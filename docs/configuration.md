@@ -4,11 +4,11 @@ Signal loads exactly one strict TOML file selected by `SIGNAL_CONFIG` or `config
 
 Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions, non-finite numbers, invalid ranges, and config sources above 1 MiB are errors. No scientific value falls back silently.
 
-## Schema version 1
+## Schema version 2
 
 | Section | Key | Value | Validation |
 |---|---|---:|---|
-| root | `schema_version` | `1` | exactly 1 |
+| root | `schema_version` | `2` | exactly 2 |
 | `reference` | `topology` | `circular` | `linear` or `circular` |
 | `basecalling` | `secondary_peak_ratio` | `0.33` | finite `(0,1]` |
 | `quality_control` | `trim_window_size` | `10` | positive |
@@ -24,9 +24,12 @@ Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions
 | | `minimum_callable_bases` | `20` | positive |
 | | `minimum_identity` | `0.80` | finite `(0,1]` |
 | `variant_calling` | `max_indel_length` | `50` | `1..=50` |
+| | `minimum_peak_height` | `150` | `1..=32767` |
+| | `relative_quality_threshold` | `30` | less than `max_relative_quality_score`; comparison is strict `>` |
+| | `regions` | `[[16024, 16365], [73, 340], [438, 576]]` | non-empty inclusive 1-based ranges within `1..=50000` |
 
-The compact JSON records the raw config checksum and versioned method IDs. Effective values remain in the strict TOML selected for the run; the local path is omitted.
+The region list is treated as a union in the supplied reference coordinate system. Region order and overlap do not change eligibility. The compact JSON records the raw config checksum and versioned method IDs. Effective values remain in the strict TOML selected for the run; the local path is omitted.
 
 ## `.env`
 
-`.env.example` is a shell-tooling template containing only `SIGNAL_CONFIG=config/signal.toml`. Local `.env` remains ignored. Shells, IDEs, and containers may export it; Signal itself never reads dotenv files.
+`.env.example` is a shell-tooling template for `SIGNAL_CONFIG=config/signal.toml` and the operational `SIGNAL_LOG_DIR=logs`. `SIGNAL_LOG_DIR` changes only the append-only log destination; it does not alter scientific settings or their checksum. Local `.env` remains ignored. Shells, IDEs, and containers may export these values; Signal itself never reads dotenv files.

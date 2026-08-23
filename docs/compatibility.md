@@ -12,7 +12,8 @@ Apollo C++ is evidence for intended behavior, not authority for known unsafe, in
 | ABIF `basecall` | `basecalling` | PLOC-window signal re-calling, corrected ties/ambiguity |
 | quality helpers/`trim.h` | `quality_control` | safe penalty and end-trim behavior; score named relative |
 | `alignment/gotoh.h` | `alignment` | bounded deterministic semi-global affine DP |
-| primary subset of `variant.h` | `variant_calling` | SNV/small-indel extraction and normalization |
+| primary subset of `variant.h` | `variant_calling` | SNV/small-indel extraction, normalization, and configured eligibility |
+| `logger.rs` | `logger` | Apollo-style timestamp/level/source records written to per-trace files |
 | `report/json.h` | `report` | versioned, nested, schema-governed JSON |
 
 ## Exact evidence targets
@@ -30,15 +31,15 @@ For an approved fixture, raw decoded bytes, channel remapping, PLOC positions, u
 - per-channel PLOC fallback is kept and Apollo's collective midpoint rescue is not ported;
 - the Rust Gotoh traceback breaks ties by state preference Match > Deletion > Insertion, which may differ from C++ tie behavior on equally scoring paths;
 - alignments below `minimum_callable_bases` or `minimum_identity` fail rather than being silently accepted;
-- Apollo's channel peak filters are not applied; signal-derived re-calling uses only the documented positive local maxima and per-channel PLOC fallback;
+- Apollo's called/other peak-dominance ratio and Phred-like signal quality are not ported; Signal instead requires configured maximum-channel peak and uncalibrated relative-quality thresholds for SNV/inserted-base supporting calls;
 - indels are capped at the configured 50 bp changed length; longer candidates are excluded rather than emitted;
-- no hardcoded poly-C correction, HV-region filter, rescue coordinate, or sample patch;
+- HV-region eligibility is expressed as strict TOML list-of-lists rather than hardcoded sample logic; there is no poly-C correction, rescue coordinate, or sample patch;
 - zero maximum penalty yields maximum relative score rather than division by zero;
 - the relative score is not labeled Phred; PCON remains distinct;
 - N uses an explicit alignment score and cannot produce a reportable SNV;
 - rCRS is treated as circular and origin-spanning coordinates are preserved;
 - indels are normalized deterministically, including circular repeats;
-- compact `signal.analysis/v3` JSON is the only output; variants contain direct mapped trace calls, complete trace arrays are omitted, and no VCF/BCF compatibility layer exists;
+- compact `signal.analysis/v3` JSON is the only scientific result; append-only operational logs are separate, variants contain direct mapped trace calls, complete trace arrays are omitted, and no VCF/BCF compatibility layer exists;
 - no ConfirmFilter, PHFinder, genotype, allelic fraction, or two-allele decomposition.
 
 None of these divergences keeps a legacy path: Signal emits a single

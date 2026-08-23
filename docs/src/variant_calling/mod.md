@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Converts the primary-sequence alignment into normalized primary-sequence
-variants, preserving the mapping to original trace calls.
+Converts the primary-sequence alignment into normalized, configured-eligible
+primary-sequence variants while preserving original trace-call mappings.
 
 ## Responsibilities
 
-- Re-export `call` as the module boundary.
+- Define `call` as the module boundary and sequence extraction before filtering.
 - Extract SNVs and ≤50 bp insertions/deletions, exclude unresolved alleles, map
-  each variant to its original calls, and left-normalize (or
-  circular-canonicalize) indels.
+  each variant to its original calls, left-normalize (or circular-canonicalize)
+  indels, then apply configured region and supporting-signal eligibility.
 
 ## Non-responsibilities
 
@@ -19,21 +19,24 @@ allelic fraction fitting, or serialization.
 
 ## Key types and functions
 
-- `call(alignment, reference, config) -> Result<VariantCallingResult>`: the public
-  entry point, re-exported from `extract`.
+- `call(alignment, reference, calls, quality, config) -> Result<VariantCallingResult>`:
+  the crate-level entry point.
 - Child modules: `extract` (alignment-difference extraction), `mapping`
-  (original-call/reference mappings), `normalize` (left/circular normalization).
+  (original-call/reference mappings), `normalize` (left/circular normalization),
+  and `filter` (configured eligibility).
 
 ## Invariants and errors
 
 Variants use validated alleles and explicit coordinates. Equivalent repetitive
-indels normalize to the same `(contig, position, ref, alt)` tuple. Unresolved or
-oversized differences are excluded with a count.
+indels normalize to the same `(contig, position, ref, alt)` tuple. Unresolved,
+oversized, out-of-region, or low-support differences are excluded with one count
+per candidate.
 
 ## Dependencies
 
 - `config` for `VariantCallingConfig`.
-- `model::alignment`, `model::reference`, `model::variant`.
+- `model::alignment`, `model::basecalls`, `model::quality`, `model::reference`,
+  `model::variant`.
 - `error` for `Error`/`Result`.
 
 ## Apollo mapping

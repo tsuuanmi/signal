@@ -2,7 +2,33 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 pub fn write_abif(path: &Path, sequence: &str) -> Result<(), Box<dyn std::error::Error>> {
-    write_abif_fixture(path, sequence, sequence.as_bytes(), 1, *b"ACGT", None, None)
+    write_abif_fixture(
+        path,
+        sequence,
+        sequence.as_bytes(),
+        1,
+        *b"ACGT",
+        None,
+        None,
+        None,
+    )
+}
+
+pub fn write_abif_with_peak_heights(
+    path: &Path,
+    sequence: &str,
+    peak_heights: Vec<i16>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    write_abif_fixture(
+        path,
+        sequence,
+        sequence.as_bytes(),
+        1,
+        *b"ACGT",
+        None,
+        None,
+        Some(peak_heights),
+    )
 }
 
 pub fn write_abif_with_vendor(
@@ -22,6 +48,7 @@ pub fn write_abif_with_vendor(
         *b"ACGT",
         None,
         None,
+        None,
     )
 }
 
@@ -36,6 +63,7 @@ pub fn write_abif_with_channel_order(
         sequence.as_bytes(),
         1,
         channel_order,
+        None,
         None,
         None,
     )
@@ -54,6 +82,7 @@ pub fn write_abif_with_ploc(
         *b"ACGT",
         Some(ploc),
         None,
+        None,
     )
 }
 
@@ -70,6 +99,7 @@ pub fn write_abif_with_unused_p2ba(
         *b"ACGT",
         None,
         Some(p2ba),
+        None,
     )
 }
 
@@ -78,7 +108,7 @@ pub fn write_abif_with_short_pbas(
     sequence: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let short = &sequence.as_bytes()[..sequence.len() - 1];
-    write_abif_fixture(path, sequence, short, 1, *b"ACGT", None, None)
+    write_abif_fixture(path, sequence, short, 1, *b"ACGT", None, None, None)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -90,16 +120,21 @@ fn write_abif_fixture(
     channel_order: [u8; 4],
     ploc_override: Option<Vec<usize>>,
     p2ba: Option<Vec<u8>>,
+    peak_heights: Option<Vec<i16>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let spacing = 4_usize;
     let signal_locations: Vec<usize> = (0..sequence.len())
         .map(|index| 2 + index * spacing)
         .collect();
     let sample_count = signal_locations.last().copied().unwrap_or(0) + 3;
+    let peak_heights = peak_heights.unwrap_or_else(|| vec![1000; sequence.len()]);
+    if peak_heights.len() != sequence.len() {
+        return Err("synthetic peak-height count must equal signal sequence length".into());
+    }
     let mut channels: [Vec<i16>; 4] = std::array::from_fn(|_| vec![0; sample_count]);
     for (index, base) in sequence.bytes().enumerate() {
         let channel = channel_index(base)?;
-        channels[channel][signal_locations[index]] = 1000;
+        channels[channel][signal_locations[index]] = peak_heights[index];
     }
     let mut records = Vec::new();
     for (index, base) in channel_order.iter().enumerate() {
@@ -195,7 +230,7 @@ pub fn write_config(path: &Path, topology: &str) -> Result<(), Box<dyn std::erro
     fs::write(
         path,
         format!(
-            "schema_version=1\n[reference]\ntopology='{topology}'\n[basecalling]\nsecondary_peak_ratio=0.33\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.10\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.80\n[variant_calling]\nmax_indel_length=50\n"
+            "schema_version=2\n[reference]\ntopology='{topology}'\n[basecalling]\nsecondary_peak_ratio=0.33\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.10\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.80\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[1, 50000]]\n"
         ),
     )?;
     Ok(())

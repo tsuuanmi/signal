@@ -69,7 +69,12 @@ fn require_regular_file(path: &Path, kind: &'static str) -> Result<()> {
 }
 
 fn output_path(trace: &Path) -> Result<PathBuf> {
-    let stem = trace
+    Ok(PathBuf::from("results").join(format!("{}.json", trace_stem(trace)?)))
+}
+
+/// Returns the validated UTF-8 trace stem shared by result and log paths.
+pub(super) fn trace_stem(trace: &Path) -> Result<&str> {
+    trace
         .file_stem()
         .and_then(|value| value.to_str())
         .filter(|value| !value.is_empty())
@@ -77,6 +82,5 @@ fn output_path(trace: &Path) -> Result<PathBuf> {
             kind: "AB1",
             path: trace.to_path_buf(),
             reason: "file stem must be valid non-empty UTF-8".into(),
-        })?;
-    Ok(PathBuf::from("results").join(format!("{stem}.json")))
+        })
 }

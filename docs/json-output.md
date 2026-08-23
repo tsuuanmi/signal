@@ -1,6 +1,6 @@
 # Signal Compact JSON Output
 
-`signal analyze <trace.ab1> --reference <reference.fasta>` writes one deterministic file named `results/<trace-stem>.json`. The `results/` directory is created when publication begins. Existing results are never overwritten.
+`signal analyze <trace.ab1> --reference <reference.fasta>` writes one deterministic file named `results/<trace-stem>.json`. The `results/` directory is created when publication begins. Existing results are never overwritten. After validating a non-empty UTF-8 trace stem, Rust separately appends nondeterministic, run-correlated operational records to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`); that sidecar is outside this JSON contract. A refused rerun therefore appends a stage-aware failure record while leaving the existing JSON byte-for-byte unchanged. Clap errors and invalid trace stems occur before logger creation.
 
 The authoritative contract is [`schemas/analysis-v3.schema.json`](schemas/analysis-v3.schema.json); a synthetic example is [`examples/analysis-v3.example.json`](examples/analysis-v3.example.json).
 
@@ -13,7 +13,7 @@ The authoritative contract is [`schemas/analysis-v3.schema.json`](schemas/analys
 | `sequence` | Primary, ambiguity, retained sequence, and trim interval. |
 | `alignment` | Selected orientation, score, metrics, segments, operations, and gapped rows. |
 | `variants` | Normalized primary-sequence differences and their associated trace calls. |
-| `warnings` | Compact counts of non-fatal conditions, plus the boolean `reference_origin_wrap` flag for an origin-crossing circular alignment. |
+| `warnings` | Compact counts of non-fatal conditions, including excluded variant candidates, plus the boolean `reference_origin_wrap` flag for an origin-crossing circular alignment. |
 
 Complete channel arrays, non-variant call tables, losing alignments, and verbose intermediate records are intentionally omitted. All objects are closed by the schema.
 
@@ -73,4 +73,4 @@ Each variant-associated call contains:
 - `phred_calibrated: false`;
 - optional vendor `vendor_score` and `vendor_score_applies`.
 
-Peak ratios and relative quality do not imply genotype, zygosity, allele fraction, or heteroplasmy.
+Peak ratios and relative quality do not imply genotype, zygosity, allele fraction, or heteroplasmy. Variant eligibility uses this uncalibrated `relative_score`, not optional vendor quality: SNV and inserted-base supporting calls must each exceed the configured relative threshold and meet the configured maximum-channel peak floor. Deletion flanks are exempt because they do not measure a deleted base.

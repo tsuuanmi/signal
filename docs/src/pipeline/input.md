@@ -24,6 +24,8 @@ No directory scanning, globs, manifests, or multi-file discovery.
 - `require_regular_file(path, kind) -> Result<()>`: path-type validation.
 - `output_path(trace) -> Result<PathBuf>`: joins the trace file stem to `results/`
   as `results/<trace-stem>.json`.
+- `trace_stem(trace) -> Result<&str>`: validates and shares the UTF-8 stem used by
+  result and log paths.
 
 ## Invariants and errors
 

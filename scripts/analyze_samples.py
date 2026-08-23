@@ -91,12 +91,18 @@ def parser() -> argparse.ArgumentParser:
         help="result root directory",
     )
     built.add_argument(
+        "--log-dir",
+        type=Path,
+        default=Path("logs"),
+        help="Rust log root directory",
+    )
+    built.add_argument(
         "--binary",
         type=Path,
         default=Path("target/release/signal"),
         help="Signal executable",
     )
-    built.add_argument("--limit", type=int, default=10, help="number of sample IDs")
+    built.add_argument("--limit", type=int, default=89, help="number of sample IDs")
     built.add_argument(
         "--no-build",
         action="store_true",
@@ -110,6 +116,7 @@ def run_analysis(
     trace: Path,
     reference: Path,
     config: Path,
+    log_dir: Path,
     destination: Path,
 ) -> tuple[bool, str]:
     """Run one analysis in isolation and publish its JSON without overwrite."""
@@ -117,6 +124,7 @@ def run_analysis(
         work = Path(temporary)
         environment = os.environ.copy()
         environment["SIGNAL_CONFIG"] = str(config)
+        environment["SIGNAL_LOG_DIR"] = str(log_dir)
         completed = subprocess.run(
             [str(binary), "analyze", str(trace), "--reference", str(reference)],
             cwd=work,
@@ -165,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
         config = regular_file(args.config, "config")
         trace_dir = resolved(args.trace_dir)
         output_dir = resolved(args.output_dir)
+        log_dir = resolved(args.log_dir)
         binary = resolved(args.binary)
         if not trace_dir.is_dir():
             raise ValueError(f"trace directory does not exist: {trace_dir}")
@@ -201,7 +210,7 @@ def main(argv: list[str] | None = None) -> int:
                 skipped_count += 1
                 continue
             succeeded, detail = run_analysis(
-                binary, trace.resolve(), reference, config, destination
+                binary, trace.resolve(), reference, config, log_dir, destination
             )
             if succeeded:
                 print(f"OK   {displayed(destination)}")

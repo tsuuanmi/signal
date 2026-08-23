@@ -10,6 +10,8 @@ original trace calls.
 - Represent reportable variants, the variant stage output, and each
   variant-associated call's role and original-call identity.
 - Carry optional biological reference positions for each mapped call.
+- Represent every excluded candidate with a stable reason list and a concise,
+  allele-free identity for pipeline logging.
 
 ## Non-responsibilities
 
@@ -24,7 +26,12 @@ No extraction, normalization, or inference.
   reference position that is absent only for inserted query calls.
 - `Variant`: contig, one-based position, reference/alternate alleles, kind,
   classification, normalization, and the mapped calls.
-- `VariantCallingResult`: reported variants and the count of excluded candidates.
+- `VariantExclusionReason`: stable structural, region, peak, and relative-quality
+  rejection reasons with operational labels.
+- `ExcludedVariant`: contig, optional normalized one-based position, kind, and all
+  rejection reasons; alleles are intentionally absent.
+- `VariantCallingResult`: configured-eligible variants plus one diagnostic per
+  excluded candidate; `excluded_count()` derives the warning count.
 
 ## Invariants and errors
 
@@ -33,6 +40,8 @@ No extraction, normalization, or inference.
   alt)` tuple.
 - `reference_position_0based` is `None` only for inserted query calls; deletion
   evidence is flanking calls only.
+- Each excluded candidate appears exactly once. Its reason list is deduplicated by
+  rule, and its position is absent when normalization never produced one.
 
 ## Dependencies
 

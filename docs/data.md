@@ -34,7 +34,7 @@ from the local corpus is external test orchestration, not behavior of
 `signal analyze`.
 
 For the current local corpus, the external wrapper analyzes every trace belonging
-to the first ten non-empty sample IDs and groups outputs by sample:
+to the first 89 non-empty sample IDs by default and groups outputs by sample:
 
 ```bash
 uv run python scripts/analyze_samples.py
@@ -42,11 +42,13 @@ uv run python scripts/analyze_samples.py
 
 The defaults read `data/MS_010426_001.txt`, search
 `data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write
-`results/<sample-id>/<trace-stem>.json`. Existing result files are skipped rather
-than overwritten. Run `uv run python scripts/analyze_samples.py --help` to change
-the manifest, trace directory, reference, configuration, output directory, binary,
-or sample limit. This wrapper invokes the one-file CLI once per matching AB1; it
-does not add batch behavior to Signal itself.
+`results/<sample-id>/<trace-stem>.json`. It sets `SIGNAL_LOG_DIR` so the Rust
+logger writes directly to `logs/<trace-stem>.log`. Existing result files are
+skipped rather than overwritten. Run
+`uv run python scripts/analyze_samples.py --help` to change the manifest, trace
+directory, reference, configuration, output or log directory, binary, or sample
+limit. This wrapper invokes the one-file CLI once per matching AB1; it does not add
+batch behavior to Signal itself.
 
 ## Analysis output privacy
 
@@ -54,11 +56,14 @@ The compact JSON contains the trace basename, called sequences, alignment, varia
 and local peaks/quality for variant-associated calls. It excludes complete channel
 arrays and arbitrary ABIF sample, plate, well, instrument, and run free text. A
 result can still identify a sample, so derived JSON follows the same approval and
-redistribution policy as its AB1 source.
+redistribution policy as its AB1 source. Append-only logs can contain trace/reference
+names, filesystem paths, hashes, aggregate metrics, thresholds, stage errors, and
+removed-variant kinds/coordinates/reasons. They omit alleles and raw scientific
+payloads but still follow the same policy; `logs/` is ignored.
 
 ## Privacy and repository policy
 
-- `data/` remains listed in `.gitignore`.
+- `data/`, `results`, and `logs/` remain listed in `.gitignore`.
 - Do not force-add AB1 files, manifests, sample identifiers, or derived outputs.
 - Do not copy local traces into `tests/fixtures/` without explicit approval.
 - Treat filenames and manifests as potentially identifying metadata.

@@ -4,7 +4,10 @@ use crate::config::VariantCallingConfig;
 use crate::error::{Error, Result};
 use crate::model::alignment::{Alignment, AlignmentColumn};
 use crate::model::reference::Reference;
-use crate::model::variant::{Variant, VariantCallMapping, VariantCallingResult};
+use crate::model::variant::{
+    ExcludedVariant, Variant, VariantCallMapping, VariantCallingResult, VariantExclusionReason,
+    VariantKind,
+};
 use crate::variant_calling::{mapping, normalize};
 
 /// Extracts normalized primary-sequence differences.
@@ -14,7 +17,7 @@ pub(crate) fn call(
     config: &VariantCallingConfig,
 ) -> Result<VariantCallingResult> {
     let mut reported = Vec::new();
-    let mut excluded_count = 0;
+    let mut excluded = Vec::new();
     let mut index = 0;
     while index < alignment.columns.len() {
         let column = &alignment.columns[index];
@@ -34,9 +37,8 @@ pub(crate) fn call(
             }
             let next_reference = next_reference(&alignment.columns, index);
             let next_flank = next_flank(&alignment.columns, index)?;
-            if deleted.len() > config.max_indel_length || !deleted.chars().all(is_canonical) {
-                excluded_count += 1;
-            } else {
+            let reasons = allele_exclusion_reasons(&deleted, config.max_indel_length);
+            if reasons.is_empty() {
                 reported.push(normalize::deletion(
                     reference,
                     previous_reference,
@@ -45,6 +47,13 @@ pub(crate) fn call(
                     deleted,
                     mapping::sort_dedup(optional_pair(previous_flank, next_flank)),
                 )?);
+            } else {
+                excluded.push(ExcludedVariant {
+                    contig: reference.name.clone(),
+                    position_1based: None,
+                    kind: VariantKind::Del,
+                    reasons,
+                });
             }
             continue;
         }
@@ -62,9 +71,8 @@ pub(crate) fn call(
             }
             let next_reference = next_reference(&alignment.columns, index);
             let next_flank = next_flank(&alignment.columns, index)?;
-            if inserted.len() > config.max_indel_length || !inserted.chars().all(is_canonical) {
-                excluded_count += 1;
-            } else {
+            let reasons = allele_exclusion_reasons(&inserted, config.max_indel_length);
+            if reasons.is_empty() {
                 calls.extend(optional_pair(previous_flank, next_flank));
                 reported.push(normalize::insertion(
                     reference,
@@ -73,6 +81,13 @@ pub(crate) fn call(
                     inserted,
                     mapping::sort_dedup(calls),
                 )?);
+            } else {
+                excluded.push(ExcludedVariant {
+                    contig: reference.name.clone(),
+                    position_1based: None,
+                    kind: VariantKind::Ins,
+                    reasons,
+                });
             }
             continue;
         }
@@ -88,7 +103,14 @@ pub(crate) fn call(
                     vec![mapping::supporting(column)?],
                 )?);
             } else {
-                excluded_count += 1;
+                excluded.push(ExcludedVariant {
+                    contig: reference.name.clone(),
+                    position_1based: column
+                        .reference_index_0based
+                        .and_then(|position| position.checked_add(1)),
+                    kind: VariantKind::Snv,
+                    reasons: vec![VariantExclusionReason::NonCanonicalAllele],
+                });
             }
         }
         index += 1;
@@ -123,8 +145,19 @@ pub(crate) fn call(
     }
     Ok(VariantCallingResult {
         reported: merged,
-        excluded_count,
+        excluded,
     })
+}
+
+fn allele_exclusion_reasons(allele: &str, max_indel_length: usize) -> Vec<VariantExclusionReason> {
+    let mut reasons = Vec::new();
+    if allele.len() > max_indel_length {
+        reasons.push(VariantExclusionReason::IndelLengthExceeded);
+    }
+    if !allele.chars().all(is_canonical) {
+        reasons.push(VariantExclusionReason::NonCanonicalAllele);
+    }
+    reasons
 }
 
 fn previous_reference(columns: &[AlignmentColumn], index: usize) -> Option<usize> {
@@ -213,6 +246,9 @@ mod tests {
     fn config() -> VariantCallingConfig {
         VariantCallingConfig {
             max_indel_length: 50,
+            minimum_peak_height: 150,
+            relative_quality_threshold: 30,
+            regions: vec![[1, 50_000]],
         }
     }
 
@@ -260,7 +296,13 @@ mod tests {
             &config(),
         )?;
         assert!(result.reported.is_empty());
-        assert_eq!(result.excluded_count, 1);
+        assert_eq!(result.excluded_count(), 1);
+        assert_eq!(result.excluded[0].kind, VariantKind::Snv);
+        assert_eq!(result.excluded[0].position_1based, Some(3));
+        assert_eq!(
+            result.excluded[0].reasons,
+            vec![VariantExclusionReason::NonCanonicalAllele]
+        );
         Ok(())
     }
 

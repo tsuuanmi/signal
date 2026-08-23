@@ -6,10 +6,11 @@ substep, and formula below is derived from the source under `src/`; where this
 document and the source disagree, the source is ground truth and this document
 should be corrected.
 
-The pipeline is deterministic: the same AB1 file, reference, effective
-configuration, and Signal version always produce the same result. The output is
-a single compact JSON document (`results/<trace-stem>.json`); no other output
-file is written.
+The scientific pipeline is deterministic: the same AB1 file, reference,
+effective configuration, and Signal version always produce the same result. Its
+scientific output is one compact JSON document (`results/<trace-stem>.json`). A
+separate nondeterministic append-only operational log records aggregate stage
+progress and failures without entering the JSON contract.
 
 ## Overview
 
@@ -208,7 +209,7 @@ For a circular reference, the aligned span is projected back onto the reference;
 if it crosses the origin it is split into two segments and `wraps_origin` is
 `true`.
 
-## Stage 5 — Variant calling (`signal.primary_difference/v2`)
+## Stage 5 — Variant calling (`signal.primary_difference/v3`)
 
 Extracts normalized primary-sequence differences from the selected alignment.
 Only differences in the primary sequence are considered; no allele-frequency,
@@ -246,7 +247,24 @@ calls omit biological position; deletions carry aligned flanks only. The emitted
 reference allele is validated against the supplied reference. Normalization
 may move the allele representation without changing the observed call mappings.
 
-### Substep 5.3 — Ordering
+### Substep 5.3 — Configured eligibility
+
+A normalized candidate is retained only when its 1-based anchor `position` lies
+inside at least one configured inclusive region. SNV supporting calls and every
+inserted-base supporting call must each have a highest A/C/G/T peak greater than
+or equal to `minimum_peak_height` and an uncalibrated relative score strictly
+greater than `relative_quality_threshold`. Insertion flanks are not evaluated.
+Deletions have no supporting trace base, so their flanks are not subjected to
+peak or quality thresholds; their normalized anchor must still be in a region.
+Vendor PCON is not used by this filter.
+
+Each removed candidate increments `excluded_variant_candidates` once, even when
+it fails more than one eligibility condition. The pure variant stage also returns
+a concise exclusion diagnostic containing kind, contig, normalized position when
+available, and all failed rules. Pipeline orchestration writes one WARN record per
+diagnostic without reference/alternate alleles.
+
+### Substep 5.4 — Ordering
 
 Reported variants are sorted by `(contig, position, reference, alternate)` and
 deduplicated.
@@ -256,7 +274,15 @@ deduplicated.
 The completed result is reduced to core metadata, sequences, selected alignment,
 warning counts, and variants with local peak/quality evidence. Full channel arrays
 and non-variant per-call records are not serialized. The document is published
-atomically to `results/<trace-stem>.json`. Its shape is defined in
+atomically to `results/<trace-stem>.json`. Operational records are appended
+separately to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`) and are not part
+of deterministic JSON. One run-correlated record summarizes input/decode,
+basecalling, quality control, alignment, variant calling, and publication
+readiness with aggregate metrics and elapsed milliseconds. WARN records identify
+removed candidates by kind/contig/position/reasons and summarize final warning
+categories; ERROR records identify the active failed stage. Records omit complete
+sequences, alleles, region contents, per-call peaks, alignment strings, and JSON
+bodies. The JSON shape is defined in
 [`json-output.md`](json-output.md), validated by
 [`schemas/analysis-v3.schema.json`](schemas/analysis-v3.schema.json), and shown in
 [`examples/analysis-v3.example.json`](examples/analysis-v3.example.json).
@@ -279,8 +305,9 @@ diagnostic. The following limitations are intentional and documented:
 - **Primary-sequence variants only.** Variants are derived from the conservative
   signal-derived primary sequence. A two-channel ambiguity may still contribute
   its strongest base to a primary-sequence difference, but it is not a genotype or
-  heteroplasmy call. Unresolved N differences and indels longer than
-  `max_indel_length` are excluded.
+  heteroplasmy call. Unresolved N differences, indels longer than
+  `max_indel_length`, out-of-region candidates, and SNV/insertion candidates
+  below configured supporting-signal thresholds are excluded.
 - **Sanger trace limitations.** Basecalling depends on the quality of the
   four-channel signal and the vendor-defined basecall positions. Poor signal,
   mixed templates, and sequencing artifacts can produce unresolved (`N`) calls

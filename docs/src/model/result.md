@@ -22,7 +22,7 @@ No serialization logic, filesystem access, or algorithm execution.
   and `warnings`.
 - `MetaResult` with `TraceResult` (input identity), `ReferenceResult`,
   `MethodsResult` (versioned method IDs, including `signal.peak_recall/v2` and
-  `signal.primary_difference/v2`), and `configuration_sha256`.
+  `signal.primary_difference/v3`), and `configuration_sha256`.
 - `SequenceResult`: primary, ambiguity, retained sequence, and trim interval.
 - `AlignmentResult`: the selected alignment only — orientation, score, metrics,
   `reference_segments`, `wraps_origin`, `operation_runs`, and gapped rows.

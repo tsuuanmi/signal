@@ -8,7 +8,8 @@ Defines the non-scientific default path and the compiled hard resource caps.
 
 - Provide the default strict TOML path used when `SIGNAL_CONFIG` is unset.
 - Provide the compiled safety caps: maximum config, AB1, and FASTA source bytes;
-  maximum reference/indel length; and maximum alignment cells.
+  maximum reference/indel length, representable peak height, and maximum alignment
+  cells.
 
 ## Non-responsibilities
 
@@ -22,6 +23,7 @@ No parsing, validation, or environment handling.
 - `MAX_REFERENCE_BYTES`: `4 * 1024 * 1024` (4 MiB).
 - `MAX_REFERENCE_LENGTH`: `50_000` bases.
 - `MAX_INDEL_LENGTH`: `50` bases.
+- `MAX_PEAK_HEIGHT`: `32767`, the largest ABIF signed-short channel value.
 - `MAX_ALIGNMENT_CELLS`: `100_000_000`.
 
 ## Invariants and errors

@@ -13,9 +13,9 @@ cargo run --release -- analyze sample.ab1 \
   --reference references/rCRS.fasta
 ```
 
-Signal reads `SIGNAL_CONFIG` or `config/signal.toml` and writes exactly one new file: `results/sample.json`. It creates `results/` when needed and refuses to overwrite an existing result. The binary does not parse `.env`.
+Signal reads `SIGNAL_CONFIG` or `config/signal.toml`, atomically writes one new `results/sample.json`, and appends concise stage records to `logs/sample.log`. Records include aggregate counts, thresholds, timings, warnings, and stage-aware failures, but never sequences, per-call peak arrays, or JSON bodies. `SIGNAL_LOG_DIR` can select another log directory. Existing results are never overwritten; per-trace logs are append-only. The binary does not parse `.env`.
 
-For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads the first ten IDs from `data/MS_010426_001.txt` and writes every matching trace result under `results/<sample-id>/`. See [`docs/data.md`](docs/data.md); the Signal CLI itself remains one-file-per-invocation.
+For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads the first 89 IDs from `data/MS_010426_001.txt`, writes every matching trace result under `results/<sample-id>/`, and directs the Rust logs to `logs/`. See [`docs/data.md`](docs/data.md); the Signal CLI itself remains one-file-per-invocation.
 
 ## Scope
 
@@ -23,6 +23,7 @@ For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads
 - exactly one non-empty plain FASTA record, at most 50,000 bases;
 - compact `signal.analysis/v3` JSON with concise coordinates and direct per-variant trace calls containing four-channel peaks and quality;
 - explicit linear/circular topology; bundled rCRS defaults to circular;
+- configured inclusive biological regions, with a bundled peak floor of 150 and relative-quality eligibility for SNVs and inserted bases;
 - primary-sequence SNVs and normalized insertions/deletions up to 50 bp.
 
 Directories, manifests, globs, batch discovery, SCF, VCF/BCF, FM indexing, two-allele decomposition, heteroplasmy fraction, genotype, pathogenicity, consensus, and assembly are outside the MVP.

@@ -21,9 +21,11 @@ risk.
 
 Choose option 3.
 
-- The tracked default is `config/signal.toml` with `schema_version = 1`.
+- The tracked default is `config/signal.toml` with `schema_version = 2`.
 - `SIGNAL_CONFIG` may select another TOML path.
 - Environment variables do not override individual scientific values.
+- The operational `SIGNAL_LOG_DIR` may select the append-only log destination;
+  it is not scientific configuration and does not affect the config checksum.
 - The CLI continues to require the AB1 path and `--reference` path.
 - Unknown keys, invalid values, and unsupported versions are errors.
 - `.env.example` is tracked; `.env` is local and ignored.

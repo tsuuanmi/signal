@@ -24,7 +24,9 @@ Adopt `signal.analysis/v3` without compatibility aliases.
 
 Variant extraction owns call/reference mappings. Normalization owns allele representation and does not alter mappings. Report projection only joins mapped original call indexes to PLOC, peaks, and quality.
 
-Normalization hardening for `signal.primary_difference/v2`: when no aligned left flank exists, the actual reference predecessor is derived from the event position; a true linear origin insertion/deletion right-anchors to the next reference base; circular repeats canonicalize anchor-independently; and emitted reference alleles are validated against the supplied reference. Call mappings remain unchanged throughout.
+Normalization hardening introduced in `signal.primary_difference/v2`: when no aligned left flank exists, the actual reference predecessor is derived from the event position; a true linear origin insertion/deletion right-anchors to the next reference base; circular repeats canonicalize anchor-independently; and emitted reference alleles are validated against the supplied reference. Call mappings remain unchanged throughout.
+
+`signal.primary_difference/v3` keeps the v3 JSON shape and mappings but adds strict configured eligibility after normalization: the normalized anchor must lie in an inclusive configured region, and SNV/inserted-base supporting calls must pass the configured maximum-channel peak and relative-quality thresholds. Deletion and insertion flanks are not treated as supporting evidence.
 
 ## Consequences
 

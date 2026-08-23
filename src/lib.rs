@@ -14,6 +14,7 @@ mod checksum;
 pub mod cli;
 pub mod config;
 pub mod error;
+mod logger;
 pub mod model;
 mod pipeline;
 mod quality_control;

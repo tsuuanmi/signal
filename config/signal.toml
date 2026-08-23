@@ -1,5 +1,5 @@
 # Signal MVP scientific configuration. Unknown or missing keys are errors.
-schema_version = 1
+schema_version = 2
 
 [reference]
 # rCRS is a circular mitochondrial reference.
@@ -30,3 +30,8 @@ minimum_identity = 0.80
 [variant_calling]
 # Anchor bases do not count toward this changed-length limit.
 max_indel_length = 50
+# SNV and inserted-base supporting calls must meet both evidence thresholds.
+minimum_peak_height = 150
+relative_quality_threshold = 30
+# Inclusive 1-based normalized variant anchor ranges (HV1, HV2, HV3).
+regions = [[16024, 16365], [73, 340], [438, 576]]

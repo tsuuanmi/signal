@@ -28,7 +28,7 @@ No file I/O, environment handling, or algorithm execution.
 
 ## Invariants and errors
 
-- `schema_version` must equal `1`; otherwise `Error::Config`.
+- `schema_version` must equal `2`; otherwise `Error::Config`.
 - Fractions (`secondary_peak_ratio`, `best_section_fraction`, `minimum_identity`)
   must be finite and in `(0, 1]`.
 - `trim_window_size`, `max_relative_quality_score`, `minimum_retained_bases`,
@@ -36,13 +36,18 @@ No file I/O, environment handling, or algorithm execution.
 - `trim_stringency` must be finite and in `[0, 9]`.
 - `match_score` must be positive; `mismatch_score`, `gap_open_score`, and
   `gap_extension_score` must be negative.
-- `max_indel_length` must be in `1..=MAX_INDEL_LENGTH`.
+- `max_indel_length` must be in `1..=MAX_INDEL_LENGTH` and
+  `minimum_peak_height` in `1..=MAX_PEAK_HEIGHT`.
+- `relative_quality_threshold` must be below `max_relative_quality_score`.
+- `regions` must be a non-empty list of inclusive `[start, end]` pairs within
+  `1..=MAX_REFERENCE_LENGTH`.
 - All raw structs use `#[serde(deny_unknown_fields)]`, so unknown keys are
   rejected at parse time.
 
 ## Dependencies
 
-- `defaults` for `MAX_INDEL_LENGTH` and `MAX_REFERENCE_LENGTH`.
+- `defaults` for `MAX_INDEL_LENGTH`, `MAX_PEAK_HEIGHT`, and
+  `MAX_REFERENCE_LENGTH`.
 - `model::reference` for `ReferenceTopology`.
 - `error` for `Error`/`Result`.
 - `serde` for serialization/deserialization.
@@ -56,8 +61,9 @@ read ends are handled.
 
 ## Tests
 
-No dedicated unit tests; validation is exercised through `load` and the
-end-to-end integration tests.
+Unit tests cover schema version 2, required filter fields, list-of-lists parsing,
+threshold relationships, and invalid/empty/out-of-range regions. End-to-end tests
+exercise the selected strict config.
 
 ## Status
 

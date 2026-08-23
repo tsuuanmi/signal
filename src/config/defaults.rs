@@ -12,5 +12,7 @@ pub const MAX_REFERENCE_BYTES: usize = 4 * 1024 * 1024;
 pub const MAX_REFERENCE_LENGTH: usize = 50_000;
 /// Largest supported primary-sequence indel.
 pub const MAX_INDEL_LENGTH: usize = 50;
+/// Largest peak height representable by an ABIF signed short.
+pub const MAX_PEAK_HEIGHT: i32 = i16::MAX as i32;
 /// Maximum number of traceback cells allocated by Gotoh.
 pub const MAX_ALIGNMENT_CELLS: usize = 100_000_000;

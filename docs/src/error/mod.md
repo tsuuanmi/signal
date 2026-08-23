@@ -14,7 +14,8 @@ Defines typed failures crossing the Signal library boundary.
 - `Result<T> = std::result::Result<T, Error>`.
 - `Error` enum with variants for path, read, config parse, config value, ABIF,
   FASTA, basecalling, quality control, alignment, variant, report assembly,
-  serialization, and output failures.
+  serialization, logging I/O, combined analysis/logging failure, and output
+  failures.
 
 ## Invariants and errors
 

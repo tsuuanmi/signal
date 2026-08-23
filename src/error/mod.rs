@@ -57,6 +57,19 @@ pub enum Error {
     /// A completed model could not be serialized.
     #[error("failed to serialize analysis JSON: {0}")]
     Serialize(#[from] serde_json::Error),
+    /// An analysis failed and its terminal error record also could not be persisted.
+    #[error("{analysis}; additionally failed to persist the analysis error log: {logging}")]
+    AnalysisAndLog {
+        analysis: Box<Error>,
+        logging: Box<Error>,
+    },
+    /// A log directory or append-only log file operation failed.
+    #[error("failed to access log path {path}: {source}")]
+    Log {
+        path: PathBuf,
+        #[source]
+        source: std::io::Error,
+    },
     /// An output file operation failed.
     #[error("failed to publish output {path}: {source}")]
     Output {

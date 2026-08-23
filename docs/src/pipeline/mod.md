@@ -2,14 +2,14 @@
 
 ## Purpose
 
-Orchestrates the complete `analyze` use case: one AB1, one FASTA, and one JSON
-result.
+Orchestrates the complete `analyze` use case: one AB1, one FASTA, one JSON result,
+and one append-only operational log.
 
 ## Responsibilities
 
 - Re-export `analyze` as the module boundary.
 - Sequence validated input, basecalling, QC, alignment, variant calling, and
-  atomic reporting.
+  atomic reporting while recording stage summaries through `logger`.
 
 ## Non-responsibilities
 

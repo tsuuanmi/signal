@@ -9,9 +9,9 @@ use serde_json::Value;
 use tempfile::tempdir;
 
 use support::{
-    output_path, write_abif, write_abif_with_channel_order, write_abif_with_ploc,
-    write_abif_with_short_pbas, write_abif_with_unused_p2ba, write_abif_with_vendor, write_config,
-    write_reference,
+    output_path, write_abif, write_abif_with_channel_order, write_abif_with_peak_heights,
+    write_abif_with_ploc, write_abif_with_short_pbas, write_abif_with_unused_p2ba,
+    write_abif_with_vendor, write_config, write_reference,
 };
 
 const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
@@ -27,7 +27,10 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
         write_abif(&trace, QUERY)?;
         write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
         write_config(&config, "linear")?;
-        run(&trace, &reference, &config, directory)?.success();
+        run(&trace, &reference, &config, directory)?
+            .success()
+            .stdout(predicate::str::is_empty())
+            .stderr(predicate::str::is_empty());
     }
 
     let first_bytes = fs::read(output_path(first.path(), &first.path().join("trace.ab1")))?;
@@ -42,7 +45,7 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     );
     assert_eq!(
         value["meta"]["methods"]["variant_calling"],
-        "signal.primary_difference/v2"
+        "signal.primary_difference/v3"
     );
     assert!(value.get("analysis").is_none());
     assert!(value.pointer("/meta/input/size_bytes").is_none());
@@ -51,6 +54,32 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
         assert!(!text.contains(obsolete));
     }
     assert!(!first.path().join("results/trace.vcf").exists());
+    let log = fs::read_to_string(first.path().join("logs/trace.log"))?;
+    let mut search_start = 0;
+    for event in [
+        "event=analysis_started",
+        "event=inputs_loaded",
+        "event=basecalling_completed",
+        "event=quality_control_completed",
+        "event=alignment_completed",
+        "event=variant_calling_completed",
+        "event=result_ready_for_publication",
+    ] {
+        let offset = log[search_start..]
+            .find(event)
+            .ok_or_else(|| format!("missing ordered log event {event}"))?;
+        search_start += offset + event.len();
+    }
+    assert!(log.lines().all(|line| line.contains("run_id=")));
+    assert!(log.contains("calls=28 canonical_primary=28 unresolved_primary=0"));
+    assert!(log.contains("retained=28"));
+    assert!(log.contains("orientation=Forward"));
+    assert!(log.contains("reported=0 snv=0 insertion=0 deletion=0 excluded=0"));
+    assert!(log.contains("minimum_peak_height=150"));
+    assert!(!log.contains(QUERY));
+    assert!(!log.contains("[[1, 50000]]"));
+    assert!(!log.contains("\"schema_version\""));
+    assert!(!log.contains("gapped_query"));
     Ok(())
 }
 
@@ -186,6 +215,67 @@ fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[test]
+fn filters_extracted_snv_below_peak_floor() -> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut query = QUERY.to_owned();
+    query.replace_range(10..11, "T");
+    let mut peaks = vec![1000; query.len()];
+    peaks[10] = 149;
+    write_abif_with_peak_heights(&trace, &query, peaks)?;
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["variants"].as_array().map(Vec::len), Some(0));
+    assert_eq!(value["warnings"]["excluded_variant_candidates"], 1);
+    let log = fs::read_to_string(directory.path().join("logs/trace.log"))?;
+    assert!(log.contains("event=variant_calling_completed"));
+    assert!(log.contains("reported=0 snv=0 insertion=0 deletion=0 excluded=1"));
+    let removed = log
+        .lines()
+        .find(|line| line.contains("event=variant_removed"))
+        .ok_or("missing removed-variant log record")?;
+    assert!(removed.contains("kind=SNV contig=\"synthetic\" position=15"));
+    assert!(removed.contains("reasons=peak_below_minimum"));
+    assert!(!removed.contains("reference="));
+    assert!(!removed.contains("alternate="));
+    assert!(log.contains(" | WARN     | "));
+    assert!(log.contains("event=warning_summary"));
+    assert!(log.contains("excluded_variant_candidates=1"));
+    Ok(())
+}
+
+#[test]
+fn filters_by_normalized_anchor_region() -> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut query = QUERY.to_owned();
+    query.replace_range(10..11, "T");
+    write_abif(&trace, &query)?;
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+    let restricted =
+        fs::read_to_string(&config)?.replace("regions=[[1, 50000]]", "regions=[[16, 16]]");
+    fs::write(&config, restricted)?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["variants"].as_array().map(Vec::len), Some(0));
+    assert_eq!(value["warnings"]["excluded_variant_candidates"], 1);
+    let log = fs::read_to_string(directory.path().join("logs/trace.log"))?;
+    assert!(log.contains(
+        "event=variant_removed kind=SNV contig=\"synthetic\" position=15 reasons=outside_configured_region"
+    ));
+    Ok(())
+}
+
+#[test]
 fn maps_reverse_snv_to_original_call_and_ploc() -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempdir()?;
     let trace = directory.path().join("trace.ab1");
@@ -219,7 +309,10 @@ fn reports_insertion_support_and_flanks() -> Result<(), Box<dyn std::error::Erro
     let trace = directory.path().join("trace.ab1");
     let reference = directory.path().join("reference.fa");
     let config = directory.path().join("signal.toml");
-    write_abif(&trace, QUERY)?;
+    let mut peaks = vec![1000; QUERY.len()];
+    peaks[11] = 1;
+    peaks[13] = 1;
+    write_abif_with_peak_heights(&trace, QUERY, peaks)?;
     let reference_query = format!("{}{}", &QUERY[..12], &QUERY[13..]);
     write_reference(&reference, &format!("TTTT{reference_query}CCCC"))?;
     write_config(&config, "linear")?;
@@ -249,12 +342,36 @@ fn reports_insertion_support_and_flanks() -> Result<(), Box<dyn std::error::Erro
 }
 
 #[test]
+fn filters_multibase_insertion_when_any_inserted_peak_is_low()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut peaks = vec![1000; QUERY.len()];
+    peaks[13] = 149;
+    write_abif_with_peak_heights(&trace, QUERY, peaks)?;
+    let reference_query = format!("{}{}", &QUERY[..12], &QUERY[14..]);
+    write_reference(&reference, &format!("TTTT{reference_query}CCCC"))?;
+    write_config(&config, "linear")?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["variants"].as_array().map(Vec::len), Some(0));
+    assert_eq!(value["warnings"]["excluded_variant_candidates"], 1);
+    Ok(())
+}
+
+#[test]
 fn reports_deletion_with_flanks_only() -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempdir()?;
     let trace = directory.path().join("trace.ab1");
     let reference = directory.path().join("reference.fa");
     let config = directory.path().join("signal.toml");
-    write_abif(&trace, QUERY)?;
+    let mut peaks = vec![1000; QUERY.len()];
+    peaks[10] = 1;
+    peaks[11] = 1;
+    write_abif_with_peak_heights(&trace, QUERY, peaks)?;
     let reference_query = format!("{}A{}", &QUERY[..12], &QUERY[12..]);
     write_reference(&reference, &format!("TTTT{reference_query}CCCC"))?;
     write_config(&config, "linear")?;
@@ -371,6 +488,10 @@ fn malformed_abif_leaves_no_output() -> Result<(), Box<dyn std::error::Error>> {
         .failure()
         .stderr(predicate::str::contains("invalid ABIF input"));
     assert!(!output_path(directory.path(), &trace).exists());
+    let log = fs::read_to_string(directory.path().join("logs/trace.log"))?;
+    assert!(log.contains(" | ERROR    | "));
+    assert!(log.contains("event=analysis_failed stage=input_loading"));
+    assert!(log.contains("invalid ABIF input"));
     Ok(())
 }
 
@@ -391,6 +512,11 @@ fn refuses_to_overwrite_completed_output() -> Result<(), Box<dyn std::error::Err
         .failure()
         .stderr(predicate::str::contains("target already exists"));
     assert_eq!(fs::read(output)?, b"owned");
+    let log = fs::read_to_string(directory.path().join("logs/trace.log"))?;
+    assert!(log.contains("event=analysis_started"));
+    assert!(log.contains("event=analysis_failed stage=input_loading"));
+    assert!(log.contains("target already exists"));
+    assert!(log.contains(" | ERROR    | "));
     Ok(())
 }
 

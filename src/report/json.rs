@@ -36,7 +36,7 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
         alignment,
         variants,
     } = completed;
-    let warnings = warning_summary(&calls, &alignment, variants.excluded_count);
+    let warnings = warning_summary(&calls, &alignment, variants.excluded_count());
     let variant_results = variant::project(variants.reported, &calls, &quality)?;
     let reference_segments = alignment
         .reference_segments
@@ -68,7 +68,7 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
                 quality_control: "signal.apollo_relative_quality/v1",
                 trimming: "signal.apollo_end_trim/v1",
                 alignment: "signal.gotoh_semiglobal/v1",
-                variant_calling: "signal.primary_difference/v2",
+                variant_calling: "signal.primary_difference/v3",
             },
         },
         sequence: SequenceResult {

@@ -9,7 +9,8 @@ small indels, mapping each to its original trace calls.
 
 - Walk the alignment columns, identifying substitutions, insertions, and
   deletions.
-- Exclude unresolved alleles and indels longer than the configured maximum.
+- Exclude unresolved alleles and indels longer than the configured maximum while
+  retaining kind, position when available, and every structural rejection reason.
 - Build supporting and flanking call mappings for each reported difference.
 - Sort, deduplicate, and merge reported variants with their call mappings.
 
@@ -20,8 +21,8 @@ allelic fraction fitting, or serialization.
 
 ## Key types and functions
 
-- `call(alignment, reference, config) -> Result<VariantCallingResult>`: the module
-  entry point, re-exported from `mod.rs`.
+- `call(alignment, reference, config) -> Result<VariantCallingResult>`: the
+  extraction entry point consumed by the parent module before filtering.
 - `previous_reference`/`next_reference`, `previous_flank`/`next_flank`,
   `optional_pair`, `is_canonical`: helpers.
 
@@ -29,7 +30,8 @@ allelic fraction fitting, or serialization.
 
 - Variants use validated alleles and explicit coordinates.
 - Indels longer than `max_indel_length` or with unresolved alleles are excluded
-  with a count.
+  with one allele-free diagnostic; candidates that fail both rules retain both
+  reasons.
 - Reported variants are sorted by `(contig, position, ref, alt)` and deduplicated;
   same-locus variants merge their call mappings.
 - A missing reference coordinate on an SNV column returns `Error::Variant`.
@@ -56,8 +58,8 @@ the actual reference predecessor.
 
 - `leading_alignment_deletion_uses_reference_predecessor`: verifies a leading
   deletion without an aligned left flank still derives the reference predecessor.
-- `unresolved_primary_difference_is_excluded`: verifies an `N` difference is
-  excluded with a count.
+- `unresolved_primary_difference_is_excluded`: verifies an `N` difference keeps
+  its SNV kind, position, and noncanonical-allele reason.
 - `leading_alignment_insertion_keeps_inserted_and_flanking_mappings`: verifies
   inserted and flanking call mappings are retained.
 

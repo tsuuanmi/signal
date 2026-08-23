@@ -6,7 +6,7 @@ Defines the Signal library boundary and dispatches parsed commands.
 
 ## Responsibilities
 
-- Declare the internal subsystem graph.
+- Declare the internal subsystem graph, including the private operational logger.
 - Expose the intentional CLI, configuration, error, and model surfaces.
 - Route commands to `pipeline`.
 
@@ -27,8 +27,8 @@ Pipeline errors are preserved for the binary boundary.
 ## Dependencies
 
 - `cli`, `config`, `error`, `model` are public.
-- `alignment`, `basecalling`, `pipeline`, `quality_control`, `reference`,
-  `report`, `trace`, `variant_calling` are private.
+- `alignment`, `basecalling`, `logger`, `pipeline`, `quality_control`,
+  `reference`, `report`, `trace`, `variant_calling` are private.
 
 ## Apollo mapping
 

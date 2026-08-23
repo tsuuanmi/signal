@@ -4,7 +4,7 @@ use std::path::PathBuf;
 
 use serde::Deserialize;
 
-use crate::config::defaults::MAX_INDEL_LENGTH;
+use crate::config::defaults::{MAX_INDEL_LENGTH, MAX_PEAK_HEIGHT, MAX_REFERENCE_LENGTH};
 use crate::error::{Error, Result};
 use crate::model::reference::ReferenceTopology;
 
@@ -58,6 +58,9 @@ pub struct AlignmentConfig {
 #[derive(Debug, Clone)]
 pub struct VariantCallingConfig {
     pub(crate) max_indel_length: usize,
+    pub(crate) minimum_peak_height: i32,
+    pub(crate) relative_quality_threshold: u8,
+    pub(crate) regions: Vec<[usize; 2]>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -109,13 +112,16 @@ struct RawAlignmentConfig {
 #[serde(deny_unknown_fields)]
 struct RawVariantCallingConfig {
     max_indel_length: usize,
+    minimum_peak_height: i32,
+    relative_quality_threshold: u8,
+    regions: Vec<[usize; 2]>,
 }
 
 impl RawConfig {
     pub(super) fn validate(self, source_path: PathBuf, source_sha256: String) -> Result<Config> {
-        if self.schema_version != 1 {
+        if self.schema_version != 2 {
             return Err(Error::Config(format!(
-                "unsupported schema_version {}; expected 1",
+                "unsupported schema_version {}; expected 2",
                 self.schema_version
             )));
         }
@@ -177,6 +183,34 @@ impl RawConfig {
                 "variant_calling.max_indel_length must be in 1..={MAX_INDEL_LENGTH}"
             )));
         }
+        if self.variant_calling.minimum_peak_height <= 0
+            || self.variant_calling.minimum_peak_height > MAX_PEAK_HEIGHT
+        {
+            return Err(Error::Config(format!(
+                "variant_calling.minimum_peak_height must be in 1..={MAX_PEAK_HEIGHT}"
+            )));
+        }
+        if self.variant_calling.relative_quality_threshold
+            >= self.quality_control.max_relative_quality_score
+        {
+            return Err(Error::Config(
+                "variant_calling.relative_quality_threshold must be less than quality_control.max_relative_quality_score"
+                    .into(),
+            ));
+        }
+        if self.variant_calling.regions.is_empty() {
+            return Err(Error::Config(
+                "variant_calling.regions must contain at least one inclusive range".into(),
+            ));
+        }
+        for (index, region) in self.variant_calling.regions.iter().enumerate() {
+            let [start, end] = *region;
+            if start == 0 || start > end || end > MAX_REFERENCE_LENGTH {
+                return Err(Error::Config(format!(
+                    "variant_calling.regions[{index}] must satisfy 1 <= start <= end <= {MAX_REFERENCE_LENGTH}"
+                )));
+            }
+        }
         Ok(Config {
             reference: ReferenceConfig {
                 topology: self.reference.topology,
@@ -202,6 +236,9 @@ impl RawConfig {
             },
             variant_calling: VariantCallingConfig {
                 max_indel_length: self.variant_calling.max_indel_length,
+                minimum_peak_height: self.variant_calling.minimum_peak_height,
+                relative_quality_threshold: self.variant_calling.relative_quality_threshold,
+                regions: self.variant_calling.regions,
             },
             source_path,
             source_sha256,
@@ -220,4 +257,75 @@ fn require_finite_range(name: &str, value: f64, minimum: f64, maximum: f64) -> R
         )));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const VALID: &str = "schema_version=2\n[reference]\ntopology='circular'\n[basecalling]\nsecondary_peak_ratio=0.33\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.1\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.8\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[16024,16365],[73,340],[438,576]]\n";
+
+    fn validate(text: &str) -> std::result::Result<Config, Box<dyn std::error::Error>> {
+        let raw: RawConfig = toml::from_str(text)?;
+        Ok(raw.validate(PathBuf::from("signal.toml"), String::new())?)
+    }
+
+    #[test]
+    fn accepts_variant_filter_list_of_lists() -> std::result::Result<(), Box<dyn std::error::Error>>
+    {
+        let config = validate(VALID)?;
+
+        assert_eq!(config.variant_calling.minimum_peak_height, 150);
+        assert_eq!(config.variant_calling.relative_quality_threshold, 30);
+        assert_eq!(
+            config.variant_calling.regions,
+            vec![[16024, 16365], [73, 340], [438, 576]]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn rejects_old_schema_and_missing_filter_fields() {
+        assert!(validate(&VALID.replace("schema_version=2", "schema_version=1")).is_err());
+        assert!(
+            toml::from_str::<RawConfig>(&VALID.replace("minimum_peak_height=150\n", "")).is_err()
+        );
+    }
+
+    #[test]
+    fn rejects_invalid_filter_thresholds_and_regions() {
+        for invalid in [
+            VALID.replace("minimum_peak_height=150", "minimum_peak_height=0"),
+            VALID.replace("minimum_peak_height=150", "minimum_peak_height=32768"),
+            VALID.replace(
+                "relative_quality_threshold=30",
+                "relative_quality_threshold=60",
+            ),
+            VALID.replace("regions=[[16024,16365],[73,340],[438,576]]", "regions=[]"),
+            VALID.replace(
+                "regions=[[16024,16365],[73,340],[438,576]]",
+                "regions=[[0,1]]",
+            ),
+            VALID.replace(
+                "regions=[[16024,16365],[73,340],[438,576]]",
+                "regions=[[2,1]]",
+            ),
+            VALID.replace(
+                "regions=[[16024,16365],[73,340],[438,576]]",
+                "regions=[[1,50001]]",
+            ),
+        ] {
+            assert!(
+                validate(&invalid).is_err(),
+                "unexpectedly accepted {invalid}"
+            );
+        }
+        assert!(
+            toml::from_str::<RawConfig>(&VALID.replace(
+                "regions=[[16024,16365],[73,340],[438,576]]",
+                "regions=[[1]]"
+            ))
+            .is_err()
+        );
+    }
 }
