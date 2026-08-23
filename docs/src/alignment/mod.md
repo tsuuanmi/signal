@@ -9,8 +9,8 @@ deterministic affine-gap Gotoh scoring, and selects the best-supported strand.
 
 - Re-export `align_best` as the module boundary.
 - Coordinate scoring, traceback, and forward/reverse orientation selection.
-- Return the selected orientation, score, reference segments, gapped rows, and
-  alignment metrics.
+- Return the selected internal orientation, score, reference segments, metrics,
+  and per-column coordinates without duplicate gapped-row strings.
 
 ## Non-responsibilities
 
@@ -22,13 +22,14 @@ output formatting.
 - `align_best(qc, reference, config) -> Result<Alignment>`: the public entry
   point, re-exported from `orient`.
 - Child modules: `scoring` (affine scores and state ordering), `gotoh` (DP
-  matrices), `traceback` (gapped rows and metrics), `orient` (strand selection
+  matrices), `traceback` (aligned columns and metrics), `orient` (strand selection
   and coordinate projection).
 
 ## Invariants and errors
 
-The complete retained query is consumed; reference flanks may be free. Gapped
-rows have equal lengths. Tie order and scores are explicit and deterministic.
+The complete retained query is consumed; reference flanks may be free. The
+selected model retains one ordered column representation rather than duplicate
+row strings. Tie order and scores are explicit and deterministic.
 Ambiguous orientation or sub-threshold identity returns `Error::Alignment`.
 
 ## Dependencies

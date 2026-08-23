@@ -1,15 +1,13 @@
-//! Projection of variant-associated calls into compact signal records.
+//! Projection of variant-associated calls into concise signal records.
 
 use crate::error::{Error, Result};
-use crate::model::basecalls::{BaseCall, BaseCalls, ChannelPeak};
+use crate::model::basecalls::BaseCalls;
 use crate::model::coordinate::reference_one_based;
-use crate::model::quality::{CallQuality, QualityControlResult};
-use crate::model::result::{
-    ChannelPeaksResult, PeakResult, VariantCallResult, VariantQualityResult, VariantResult,
-};
-use crate::model::variant::{Variant, VariantCallMapping};
+use crate::model::quality::QualityControlResult;
+use crate::model::result::{VariantCallResult, VariantResult};
+use crate::model::variant::{Variant, VariantCallMapping, VariantCallRole};
 
-/// Projects normalized variants and joins their original calls to peaks and quality.
+/// Projects normalized variants and joins their original calls to essential evidence.
 pub(super) fn project(
     variants: Vec<Variant>,
     calls: &BaseCalls,
@@ -32,13 +30,10 @@ fn project_variant(
         .map(|mapping| project_call(mapping, calls, quality))
         .collect::<Result<Vec<_>>>()?;
     Ok(VariantResult {
-        contig: variant.contig,
         position: variant.position_1based,
         reference: variant.reference,
         alternate: variant.alternate,
         kind: variant.kind,
-        classification: variant.classification,
-        normalization: variant.normalization,
         calls: projected_calls,
     })
 }
@@ -61,6 +56,7 @@ fn project_call(
             "variant call index {index} does not match call/quality records"
         )));
     }
+    let supporting = mapping.role == VariantCallRole::Supporting;
     Ok(VariantCallResult {
         role: mapping.role,
         index,
@@ -71,34 +67,13 @@ fn project_call(
         ploc: call.ploc_0based,
         primary: call.primary,
         ambiguity: call.ambiguity,
-        peaks: channel_peaks(call),
-        quality: quality_result(score),
+        maximum_peak_height: supporting.then(|| {
+            call.peaks
+                .iter()
+                .map(|peak| peak.height)
+                .max()
+                .unwrap_or_default()
+        }),
+        relative_quality: supporting.then_some(score.relative_quality_score),
     })
-}
-
-fn channel_peaks(call: &BaseCall) -> ChannelPeaksResult {
-    ChannelPeaksResult {
-        a: peak_result(call.peaks[0]),
-        c: peak_result(call.peaks[1]),
-        g: peak_result(call.peaks[2]),
-        t: peak_result(call.peaks[3]),
-    }
-}
-
-const fn peak_result(peak: ChannelPeak) -> PeakResult {
-    PeakResult {
-        height: peak.height,
-        position: peak.position_0based,
-        source: peak.source,
-    }
-}
-
-const fn quality_result(quality: &CallQuality) -> VariantQualityResult {
-    VariantQualityResult {
-        relative_score: quality.relative_quality_score,
-        penalty: quality.penalty,
-        phred_calibrated: quality.phred_calibrated,
-        vendor_score: quality.vendor_quality,
-        vendor_score_applies: quality.vendor_quality_applies,
-    }
 }

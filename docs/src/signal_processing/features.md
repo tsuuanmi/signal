@@ -10,7 +10,10 @@ Calculates bounded rolling baseline, noise, and peak-SNR observations from analy
 - Estimate each channel baseline by median and noise sigma from first-difference MAD.
 - Apply a one-channel-unit noise floor so every result remains finite.
 - Baseline-correct and rank the four selected channel peaks per call.
-- Record minimum primary SNR, maximum secondary SNR, and the configured candidate-noisy decision.
+- Retain minimum primary SNR, maximum secondary SNR, and the configured
+  candidate-noisy decision in each internal window. Pipeline logging computes its
+  aggregate maximum secondary SNR from those windows, while compact v5 serializes
+  neither rolling windows nor maximum secondary SNR.
 - Round output and comparison metrics to six decimal places.
 
 ## Non-responsibilities

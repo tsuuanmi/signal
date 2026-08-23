@@ -6,6 +6,7 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace `signal.analysis/v4` with compact `signal.analysis/v5`: retain provenance hashes/software, call count and trim, merged noisy regions, alignment summary, normalized variants with concise call mappings, and warning counts; remove filenames, full sequences, rolling windows, gapped rows, method constants, full peaks, vendor data, and redundant fields without a compatibility output.
 - Replace `signal.analysis/v3` with `signal.analysis/v4`, adding bounded rolling signal-quality windows, merged candidate-noisy regions, and a signal-processing method identity without a v3 compatibility path.
 - Replace strict configuration schema version 3 with version 4, requiring the minimum two-window noisy-interval setting.
 - Replace `signal.analysis/v1` with compact `signal.analysis/v3`: omit bulk records; use concise coordinate names and direct mapped variant `calls` with A/C/G/T peaks plus relative/vendor quality.
@@ -36,14 +37,17 @@ All notable changes to this project are documented here.
 - Basecalling is `signal.peak_recall/v2`: one/two/three qualifying channels behave canonical / strongest+IUPAC / strongest+unresolved-ambiguity, and four produce unresolved primary+ambiguity N.
 - Variant calling is `signal.primary_difference/v3`: normalized anchors must lie in configured inclusive regions; SNV and every inserted-base supporting call must meet the configured maximum-channel peak floor and strictly exceed the relative-quality threshold; deletion and insertion flanks are exempt.
 - Alignment scores are 64-bit (`i64`) while configuration score deltas remain 32-bit (`i32`).
-- An origin-crossing circular alignment sets a boolean `reference_origin_wrap` in the warning summary instead of an info warning string.
+- Origin crossing is represented once by `alignment.wraps_origin`; Rust still counts it in the operational warning summary without duplicating it in JSON.
 - `P2BA.1` is ignored; only optional `PBAS.2` and `PCON.2` vendor evidence is consumed.
 - Relative quality scores manually clamp the score fraction to `[0, 1]` so results stay in `[0, max_relative_quality_score]`.
 - Operational logs now record concise aggregate metrics and timings for every processing stage, exact warning categories, stage-aware failures, and each removed variant's kind/position/reasons without alleles or raw scientific payloads.
 - The bundled `variant_calling.minimum_peak_height` is raised from 100 to 150.
+- The external batch runner now preflights and builds before destructive cleanup, removes only selected sample result directories and matching selected logs, rejects ambiguous identities, collisions, and symlinked cleanup targets, preserves unselected artifacts, and reruns the selected workload from a clean state. A later analysis failure may leave partial new outputs.
+- Rename the stale documentation names to `docs/delivery-record.md` and `docs/requirements.md`.
 
 ### Fixed
 
+- Synchronize batch result directories after atomic publication and roll back a new destination when durability cannot be confirmed.
 - Accept uppercase IUPAC vendor base evidence and both one-byte ABIF PCON element representations without changing signal-derived calls.
 - Avoid stale PID-only temporary-output name collisions and remove a just-published target when final synchronization fails.
 - Select the best span-valid circular traceback when a higher-scoring unbounded candidate exists in the doubled reference.

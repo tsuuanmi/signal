@@ -19,7 +19,6 @@ pub enum PeakSource {
 pub struct ChannelPeak {
     pub(crate) base: Nucleotide,
     pub(crate) height: i32,
-    pub(crate) position_0based: usize,
     pub(crate) source: PeakSource,
 }
 
@@ -37,12 +36,11 @@ pub struct BaseCall {
     pub(crate) vendor_agrees: Option<bool>,
 }
 
-/// Ordered calls and derived sequence strings.
+/// Ordered calls and the primary sequence consumed by downstream stages.
 #[derive(Debug, Clone)]
 pub struct BaseCalls {
     pub(crate) calls: Vec<BaseCall>,
     pub(crate) primary_sequence: String,
-    pub(crate) ambiguity_sequence: String,
 }
 
 impl BaseCalls {

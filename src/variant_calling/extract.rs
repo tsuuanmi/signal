@@ -217,9 +217,6 @@ mod tests {
         Alignment {
             orientation: Orientation::Forward,
             score: 0,
-            gapped_query: columns.iter().map(|column| column.query_base).collect(),
-            gapped_reference: columns.iter().map(|column| column.reference_base).collect(),
-            operation_runs: String::new(),
             reference_segments: Vec::new(),
             wraps_origin: false,
             metrics: AlignmentMetrics {

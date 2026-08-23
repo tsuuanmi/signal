@@ -7,9 +7,8 @@ use crate::model::basecalls::BaseCalls;
 use crate::model::quality::QualityControlResult;
 use crate::model::reference::Reference;
 use crate::model::result::{
-    AlignmentResult, AnalysisResult, IntervalResult, MetaResult, MethodsResult, NoisyRegionResult,
-    ReferenceResult, SequenceResult, SignalResult, SignalWindowResult, TraceResult,
-    WarningSummaryResult,
+    AlignmentResult, AnalysisResult, InputResult, IntervalResult, NoisyRegionResult,
+    ProvenanceResult, ReadResult, ReferenceResult, SignalQualityResult, WarningSummaryResult,
 };
 use crate::model::signal::SignalAnalysis;
 use crate::model::trace::Chromatogram;
@@ -28,7 +27,7 @@ pub(crate) struct CompletedAnalysis {
     pub(crate) variants: VariantCallingResult,
 }
 
-/// Builds the compact v4 document without filesystem side effects.
+/// Builds the compact v5 document without filesystem side effects.
 pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     let CompletedAnalysis {
         config,
@@ -40,42 +39,23 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
         alignment,
         variants,
     } = completed;
-    let warnings = warning_summary(&calls, &alignment, variants.excluded_count());
+    let warnings = warning_summary(&calls, variants.excluded_count());
     let variant_results = variant::project(variants.reported, &calls, &quality)?;
-    let signal_result = SignalResult {
-        windows: signal
-            .windows
-            .into_iter()
-            .map(|window| SignalWindowResult {
-                calls: IntervalResult {
-                    start: window.call_start_0based,
-                    end: window.call_end_0based_exclusive,
-                },
-                samples: IntervalResult {
-                    start: window.sample_start_0based,
-                    end: window.sample_end_0based_exclusive,
-                },
-                minimum_primary_snr: window.minimum_primary_snr,
-                maximum_secondary_snr: window.maximum_secondary_snr,
-                candidate_noisy: window.candidate_noisy,
-            })
-            .collect(),
-        noisy_regions: signal
-            .noisy_regions
-            .into_iter()
-            .map(|region| NoisyRegionResult {
-                calls: IntervalResult {
-                    start: region.call_start_0based,
-                    end: region.call_end_0based_exclusive,
-                },
-                samples: IntervalResult {
-                    start: region.sample_start_0based,
-                    end: region.sample_end_0based_exclusive,
-                },
-                minimum_primary_snr: region.minimum_primary_snr,
-            })
-            .collect(),
-    };
+    let noisy_regions = signal
+        .noisy_regions
+        .into_iter()
+        .map(|region| NoisyRegionResult {
+            calls: IntervalResult {
+                start: region.call_start_0based,
+                end: region.call_end_0based_exclusive,
+            },
+            samples: IntervalResult {
+                start: region.sample_start_0based,
+                end: region.sample_end_0based_exclusive,
+            },
+            minimum_primary_snr: region.minimum_primary_snr,
+        })
+        .collect();
     let reference_segments = alignment
         .reference_segments
         .into_iter()
@@ -86,49 +66,35 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
         .collect();
 
     Ok(AnalysisResult {
-        schema_version: "signal.analysis/v4",
-        meta: MetaResult {
-            program: "signal",
-            version: env!("CARGO_PKG_VERSION"),
-            deterministic: true,
-            input: TraceResult {
-                file_name: trace.source_name,
+        schema_version: "signal.analysis/v5",
+        provenance: ProvenanceResult {
+            software_version: env!("CARGO_PKG_VERSION"),
+            input: InputResult {
                 sha256: trace.source_sha256,
             },
             reference: ReferenceResult {
                 name: reference.name,
                 topology: reference.topology,
-                sequence_sha256: reference.sequence_sha256,
+                sha256: reference.sequence_sha256,
             },
             configuration_sha256: config.source_sha256,
-            methods: MethodsResult {
-                basecalling: "signal.peak_recall/v2",
-                signal_processing: "signal.windowed_snr/v1",
-                quality_control: "signal.apollo_relative_quality/v1",
-                trimming: "signal.apollo_end_trim/v1",
-                alignment: "signal.gotoh_semiglobal/v1",
-                variant_calling: "signal.primary_difference/v3",
-            },
         },
-        sequence: SequenceResult {
-            primary: calls.primary_sequence,
-            ambiguity: calls.ambiguity_sequence,
-            retained: quality.retained_sequence,
+        read: ReadResult {
+            call_count: calls.len(),
             trim: IntervalResult {
                 start: quality.trim_start_0based,
                 end: quality.trim_end_0based_exclusive,
             },
         },
-        signal: signal_result,
+        signal_quality: SignalQualityResult { noisy_regions },
         alignment: AlignmentResult {
             orientation: alignment.orientation,
-            score: alignment.score,
-            metrics: alignment.metrics,
+            callable_bases: alignment.metrics.callable_columns,
+            identity: alignment.metrics.callable_identity,
+            unresolved_bases: alignment.metrics.unresolved_query_bases,
+            gap_opens: alignment.metrics.gap_opens,
             reference_segments,
             wraps_origin: alignment.wraps_origin,
-            operation_runs: alignment.operation_runs,
-            gapped_query: alignment.gapped_query,
-            gapped_reference: alignment.gapped_reference,
         },
         variants: variant_results,
         warnings,
@@ -142,11 +108,7 @@ pub(crate) fn serialize(result: &AnalysisResult) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 
-fn warning_summary(
-    calls: &BaseCalls,
-    alignment: &Alignment,
-    excluded_variant_candidates: usize,
-) -> WarningSummaryResult {
+fn warning_summary(calls: &BaseCalls, excluded_variant_candidates: usize) -> WarningSummaryResult {
     let unresolved_primary_calls = calls
         .calls
         .iter()
@@ -157,23 +119,9 @@ fn warning_summary(
         .iter()
         .filter(|call| call.ambiguity == 'N' && call.qualifying_channels.len() > 2)
         .count();
-    let vendor_disagreements = calls
-        .calls
-        .iter()
-        .filter(|call| call.vendor_agrees == Some(false))
-        .count();
-    let reference_origin_wrap = alignment.wraps_origin;
-    let total = unresolved_primary_calls
-        + multi_channel_unresolved_calls
-        + vendor_disagreements
-        + excluded_variant_candidates
-        + usize::from(reference_origin_wrap);
     WarningSummaryResult {
-        total,
         unresolved_primary_calls,
         multi_channel_unresolved_calls,
-        vendor_disagreements,
         excluded_variant_candidates,
-        reference_origin_wrap,
     }
 }

@@ -1,9 +1,8 @@
-//! Compact serializable `signal.analysis/v4` contract.
+//! Compact serializable `signal.analysis/v5` contract.
 
 use serde::Serialize;
 
-use crate::model::alignment::{AlignmentMetrics, Orientation};
-use crate::model::basecalls::PeakSource;
+use crate::model::alignment::Orientation;
 use crate::model::reference::ReferenceTopology;
 use crate::model::variant::{VariantCallRole, VariantKind};
 
@@ -11,30 +10,26 @@ use crate::model::variant::{VariantCallRole, VariantKind};
 #[derive(Debug, Serialize)]
 pub struct AnalysisResult {
     pub(crate) schema_version: &'static str,
-    pub(crate) meta: MetaResult,
-    pub(crate) sequence: SequenceResult,
-    pub(crate) signal: SignalResult,
+    pub(crate) provenance: ProvenanceResult,
+    pub(crate) read: ReadResult,
+    pub(crate) signal_quality: SignalQualityResult,
     pub(crate) alignment: AlignmentResult,
     pub(crate) variants: Vec<VariantResult>,
     pub(crate) warnings: WarningSummaryResult,
 }
 
-/// Minimal deterministic provenance and input identity.
+/// Deterministic identities needed to reproduce an analysis.
 #[derive(Debug, Serialize)]
-pub struct MetaResult {
-    pub(crate) program: &'static str,
-    pub(crate) version: &'static str,
-    pub(crate) deterministic: bool,
-    pub(crate) input: TraceResult,
+pub struct ProvenanceResult {
+    pub(crate) software_version: &'static str,
+    pub(crate) input: InputResult,
     pub(crate) reference: ReferenceResult,
     pub(crate) configuration_sha256: String,
-    pub(crate) methods: MethodsResult,
 }
 
-/// Trace identity without decoded bulk data.
+/// Trace identity without an identifying filename or decoded bulk data.
 #[derive(Debug, Serialize)]
-pub struct TraceResult {
-    pub(crate) file_name: String,
+pub struct InputResult {
     pub(crate) sha256: String,
 }
 
@@ -43,26 +38,13 @@ pub struct TraceResult {
 pub struct ReferenceResult {
     pub(crate) name: String,
     pub(crate) topology: ReferenceTopology,
-    pub(crate) sequence_sha256: String,
+    pub(crate) sha256: String,
 }
 
-/// Versioned scientific method identifiers.
+/// Call count and retained interval without complete sequence strings.
 #[derive(Debug, Serialize)]
-pub struct MethodsResult {
-    pub(crate) basecalling: &'static str,
-    pub(crate) signal_processing: &'static str,
-    pub(crate) quality_control: &'static str,
-    pub(crate) trimming: &'static str,
-    pub(crate) alignment: &'static str,
-    pub(crate) variant_calling: &'static str,
-}
-
-/// Core sequence and trim result.
-#[derive(Debug, Serialize)]
-pub struct SequenceResult {
-    pub(crate) primary: String,
-    pub(crate) ambiguity: String,
-    pub(crate) retained: String,
+pub struct ReadResult {
+    pub(crate) call_count: usize,
     pub(crate) trim: IntervalResult,
 }
 
@@ -73,21 +55,10 @@ pub struct IntervalResult {
     pub(crate) end: usize,
 }
 
-/// Observation-only rolling signal features and merged noisy regions.
+/// Merged observation-only signal-quality regions.
 #[derive(Debug, Serialize)]
-pub struct SignalResult {
-    pub(crate) windows: Vec<SignalWindowResult>,
+pub struct SignalQualityResult {
     pub(crate) noisy_regions: Vec<NoisyRegionResult>,
-}
-
-/// One full-width, stride-one rolling signal window.
-#[derive(Debug, Serialize)]
-pub struct SignalWindowResult {
-    pub(crate) calls: IntervalResult,
-    pub(crate) samples: IntervalResult,
-    pub(crate) minimum_primary_snr: f64,
-    pub(crate) maximum_secondary_snr: f64,
-    pub(crate) candidate_noisy: bool,
 }
 
 /// A union of overlapping or adjacent candidate-noisy windows.
@@ -98,29 +69,25 @@ pub struct NoisyRegionResult {
     pub(crate) minimum_primary_snr: f64,
 }
 
-/// Selected alignment only; losing orientation candidates are omitted.
+/// Concise summary of the selected alignment.
 #[derive(Debug, Serialize)]
 pub struct AlignmentResult {
     pub(crate) orientation: Orientation,
-    pub(crate) score: i64,
-    pub(crate) metrics: AlignmentMetrics,
+    pub(crate) callable_bases: usize,
+    pub(crate) identity: f64,
+    pub(crate) unresolved_bases: usize,
+    pub(crate) gap_opens: usize,
     pub(crate) reference_segments: Vec<IntervalResult>,
     pub(crate) wraps_origin: bool,
-    pub(crate) operation_runs: String,
-    pub(crate) gapped_query: String,
-    pub(crate) gapped_reference: String,
 }
 
-/// Compact normalized variant with its associated chromatogram calls.
+/// Compact normalized variant with mapped trace calls.
 #[derive(Debug, Serialize)]
 pub struct VariantResult {
-    pub(crate) contig: String,
     pub(crate) position: usize,
     pub(crate) reference: String,
     pub(crate) alternate: String,
     pub(crate) kind: VariantKind,
-    pub(crate) classification: &'static str,
-    pub(crate) normalization: &'static str,
     pub(crate) calls: Vec<VariantCallResult>,
 }
 
@@ -129,55 +96,24 @@ pub struct VariantResult {
 pub struct VariantCallResult {
     pub(crate) role: VariantCallRole,
     pub(crate) index: usize,
-    /// One-based aligned reference position; absent for inserted calls.
+    /// One-based aligned reference position; absent for inserted supporting calls.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) position: Option<usize>,
     pub(crate) ploc: usize,
     pub(crate) primary: char,
     pub(crate) ambiguity: char,
-    pub(crate) peaks: ChannelPeaksResult,
-    pub(crate) quality: VariantQualityResult,
-}
-
-/// A/C/G/T peak evidence for one variant-associated call.
-#[derive(Debug, Serialize)]
-pub struct ChannelPeaksResult {
-    #[serde(rename = "A")]
-    pub(crate) a: PeakResult,
-    #[serde(rename = "C")]
-    pub(crate) c: PeakResult,
-    #[serde(rename = "G")]
-    pub(crate) g: PeakResult,
-    #[serde(rename = "T")]
-    pub(crate) t: PeakResult,
-}
-
-/// One selected channel peak.
-#[derive(Debug, Serialize)]
-pub struct PeakResult {
-    pub(crate) height: i32,
-    pub(crate) position: usize,
-    pub(crate) source: PeakSource,
-}
-
-/// Relative and optional applicable vendor quality for one call.
-#[derive(Debug, Serialize)]
-pub struct VariantQualityResult {
-    pub(crate) relative_score: u8,
-    pub(crate) penalty: i32,
-    pub(crate) phred_calibrated: bool,
+    /// Maximum A/C/G/T peak height; present only for supporting calls.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) vendor_score: Option<u8>,
-    pub(crate) vendor_score_applies: bool,
+    pub(crate) maximum_peak_height: Option<i32>,
+    /// Uncalibrated relative quality; present only for supporting calls.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) relative_quality: Option<u8>,
 }
 
-/// Counts of non-fatal conditions, replacing verbose per-call messages.
+/// Public non-fatal analysis counts.
 #[derive(Debug, Serialize)]
 pub struct WarningSummaryResult {
-    pub(crate) total: usize,
     pub(crate) unresolved_primary_calls: usize,
     pub(crate) multi_channel_unresolved_calls: usize,
-    pub(crate) vendor_disagreements: usize,
     pub(crate) excluded_variant_candidates: usize,
-    pub(crate) reference_origin_wrap: bool,
 }

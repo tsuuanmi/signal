@@ -12,7 +12,6 @@ pub(crate) fn call(trace: &Chromatogram, config: &BasecallingConfig) -> Result<B
     let windows = peak::windows(trace)?;
     let mut calls = Vec::with_capacity(trace.call_count());
     let mut primary_sequence = String::with_capacity(trace.call_count());
-    let mut ambiguity_sequence = String::with_capacity(trace.call_count());
 
     for (index, (&ploc, window)) in trace.base_locations.iter().zip(windows).enumerate() {
         let peaks = peak::peaks(trace, window, ploc);
@@ -56,7 +55,6 @@ pub(crate) fn call(trace: &Chromatogram, config: &BasecallingConfig) -> Result<B
         };
 
         primary_sequence.push(primary);
-        ambiguity_sequence.push(ambiguity);
         calls.push(BaseCall {
             index_0based: index,
             ploc_0based: ploc,
@@ -73,7 +71,6 @@ pub(crate) fn call(trace: &Chromatogram, config: &BasecallingConfig) -> Result<B
     Ok(BaseCalls {
         calls,
         primary_sequence,
-        ambiguity_sequence,
     })
 }
 
@@ -108,7 +105,14 @@ mod tests {
             },
         )?;
         assert_eq!(calls.primary_sequence, "AA");
-        assert_eq!(calls.ambiguity_sequence, "AA");
+        assert_eq!(
+            calls
+                .calls
+                .iter()
+                .map(|call| call.ambiguity)
+                .collect::<String>(),
+            "AA"
+        );
         Ok(())
     }
 
@@ -145,7 +149,14 @@ mod tests {
             },
         )?;
         assert_eq!(calls.primary_sequence, "AA");
-        assert_eq!(calls.ambiguity_sequence, "NN");
+        assert_eq!(
+            calls
+                .calls
+                .iter()
+                .map(|call| call.ambiguity)
+                .collect::<String>(),
+            "NN"
+        );
         Ok(())
     }
 
@@ -164,7 +175,14 @@ mod tests {
             },
         )?;
         assert_eq!(calls.primary_sequence, "NN");
-        assert_eq!(calls.ambiguity_sequence, "NN");
+        assert_eq!(
+            calls
+                .calls
+                .iter()
+                .map(|call| call.ambiguity)
+                .collect::<String>(),
+            "NN"
+        );
         assert!(
             calls
                 .calls

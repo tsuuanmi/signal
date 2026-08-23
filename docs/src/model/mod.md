@@ -24,15 +24,17 @@ No filesystem access, argument parsing, logging, or algorithm execution.
 - `signal`: rolling SNR windows and merged candidate-noisy regions.
 - `quality`: quality vector, trim bounds, and QC result.
 - `reference`: name, sequence, topology, and checksums.
-- `alignment`: orientation, interval, score, and gapped rows.
-- `variant`: normalized `Variant`, `VariantKind`, alleles, and mapped calls.
-- `result`: complete `AnalysisResult` matching JSON schema v4.
+- `alignment`: selected orientation, score, reference segments, metrics, and
+  per-column coordinates without final gapped-row duplication.
+- `variant`: normalized `Variant`, `VariantKind`, alleles, mappings, and exclusion
+  diagnostics without report-only labels.
+- `result`: compact `AnalysisResult` matching JSON schema v5.
 
 ## Invariants and errors
 
 Constructors and loaders enforce aligned vector lengths, valid nucleotide
-symbols, explicit coordinate systems, bounded qualities, and equal-length gapped
-rows. Model files have no I/O, CLI, configuration loading, or algorithm
+symbols, explicit coordinate systems, bounded qualities, and consistent internal
+records. Model files have no I/O, CLI, configuration loading, or algorithm
 dependencies.
 
 ## Dependencies

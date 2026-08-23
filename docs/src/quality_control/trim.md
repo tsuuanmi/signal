@@ -28,8 +28,9 @@ No middle-read masking, denoising, ML scoring, or variant filtering.
 - The retained interval must be at least `minimum_retained_bases` long;
   otherwise `Error::QualityControl`.
 - One quality record per call; trim bounds are within the call range.
-- Vendor quality applies only when present and the vendor call agrees with the
-  signal-derived call.
+- `vendor_quality_applies` is true only when PCON is present and PBAS agrees with
+  the signal-derived call. The vendor score itself is not copied into
+  `CallQuality` or compact v5 output.
 
 ## Dependencies
 
@@ -46,7 +47,9 @@ bases.
 
 ## Tests
 
-- `retains_a_uniform_read_and_applies_matching_vendor_quality`: verifies full-span retention and exact PBAS/primary quality applicability.
+- `retains_a_uniform_read_and_applies_matching_vendor_quality`: verifies full-span
+  retention and the applicability boolean for present PCON whose PBAS agrees with
+  the signal-derived primary call; it does not retain the PCON value.
 
 ## Status
 

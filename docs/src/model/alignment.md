@@ -6,8 +6,9 @@ Defines the pairwise alignment records with explicit strand and coordinates.
 
 ## Responsibilities
 
-- Represent the selected alignment only: orientation, score, gapped rows,
-  operation runs, reference segments, metrics, and per-column records.
+- Represent the selected internal alignment only: orientation, score, reference
+  segments, origin-wrap status, metrics, and per-column records used by variant
+  extraction.
 - Losing orientation candidates are not retained.
 
 ## Non-responsibilities
@@ -22,13 +23,14 @@ No scoring, traceback, or strand selection.
   callable identity, and unresolved query bases.
 - `AlignmentColumn`: one aligned column with query/reference bases and optional
   original indices.
-- `Alignment`: the selected alignment only — orientation, `i64` score, gapped
-  rows, operation runs, reference segments, origin-wrap flag, metrics, and
-  columns.
+- `Alignment`: the selected internal alignment only — orientation, `i64` score,
+  reference segments, origin-wrap flag, metrics, and columns. Gapped rows and
+  operation runs are not retained in this final model.
 
 ## Invariants and errors
 
-- Gapped query and reference rows have equal lengths.
+- Alignment columns retain enough query/reference and coordinate information for
+  variant extraction without retaining duplicate gapped strings.
 - Reference segments are half-open and within the reference.
 - Only one orientation is retained after selection; the rejected orientation is
   discarded and absent from the output.

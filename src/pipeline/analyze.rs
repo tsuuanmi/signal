@@ -158,6 +158,11 @@ fn run_logged(
     let stage_started = Instant::now();
     let signal =
         signal_processing::analyze(&inputs.trace, &calls, &inputs.config.signal_processing)?;
+    let maximum_secondary_snr = signal
+        .windows
+        .iter()
+        .map(|window| window.maximum_secondary_snr)
+        .fold(0.0_f64, f64::max);
     logger.info(
         module_path!(),
         line!(),
@@ -165,7 +170,7 @@ fn run_logged(
             concat!(
                 "event=signal_processing_completed elapsed_ms={} windows={} noisy_windows={} ",
                 "noisy_regions={} noisy_calls={} window_size_bases={} minimum_noisy_windows={} ",
-                "minimum_primary_snr={:.4}"
+                "minimum_primary_snr={:.4} maximum_secondary_snr={:.4}"
             ),
             stage_started.elapsed().as_millis(),
             signal.windows.len(),
@@ -174,7 +179,8 @@ fn run_logged(
             signal.noisy_call_count(),
             inputs.config.signal_processing.window_size_bases,
             inputs.config.signal_processing.minimum_noisy_windows,
-            inputs.config.signal_processing.minimum_primary_snr
+            inputs.config.signal_processing.minimum_primary_snr,
+            maximum_secondary_snr
         ),
     )?;
 
@@ -346,6 +352,14 @@ fn run_logged(
         )?;
     }
 
+    let excluded_variant_candidates = variants.excluded_count();
+    let reference_origin_wrap = alignment.wraps_origin;
+    let warning_total = unresolved_primary
+        + multi_channel_unresolved
+        + vendor_disagreements
+        + excluded_variant_candidates
+        + usize::from(reference_origin_wrap);
+
     *stage = "reporting";
     let stage_started = Instant::now();
     let output = inputs.output.clone();
@@ -359,7 +373,7 @@ fn run_logged(
         alignment,
         variants,
     })?;
-    if result.warnings.total > 0 {
+    if warning_total > 0 {
         logger.warn(
             module_path!(),
             line!(),
@@ -369,12 +383,12 @@ fn run_logged(
                     "multi_channel_unresolved_calls={} vendor_disagreements={} ",
                     "excluded_variant_candidates={} reference_origin_wrap={}"
                 ),
-                result.warnings.total,
-                result.warnings.unresolved_primary_calls,
-                result.warnings.multi_channel_unresolved_calls,
-                result.warnings.vendor_disagreements,
-                result.warnings.excluded_variant_candidates,
-                result.warnings.reference_origin_wrap
+                warning_total,
+                unresolved_primary,
+                multi_channel_unresolved,
+                vendor_disagreements,
+                excluded_variant_candidates,
+                reference_origin_wrap
             ),
         )?;
     }
@@ -395,7 +409,7 @@ fn run_logged(
             analysis_started.elapsed().as_millis(),
             schema_version,
             result_variants,
-            result.warnings.total,
+            warning_total,
             output.display().to_string(),
             bytes.len()
         ),

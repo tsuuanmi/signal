@@ -1,0 +1,76 @@
+{
+  "schema_version": "signal.analysis/v5",
+  "provenance": {
+    "software_version": "0.1.0",
+    "input": {
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    "reference": {
+      "name": "synthetic-reference",
+      "topology": "linear",
+      "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    "configuration_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+  },
+  "read": {
+    "call_count": 28,
+    "trim": {
+      "start": 2,
+      "end": 26
+    }
+  },
+  "signal_quality": {
+    "noisy_regions": [
+      {
+        "calls": {
+          "start": 8,
+          "end": 15
+        },
+        "samples": {
+          "start": 79,
+          "end": 151
+        },
+        "minimum_primary_snr": 4.125
+      }
+    ]
+  },
+  "alignment": {
+    "orientation": "forward",
+    "callable_bases": 24,
+    "identity": 0.9583333333333334,
+    "unresolved_bases": 0,
+    "gap_opens": 0,
+    "reference_segments": [
+      {
+        "start": 100,
+        "end": 124
+      }
+    ],
+    "wraps_origin": false
+  },
+  "variants": [
+    {
+      "position": 112,
+      "reference": "A",
+      "alternate": "G",
+      "kind": "SNV",
+      "calls": [
+        {
+          "role": "supporting",
+          "index": 13,
+          "position": 112,
+          "ploc": 132,
+          "primary": "G",
+          "ambiguity": "R",
+          "maximum_peak_height": 842,
+          "relative_quality": 37
+        }
+      ]
+    }
+  ],
+  "warnings": {
+    "unresolved_primary_calls": 0,
+    "multi_channel_unresolved_calls": 0,
+    "excluded_variant_candidates": 1
+  }
+}

@@ -95,9 +95,6 @@ pub(crate) fn align_best(
     Ok(Alignment {
         orientation: selected.orientation,
         score: raw.score,
-        gapped_query: raw.gapped_query.clone(),
-        gapped_reference: raw.gapped_reference.clone(),
-        operation_runs: raw.operation_runs.clone(),
         reference_segments: segments,
         wraps_origin,
         metrics: raw.metrics.clone(),

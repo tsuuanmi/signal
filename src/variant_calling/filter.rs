@@ -146,7 +146,6 @@ mod tests {
                 peaks: std::array::from_fn(|channel| ChannelPeak {
                     base: Nucleotide::ALL[channel],
                     height,
-                    position_0based: index * 4,
                     source: PeakSource::LocalMaximum,
                 }),
                 primary: 'A',
@@ -162,15 +161,12 @@ mod tests {
                 index_0based: index,
                 penalty: 0,
                 relative_quality_score: score,
-                phred_calibrated: false,
-                vendor_quality: None,
                 vendor_quality_applies: false,
             })
             .collect::<Vec<_>>();
         (
             BaseCalls {
                 primary_sequence: "A".repeat(calls.len()),
-                ambiguity_sequence: "A".repeat(calls.len()),
                 calls,
             },
             QualityControlResult {
@@ -197,8 +193,6 @@ mod tests {
             reference: "A".into(),
             alternate: "T".into(),
             kind,
-            classification: "primary_sequence_difference",
-            normalization: "linear_left",
             calls,
         }
     }

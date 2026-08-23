@@ -101,9 +101,9 @@ primary and ambiguity symbols.
 
 Calculates observation-only signal-quality features from the immutable analyzed channels and basecalling evidence. It uses full-width, stride-one windows of configured size `5..=10` calls. Each base call retains the sample interval used for peak selection, so a rolling call interval maps to one exact channel-sample span.
 
-For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison and output.
+For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every internal window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison; compact v5 serializes only each merged region's minimum primary SNR.
 
-Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows remain visible in `signal.windows` but do not form a noisy interval. Clean gaps are never filled. These annotations do not alter calls, quality, trimming, alignment, warning totals, or variant eligibility. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
+Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows do not form a noisy interval. Clean gaps are never filled. Windows remain internal; compact v5 emits only merged regions. These annotations do not alter calls, quality, trimming, alignment, warning totals, or variant eligibility. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
 
 ## Stage 4 — Quality control (`signal.apollo_relative_quality/v1`,
 `signal.apollo_end_trim/v1`)
@@ -192,9 +192,10 @@ compiled cell cap.
 
 ### Substep 5.3 — Traceback
 
-The traceback decodes the selected path into equal-length gapped query and
+The traceback internally decodes the selected path into equal-length gapped query and
 gapped reference strings, an operation-run string (e.g. `5M`, `3M1I1M`), and
-alignment metrics. When multiple paths tie, a documented state order
+alignment metrics. Compact v5 emits only the selected alignment summary and
+reference segments, not the rows, operation runs, or score. When multiple paths tie, a documented state order
 (match > deletion > insertion) makes the result deterministic. Metrics are:
 
 - `exact_matches`, `mismatches`, `gap_opens`;
@@ -247,13 +248,16 @@ Reported variants are normalized:
   (`circular_canonical`). Repeat normalization walks the whole circle, so the
   resulting representation is anchor-independent.
 
-Each variant records its contig, 1-based `position`, reference/alternate alleles,
-kind (`SNV`, `INS`, `DEL`), classification, normalization, and direct `calls`.
-Every mapped call has its original 0-based `index`, ABIF `ploc`, optional aligned
-1-based biological `position`, four channel peaks, and quality. Inserted supporting
-calls omit biological position; deletions carry aligned flanks only. The emitted
-reference allele is validated against the supplied reference. Normalization
-may move the allele representation without changing the observed call mappings.
+Internally each variant retains its contig, 1-based position, reference/alternate
+alleles, kind, normalization, and direct call mappings. Compact v5 emits only
+`position`, `reference`, `alternate`, `kind`, and `calls`. Every mapped call keeps
+its original 0-based `index`, ABIF `ploc`, trace-strand `primary`/`ambiguity`, and
+optional aligned 1-based biological `position`. Supporting calls additionally
+emit only `maximum_peak_height` and uncalibrated `relative_quality`; full channel
+peaks, penalties, and vendor evidence are omitted. Inserted supporting calls omit
+biological position; deletions carry aligned flanks only. The emitted reference
+allele is validated against the supplied reference. Normalization may move the
+allele representation without changing the observed call mappings.
 
 ### Substep 6.3 — Configured eligibility
 
@@ -279,10 +283,14 @@ deduplicated.
 
 ## Output
 
-The completed result is reduced to core metadata, sequences, rolling signal-quality windows and merged candidate-noisy regions, selected alignment,
-warning counts, and variants with local peak/quality evidence. Full channel arrays
-and non-variant per-call records are not serialized. The document is published
-atomically to `results/<trace-stem>.json`. Operational records are appended
+The completed `signal.analysis/v5` result contains compact provenance
+hashes/software, read count and trim bounds, merged candidate-noisy regions, the
+selected alignment summary, normalized variants with concise call mappings and
+supporting peak/relative-quality scalars, and warning counts. It omits filenames,
+full sequences, individual rolling windows, gapped rows, operation runs, method
+constants, full peaks, vendor data, and redundant fields. The strict configuration
+remains schema version 4. No compatibility result is emitted. The document is
+published atomically to `results/<trace-stem>.json` without overwriting. Operational records are appended
 separately to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`) and are not part
 of deterministic JSON. One run-correlated record summarizes input/decode,
 basecalling, signal processing, quality control, alignment, variant calling, and publication
@@ -292,8 +300,8 @@ categories; ERROR records identify the active failed stage. Records omit complet
 sequences, alleles, region contents, per-call peaks, alignment strings, and JSON
 bodies. The JSON shape is defined in
 [`json-output.md`](json-output.md), validated by
-[`schemas/analysis-v4.schema.json`](schemas/analysis-v4.schema.json), and shown in
-[`examples/analysis-v4.example.json`](examples/analysis-v4.example.json).
+[`schemas/analysis-v5.schema.json`](schemas/analysis-v5.schema.json), and shown in
+[`examples/analysis-v5.example.json`](examples/analysis-v5.example.json).
 
 ## Biological limitations
 

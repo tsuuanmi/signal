@@ -4,7 +4,7 @@
 
 Signal reads the analyzed ABIF `DATA.9`–`DATA.12` arrays in canonical A/C/G/T order. These are instrument-analyzed fluorescence channels, not raw detector channels. The current ABIF boundary does not retain a spectral matrix, mobility model, or raw-channel baseline metadata.
 
-The `signal.windowed_snr/v1` stage is deliberately observational. It annotates rolling windows and candidate-noisy regions but does not smooth channels, re-call bases, trim internal sequence, change an alignment, or remove a variant.
+The `signal.windowed_snr/v1` stage is deliberately observational. It calculates rolling windows internally and emits only merged candidate-noisy regions in compact v5; it does not smooth channels, re-call bases, trim internal sequence, change an alignment, or remove a variant.
 
 ## Coordinate domains
 
@@ -25,9 +25,9 @@ noise_sigma = max(1, MAD(first_difference(samples)) / (0.67448975 × sqrt(2)))
 peak_snr = max(0, selected_peak_height - baseline) / noise_sigma
 ```
 
-The one-unit floor reflects signed-short quantization and prevents NaN or infinity. Within each call, baseline-corrected selected peaks are ranked deterministically by value and then A/C/G/T order. A window records its minimum primary SNR and maximum secondary SNR. Values are rounded to six decimal places before threshold comparison and serialization.
+The one-unit floor reflects signed-short quantization and prevents NaN or infinity. Within each call, baseline-corrected selected peaks are ranked deterministically by value and then A/C/G/T order. A window records its minimum primary SNR and maximum secondary SNR internally. Values are rounded to six decimal places before threshold comparison; only each merged region's minimum primary SNR is serialized.
 
-A window is `candidate_noisy` only when its minimum primary SNR is strictly below the configured threshold. Overlapping or adjacent candidate windows are unioned; clean gaps are never filled. Secondary SNR is reported but does not make a window noisy because a strong secondary peak may be real mixed signal.
+A window is `candidate_noisy` only when its minimum primary SNR is strictly below the configured threshold. Overlapping or adjacent candidate windows are unioned; clean gaps are never filled. Secondary SNR participates only in internal observation and does not make a window noisy because a strong secondary peak may be real mixed signal. Compact v5 omits individual windows and secondary-SNR values.
 
 ## Interpretation limits
 

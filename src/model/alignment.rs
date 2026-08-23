@@ -44,9 +44,6 @@ pub struct AlignmentColumn {
 pub struct Alignment {
     pub(crate) orientation: Orientation,
     pub(crate) score: i64,
-    pub(crate) gapped_query: String,
-    pub(crate) gapped_reference: String,
-    pub(crate) operation_runs: String,
     pub(crate) reference_segments: Vec<ReferenceSegment>,
     pub(crate) wraps_origin: bool,
     pub(crate) metrics: AlignmentMetrics,

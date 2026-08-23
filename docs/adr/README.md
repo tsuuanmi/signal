@@ -15,3 +15,4 @@
 | [0011](0011-compact-variant-focused-json.md) | Compact variant-focused JSON | Superseded in part by ADR-0012 |
 | [0012](0012-concise-mapped-variant-calls.md) | Concise mapped variant calls | Superseded in part by ADR-0013 |
 | [0013](0013-observational-signal-quality.md) | Observational rolling signal quality | Accepted |
+| [0014](0014-compact-result-summary.md) | Compact v5 result summary | Accepted |

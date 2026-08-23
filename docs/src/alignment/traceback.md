@@ -9,8 +9,8 @@ alignment metrics.
 
 - Walk the packed traceback from a chosen endpoint back to the query start,
   producing ordered `RawColumn` records.
-- Build the gapped query and reference strings and the compact operation-run
-  string (e.g. `3M1I1M`).
+- Build internal gapped query and reference strings used to distinguish equal-score
+  placements; operation-run serialization is not retained.
 - Count exact matches, mismatches, gap opens, callable columns, and unresolved
   query bases, and derive callable identity.
 
@@ -22,20 +22,21 @@ No dynamic-programming scoring, strand selection, or variant extraction.
 
 - `RawColumn`: one aligned column with query/reference bases and optional
   original indices.
-- `RawAlignment`: score, reference span, gapped rows, operation runs, columns,
-  and `AlignmentMetrics`.
+- `RawAlignment`: score, reference span, aligned columns, and `AlignmentMetrics`;
+  gapped-row and operation-run strings are not duplicated.
 - `TracebackInput`: the packed trace, dimensions, endpoint, state, and score.
 - `decode(input) -> Result<RawAlignment>`: performs the traceback walk.
-- `operation_runs(columns) -> (String, usize)`: run-length encodes operations and
-  counts gap opens.
+- `gap_open_count(columns) -> usize`: counts transitions into insertion/deletion
+  runs without serializing an operation string.
 
 ## Invariants and errors
 
 - Every traceback index is bounds-checked; overflow or out-of-range access
   returns `Error::Alignment`.
 - Reaching a match or deletion state at reference column zero is an error.
-- Gapped rows are always equal length; a column is either a match, an insertion
-  (query base, reference `-`), or a deletion (query `-`, reference base).
+- The ordered columns are the single alignment-row representation; each is a
+  match, insertion (query base, reference `-`), or deletion (query `-`, reference
+  base).
 - Callable identity is `exact_matches / callable_columns`, or `0.0` when there
   are no callable columns.
 

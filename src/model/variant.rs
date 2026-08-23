@@ -52,8 +52,6 @@ pub struct Variant {
     pub(crate) reference: String,
     pub(crate) alternate: String,
     pub(crate) kind: VariantKind,
-    pub(crate) classification: &'static str,
-    pub(crate) normalization: &'static str,
     pub(crate) calls: Vec<VariantCallMapping>,
 }
 

@@ -1,10 +1,7 @@
-"""Validate signal.analysis/v4 signal windows and variant call mappings.
+"""Validate the compact signal.analysis/v5 contract and call mappings.
 
-Checks that the Draft 2020-12 schema is itself valid, that the bundled example
-and any supplied result files validate against it, and that malformed signal and
-SNV/INS/DEL call-mapping shapes are rejected.
-
-Exit status is non-zero if any check fails.
+Checks the Draft 2020-12 schema, the bundled example and optional result files,
+positive SNV/INS/DEL shapes, and representative malformed compact records.
 """
 
 from __future__ import annotations
@@ -16,11 +13,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from jsonschema import Draft202012Validator, ValidationError
+from jsonschema import Draft202012Validator, SchemaError, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = ROOT / "docs" / "schemas" / "analysis-v4.schema.json"
-DEFAULT_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v4.example.json"
+SCHEMA_PATH = ROOT / "docs" / "schemas" / "analysis-v5.schema.json"
+DEFAULT_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v5.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -37,20 +34,41 @@ def validate_documents(validator: Draft202012Validator, paths: list[Path]) -> li
     return errors
 
 
-def rejected_call_shapes(example: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
-    """Return (label, document) pairs that the root schema must reject.
-
-    Shapes are derived by mutating the example's single SNV supporting call
-    into an inserted (no position) and a flanking call.
-    """
-    base_variant = copy.deepcopy(example["variants"][0])
-    supporting = copy.deepcopy(base_variant["calls"][0])
+def call_shapes(example: dict[str, Any]) -> tuple[dict[str, Any], ...]:
+    """Return valid SNV, insertion, and deletion documents."""
+    snv = copy.deepcopy(example)
+    supporting = copy.deepcopy(snv["variants"][0]["calls"][0])
 
     inserted = copy.deepcopy(supporting)
     inserted.pop("position")
 
     flanking = copy.deepcopy(supporting)
     flanking["role"] = "flanking"
+    flanking.pop("maximum_peak_height")
+    flanking.pop("relative_quality")
+
+    insertion = copy.deepcopy(example)
+    insertion["variants"][0].update(
+        {
+            "reference": "A",
+            "alternate": "AG",
+            "kind": "INS",
+            "calls": [flanking, inserted],
+        }
+    )
+
+    deletion = copy.deepcopy(example)
+    deletion["variants"][0].update(
+        {"reference": "AG", "alternate": "A", "kind": "DEL", "calls": [flanking]}
+    )
+    return snv, insertion, deletion
+
+
+def rejected_call_shapes(example: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
+    snv, insertion, deletion = call_shapes(example)
+    supporting = copy.deepcopy(snv["variants"][0]["calls"][0])
+    inserted = copy.deepcopy(insertion["variants"][0]["calls"][1])
+    flanking = copy.deepcopy(deletion["variants"][0]["calls"][0])
 
     def document(kind: str, calls: list[dict[str, Any]]) -> dict[str, Any]:
         built = copy.deepcopy(example)
@@ -58,33 +76,44 @@ def rejected_call_shapes(example: dict[str, Any]) -> list[tuple[str, dict[str, A
         built["variants"][0]["calls"] = calls
         return built
 
+    missing_evidence = copy.deepcopy(inserted)
+    missing_evidence.pop("relative_quality")
+    verbose_flank = copy.deepcopy(flanking)
+    verbose_flank["maximum_peak_height"] = 800
+
     return [
-        ("SNV empty calls", document("SNV", [])),
+        ("SNV with no calls", document("SNV", [])),
         ("SNV supporting call without position", document("SNV", [inserted])),
         ("SNV flanking call", document("SNV", [flanking])),
-        ("INS empty calls", document("INS", [])),
-        ("INS aligned supporting call", document("INS", [supporting])),
-        ("INS only flanking calls", document("INS", [flanking])),
-        ("DEL empty calls", document("DEL", [])),
-        ("DEL supporting call without position", document("DEL", [inserted])),
+        ("INS with aligned supporting call", document("INS", [supporting])),
+        ("INS with only flanking calls", document("INS", [flanking])),
+        ("INS supporting call missing quality", document("INS", [missing_evidence])),
+        ("DEL supporting call", document("DEL", [supporting])),
+        ("DEL flank with verbose evidence", document("DEL", [verbose_flank])),
     ]
 
 
-def rejected_signal_shapes(example: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
-    """Return malformed signal summaries that the closed schema must reject."""
+def rejected_summary_shapes(
+    example: dict[str, Any],
+) -> list[tuple[str, dict[str, Any]]]:
+    """Return malformed compact summaries that the closed schema must reject."""
     missing_metric = copy.deepcopy(example)
-    missing_metric["signal"]["windows"][0].pop("minimum_primary_snr")
+    missing_metric["signal_quality"]["noisy_regions"][0].pop("minimum_primary_snr")
 
     negative_metric = copy.deepcopy(example)
-    negative_metric["signal"]["windows"][0]["maximum_secondary_snr"] = -1
+    negative_metric["signal_quality"]["noisy_regions"][0]["minimum_primary_snr"] = -1
 
     unknown_field = copy.deepcopy(example)
-    unknown_field["signal"]["windows"][0]["raw_channels"] = []
+    unknown_field["signal_quality"]["windows"] = []
+
+    removed_section = copy.deepcopy(example)
+    removed_section["sequence"] = {"primary": "ACGT"}
 
     return [
-        ("signal window missing primary SNR", missing_metric),
-        ("signal window with negative secondary SNR", negative_metric),
-        ("signal window with unknown raw channels", unknown_field),
+        ("noisy region missing primary SNR", missing_metric),
+        ("noisy region with negative primary SNR", negative_metric),
+        ("signal quality with removed windows", unknown_field),
+        ("document with removed sequence section", removed_section),
     ]
 
 
@@ -92,9 +121,9 @@ def assert_rejected(
     validator: Draft202012Validator, rejected: list[tuple[str, dict[str, Any]]]
 ) -> list[str]:
     errors: list[str] = []
-    for label, variant in rejected:
+    for label, document in rejected:
         try:
-            validator.validate(variant)
+            validator.validate(document)
         except ValidationError:
             continue
         errors.append(f"expected {label} to be rejected, but it validated")
@@ -103,7 +132,7 @@ def assert_rejected(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Validate the signal.analysis/v4 schema and result documents."
+        description="Validate the signal.analysis/v5 schema and result documents."
     )
     parser.add_argument(
         "results",
@@ -119,16 +148,22 @@ def main(argv: list[str] | None = None) -> int:
     errors: list[str] = []
     try:
         validator.check_schema(schema)
-    except ValidationError as exc:
+    except SchemaError as exc:
         errors.append(
             f"schema {SCHEMA_PATH} is not a valid Draft 2020-12 schema: {exc.message}"
         )
 
-    paths = [Path(p) for p in args.results] or [DEFAULT_EXAMPLE]
+    paths = [Path(path) for path in args.results] or [DEFAULT_EXAMPLE]
     errors.extend(validate_documents(validator, paths))
 
     example = load_json(DEFAULT_EXAMPLE)
-    rejected = rejected_call_shapes(example) + rejected_signal_shapes(example)
+    valid_shapes = call_shapes(example)
+    for index, document in enumerate(valid_shapes, start=1):
+        try:
+            validator.validate(document)
+        except ValidationError as exc:
+            errors.append(f"valid call shape {index} was rejected: {exc.message}")
+    rejected = rejected_call_shapes(example) + rejected_summary_shapes(example)
     errors.extend(assert_rejected(validator, rejected))
 
     for error in errors:
@@ -137,7 +172,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(errors)} check(s) failed", file=sys.stderr)
         return 1
     print(
-        f"OK: validated {len(paths)} document(s); rejected {len(rejected)} invalid contract shape(s)"
+        f"OK: validated {len(paths)} document(s), {len(valid_shapes)} call shapes; "
+        f"rejected {len(rejected)} invalid contract shape(s)"
     )
     return 0
 

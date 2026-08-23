@@ -74,8 +74,6 @@ pub(crate) fn analyze(
                 index_0based: index,
                 penalty: penalty.penalties[index],
                 relative_quality_score: scores[index],
-                phred_calibrated: false,
-                vendor_quality,
                 vendor_quality_applies: vendor_quality.is_some()
                     && call.vendor_agrees == Some(true),
             }
@@ -112,7 +110,6 @@ mod tests {
                     peaks: std::array::from_fn(|channel| ChannelPeak {
                         base: Nucleotide::ALL[channel],
                         height: 1,
-                        position_0based: ploc,
                         source: PeakSource::PlocFallback,
                     }),
                     primary: 'A',
@@ -122,7 +119,6 @@ mod tests {
                 })
                 .collect(),
             primary_sequence: "AAAA".into(),
-            ambiguity_sequence: "AAAA".into(),
         };
         let trace = Chromatogram {
             source_name: "synthetic.ab1".into(),
@@ -151,9 +147,7 @@ mod tests {
         );
         assert_eq!(result.retained_sequence, "AAAA");
         assert!(result.per_call.iter().all(|quality| {
-            quality.relative_quality_score == 60
-                && quality.vendor_quality == Some(40)
-                && quality.vendor_quality_applies
+            quality.relative_quality_score == 60 && quality.vendor_quality_applies
         }));
         Ok(())
     }

@@ -6,8 +6,6 @@ pub struct CallQuality {
     pub(crate) index_0based: usize,
     pub(crate) penalty: i32,
     pub(crate) relative_quality_score: u8,
-    pub(crate) phred_calibrated: bool,
-    pub(crate) vendor_quality: Option<u8>,
     pub(crate) vendor_quality_applies: bool,
 }
 

@@ -1,85 +1,86 @@
 # Signal Compact JSON Output
 
-`signal analyze <trace.ab1> --reference <reference.fasta>` writes one deterministic file named `results/<trace-stem>.json`. The `results/` directory is created when publication begins. Existing results are never overwritten. After validating a non-empty UTF-8 trace stem, Rust separately appends nondeterministic, run-correlated operational records to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`); that sidecar is outside this JSON contract. A refused rerun therefore appends a stage-aware failure record while leaving the existing JSON byte-for-byte unchanged. Clap errors and invalid trace stems occur before logger creation.
+`signal analyze <trace.ab1> --reference <reference.fasta>` writes one deterministic file named `results/<trace-stem>.json`. The `results/` directory is created when publication begins. The core CLI never overwrites an existing result. After validating a non-empty UTF-8 trace stem, Rust separately appends nondeterministic operational records to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`); that sidecar is outside the JSON contract.
 
-The authoritative contract is [`schemas/analysis-v4.schema.json`](schemas/analysis-v4.schema.json); a synthetic example is [`examples/analysis-v4.example.json`](examples/analysis-v4.example.json).
+The authoritative contract is [`schemas/analysis-v5.schema.json`](schemas/analysis-v5.schema.json); a synthetic example is [`examples/analysis-v5.example.json`](examples/analysis-v5.example.json). Output v5 is intentionally incompatible with earlier result versions, and Signal emits no compatibility document or duplicate legacy fields. The strict scientific configuration remains schema version 4.
 
 ## Top-level fields
 
 | Field | Meaning |
 |---|---|
-| `schema_version` | Always `signal.analysis/v4`. |
-| `meta` | Software, input/reference hashes, config hash, and method IDs. |
-| `sequence` | Primary, ambiguity, retained sequence, and trim interval. |
-| `signal` | Full rolling SNR windows and merged candidate-noisy call/sample intervals. |
-| `alignment` | Selected orientation, score, metrics, segments, operations, and gapped rows. |
-| `variants` | Normalized primary-sequence differences and their associated trace calls. |
-| `warnings` | Compact counts of non-fatal conditions, including excluded variant candidates, plus the boolean `reference_origin_wrap` flag for an origin-crossing circular alignment. |
+| `schema_version` | Always `signal.analysis/v5`. |
+| `provenance` | Software version plus input, reference, and configuration identities. |
+| `read` | Original call count and the retained 0-based half-open trim interval. |
+| `signal_quality` | Merged candidate-noisy call/sample regions only. |
+| `alignment` | Selected-orientation alignment summary and reference segments. |
+| `variants` | Normalized primary-sequence differences with concise mapped calls. |
+| `warnings` | Counts of unresolved primary calls, multi-channel unresolved calls, and excluded variant candidates. |
 
-Complete channel arrays, non-signal per-call tables, losing alignments, and verbose intermediate records are intentionally omitted. Signal windows are bounded by call count and are observation-only. All objects are closed by the schema.
+All objects are closed by the schema. Compact v5 deliberately omits trace filenames, full primary/ambiguity/retained sequences, individual rolling windows, gapped alignment rows, operation runs, alignment score and redundant match counts, method constants, complete A/C/G/T peak objects, vendor PBAS/PCON data, variant contig/classification/normalization labels, warning totals, and duplicated origin-wrap or vendor-disagreement fields.
 
-## Coordinate conventions
+## Provenance
 
-Concise field names are interpreted by context:
+`provenance` retains the information needed to identify a deterministic run without exposing the trace filename:
 
-| Field | Coordinate system |
-|---|---|
-| variant `position` | 1-based normalized biological reference coordinate |
-| call `position` | 1-based biological reference coordinate of that aligned call |
-| call `index` | 0-based index in the original ABIF call list |
-| call `ploc` | 0-based ABIF PLOC channel-sample index |
-| peak `position` | 0-based ABIF channel-sample index |
-| signal window/region `calls.start`, `calls.end` | 0-based half-open original call-index interval |
-| signal window/region `samples.start`, `samples.end` | 0-based half-open channel-sample interval |
-| trim/segment `start`, `end` | 0-based half-open interval `[start, end)` |
+- `software_version`;
+- input AB1 `sha256`;
+- reference `name`, `topology`, and sequence `sha256`;
+- `configuration_sha256`.
 
-An inserted supporting call omits `position` because it has no reference base. Every SNV supporting call and every indel flank has `position`.
+The local input/configuration paths, expanded configuration, program constants, timestamps, host data, and method identifiers are not serialized. Effective scientific settings remain in the strict configuration selected for the run.
 
-## Signal annotations
+## Read and signal-quality summary
 
-Each full-width, stride-one window reports `minimum_primary_snr`, `maximum_secondary_snr`, and `candidate_noisy` with call/sample intervals. `noisy_regions` unions overlapping or adjacent candidate windows only when the run contains at least the configured `minimum_noisy_windows` (default 2), and records each region's minimum primary SNR. A region is a window-union approximation, not a per-call classification. These estimated values are finite, non-negative, rounded to six decimal places, and not Phred-calibrated.
+`read.call_count` is the number of decoded PLOC call loci. `read.trim.start` and `read.trim.end` delimit the retained calls as a 0-based half-open interval. No sequence string is emitted.
 
-The annotation is independent of trimming and variant eligibility. A variant call index may lie inside a candidate-noisy region and still be reported when it passes the existing configured variant rules.
+`signal_quality.noisy_regions` contains only merged candidate-noisy regions. Each region has 0-based half-open `calls` and `samples` intervals plus `minimum_primary_snr`. Full-width stride-one windows are still calculated internally by `signal.windowed_snr/v1`, but v5 does not serialize them. The regions remain observational and do not alter trimming, alignment, warning counts, or variant eligibility.
+
+## Alignment summary
+
+The selected alignment reports:
+
+- `orientation` (`forward` or `reverse`);
+- `callable_bases` and callable `identity`;
+- `unresolved_bases` and `gap_opens`;
+- one or two 0-based half-open `reference_segments`;
+- `wraps_origin`.
+
+Gapped query/reference rows, operation runs, score, exact-match/mismatch redundancy, and traceback columns remain internal.
 
 ## Variant calls
 
-Each variant contains a direct `calls` array; there is no `evidence` wrapper. Every call includes its role, coordinate mapping, recalled bases, A/C/G/T peaks, and quality.
+Each normalized variant contains only `position`, `reference`, `alternate`, `kind`, and direct `calls`. The variant position is 1-based on the supplied reference strand.
+
+Every mapped call keeps `role`, original 0-based call `index`, 0-based ABIF `ploc`, `primary`, and `ambiguity`. A mapped biological `position` is 1-based and is omitted only for inserted supporting calls.
+
+Supporting calls additionally contain:
+
+- `maximum_peak_height`: the maximum selected A/C/G/T channel height used by the configured evidence floor;
+- `relative_quality`: the uncalibrated relative score used by the configured strict quality gate.
+
+Full per-channel peak height/position/source objects, penalties, Phred flags, and vendor scores are not emitted. Flanking calls contain mapping context only and do not carry supporting evidence metrics.
 
 ### SNVs
 
-An SNV has one or more `supporting` calls. The call `position` equals the substituted biological position. `index` identifies the original trace call, and `ploc` identifies that call's ABIF sample locus.
+An SNV has one or more supporting calls, each with a biological `position` equal to the observed substituted reference position.
 
 ### Insertions
 
-An insertion has:
-
-- one `supporting` call per inserted base, with `index` and `ploc` but no biological `position`;
-- available `flanking` calls, each with its actual aligned biological `position`.
-
-The reported variant `position` is the normalized reference anchor. Inserted calls cannot be assigned a reference coordinate without inventing one.
+An insertion has one supporting call per inserted base without a biological `position`, plus any available flanking calls with their observed aligned positions. The variant `position` is the normalized reference anchor.
 
 ### Deletions
 
-A deletion has no trace call for a deleted reference base. Signal therefore reports only available `flanking` calls. Their positions bound the gap selected by the alignment; no deleted-base peak or quality is fabricated.
+A deletion has no trace call for a deleted reference base, so it contains only available flanking calls. Signal does not fabricate deleted-base peak or quality evidence.
 
-For repeat-associated indels, left/circular normalization can move the reported variant representation away from the originally observed alignment gap. Call `position` always describes the observed alignment mapping, while variant `position` describes the normalized allele representation.
+For repeat-associated indels, normalization can move the reported variant representation away from the observed alignment gap. Call positions describe observed mappings; the variant position describes the normalized allele representation.
 
-## Why channel peak positions differ
+## Coordinate conventions
 
-`ploc` is the shared ABIF locus for a call. Signal searches each A/C/G/T channel independently inside that call's window and records its strongest local maximum. Dye mobility, peak shape, overlap, and noise can place those four maxima at slightly different sample indexes. Therefore the four peak `position` values are not expected to equal one another or `ploc`.
+| Field | Coordinate system |
+|---|---|
+| variant/call `position` | 1-based biological reference coordinate |
+| call `index` | 0-based original ABIF call index |
+| call `ploc` | 0-based ABIF channel-sample index |
+| trim, segment, noisy-region `start`/`end` | 0-based half-open interval `[start, end)` |
 
-When a channel has no positive local maximum, Signal uses its value at `ploc` and marks the peak source `ploc_fallback`.
-
-## Strand semantics
-
-Variant `reference` and `alternate` are always written on the supplied reference strand. Call `primary`, `ambiguity`, and A/C/G/T peaks remain in the original trace strand. For a reverse alignment, a supporting trace base is therefore the complement of the variant alternate.
-
-## Quality
-
-Each variant-associated call contains:
-
-- `relative_score` and its `penalty`;
-- `phred_calibrated: false`;
-- optional vendor `vendor_score` and `vendor_score_applies`.
-
-Peak ratios and relative quality do not imply genotype, zygosity, allele fraction, or heteroplasmy. Variant eligibility uses this uncalibrated `relative_score`, not optional vendor quality: SNV and inserted-base supporting calls must each exceed the configured relative threshold and meet the configured maximum-channel peak floor. Deletion flanks are exempt because they do not measure a deleted base.
+Variant alleles are written on the supplied reference strand. Call `primary` and `ambiguity` retain the original trace strand, including reverse alignments. Neither peak height nor relative quality implies genotype, zygosity, allele fraction, heteroplasmy, or clinical significance.

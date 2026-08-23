@@ -38,8 +38,9 @@ No extraction, mapping construction, or serialization.
   disagreement returns `Error::Variant`.
 - Equivalent repetitive indels normalize to the same `(contig, position, ref,
   alt)` tuple.
-- `normalization` is `linear_left` for linear references and `circular_canonical`
-  for circular references.
+- Linear references use left normalization and circular references use bounded
+  canonical rotation; the algorithm remains explicit even though compact v5 does
+  not emit a fixed normalization label.
 - Call mappings are validated by `mapping` and preserved through normalization:
   the reported variant's calls are exactly the observed supporting/flanking calls.
 

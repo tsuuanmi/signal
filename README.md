@@ -15,13 +15,13 @@ cargo run --release -- analyze sample.ab1 \
 
 Signal reads `SIGNAL_CONFIG` or `config/signal.toml`, atomically writes one new `results/sample.json`, and appends concise stage records to `logs/sample.log`. Records include aggregate counts, thresholds, timings, warnings, and stage-aware failures, but never sequences, per-call peak arrays, or JSON bodies. `SIGNAL_LOG_DIR` can select another log directory. Existing results are never overwritten; per-trace logs are append-only. The binary does not parse `.env`.
 
-For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads the first 89 IDs from `data/MS_010426_001.txt`, writes every matching trace result under `results/<sample-id>/`, and directs the Rust logs to `logs/`. See [`docs/data.md`](docs/data.md); the Signal CLI itself remains one-file-per-invocation.
+For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads the first 89 IDs from `data/MS_010426_001.txt`, preflights the complete selected workload, builds the release binary unless `--no-build` is used, then removes only the selected sample result directories and matching selected logs before rerunning every selected trace. Ambiguous matches, identity collisions, and symlinked cleanup targets are rejected before deletion; artifacts for unselected samples are preserved. A later per-trace failure may leave partial new outputs from earlier successful traces. See [`docs/data.md`](docs/data.md); the core Signal CLI remains one-file-per-invocation and never overwrites an existing result.
 
 ## Scope
 
 - exactly one canonical analyzed ABIF/AB1 file per invocation;
 - exactly one non-empty plain FASTA record, at most 50,000 bases;
-- compact `signal.analysis/v4` JSON with rolling signal-quality windows, merged candidate-noisy regions, concise coordinates, and direct per-variant trace calls containing four-channel peaks and quality;
+- compact `signal.analysis/v5` JSON with provenance hashes/software, call count and trim bounds, merged noisy regions, an alignment summary, normalized variants with concise call mappings, and warning counts;
 - explicit linear/circular topology; bundled rCRS defaults to circular;
 - configured inclusive biological regions, with a bundled peak floor of 150 and relative-quality eligibility for SNVs and inserted bases;
 - primary-sequence SNVs and normalized insertions/deletions up to 50 bp.
@@ -30,7 +30,7 @@ Directories, manifests, globs, batch discovery, SCF, VCF/BCF, FM indexing, two-a
 
 ## Biological interpretation
 
-Signal reports differences between the conservative signal-derived primary sequence and the supplied reference. Its rolling SNR annotation and relative quality score are not Phred-calibrated; candidate-noisy regions do not suppress calls or variants. Vendor PCON is retained separately and applies to a re-called base only when that call agrees with PBAS. A single trace cannot establish zygosity, homoplasmy, low-level heteroplasmy, phase, or clinical significance.
+Signal reports differences between the conservative signal-derived primary sequence and the supplied reference. Its rolling SNR annotation and relative quality score are not Phred-calibrated; candidate-noisy regions do not suppress calls or variants. Vendor PBAS/PCON may be consumed internally but are not emitted in compact v5. A single trace cannot establish zygosity, homoplasmy, low-level heteroplasmy, phase, or clinical significance.
 
 ## Development
 

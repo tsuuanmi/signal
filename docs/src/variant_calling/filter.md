@@ -18,7 +18,7 @@ candidates.
 ## Non-responsibilities
 
 No extraction, normalization, vendor-quality filtering, genotype inference,
-report projection, or logging.
+report projection, report-only label assignment, or logging.
 
 ## Key functions
 

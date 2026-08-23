@@ -3,7 +3,7 @@
 ## Purpose
 
 Re-calls every vendor-defined PLOC locus from the analyzed channel signals,
-producing primary and ambiguous calls.
+producing a primary sequence plus per-call ambiguity evidence.
 
 ## Responsibilities
 
@@ -33,7 +33,8 @@ No ABIF parsing, end trimming, reference alignment, or variant calling.
   a canonical call, two give a two-base IUPAC code, three keep the strongest
   primary with unresolved `N` ambiguity, and four are unresolved `N` for both
   primary and ambiguity.
-- Output arrays (calls, primary sequence, ambiguity sequence) have equal lengths.
+- The call vector and retained `primary_sequence` have equal lengths; ambiguity is
+  retained per call rather than duplicated in a second aggregate string.
 - Vendor PBAS is evidence only and never replaces the signal-derived call.
 
 ## Dependencies

@@ -106,7 +106,6 @@ mod tests {
                 peaks: std::array::from_fn(|channel| ChannelPeak {
                     base: Nucleotide::ALL[channel],
                     height: 1,
-                    position_0based: ploc,
                     source: PeakSource::PlocFallback,
                 }),
                 primary: 'A',
@@ -118,7 +117,6 @@ mod tests {
         BaseCalls {
             calls,
             primary_sequence: "A".repeat(plocs.len()),
-            ambiguity_sequence: ambiguities.iter().collect(),
         }
     }
 

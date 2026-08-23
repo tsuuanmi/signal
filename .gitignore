@@ -2,6 +2,7 @@ data/
 results
 logs/
 .env
+__pycache__/
 
 /.venv/
 /target/

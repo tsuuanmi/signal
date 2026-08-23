@@ -141,8 +141,15 @@ pub(crate) fn align(
                 .map(|length| existing.start_reference % length)
                 .unwrap_or(existing.start_reference);
             existing_start == key_start
-                && existing.gapped_query == raw.gapped_query
-                && existing.gapped_reference == raw.gapped_reference
+                && existing.columns.len() == raw.columns.len()
+                && existing
+                    .columns
+                    .iter()
+                    .zip(&raw.columns)
+                    .all(|(left, right)| {
+                        left.query_base == right.query_base
+                            && left.reference_base == right.reference_base
+                    })
         });
         if !duplicate {
             placements.push(raw);
@@ -209,7 +216,7 @@ mod tests {
     #[test]
     fn scores_one_base_gap_as_open_plus_extension() -> Result<()> {
         let alignments = align("ACGTT", "ACGT", &config(), None)?;
-        assert_eq!(alignments[0].operation_runs, "3M1I1M");
+        assert_eq!(alignments[0].metrics.gap_opens, 1);
         assert_eq!(alignments[0].score, -2);
         Ok(())
     }

@@ -15,8 +15,9 @@ No scoring, trimming, or algorithm logic.
 
 ## Key types and functions
 
-- `CallQuality`: index, penalty, relative quality score, calibration flag, vendor
-  quality, and whether vendor quality applies.
+- `CallQuality`: call index, penalty, uncalibrated relative quality score, and the
+  boolean indicating whether optional vendor quality applies. The vendor score
+  itself and a redundant calibration flag are not retained.
 - `QualityControlResult`: per-call records, trim bounds, and the retained
   sequence.
 
@@ -32,9 +33,10 @@ No external dependencies; report serialization uses separate compact result type
 
 ## Biological semantics
 
-Quality scores are relative and uncalibrated (`phred_calibrated` is `false`); they
-rank calls by local ambiguity and peak-spacing penalties. The retained interval is
-the auditable read section kept for alignment.
+Quality scores are relative and uncalibrated; they rank calls by local ambiguity
+and peak-spacing penalties. No `phred_calibrated` field is retained because the
+method is always uncalibrated. The retained interval is the auditable read section
+kept for alignment.
 
 ## Tests
 

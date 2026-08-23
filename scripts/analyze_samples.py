@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analyze the first sample IDs from a manifest into per-sample result folders."""
+"""Cleanly analyze selected manifest samples into per-sample result folders."""
 
 from __future__ import annotations
 
@@ -14,11 +14,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 SAMPLE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]*$")
+type Workload = dict[str, list[Path]]
 
 
 def resolved(path: Path) -> Path:
     """Resolve a path relative to the repository root."""
-    return path if path.is_absolute() else (ROOT / path).resolve()
+    return path.resolve() if path.is_absolute() else (ROOT / path).resolve()
 
 
 def regular_file(path: Path, label: str) -> Path:
@@ -56,6 +57,81 @@ def sample_ids(manifest: Path, limit: int) -> list[str]:
     if len(set(selected)) != len(selected):
         raise ValueError("the selected sample IDs are not unique")
     return selected
+
+
+def discover_workload(trace_dir: Path, selected: list[str]) -> Workload:
+    """Discover every selected trace and reject ambiguous batch identities."""
+    workload: Workload = {}
+    owners: dict[Path, str] = {}
+    stems: dict[str, Path] = {}
+    for sample in selected:
+        candidates = sorted(trace_dir.glob(f"*_{sample}_*.ab1"))
+        symlink = next((trace for trace in candidates if trace.is_symlink()), None)
+        if symlink is not None:
+            raise ValueError(f"refusing symlinked trace: {symlink}")
+        traces = [trace.resolve() for trace in candidates if trace.is_file()]
+        if not traces:
+            raise ValueError(f"{sample}: no matching AB1 files")
+        for trace in traces:
+            if owner := owners.get(trace):
+                raise ValueError(
+                    f"trace {trace.name} matches multiple samples: {owner} and {sample}"
+                )
+            owners[trace] = sample
+            if previous := stems.get(trace.stem):
+                raise ValueError(
+                    f"trace stem collision for logs: {previous.name} and {trace.name}"
+                )
+            stems[trace.stem] = trace
+        workload[sample] = traces
+    return workload
+
+
+def cleanup_targets(
+    output_dir: Path, log_dir: Path, workload: Workload
+) -> tuple[list[Path], list[Path]]:
+    """Validate and return selected result directories and log files to remove."""
+    result_targets: list[Path] = []
+    log_targets: set[Path] = set()
+    for sample, traces in workload.items():
+        result = output_dir / sample
+        if result.is_symlink():
+            raise ValueError(f"refusing symlinked result directory: {result}")
+        if result.exists():
+            if not result.is_dir():
+                raise ValueError(f"result target is not a directory: {result}")
+            if result.parent != output_dir:
+                raise ValueError(f"result target escapes output root: {result}")
+            result_targets.append(result)
+        for trace in traces:
+            candidate = log_dir / f"{trace.stem}.log"
+            if candidate.exists() or candidate.is_symlink():
+                log_targets.add(candidate)
+        for candidate in log_dir.glob(f"*_{sample}_*.log"):
+            log_targets.add(candidate)
+
+    for log in log_targets:
+        if log.parent != log_dir:
+            raise ValueError(f"log target escapes log root: {log}")
+        if log.is_symlink():
+            raise ValueError(f"refusing symlinked log target: {log}")
+        if log.exists() and not log.is_file():
+            raise ValueError(f"log target is not a file: {log}")
+    return result_targets, sorted(log_targets)
+
+
+def clean_previous_results(
+    output_dir: Path, log_dir: Path, workload: Workload
+) -> tuple[int, int]:
+    """Remove only preflighted selected-sample result directories and logs."""
+    result_targets, log_targets = cleanup_targets(output_dir, log_dir, workload)
+    for result in result_targets:
+        shutil.rmtree(result)
+        print(f"CLEAN results {displayed(result)}")
+    for log in log_targets:
+        log.unlink(missing_ok=True)
+        print(f"CLEAN log     {displayed(log)}")
+    return len(result_targets), len(log_targets)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -111,6 +187,61 @@ def parser() -> argparse.ArgumentParser:
     return built
 
 
+def sync_directory(directory: Path) -> None:
+    """Synchronize a directory after an atomic link or rollback."""
+    descriptor = os.open(directory, os.O_RDONLY)
+    try:
+        os.fsync(descriptor)
+    finally:
+        os.close(descriptor)
+
+
+def publish_result(generated: Path, destination: Path) -> tuple[bool, str]:
+    """Publish one generated result atomically without overwrite."""
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staged: Path | None = None
+    published = False
+    error = ""
+    try:
+        with (
+            generated.open("rb") as source,
+            tempfile.NamedTemporaryFile(
+                mode="wb",
+                prefix=f".{destination.stem}.",
+                suffix=".tmp",
+                dir=destination.parent,
+                delete=False,
+            ) as target,
+        ):
+            staged = Path(target.name)
+            shutil.copyfileobj(source, target)
+            target.flush()
+            os.fsync(target.fileno())
+        os.link(staged, destination)
+        published = True
+        staged.unlink()
+        staged = None
+        sync_directory(destination.parent)
+    except FileExistsError:
+        error = f"result appeared while analysis was running: {destination}"
+    except OSError as publication_error:
+        error = f"could not publish {destination}: {publication_error}"
+        if published:
+            try:
+                destination.unlink()
+                sync_directory(destination.parent)
+            except OSError as rollback_error:
+                error = f"{error}; rollback failed: {rollback_error}"
+    finally:
+        if staged is not None:
+            try:
+                staged.unlink(missing_ok=True)
+            except OSError as cleanup_error:
+                if not error:
+                    error = f"could not remove staged result {staged}: {cleanup_error}"
+    return not error, error
+
+
 def run_analysis(
     binary: Path,
     trace: Path,
@@ -139,30 +270,7 @@ def run_analysis(
         generated = work / "results" / f"{trace.stem}.json"
         if not generated.is_file():
             return False, f"analysis succeeded but did not create {generated}"
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        staged: Path | None = None
-        try:
-            with (
-                generated.open("rb") as source,
-                tempfile.NamedTemporaryFile(
-                    mode="wb",
-                    prefix=f".{destination.stem}.",
-                    suffix=".tmp",
-                    dir=destination.parent,
-                    delete=False,
-                ) as target,
-            ):
-                staged = Path(target.name)
-                shutil.copyfileobj(source, target)
-                target.flush()
-                os.fsync(target.fileno())
-            os.link(staged, destination)
-        except FileExistsError:
-            return False, f"result appeared while analysis was running: {destination}"
-        finally:
-            if staged is not None:
-                staged.unlink(missing_ok=True)
-    return True, ""
+        return publish_result(generated, destination)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -178,6 +286,8 @@ def main(argv: list[str] | None = None) -> int:
         if not trace_dir.is_dir():
             raise ValueError(f"trace directory does not exist: {trace_dir}")
         selected = sample_ids(manifest, args.limit)
+        workload = discover_workload(trace_dir, selected)
+        cleanup_targets(output_dir, log_dir, workload)
     except (OSError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -190,27 +300,23 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: Signal binary is not a regular file: {binary}", file=sys.stderr)
         return 2
 
+    try:
+        cleaned_results, cleaned_logs = clean_previous_results(
+            output_dir, log_dir, workload
+        )
+    except (OSError, ValueError) as error:
+        print(f"error: cleanup failed: {error}", file=sys.stderr)
+        return 2
+
     completed_count = 0
-    skipped_count = 0
     failed_count = 0
     trace_count = 0
-    for sample in selected:
-        traces = sorted(
-            trace for trace in trace_dir.glob(f"*_{sample}_*.ab1") if trace.is_file()
-        )
-        if not traces:
-            print(f"FAIL {sample}: no matching AB1 files", file=sys.stderr)
-            failed_count += 1
-            continue
+    for sample, traces in workload.items():
         for trace in traces:
             trace_count += 1
             destination = output_dir / sample / f"{trace.stem}.json"
-            if destination.exists():
-                print(f"SKIP {displayed(destination)}: already exists")
-                skipped_count += 1
-                continue
             succeeded, detail = run_analysis(
-                binary, trace.resolve(), reference, config, log_dir, destination
+                binary, trace, reference, config, log_dir, destination
             )
             if succeeded:
                 print(f"OK   {displayed(destination)}")
@@ -222,7 +328,8 @@ def main(argv: list[str] | None = None) -> int:
     print(
         "Summary: "
         f"samples={len(selected)} traces={trace_count} completed={completed_count} "
-        f"skipped={skipped_count} failed={failed_count}"
+        f"failed={failed_count} cleaned_results={cleaned_results} "
+        f"cleaned_logs={cleaned_logs}"
     )
     return 1 if failed_count else 0
 

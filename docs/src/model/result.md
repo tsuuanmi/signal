@@ -2,77 +2,78 @@
 
 ## Purpose
 
-Defines the compact serializable `signal.analysis/v4` document contract.
+Defines the compact serializable `signal.analysis/v5` document contract.
 
 ## Responsibilities
 
-- Represent the selected run identity, sequence, signal annotations, alignment,
-  reported variants, and a compact warning summary.
+- Represent deterministic provenance, the read extent, merged signal-quality
+  regions, a concise selected-alignment summary, reported variants with essential
+  supporting evidence, and public warning counts.
 - Provide the typed structs that `report::json` serializes deterministically.
-- Omit decoded bulk data, per-call tables, losing orientation candidates, and the
-  complete reference/configuration, which remain internal to the algorithms.
+- Keep bulk sequences, full channel arrays, per-call tables, detailed alignments,
+  vendor-only evidence, and operational-only warning categories out of JSON.
 
 ## Non-responsibilities
 
-No serialization logic, filesystem access, or algorithm execution.
+No serialization logic, filesystem access, scientific computation, or variant
+projection.
 
 ## Key types and functions
 
-- `AnalysisResult`: `schema_version`, `meta`, `sequence`, `signal`, `alignment`,
-  `variants`,
-  and `warnings`.
-- `MetaResult` with `TraceResult` (input identity), `ReferenceResult`,
-  `MethodsResult` (versioned method IDs, including `signal.peak_recall/v2`,
-  `signal.windowed_snr/v1`, and `signal.primary_difference/v3`), and
-  `configuration_sha256`.
-- `SequenceResult`: primary, ambiguity, retained sequence, and trim interval.
-- `SignalResult`, `SignalWindowResult`, and `NoisyRegionResult`: bounded rolling
-  SNR features and merged call/sample intervals.
-- `AlignmentResult`: the selected alignment only — orientation, score, metrics,
-  `reference_segments`, `wraps_origin`, `operation_runs`, and gapped rows.
-- `VariantResult` with a `calls` vector of `VariantCallResult` for each
-  supporting/flanking call. Field names are concise (`position`, `reference`,
-  `alternate`, `kind`) rather than verbose descriptors.
-- `VariantCallResult`: role, 0-based call `index`, optional one-based reference
-  `position` (absent for inserted calls), the 0-based `ploc`, primary and
-  ambiguity symbols, `ChannelPeaksResult`, and `VariantQualityResult`.
-- `ChannelPeaksResult` and `PeakResult`: one A/C/G/T peak (height, 0-based
-  trace position, and selection `source`) per variant-associated call.
-- `VariantQualityResult`: relative score, penalty, calibration flag, and optional
-  vendor score plus applicability.
-- `WarningSummaryResult`: compact counts of non-fatal conditions plus the
-  boolean `reference_origin_wrap` flag.
+- `AnalysisResult`: `schema_version`, `provenance`, `read`, `signal_quality`,
+  `alignment`, `variants`, and `warnings`.
+- `ProvenanceResult`: software version, input SHA-256, reference identity, and
+  configuration SHA-256. `InputResult` deliberately omits the trace filename;
+  `ReferenceResult` carries name, topology, and sequence SHA-256.
+- `ReadResult`: total `call_count` and the retained 0-based half-open `trim`
+  interval. Complete called and retained sequences are not serialized.
+- `SignalQualityResult`: only merged `noisy_regions`. Each `NoisyRegionResult`
+  contains call/sample intervals and the minimum primary SNR; individual rolling
+  windows and maximum secondary SNR are not serialized.
+- `AlignmentResult`: orientation, callable-base count, callable identity,
+  unresolved-base count, gap-open count, reference segments, and origin-wrap
+  status. Score, columns, gapped rows, and operation runs are absent.
+- `VariantResult`: one-based position, reference/alternate alleles, kind, and
+  mapped calls. Contig and report-only classification/normalization labels are
+  absent from the compact result.
+- `VariantCallResult`: role, original 0-based call index, optional one-based
+  reference position, 0-based PLOC, primary/ambiguity symbols, and optional
+  `maximum_peak_height`/`relative_quality`. The two evidence fields are present
+  only for supporting calls; flanks do not claim supporting signal evidence.
+- `WarningSummaryResult`: exactly the three serialized counts for unresolved
+  primary calls, multi-channel unresolved calls, and excluded candidates.
+  Operational vendor-disagreement and origin-wrap accounting stays in the
+  pipeline rather than the JSON model.
 
 ## Invariants and errors
 
-- `schema_version` is `signal.analysis/v4`.
-- Call `position` is skipped for inserted calls; `vendor_score` is skipped when
-  the ABIF input has no PCON value.
-- The document is deterministic: identical inputs produce identical output.
-- Only the selected alignment and direct variant-associated calls are emitted;
-  dead and duplicate fields are absent.
+- `schema_version` is `signal.analysis/v5`.
+- All intervals are 0-based half-open; variant and mapped reference positions are
+  1-based; call indexes and PLOC values are 0-based.
+- Inserted supporting calls omit `position`; supporting calls include maximum peak
+  height and relative quality; flanking calls omit both evidence fields.
+- The document is deterministic: identical completed analysis inputs produce
+  identical serialized values.
 
 ## Dependencies
 
-- `model::alignment` (`AlignmentMetrics`, `Orientation`).
-- `model::basecalls` (`PeakSource`).
-- `model::reference` (`ReferenceTopology`).
-- `model::variant` (`VariantCallRole`, `VariantKind`).
+- `model::alignment::Orientation`.
+- `model::reference::ReferenceTopology`.
+- `model::variant::{VariantCallRole, VariantKind}`.
 - `serde` for serialization.
 
 ## Biological semantics
 
-The result document records the selected sequence, the retained trim interval,
-the winning alignment, and the reported variants with the direct original-call
-evidence (trace PLOC and channel peak positions are 0-based sample coordinates;
-the reported variant reference position is 1-based). Non-variant positions carry
-no per-call peaks or quality in the output. Provenance and configuration identity
-are included for reproducibility.
+The v5 contract exposes only the information needed to identify the analysis,
+locate the retained read and noisy regions, judge the selected alignment, and
+review normalized variants with their direct supporting/flanking calls. It omits
+raw or duplicative scientific payloads while preserving the coordinate and signal
+quality evidence needed for variant review.
 
 ## Tests
 
-No dedicated unit tests; the schema is exercised through `report::json`,
-`report::variant`, and the integration tests.
+No dedicated unit tests; report assembly, projection, schema validation, and
+integration tests exercise these types.
 
 ## Status
 

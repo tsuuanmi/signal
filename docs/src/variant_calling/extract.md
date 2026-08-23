@@ -17,7 +17,8 @@ small indels, mapping each to its original trace calls.
 ## Non-responsibilities
 
 No heteroplasmy inference, breakpoint detection, two-allele decomposition,
-allelic fraction fitting, or serialization.
+allelic fraction fitting, serialization, or addition of fixed report-only
+classification/normalization labels.
 
 ## Key types and functions
 

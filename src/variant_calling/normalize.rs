@@ -27,11 +27,6 @@ pub(crate) fn snv(
             reference: char::from(reference_base).to_string(),
             alternate: alternate.to_string(),
             kind: VariantKind::Snv,
-            classification: "primary_sequence_difference",
-            normalization: match reference.topology {
-                ReferenceTopology::Linear => "linear_left",
-                ReferenceTopology::Circular => "circular_canonical",
-            },
             calls,
         },
     )
@@ -53,7 +48,7 @@ pub(crate) fn insertion(
         ReferenceTopology::Linear => {
             if let Some(anchor) = anchor {
                 let (anchor, inserted) = shift_linear(reference, anchor, inserted)?;
-                build_insertion(reference, anchor, &inserted, calls, "linear_left")
+                build_insertion(reference, anchor, &inserted, calls)
             } else {
                 let right_anchor = next_reference.ok_or_else(|| {
                     Error::Variant("leading insertion lacks a right anchor".into())
@@ -67,8 +62,6 @@ pub(crate) fn insertion(
                         reference: base.to_string(),
                         alternate: format!("{inserted}{base}"),
                         kind: VariantKind::Ins,
-                        classification: "primary_sequence_difference",
-                        normalization: "linear_left",
                         calls,
                     },
                 )
@@ -79,7 +72,7 @@ pub(crate) fn insertion(
                 Error::Variant("circular insertion lacks an adjacent reference base".into())
             })?;
             let (anchor, inserted) = canonical_circular(reference, anchor, inserted)?;
-            build_insertion(reference, anchor, &inserted, calls, "circular_canonical")
+            build_insertion(reference, anchor, &inserted, calls)
         }
     }
 }
@@ -101,7 +94,7 @@ pub(crate) fn deletion(
         ReferenceTopology::Linear => {
             if let Some(anchor) = anchor {
                 let (anchor, deleted) = shift_linear(reference, anchor, deleted)?;
-                build_deletion(reference, anchor, &deleted, calls, "linear_left")
+                build_deletion(reference, anchor, &deleted, calls)
             } else {
                 let right_anchor = next_reference.ok_or_else(|| {
                     Error::Variant("leading deletion lacks a right anchor".into())
@@ -115,8 +108,6 @@ pub(crate) fn deletion(
                         reference: format!("{deleted}{base}"),
                         alternate: base.to_string(),
                         kind: VariantKind::Del,
-                        classification: "primary_sequence_difference",
-                        normalization: "linear_left",
                         calls,
                     },
                 )
@@ -127,7 +118,7 @@ pub(crate) fn deletion(
                 Error::Variant("circular deletion lacks an adjacent reference base".into())
             })?;
             let (anchor, deleted) = canonical_circular(reference, anchor, deleted)?;
-            build_deletion(reference, anchor, &deleted, calls, "circular_canonical")
+            build_deletion(reference, anchor, &deleted, calls)
         }
     }
 }
@@ -203,7 +194,6 @@ fn build_insertion(
     anchor: usize,
     inserted: &str,
     calls: Vec<VariantCallMapping>,
-    normalization: &'static str,
 ) -> Result<Variant> {
     let base = reference_base(reference, anchor)?;
     validated(
@@ -214,8 +204,6 @@ fn build_insertion(
             reference: base.to_string(),
             alternate: format!("{base}{inserted}"),
             kind: VariantKind::Ins,
-            classification: "primary_sequence_difference",
-            normalization,
             calls,
         },
     )
@@ -226,7 +214,6 @@ fn build_deletion(
     anchor: usize,
     deleted: &str,
     calls: Vec<VariantCallMapping>,
-    normalization: &'static str,
 ) -> Result<Variant> {
     let base = reference_base(reference, anchor)?;
     validated(
@@ -237,8 +224,6 @@ fn build_deletion(
             reference: format!("{base}{deleted}"),
             alternate: base.to_string(),
             kind: VariantKind::Del,
-            classification: "primary_sequence_difference",
-            normalization,
             calls,
         },
     )

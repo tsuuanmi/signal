@@ -43,21 +43,42 @@ uv run python scripts/analyze_samples.py
 The defaults read `data/MS_010426_001.txt`, search
 `data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write
 `results/<sample-id>/<trace-stem>.json`. It sets `SIGNAL_LOG_DIR` so the Rust
-logger writes directly to `logs/<trace-stem>.log`. Existing result files are
-skipped rather than overwritten. Run
-`uv run python scripts/analyze_samples.py --help` to change the manifest, trace
-directory, reference, configuration, output or log directory, binary, or sample
-limit. This wrapper invokes the one-file CLI once per matching AB1; it does not add
-batch behavior to Signal itself.
+logger writes directly to `logs/<trace-stem>.log`.
+
+The wrapper performs a clean selected rerun:
+
+1. read and validate the complete selected manifest prefix;
+2. discover every selected trace and reject missing matches, ambiguous ownership,
+   duplicate selected IDs, trace-stem/log collisions, unsafe target types, and
+   symlinks;
+3. preflight all selected result/log cleanup targets;
+4. build the release binary unless `--no-build` is supplied, then require a
+   regular binary;
+5. destructively remove only `results/<selected-sample>/` directories and logs
+   matching selected trace stems/sample identities;
+6. run each selected trace through the one-file CLI and atomically place each new
+   result without overwrite.
+
+Cleanup never removes unselected sample directories or unrelated logs. It occurs
+only after successful preflight and build, but it is not transactional across the
+whole workload: if a later analysis fails, earlier new results/logs may remain and
+the removed prior selected artifacts are not restored. The core CLI itself keeps
+its no-overwrite and failure-without-result semantics.
+
+Run `uv run python scripts/analyze_samples.py --help` to change the manifest,
+trace directory, reference, configuration, output or log directory, binary, or
+sample limit. This wrapper remains external orchestration; it does not add batch
+input behavior to `signal analyze`.
 
 ## Analysis output privacy
 
-The compact JSON contains the trace basename, called sequences, rolling
-signal-quality windows and candidate-noisy intervals, alignment, variants, and
-local peaks/quality for variant-associated calls. It excludes complete channel
-arrays and arbitrary ABIF sample, plate, well, instrument, and run free text. A
-result can still identify a sample, so derived JSON follows the same approval and
-redistribution policy as its AB1 source. Append-only logs can contain trace/reference
+Compact v5 omits the trace filename, full called sequences, individual rolling
+windows, gapped alignment rows, full per-channel peaks, and vendor data. It keeps
+input/reference/configuration hashes, reference identity, read/trim and merged
+noisy-region summaries, normalized alleles, concise call mappings, and supporting
+maximum-peak/relative-quality values. A result can still identify a sample through
+its hashes or biological differences, so derived JSON follows the same approval
+and redistribution policy as its AB1 source. Append-only logs can contain trace/reference
 names, filesystem paths, hashes, aggregate metrics, thresholds, stage errors, and
 removed-variant kinds/coordinates/reasons. They omit alleles and raw scientific
 payloads but still follow the same policy; `logs/` is ignored.

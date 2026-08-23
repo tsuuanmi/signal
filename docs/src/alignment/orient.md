@@ -14,8 +14,10 @@ selects one unique winner, and projects coordinates onto the reference.
 - Select the winning orientation by score, then exact matches, then fewer
   mismatches and gap opens; reject ties.
 - Enforce the minimum callable bases and minimum callable identity thresholds.
-- Produce reference segments, origin-wrap status, and per-column coordinates for
-  the selected alignment only; losing orientation candidates are discarded.
+- Produce the smaller final internal `Alignment`: orientation, score, reference
+  segments, origin-wrap status, metrics, and per-column coordinates. Gapped rows
+  remain temporary traceback data used for placement deduplication and are not
+  copied into the final model; losing candidates are discarded.
 
 ## Non-responsibilities
 

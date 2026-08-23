@@ -6,7 +6,7 @@
 
 - exact `src/**/*.rs` ↔ `docs/src/**/*.md` mirror;
 - strict TOML parse plus range/relational checks;
-- Draft 2020-12 schema validation owned by `scripts/validate_analysis_schema.py` and CI, not Rust integration code;
+- Draft 2020-12 compact v5 schema validation owned by `scripts/validate_analysis_schema.py` and CI, not Rust integration code;
 - Markdown links, rustdoc, rCRS source checksum/length, `.env` policy;
 - no repository backups or accidental patient/sample fixtures.
 
@@ -25,7 +25,7 @@
 
 ### Integration tests
 
-Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic compact JSON, rolling signal windows, candidate-noisy interval merging, observation-only variant behavior, exact forward/reverse SNV call-to-position/PLOC mapping, insertion calls without invented reference positions, deletion flanks without invented peaks, indel-normalization mapping preservation, circular segments, four peaks and quality, strict config, malformed input, no-overwrite publication, and no VCF.
+Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic compact v5 JSON, internal rolling-window behavior and merged noisy-region projection, observation-only variant behavior, exact forward/reverse SNV call-to-position/PLOC mapping, insertion calls without invented reference positions, deletion flanks without invented support metrics, indel-normalization mapping preservation, circular segments, supporting-call maximum peak/relative quality, strict config v4, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, unselected-artifact preservation, and partial-output behavior after a later failure.
 
 ### Differential and real-trace validation
 
@@ -41,4 +41,4 @@ Run a release build with a named 500–1,000 base approved or synthetic trace ag
 
 ## Release gate
 
-All SRS implementation requirements and automated checks must pass, and at least one approved real AB1 must have complete end-to-end evidence before describing a scientific release as real-trace validated.
+All normative requirements and automated checks must pass, and at least one approved real AB1 must have complete end-to-end evidence before describing a scientific release as real-trace validated.

@@ -32,8 +32,9 @@ None.
 
 ## Biological semantics
 
-Scores are relative and uncalibrated (`phred_calibrated` is `false`): they rank
-calls within a read rather than representing an absolute error probability.
+Scores are relative and uncalibrated: they rank calls within a read rather than
+representing an absolute error probability. Compact v5 does not retain a redundant
+`phred_calibrated` flag.
 
 ## Tests
 

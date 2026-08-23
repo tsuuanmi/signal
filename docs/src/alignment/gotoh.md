@@ -35,8 +35,8 @@ formatting. It does not decide between forward and reverse orientation.
   `MAX_ALIGNMENT_CELLS`.
 - All matrix indices are bounds-checked; overflow yields `Error::Alignment`.
 - If no valid bounded traceback is found, `Error::Alignment` is returned.
-- Placements are deduplicated by wrapped start and gapped rows; the function
-  stops early once two distinct placements are found.
+- Placements are deduplicated by wrapped start and aligned query/reference base
+  columns; the function stops early once two distinct placements are found.
 
 ## Dependencies
 
@@ -59,7 +59,7 @@ query is a read that should be placed within a longer reference.
 - `accepts_one_full_circular_reference_span`: verifies a one-circle traceback is
   retained under the circular bound.
 - `scores_one_base_gap_as_open_plus_extension`: verifies a single-base insertion
-  costs open + extension and produces the expected operation run.
+  costs open + extension and contributes exactly one gap open.
 - `preserves_scores_beyond_i32_range`: verifies the DP retains an exact 64-bit score.
 
 ## Status

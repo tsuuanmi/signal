@@ -2,53 +2,45 @@
 
 ## Purpose
 
-Serializes the completed analysis result into a versioned JSON document and
-publishes it atomically.
+Provides compact v5 JSON assembly/serialization and atomic no-overwrite
+publication.
 
 ## Responsibilities
 
-- Re-export `build`, `serialize`, `CompletedAnalysis`, and `publish`.
-- Assemble the compact `signal.analysis/v4` document and write it atomically.
-- Keep the variant-call projection in a separate `variant` submodule.
+- Re-export `CompletedAnalysis`, `build`, `serialize`, and `publish` to pipeline
+  orchestration.
+- Keep typed v5 assembly, concise variant evidence projection, and atomic
+  publication in separate child modules.
 
 ## Non-responsibilities
 
-No basecalling, quality scoring, alignment, variant inference, or hidden
-filtering.
+No basecalling, signal feature calculation, quality scoring, alignment, variant
+inference/filtering, or operational logging.
 
 ## Key types and functions
 
-- `build(completed) -> Result<AnalysisResult>`: assembles the compact v4 document,
-  delegating variant-call projection to `variant`.
-- `serialize(result) -> Result<Vec<u8>>`: deterministic JSON bytes.
-- `publish(path, bytes) -> Result<()>`: atomic no-overwrite publication.
-- Child modules: `json` (assembly and serialization), `variant` (projection of
-  variant-associated calls), `atomic` (publication).
+- `build(completed) -> Result<AnalysisResult>`: assembles `signal.analysis/v5`.
+- `serialize(result) -> Result<Vec<u8>>`: produces deterministic JSON bytes.
+- `publish(path, bytes) -> Result<()>`: atomically publishes a new result without
+  overwriting an existing target.
+- Child modules: `json` (v5 assembly/serialization), `variant` (essential mapped
+  supporting evidence), and `atomic` (publication transaction).
 
 ## Invariants and errors
 
-JSON identifies `signal.analysis/v4`; serialization is deterministic; the output
-is written atomically and never overwrites an existing target. Assembly,
-serialization, and output failures return typed errors.
+JSON identifies `signal.analysis/v5`; serialization is deterministic; publication
+is atomic and no-overwrite. Assembly, serialization, and filesystem failures
+propagate as typed errors.
 
 ## Dependencies
 
-- `model::result` and the other model types.
-- `error` for `Error`/`Result`.
-
-## Apollo mapping
-
-Replaces the output responsibilities of `apollo/include/apollo/report/json.h`
-with a versioned contract.
-
-## Requirements and decisions
-
-ADR-0011, ADR-0012, ADR-0013; `SRS-OUT-001` through `SRS-OUT-007`.
+- Completed model and stage outputs used by `json` and `variant`.
+- `error` for typed failures.
 
 ## Tests
 
-The integration tests exercise deterministic serialization and no-overwrite
-publication.
+Integration tests exercise deterministic v5 serialization and no-overwrite
+publication; atomic publication also has focused unit coverage.
 
 ## Status
 

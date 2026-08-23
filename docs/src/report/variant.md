@@ -2,59 +2,69 @@
 
 ## Purpose
 
-Projects normalized variants and their mapped original calls into the compact
-`signal` variant records, joining them to chromatogram peaks and call quality.
+Projects normalized variants and mapped original calls into the compact v5
+variant and supporting-evidence records.
 
 ## Responsibilities
 
-- Turn each `Variant` into a `VariantResult` and each `VariantCallMapping` into a
-  `VariantCallResult`.
-- Look up the original call and its quality record by index and emit the PLOC,
-  primary/ambiguity symbols, channel peaks, and non-redundant quality fields.
-- Convert internal 0-based positions to the one-based report reference position,
-  leaving it absent for inserted calls.
+- Turn each internal `Variant` into a `VariantResult` containing position,
+  reference/alternate alleles, kind, and projected calls.
+- Join each `VariantCallMapping` to its original `BaseCall` and `CallQuality` by
+  index, validating index consistency.
+- Preserve role, original call index, mapped biological position, PLOC, primary,
+  and ambiguity symbols.
+- For supporting calls only, emit the maximum of the four channel peak heights and
+  the uncalibrated relative quality score.
+- Convert internal 0-based reference positions to checked one-based report
+  positions; inserted supporting calls keep no reference position.
 
 ## Non-responsibilities
 
-No document assembly, serialization, atomic publication, or algorithm logic.
+No document assembly, serialization, atomic publication, peak-position reporting,
+per-channel peak projection, vendor-quality projection, normalization, or variant
+eligibility decisions.
 
 ## Key types and functions
 
-- `project(variants, calls, quality) -> Result<Vec<VariantResult>>`: the module
-  entry point, called by `report::json::build`.
-- `project_variant`, `project_call`, `channel_peaks`, `peak_result`,
-  `quality_result`: helpers.
+- `project(variants, calls, quality) -> Result<Vec<VariantResult>>`: module entry
+  point called by `report::json::build`.
+- `project_variant`: drops internal-only contig and emits no report-only
+  classification/normalization labels.
+- `project_call`: validates the joined call/quality indexes and constructs the
+  concise mapped-call record.
 
 ## Invariants and errors
 
-- A mapping referencing a missing call or quality index returns `Error::Report`.
-- The mapping index must match the referenced call and quality records; otherwise
-  `Error::Report`.
-- `position` is `None` for inserted calls and the checked one-based reference
-  position otherwise.
+- Missing call or quality indexes return `Error::Report`.
+- The referenced `BaseCall` and `CallQuality` indexes must equal the mapping index.
+- `position` is absent only for inserted supporting calls and otherwise is a
+  checked one-based reference coordinate.
+- `maximum_peak_height` and `relative_quality` are present exactly for
+  `VariantCallRole::Supporting`; flanking calls omit both.
+- Maximum peak height uses all four selected channel heights and does not expose
+  per-channel values or peak sample positions.
 
 ## Dependencies
 
-- `model::basecalls` for `BaseCall`, `BaseCalls`, `ChannelPeak`.
-- `model::coordinate` for `reference_one_based`.
-- `model::quality` for `CallQuality`, `QualityControlResult`.
-- `model::result` for the projection result types.
-- `model::variant` for `Variant`, `VariantCallMapping`.
+- `model::basecalls::BaseCalls`.
+- `model::coordinate::reference_one_based`.
+- `model::quality::QualityControlResult`.
+- `model::result::{VariantCallResult, VariantResult}`.
+- `model::variant::{Variant, VariantCallMapping, VariantCallRole}`.
 - `error` for `Error`/`Result`.
 
 ## Biological semantics
 
-This module is the single place that turns a normalized variant plus its original
-trace calls into report records. The reported reference `position` is 1-based;
-the trace `ploc` and channel peak positions are the 0-based chromatogram sample
-coordinates at which the call was observed. Variant alleles use the reference
-strand, while projected call bases and A/C/G/T peaks retain the original trace
-strand.
+Variant alleles and reported positions use the reference strand. Projected call
+symbols and PLOC retain the original trace orientation. Supporting SNV and
+inserted-base calls carry the two evidence values used by eligibility filtering;
+indel flanks remain positional context and do not fabricate supporting peak or
+quality evidence.
 
 ## Tests
 
-No dedicated unit tests; behavior is exercised through `report::json` and the
-integration tests.
+Behavior is exercised through report assembly, schema validation, and end-to-end
+variant tests.
 
 ## Status
 

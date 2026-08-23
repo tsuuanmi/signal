@@ -9,7 +9,8 @@
 - uncalibrated relative quality and end-only trimming;
 - bounded forward/reverse semi-global Gotoh with circular topology;
 - primary-sequence SNV and ≤50 bp indel extraction/normalization;
-- compact `signal.analysis/v4` JSON with rolling signal annotations, concise coordinates, mapped variant calls, and atomic no-overwrite publication;
+- compact `signal.analysis/v5` JSON with provenance, read/trim, merged noisy-region, alignment, normalized-variant, and warning summaries plus atomic core-CLI no-overwrite publication;
+- clean external batch reruns with full preflight, selected-only destructive cleanup, ambiguity/collision/symlink rejection, and unselected-artifact preservation;
 - synthetic unit/integration tests, source/manual mirror, schemas, and CI gates.
 
 ## Release evidence still required
@@ -25,7 +26,7 @@ An approved, non-identifying or redistributable real AB1 must exercise the compl
 5. additional reference topologies/formats and compressed FASTA;
 6. indexed search for longer/multi-contig references;
 7. SCF input;
-8. batch/parallel orchestration;
+8. parallel or resumable batch orchestration beyond the current clean sequential wrapper;
 9. optional derived interchange formats only under a separate versioned contract.
 
-Each candidate requires SRS/ADR/schema changes, mirrored source docs, focused tests, and biological validation.
+Each candidate requires requirements/ADR/schema changes, mirrored source docs, focused tests, and biological validation.

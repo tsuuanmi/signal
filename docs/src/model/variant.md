@@ -24,8 +24,9 @@ No extraction, normalization, or inference.
   reference-aligned call that bounds an indel).
 - `VariantCallMapping`: role, the 0-based original call index, and an optional
   reference position that is absent only for inserted query calls.
-- `Variant`: contig, one-based position, reference/alternate alleles, kind,
-  classification, normalization, and the mapped calls.
+- `Variant`: contig, normalized one-based position, reference/alternate alleles,
+  kind, and mapped calls. Report-only classification and normalization labels are
+  not stored.
 - `VariantExclusionReason`: stable structural, region, peak, and relative-quality
   rejection reasons with operational labels.
 - `ExcludedVariant`: contig, optional normalized one-based position, kind, and all
@@ -50,12 +51,12 @@ No extraction, normalization, or inference.
 ## Biological semantics
 
 Variants are primary-sequence differences between the read and the reference:
-single-nucleotide substitutions and small insertions/deletions. `classification`
-is always `primary_sequence_difference`; `normalization` records whether the
-variant was left-normalized (`linear_left`) or circular-canonicalized
-(`circular_canonical`). Each reported difference keeps a direct mapping back to
-the original trace calls that support or flank it, so the normalized coordinates
-do not lose the observed call evidence.
+single-nucleotide substitutions and small insertions/deletions. Linear-left or
+circular-canonical normalization remains algorithmic behavior, but fixed
+classification and normalization labels are not retained on `Variant` or emitted
+in compact v5. Each reported difference keeps a direct mapping back to the
+original trace calls that support or flank it, so normalized coordinates do not
+lose observed call evidence.
 
 ## Tests
 

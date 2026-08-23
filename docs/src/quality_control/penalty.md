@@ -43,7 +43,9 @@ baseline for end trimming.
 
 ## Tests
 
-- `calculates_deterministic_ambiguity_and_spacing_penalties`: verifies penalties and best-span selection for ambiguous, irregularly spaced calls.
+- `calculates_deterministic_ambiguity_and_spacing_penalties`: verifies penalties
+  and best-span selection with the compact `BaseCalls` fixture, where ambiguity
+  is stored per call and only the primary sequence is aggregated.
 
 ## Status
 

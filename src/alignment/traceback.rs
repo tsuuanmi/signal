@@ -17,9 +17,6 @@ pub(crate) struct RawAlignment {
     pub(crate) score: i64,
     pub(crate) start_reference: usize,
     pub(crate) end_reference: usize,
-    pub(crate) gapped_query: String,
-    pub(crate) gapped_reference: String,
-    pub(crate) operation_runs: String,
     pub(crate) columns: Vec<RawColumn>,
     pub(crate) metrics: AlignmentMetrics,
 }
@@ -102,9 +99,7 @@ pub(crate) fn decode(input: TracebackInput<'_>) -> Result<RawAlignment> {
         }
     }
     reversed.reverse();
-    let gapped_query = reversed.iter().map(|item| item.query_base).collect();
-    let gapped_reference = reversed.iter().map(|item| item.reference_base).collect();
-    let (operation_runs, gap_opens) = operation_runs(&reversed);
+    let gap_opens = gap_open_count(&reversed);
     let mut exact_matches = 0;
     let mut mismatches = 0;
     let mut callable_columns = 0;
@@ -131,9 +126,6 @@ pub(crate) fn decode(input: TracebackInput<'_>) -> Result<RawAlignment> {
         score: input.score,
         start_reference: column,
         end_reference,
-        gapped_query,
-        gapped_reference,
-        operation_runs,
         columns: reversed,
         metrics: AlignmentMetrics {
             exact_matches,
@@ -146,34 +138,21 @@ pub(crate) fn decode(input: TracebackInput<'_>) -> Result<RawAlignment> {
     })
 }
 
-fn operation_runs(columns: &[RawColumn]) -> (String, usize) {
-    let mut output = String::new();
-    let mut previous = None;
-    let mut length = 0;
+fn gap_open_count(columns: &[RawColumn]) -> usize {
+    let mut previous_gap = None;
     let mut gap_opens = 0;
     for column in columns {
-        let operation = if column.query_base == '-' {
-            'D'
+        let gap = if column.query_base == '-' {
+            Some('D')
         } else if column.reference_base == '-' {
-            'I'
+            Some('I')
         } else {
-            'M'
+            None
         };
-        if previous != Some(operation) {
-            if let Some(previous) = previous {
-                output.push_str(&format!("{length}{previous}"));
-            }
-            if matches!(operation, 'I' | 'D') {
-                gap_opens += 1;
-            }
-            previous = Some(operation);
-            length = 1;
-        } else {
-            length += 1;
+        if gap.is_some() && gap != previous_gap {
+            gap_opens += 1;
         }
+        previous_gap = gap;
     }
-    if let Some(previous) = previous {
-        output.push_str(&format!("{length}{previous}"));
-    }
-    (output, gap_opens)
+    gap_opens
 }

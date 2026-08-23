@@ -11,6 +11,8 @@ strongest positive local peak per channel.
   position, with edge windows derived from the local spacing.
 - For each channel, find the strongest positive local maximum inside the window,
   falling back to the PLOC sample when no positive local maximum exists.
+- Return only each channel's base, selected height, and selection source; peak
+  sample positions are no longer retained.
 
 ## Non-responsibilities
 
@@ -45,7 +47,8 @@ No ratio thresholding, IUPAC mapping, or call orchestration.
 Each PLOC locus is a vendor-identified base position. The window around it
 captures the local signal for that base. Selecting the strongest positive local
 maximum per channel recovers the peak height used to rank channels and apply the
-secondary-peak threshold.
+secondary-peak threshold; the downstream model needs the height/source but not a
+separate selected-peak coordinate.
 
 ## Tests
 

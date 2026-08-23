@@ -44,7 +44,7 @@ report -> completed models; no scientific computation
 - `gotoh` computes DP; `traceback` reconstructs rows; `orient` applies strand/topology policy; `scoring` centralizes arithmetic.
 - `extract` finds events; `mapping` binds original calls to aligned reference positions; `normalize` defines canonical alleles/positions; `filter` applies configured region and supporting-signal eligibility.
 - `logger` appends timestamped per-trace operational records without entering scientific stages or JSON.
-- `json` assembles core results; `variant` joins mapped calls to peaks/quality; `atomic` publishes `results/<trace-stem>.json`.
+- `json` assembles the compact v5 result summary; `variant` projects concise mapped calls and supporting maximum-peak/relative-quality values; `atomic` publishes `results/<trace-stem>.json` without overwrite.
 - `input` loads one validated use case; `analyze` sequences stages.
 
 VCF has no source file or compatibility path in the MVP.

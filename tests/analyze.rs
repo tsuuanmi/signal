@@ -1,5 +1,6 @@
 mod support;
 
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 
@@ -37,27 +38,55 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     let second_bytes = fs::read(output_path(second.path(), &second.path().join("trace.ab1")))?;
     assert_eq!(first_bytes, second_bytes);
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.analysis/v4");
+    assert_eq!(value["schema_version"], "signal.analysis/v5");
+    assert_object_keys(
+        &value,
+        &[
+            "schema_version",
+            "provenance",
+            "read",
+            "signal_quality",
+            "alignment",
+            "variants",
+            "warnings",
+        ],
+    );
+    assert_object_keys(
+        &value["provenance"],
+        &[
+            "software_version",
+            "input",
+            "reference",
+            "configuration_sha256",
+        ],
+    );
+    assert_object_keys(&value["read"], &["call_count", "trim"]);
+    assert_object_keys(
+        &value["alignment"],
+        &[
+            "orientation",
+            "callable_bases",
+            "identity",
+            "unresolved_bases",
+            "gap_opens",
+            "reference_segments",
+            "wraps_origin",
+        ],
+    );
+    assert_object_keys(
+        &value["warnings"],
+        &[
+            "unresolved_primary_calls",
+            "multi_channel_unresolved_calls",
+            "excluded_variant_candidates",
+        ],
+    );
+    assert_eq!(value["read"]["call_count"], 28);
     assert_eq!(value["alignment"]["orientation"], "forward");
-    assert_eq!(
-        value["meta"]["methods"]["basecalling"],
-        "signal.peak_recall/v2"
-    );
-    assert_eq!(
-        value["meta"]["methods"]["signal_processing"],
-        "signal.windowed_snr/v1"
-    );
-    assert_eq!(
-        value["meta"]["methods"]["variant_calling"],
-        "signal.primary_difference/v3"
-    );
-    assert_eq!(
-        value["signal"]["windows"].as_array().map(Vec::len),
-        Some(19)
-    );
-    assert!(value["signal"]["noisy_regions"].is_array());
-    assert!(value.get("analysis").is_none());
-    assert!(value.pointer("/meta/input/size_bytes").is_none());
+    assert!(value["signal_quality"]["noisy_regions"].is_array());
+    assert!(value.get("meta").is_none());
+    assert!(value.get("sequence").is_none());
+    assert!(value.pointer("/signal_quality/windows").is_none());
     let text = std::str::from_utf8(&first_bytes)?;
     for obsolete in ["evidence", "position_1based", "_0based", "_exclusive"] {
         assert!(!text.contains(obsolete));
@@ -108,7 +137,8 @@ fn reorders_noncanonical_fwo_channels() -> Result<(), Box<dyn std::error::Error>
 
     run(&trace, &reference, &config, directory.path())?.success();
     let value = read_result(directory.path(), &trace)?;
-    assert_eq!(value["sequence"]["primary"], QUERY);
+    assert_eq!(value["read"]["call_count"], QUERY.len());
+    assert_eq!(value["alignment"]["identity"], 1.0);
     assert_eq!(value["variants"].as_array().map(Vec::len), Some(0));
     Ok(())
 }
@@ -208,22 +238,32 @@ fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>
         .ok_or("variants is not an array")?;
     assert_eq!(variants.len(), 1);
     let variant = &variants[0];
+    assert_object_keys(
+        variant,
+        &["position", "reference", "alternate", "kind", "calls"],
+    );
     assert_eq!(variant["kind"], "SNV");
     assert_eq!(variant["position"], 15);
-    assert_eq!(variant["classification"], "primary_sequence_difference");
-    assert!(variant.get("evidence").is_none());
     let call = &variant["calls"][0];
+    assert_object_keys(
+        call,
+        &[
+            "role",
+            "index",
+            "position",
+            "ploc",
+            "primary",
+            "ambiguity",
+            "maximum_peak_height",
+            "relative_quality",
+        ],
+    );
     assert_eq!(call["role"], "supporting");
     assert_eq!(call["index"], 10);
     assert_eq!(call["position"], 15);
     assert_eq!(call["ploc"], 42);
-    for base in ["A", "C", "G", "T"] {
-        assert!(call["peaks"][base]["height"].is_number());
-        assert_eq!(call["peaks"][base]["position"], 42);
-    }
-    assert_eq!(call["peaks"]["G"]["height"], 1000);
-    assert!(call["quality"]["relative_score"].is_number());
-    assert_eq!(call["quality"]["phred_calibrated"], false);
+    assert_eq!(call["maximum_peak_height"], 1000);
+    assert!(call["relative_quality"].is_number());
     Ok(())
 }
 
@@ -255,11 +295,11 @@ fn annotates_noisy_region_without_filtering_supported_snv() -> Result<(), Box<dy
         results.push(read_result(directory.path(), &trace)?);
     }
 
-    assert_eq!(results[0]["sequence"], results[1]["sequence"]);
+    assert_eq!(results[0]["read"], results[1]["read"]);
     assert_eq!(results[0]["alignment"], results[1]["alignment"]);
     assert_eq!(results[0]["variants"], results[1]["variants"]);
     assert!(
-        results[0]["signal"]["noisy_regions"]
+        results[0]["signal_quality"]["noisy_regions"]
             .as_array()
             .is_some_and(Vec::is_empty)
     );
@@ -270,7 +310,7 @@ fn annotates_noisy_region_without_filtering_supported_snv() -> Result<(), Box<dy
     assert_eq!(variants.len(), 1);
     assert_eq!(variants[0]["kind"], "SNV");
     assert_eq!(variants[0]["calls"][0]["index"], 10);
-    let regions = results[1]["signal"]["noisy_regions"]
+    let regions = results[1]["signal_quality"]["noisy_regions"]
         .as_array()
         .ok_or("noisy_regions is not an array")?;
     assert!(regions.iter().any(|region| {
@@ -368,7 +408,7 @@ fn maps_reverse_snv_to_original_call_and_ploc() -> Result<(), Box<dyn std::error
     assert_eq!(call["position"], 15);
     assert_eq!(call["ploc"], 70);
     assert_eq!(call["primary"], "A");
-    assert_eq!(call["peaks"]["A"]["height"], 1000);
+    assert_eq!(call["maximum_peak_height"], 1000);
     Ok(())
 }
 
@@ -399,6 +439,8 @@ fn reports_insertion_support_and_flanks() -> Result<(), Box<dyn std::error::Erro
     assert_eq!(calls[0]["index"], 12);
     assert!(calls[0].get("position").is_none());
     assert_eq!(calls[0]["ploc"], 50);
+    assert_eq!(calls[0]["maximum_peak_height"], 1000);
+    assert!(calls[0]["relative_quality"].is_number());
     assert_eq!(calls[1]["role"], "flanking");
     assert_eq!(calls[1]["index"], 11);
     assert_eq!(calls[1]["position"], 16);
@@ -407,6 +449,10 @@ fn reports_insertion_support_and_flanks() -> Result<(), Box<dyn std::error::Erro
     assert_eq!(calls[2]["index"], 13);
     assert_eq!(calls[2]["position"], 17);
     assert_eq!(calls[2]["ploc"], 54);
+    for flank in &calls[1..] {
+        assert!(flank.get("maximum_peak_height").is_none());
+        assert!(flank.get("relative_quality").is_none());
+    }
     Ok(())
 }
 
@@ -461,6 +507,9 @@ fn reports_deletion_with_flanks_only() -> Result<(), Box<dyn std::error::Error>>
     assert_eq!(calls[1]["index"], 11);
     assert_eq!(calls[1]["position"], 17);
     assert_eq!(calls[1]["ploc"], 46);
+    assert!(calls.iter().all(|call| {
+        call.get("maximum_peak_height").is_none() && call.get("relative_quality").is_none()
+    }));
     Ok(())
 }
 
@@ -488,7 +537,7 @@ fn represents_circular_origin_wrap() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(value["alignment"]["reference_segments"][0]["end"], 28);
     assert_eq!(value["alignment"]["reference_segments"][1]["start"], 0);
     assert_eq!(value["alignment"]["reference_segments"][1]["end"], 18);
-    assert_eq!(value["warnings"]["reference_origin_wrap"], true);
+    assert!(value["warnings"].get("reference_origin_wrap").is_none());
     Ok(())
 }
 
@@ -538,8 +587,8 @@ fn accepts_iupac_vendor_calls_and_char_pcon() -> Result<(), Box<dyn std::error::
     assert_eq!(call["index"], 5);
     assert_eq!(call["position"], 10);
     assert_eq!(call["ploc"], 22);
-    assert_eq!(call["quality"]["vendor_score"], 40);
-    assert_eq!(call["quality"]["vendor_score_applies"], false);
+    assert!(call["relative_quality"].is_number());
+    assert!(call.get("quality").is_none());
     Ok(())
 }
 
@@ -587,6 +636,15 @@ fn refuses_to_overwrite_completed_output() -> Result<(), Box<dyn std::error::Err
     assert!(log.contains("target already exists"));
     assert!(log.contains(" | ERROR    | "));
     Ok(())
+}
+
+fn assert_object_keys(value: &Value, expected: &[&str]) {
+    let actual = value
+        .as_object()
+        .map(|object| object.keys().map(String::as_str).collect::<BTreeSet<_>>())
+        .unwrap_or_default();
+    let expected = expected.iter().copied().collect::<BTreeSet<_>>();
+    assert_eq!(actual, expected);
 }
 
 fn read_result(workdir: &Path, trace: &Path) -> Result<Value, Box<dyn std::error::Error>> {

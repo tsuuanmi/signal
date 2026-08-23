@@ -41,11 +41,11 @@ For an approved fixture, raw decoded bytes, channel remapping, PLOC positions, u
 - N uses an explicit alignment score and cannot produce a reportable SNV;
 - rCRS is treated as circular and origin-spanning coordinates are preserved;
 - indels are normalized deterministically, including circular repeats;
-- compact `signal.analysis/v4` JSON is the only scientific result; append-only operational logs are separate, variants contain direct mapped trace calls, complete trace arrays are omitted, and no VCF/BCF compatibility layer exists;
+- compact `signal.analysis/v5` JSON is the only scientific result; it retains provenance, read/trim, merged noisy-region, alignment, normalized-variant, and warning summaries while omitting filenames, sequences, rolling windows, gapped rows, method constants, full peaks, vendor data, and redundant fields; append-only operational logs remain separate and no VCF/BCF or legacy JSON compatibility layer exists;
 - no ConfirmFilter, PHFinder, genotype, allelic fraction, or two-allele decomposition.
 
 None of these divergences keeps a legacy path: Signal emits a single
-`signal.analysis/v4` result, consumes only the documented tags, and exposes no
+`signal.analysis/v5` result, consumes only the documented tags, and exposes no
 compatibility switch, alias, or removed behavior.
 
 The previous Apollo Rust port is not ground truth where it uses PBAS as the final result, sample-specific early-region logic, loose goldens, ignored write errors, or inconsistent coordinates/quality fields.
