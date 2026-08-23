@@ -141,6 +141,8 @@ mod tests {
             .map(|(index, &height)| BaseCall {
                 index_0based: index,
                 ploc_0based: index * 4,
+                window_start_0based: index * 4,
+                window_end_0based_exclusive: index * 4 + 1,
                 peaks: std::array::from_fn(|channel| ChannelPeak {
                     base: Nucleotide::ALL[channel],
                     height,

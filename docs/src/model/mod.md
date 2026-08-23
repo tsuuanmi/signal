@@ -7,7 +7,7 @@ Owns the validated domain types shared across scientific stages.
 ## Responsibilities
 
 - Declare the model submodules: `alignment`, `basecalls`, `coordinate`,
-  `nucleotide`, `quality`, `reference`, `result`, `trace`, and `variant`.
+  `nucleotide`, `quality`, `reference`, `result`, `signal`, `trace`, and `variant`.
 - Provide validated domain vocabulary with no I/O, CLI, configuration loading, or
   algorithm dependencies.
 
@@ -21,11 +21,12 @@ No filesystem access, argument parsing, logging, or algorithm execution.
 - `nucleotide`: canonical bases and reverse complement.
 - `trace`: four-channel `Chromatogram` plus vendor evidence.
 - `basecalls`: primary/ambiguous calls with trace positions.
+- `signal`: rolling SNR windows and merged candidate-noisy regions.
 - `quality`: quality vector, trim bounds, and QC result.
 - `reference`: name, sequence, topology, and checksums.
 - `alignment`: orientation, interval, score, and gapped rows.
 - `variant`: normalized `Variant`, `VariantKind`, alleles, and mapped calls.
-- `result`: complete `AnalysisResult` matching JSON schema v3.
+- `result`: complete `AnalysisResult` matching JSON schema v4.
 
 ## Invariants and errors
 

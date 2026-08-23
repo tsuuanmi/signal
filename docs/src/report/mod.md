@@ -8,7 +8,7 @@ publishes it atomically.
 ## Responsibilities
 
 - Re-export `build`, `serialize`, `CompletedAnalysis`, and `publish`.
-- Assemble the compact `signal.analysis/v3` document and write it atomically.
+- Assemble the compact `signal.analysis/v4` document and write it atomically.
 - Keep the variant-call projection in a separate `variant` submodule.
 
 ## Non-responsibilities
@@ -18,7 +18,7 @@ filtering.
 
 ## Key types and functions
 
-- `build(completed) -> Result<AnalysisResult>`: assembles the compact v3 document,
+- `build(completed) -> Result<AnalysisResult>`: assembles the compact v4 document,
   delegating variant-call projection to `variant`.
 - `serialize(result) -> Result<Vec<u8>>`: deterministic JSON bytes.
 - `publish(path, bytes) -> Result<()>`: atomic no-overwrite publication.
@@ -27,7 +27,7 @@ filtering.
 
 ## Invariants and errors
 
-JSON identifies `signal.analysis/v3`; serialization is deterministic; the output
+JSON identifies `signal.analysis/v4`; serialization is deterministic; the output
 is written atomically and never overwrites an existing target. Assembly,
 serialization, and output failures return typed errors.
 
@@ -43,7 +43,7 @@ with a versioned contract.
 
 ## Requirements and decisions
 
-ADR-0011, ADR-0012; `SRS-OUT-001` through `SRS-OUT-007`.
+ADR-0011, ADR-0012, ADR-0013; `SRS-OUT-001` through `SRS-OUT-007`.
 
 ## Tests
 

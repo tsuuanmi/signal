@@ -6,12 +6,15 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace `signal.analysis/v3` with `signal.analysis/v4`, adding bounded rolling signal-quality windows, merged candidate-noisy regions, and a signal-processing method identity without a v3 compatibility path.
+- Replace strict configuration schema version 3 with version 4, requiring the minimum two-window noisy-interval setting.
 - Replace `signal.analysis/v1` with compact `signal.analysis/v3`: omit bulk records; use concise coordinate names and direct mapped variant `calls` with A/C/G/T peaks plus relative/vendor quality.
 - Remove `--out-prefix`; analyses now publish as `results/<trace-stem>.json` and create the results directory when needed.
 - Replace strict configuration schema version 1 with version 2, requiring variant peak, relative-quality, and inclusive-region settings.
 
 ### Added
 
+- Deterministic `signal.windowed_snr/v1` analysis with local median/first-difference-MAD estimates, finite SNR features, and merged call/sample candidate-noisy regions requiring at least two candidate windows by default.
 - Complete one-AB1 Rust analysis pipeline with strict TOML configuration and typed errors.
 - Bounds-checked canonical ABIF decode, single-record FASTA identity, and internal four-channel signal evidence.
 - Signal-derived re-calling at PLOC loci, relative quality scoring, and end-only trimming.
@@ -26,6 +29,7 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- Candidate-noisy signal annotations are observation-only and do not affect calls, trim bounds, alignments, warning totals, or variant eligibility.
 - MVP output is one compact `results/<trace-stem>.json`; the earlier JSON-plus-VCF plan is superseded.
 - Quality is explicitly uncalibrated relative score; vendor PCON remains separate.
 - rCRS topology is circular and origin-spanning alignments/indels have explicit canonical coordinates.

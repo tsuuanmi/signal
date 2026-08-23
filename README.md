@@ -1,6 +1,6 @@
 # Signal
 
-Signal is a focused Rust pipeline for deterministic analysis of one Sanger ABIF/AB1 chromatogram against one short reference FASTA. It re-calls bases from analyzed A/C/G/T channels at ABIF PLOC loci, scores and trims poor read ends, aligns either strand with affine-gap semi-global Gotoh, and reports normalized primary-sequence SNVs and small indels.
+Signal is a focused Rust pipeline for deterministic analysis of one Sanger ABIF/AB1 chromatogram against one short reference FASTA. It re-calls bases from analyzed A/C/G/T channels at ABIF PLOC loci, annotates rolling signal-to-noise features and candidate-noisy regions, scores and trims poor read ends, aligns either strand with affine-gap semi-global Gotoh, and reports normalized primary-sequence SNVs and small indels.
 
 ## Status
 
@@ -21,7 +21,7 @@ For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads
 
 - exactly one canonical analyzed ABIF/AB1 file per invocation;
 - exactly one non-empty plain FASTA record, at most 50,000 bases;
-- compact `signal.analysis/v3` JSON with concise coordinates and direct per-variant trace calls containing four-channel peaks and quality;
+- compact `signal.analysis/v4` JSON with rolling signal-quality windows, merged candidate-noisy regions, concise coordinates, and direct per-variant trace calls containing four-channel peaks and quality;
 - explicit linear/circular topology; bundled rCRS defaults to circular;
 - configured inclusive biological regions, with a bundled peak floor of 150 and relative-quality eligibility for SNVs and inserted bases;
 - primary-sequence SNVs and normalized insertions/deletions up to 50 bp.
@@ -30,7 +30,7 @@ Directories, manifests, globs, batch discovery, SCF, VCF/BCF, FM indexing, two-a
 
 ## Biological interpretation
 
-Signal reports differences between the conservative signal-derived primary sequence and the supplied reference. Its relative quality score is not Phred-calibrated. Vendor PCON is retained separately and applies to a re-called base only when that call agrees with PBAS. A single trace cannot establish zygosity, homoplasmy, low-level heteroplasmy, phase, or clinical significance.
+Signal reports differences between the conservative signal-derived primary sequence and the supplied reference. Its rolling SNR annotation and relative quality score are not Phred-calibrated; candidate-noisy regions do not suppress calls or variants. Vendor PCON is retained separately and applies to a re-called base only when that call agrees with PBAS. A single trace cannot establish zygosity, homoplasmy, low-level heteroplasmy, phase, or clinical significance.
 
 ## Development
 

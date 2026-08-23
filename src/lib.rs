@@ -20,6 +20,7 @@ mod pipeline;
 mod quality_control;
 mod reference;
 mod report;
+mod signal_processing;
 mod trace;
 mod variant_calling;
 

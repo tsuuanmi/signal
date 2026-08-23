@@ -3,8 +3,9 @@
 ## Product and method
 
 - [`pipeline.md`](pipeline.md): normative stage-by-stage scientific method.
+- [`signal-processing.md`](signal-processing.md): rolling SNR method, limits, and deferred cleaning research.
 - [`json-output.md`](json-output.md): authoritative JSON field and coordinate contract.
-- [`SRS.md`](SRS.md): normative MVP requirements.
+- [`SRS.md`](SRS.md): normative software requirements.
 - [`architecture.md`](architecture.md): module and dependency boundaries.
 - [`configuration.md`](configuration.md): strict TOML and environment behavior.
 
@@ -19,7 +20,7 @@
 
 ## Contracts and decisions
 
-- [`schemas/analysis-v3.schema.json`](schemas/analysis-v3.schema.json): compact Draft 2020-12 result schema.
-- [`examples/analysis-v3.example.json`](examples/analysis-v3.example.json): synthetic compact contract example.
+- [`schemas/analysis-v4.schema.json`](schemas/analysis-v4.schema.json): compact Draft 2020-12 result schema.
+- [`examples/analysis-v4.example.json`](examples/analysis-v4.example.json): synthetic compact contract example.
 - [`adr/README.md`](adr/README.md): architecture decision index.
 - [`src/`](src/): one-to-one manuals for every Rust source file.

@@ -1,8 +1,8 @@
-"""Validate the signal.analysis/v3 JSON schema and its variant call mappings.
+"""Validate signal.analysis/v4 signal windows and variant call mappings.
 
 Checks that the Draft 2020-12 schema is itself valid, that the bundled example
-and any supplied result files validate against it, and that malformed SNV/INS/DEL
-call-mapping shapes are rejected.
+and any supplied result files validate against it, and that malformed signal and
+SNV/INS/DEL call-mapping shapes are rejected.
 
 Exit status is non-zero if any check fails.
 """
@@ -19,8 +19,8 @@ from typing import Any
 from jsonschema import Draft202012Validator, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = ROOT / "docs" / "schemas" / "analysis-v3.schema.json"
-DEFAULT_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v3.example.json"
+SCHEMA_PATH = ROOT / "docs" / "schemas" / "analysis-v4.schema.json"
+DEFAULT_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v4.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -70,6 +70,24 @@ def rejected_call_shapes(example: dict[str, Any]) -> list[tuple[str, dict[str, A
     ]
 
 
+def rejected_signal_shapes(example: dict[str, Any]) -> list[tuple[str, dict[str, Any]]]:
+    """Return malformed signal summaries that the closed schema must reject."""
+    missing_metric = copy.deepcopy(example)
+    missing_metric["signal"]["windows"][0].pop("minimum_primary_snr")
+
+    negative_metric = copy.deepcopy(example)
+    negative_metric["signal"]["windows"][0]["maximum_secondary_snr"] = -1
+
+    unknown_field = copy.deepcopy(example)
+    unknown_field["signal"]["windows"][0]["raw_channels"] = []
+
+    return [
+        ("signal window missing primary SNR", missing_metric),
+        ("signal window with negative secondary SNR", negative_metric),
+        ("signal window with unknown raw channels", unknown_field),
+    ]
+
+
 def assert_rejected(
     validator: Draft202012Validator, rejected: list[tuple[str, dict[str, Any]]]
 ) -> list[str]:
@@ -85,7 +103,7 @@ def assert_rejected(
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
-        description="Validate the signal.analysis/v3 schema and result documents."
+        description="Validate the signal.analysis/v4 schema and result documents."
     )
     parser.add_argument(
         "results",
@@ -109,7 +127,8 @@ def main(argv: list[str] | None = None) -> int:
     paths = [Path(p) for p in args.results] or [DEFAULT_EXAMPLE]
     errors.extend(validate_documents(validator, paths))
 
-    rejected = rejected_call_shapes(load_json(DEFAULT_EXAMPLE))
+    example = load_json(DEFAULT_EXAMPLE)
+    rejected = rejected_call_shapes(example) + rejected_signal_shapes(example)
     errors.extend(assert_rejected(validator, rejected))
 
     for error in errors:
@@ -118,7 +137,7 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(errors)} check(s) failed", file=sys.stderr)
         return 1
     print(
-        f"OK: validated {len(paths)} document(s); rejected {len(rejected)} invalid call-mapping shape(s)"
+        f"OK: validated {len(paths)} document(s); rejected {len(rejected)} invalid contract shape(s)"
     )
     return 0
 

@@ -1,5 +1,5 @@
-# Signal MVP scientific configuration. Unknown or missing keys are errors.
-schema_version = 2
+# Signal scientific configuration. Unknown or missing keys are errors.
+schema_version = 4
 
 [reference]
 # rCRS is a circular mitochondrial reference.
@@ -8,6 +8,13 @@ topology = "circular"
 [basecalling]
 # A second channel must reach this fraction of the strongest positive peak.
 secondary_peak_ratio = 0.33
+
+[signal_processing]
+# Observation-only rolling SNR annotation; it does not alter scientific calls.
+window_size_bases = 10
+minimum_primary_snr = 3.0
+# At least two candidate windows are required for a noisy interval.
+minimum_noisy_windows = 2
 
 [quality_control]
 # Relative, uncalibrated quality and end-trimming settings.

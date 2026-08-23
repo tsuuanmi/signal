@@ -1,6 +1,6 @@
 # ADR-0012: Use Concise Coordinates and Direct Mapped Variant Calls
 
-- **Status:** Accepted
+- **Status:** Superseded in part by ADR-0013
 - **Date:** 2026-08-24
 
 ## Context
@@ -36,4 +36,8 @@ A/C/G/T peaks may occur at different sample indexes because each channel is sear
 
 ## Supersession
 
-This ADR supersedes the v2 field names and nested `evidence` shape in ADR-0011. ADR-0011's compact-output scope and no-compatibility decision remain in force.
+This ADR supersedes the v2 field names and nested `evidence` shape in ADR-0011.
+ADR-0011's compact-output scope and no-compatibility decision remain in force.
+ADR-0013 supersedes only the v3 top-level contract by adding bounded
+observation-only signal windows in v4; concise variant-call mappings remain
+unchanged.

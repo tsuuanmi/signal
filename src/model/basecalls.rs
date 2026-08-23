@@ -28,6 +28,8 @@ pub struct ChannelPeak {
 pub struct BaseCall {
     pub(crate) index_0based: usize,
     pub(crate) ploc_0based: usize,
+    pub(crate) window_start_0based: usize,
+    pub(crate) window_end_0based_exclusive: usize,
     pub(crate) peaks: [ChannelPeak; 4],
     pub(crate) primary: char,
     pub(crate) ambiguity: char,

@@ -18,13 +18,15 @@ No peak detection, ratio thresholding, or call orchestration.
 
 - `PeakSource`: `LocalMaximum` or `PlocFallback`.
 - `ChannelPeak`: base, height, zero-based position, and source.
-- `BaseCall`: original index, PLOC position, per-channel peaks, primary,
-  ambiguity, qualifying channels, and vendor agreement.
+- `BaseCall`: original index, PLOC position, sample-window bounds, per-channel
+  peaks, primary, ambiguity, qualifying channels, and vendor agreement.
 - `BaseCalls`: ordered calls plus `primary_sequence` and `ambiguity_sequence`,
   with `len()` and `is_empty()`.
 
 ## Invariants and errors
 
+- Every call retains one non-empty 0-based half-open sample window containing
+  its PLOC.
 - Calls, primary sequence, and ambiguity sequence have equal lengths.
 - `BaseCalls::len()` equals the number of call loci.
 

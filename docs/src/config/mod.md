@@ -23,8 +23,8 @@ single documented default path.
 
 - `load() -> Result<Config>`: resolves `SIGNAL_CONFIG` (or the default path),
   parses strict TOML, and validates.
-- `Config`, `ReferenceConfig`, `BasecallingConfig`, `QualityControlConfig`,
-  `AlignmentConfig`, `VariantCallingConfig`: typed validated records.
+- `Config`, `ReferenceConfig`, `BasecallingConfig`, `SignalProcessingConfig`,
+  `QualityControlConfig`, `AlignmentConfig`, `VariantCallingConfig`: typed validated records.
 - Re-exported compiled caps: `MAX_AB1_BYTES`, `MAX_REFERENCE_BYTES`,
   `MAX_REFERENCE_LENGTH`, and `MAX_ALIGNMENT_CELLS`; defaults also owns internal
   config-source and indel caps.

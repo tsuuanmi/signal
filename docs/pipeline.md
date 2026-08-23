@@ -15,13 +15,13 @@ progress and failures without entering the JSON contract.
 ## Overview
 
 ```text
-AB1 file ──► decode ──► basecalling ──► quality_control ──► alignment ──► variant_calling ──► JSON
+AB1 file ──► decode ──► basecalling ──► signal_processing ──► quality_control ──► alignment ──► variant_calling ──► JSON
 FASTA ref ─┘
 TOML config ─┘
 ```
 
 The pipeline consumes exactly one AB1 trace, one single-record FASTA reference,
-and one strict TOML configuration. It runs five scientific stages in order. Each
+and one strict TOML configuration. It runs six scientific stages in order. Each
 stage consumes the validated output of the previous stage and produces a new
 typed result; no stage mutates shared state.
 
@@ -97,13 +97,21 @@ peak ties `top`, the call is unresolved (`N`). Otherwise:
 The primary and ambiguity sequences are the concatenation of the per-call
 primary and ambiguity symbols.
 
-## Stage 3 — Quality control (`signal.apollo_relative_quality/v1`,
+## Stage 3 — Signal processing (`signal.windowed_snr/v1`)
+
+Calculates observation-only signal-quality features from the immutable analyzed channels and basecalling evidence. It uses full-width, stride-one windows of configured size `5..=10` calls. Each base call retains the sample interval used for peak selection, so a rolling call interval maps to one exact channel-sample span.
+
+For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison and output.
+
+Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows remain visible in `signal.windows` but do not form a noisy interval. Clean gaps are never filled. These annotations do not alter calls, quality, trimming, alignment, warning totals, or variant eligibility. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
+
+## Stage 4 — Quality control (`signal.apollo_relative_quality/v1`,
 `signal.apollo_end_trim/v1`)
 
 Computes one bounded, uncalibrated quality value per call and selects one
 retained interval. It never removes internal sequence regions.
 
-### Substep 3.1 — Per-call penalty
+### Substep 4.1 — Per-call penalty
 
 For each call `i`, a window of `trim_window_size` calls centered on `i` is
 examined. The penalty is the sum of two components:
@@ -117,13 +125,13 @@ examined. The penalty is the sum of two components:
 
 The penalty is `ambiguity + spacing_penalty`.
 
-### Substep 3.2 — Best section
+### Substep 4.2 — Best section
 
 The best contiguous section is the window of length
 `max(1, floor(call_count * best_section_fraction))` with the minimum summed
 penalty. Its average penalty is recorded.
 
-### Substep 3.3 — Relative quality score
+### Substep 4.3 — Relative quality score
 
 Scores are uncalibrated and bounded. Let `max_penalty` be the largest penalty in
 the read. If `max_penalty <= 0`, every call receives
@@ -136,7 +144,7 @@ floor(max_relative_quality_score * (1 - penalty / max_penalty))
 clamped to `[0, max_relative_quality_score]`. These scores are **not** Phred
 calibrated; `phred_calibrated` is always `false`.
 
-### Substep 3.4 — End trimming
+### Substep 4.4 — End trimming
 
 The trim threshold is `trim_stringency * best_average * trim_window_size`.
 Starting from the best section, the algorithm walks outward and stops when a
@@ -145,20 +153,20 @@ window's summed penalty exceeds the threshold, producing `trim_start` and
 `minimum_retained_bases` calls, otherwise analysis fails. The retained sequence
 is `primary_sequence[trim_start..trim_end]`.
 
-### Substep 3.5 — Per-call record
+### Substep 4.5 — Per-call record
 
 Each call records its penalty, relative quality score, and optional vendor
 quality. `vendor_quality_applies` is true only when a vendor quality exists and
 the vendor primary agrees with the signal primary. Retention is represented once
 by the global trim interval rather than duplicated per call.
 
-## Stage 4 — Alignment (`signal.gotoh_semiglobal/v1`)
+## Stage 5 — Alignment (`signal.gotoh_semiglobal/v1`)
 
 Aligns the retained primary sequence to the reference with affine-gap Gotoh
 dynamic programming. Alignment is semi-global: the retained query is fully
 consumed while unaligned reference flanks are allowed.
 
-### Substep 4.1 — Orientation candidates
+### Substep 5.1 — Orientation candidates
 
 The retained query is aligned in both orientations:
 
@@ -170,7 +178,7 @@ so the query may wrap across the origin; the working reference length is the
 modulo length. A traceback may consume at most one reference length, so a query
 whose required reference span is longer than the circle is unsupported.
 
-### Substep 4.2 — Gotoh scoring
+### Substep 5.2 — Gotoh scoring
 
 Three dynamic-programming matrices track match, insertion, and deletion states.
 A substitution scores `match_score` for equal canonical bases, `mismatch_score`
@@ -182,7 +190,7 @@ whose consumed reference span is at most one circle rather than letting an
 invalid unbounded candidate mask a valid placement. Allocation is bounded by a
 compiled cell cap.
 
-### Substep 4.3 — Traceback
+### Substep 5.3 — Traceback
 
 The traceback decodes the selected path into equal-length gapped query and
 gapped reference strings, an operation-run string (e.g. `5M`, `3M1I1M`), and
@@ -195,27 +203,27 @@ alignment metrics. When multiple paths tie, a documented state order
   columns);
 - `unresolved_query_bases` (query `N` columns).
 
-### Substep 4.4 — Orientation selection
+### Substep 5.4 — Orientation selection
 
 The forward and reverse candidates are compared by score, then exact matches,
 then fewer mismatches, then fewer gap opens. The strictly better orientation is
 selected; an exact tie is an error. The selected orientation must meet
 `minimum_callable_bases` and `minimum_identity`, otherwise analysis fails.
 
-### Substep 4.5 — Reference segments
+### Substep 5.5 — Reference segments
 
 For a linear reference, the alignment maps to one half-open reference segment.
 For a circular reference, the aligned span is projected back onto the reference;
 if it crosses the origin it is split into two segments and `wraps_origin` is
 `true`.
 
-## Stage 5 — Variant calling (`signal.primary_difference/v3`)
+## Stage 6 — Variant calling (`signal.primary_difference/v3`)
 
 Extracts normalized primary-sequence differences from the selected alignment.
 Only differences in the primary sequence are considered; no allele-frequency,
 genotype, or heteroplasmy inference is performed.
 
-### Substep 5.1 — Difference extraction
+### Substep 6.1 — Difference extraction
 
 Walking the alignment columns:
 
@@ -227,7 +235,7 @@ Differences whose allele contains a non-canonical base, or whose indel length
 exceeds `max_indel_length`, increment the excluded-candidate warning count rather
 than being reported.
 
-### Substep 5.2 — Normalization
+### Substep 6.2 — Normalization
 
 Reported variants are normalized:
 
@@ -247,7 +255,7 @@ calls omit biological position; deletions carry aligned flanks only. The emitted
 reference allele is validated against the supplied reference. Normalization
 may move the allele representation without changing the observed call mappings.
 
-### Substep 5.3 — Configured eligibility
+### Substep 6.3 — Configured eligibility
 
 A normalized candidate is retained only when its 1-based anchor `position` lies
 inside at least one configured inclusive region. SNV supporting calls and every
@@ -264,28 +272,28 @@ a concise exclusion diagnostic containing kind, contig, normalized position when
 available, and all failed rules. Pipeline orchestration writes one WARN record per
 diagnostic without reference/alternate alleles.
 
-### Substep 5.4 — Ordering
+### Substep 6.4 — Ordering
 
 Reported variants are sorted by `(contig, position, reference, alternate)` and
 deduplicated.
 
 ## Output
 
-The completed result is reduced to core metadata, sequences, selected alignment,
+The completed result is reduced to core metadata, sequences, rolling signal-quality windows and merged candidate-noisy regions, selected alignment,
 warning counts, and variants with local peak/quality evidence. Full channel arrays
 and non-variant per-call records are not serialized. The document is published
 atomically to `results/<trace-stem>.json`. Operational records are appended
 separately to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`) and are not part
 of deterministic JSON. One run-correlated record summarizes input/decode,
-basecalling, quality control, alignment, variant calling, and publication
+basecalling, signal processing, quality control, alignment, variant calling, and publication
 readiness with aggregate metrics and elapsed milliseconds. WARN records identify
 removed candidates by kind/contig/position/reasons and summarize final warning
 categories; ERROR records identify the active failed stage. Records omit complete
 sequences, alleles, region contents, per-call peaks, alignment strings, and JSON
 bodies. The JSON shape is defined in
 [`json-output.md`](json-output.md), validated by
-[`schemas/analysis-v3.schema.json`](schemas/analysis-v3.schema.json), and shown in
-[`examples/analysis-v3.example.json`](examples/analysis-v3.example.json).
+[`schemas/analysis-v4.schema.json`](schemas/analysis-v4.schema.json), and shown in
+[`examples/analysis-v4.example.json`](examples/analysis-v4.example.json).
 
 ## Biological limitations
 
@@ -296,6 +304,7 @@ diagnostic. The following limitations are intentional and documented:
   single primary sequence. It does not estimate allele fractions, genotype
   likelihoods, or heteroplasmy levels, and it does not decompose mixed or
   two-allele signals.
+- **Observational SNR.** Rolling SNR values are robust local features, not Phred scores or error probabilities. Candidate-noisy intervals do not suppress calls or variants.
 - **Uncalibrated quality.** Quality values are relative, bounded scores derived
   from ambiguity and peak spacing. They are not Phred-calibrated and are not
   error probabilities.

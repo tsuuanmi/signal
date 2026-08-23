@@ -11,6 +11,8 @@ producing primary and ambiguous calls.
 - Rank channels by peak height and select the primary call, applying the
   configured secondary-peak ratio to identify qualifying channels.
 - Emit the primary and IUPAC ambiguity calls with their qualifying channels.
+- Retain each call's validated sample-window bounds for downstream
+  observation-only signal analysis.
 - Record whether the vendor primary agrees with the signal-derived call, without
   retaining duplicate vendor/call fields or using it as the result.
 

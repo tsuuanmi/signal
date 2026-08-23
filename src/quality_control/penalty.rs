@@ -101,6 +101,8 @@ mod tests {
             .map(|(index, (&ploc, &ambiguity))| BaseCall {
                 index_0based: index,
                 ploc_0based: ploc,
+                window_start_0based: ploc.saturating_sub(1),
+                window_end_0based_exclusive: ploc + 2,
                 peaks: std::array::from_fn(|channel| ChannelPeak {
                     base: Nucleotide::ALL[channel],
                     height: 1,

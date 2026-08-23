@@ -21,7 +21,7 @@ risk.
 
 Choose option 3.
 
-- The tracked default is `config/signal.toml` with `schema_version = 2`.
+- The tracked default is `config/signal.toml` with `schema_version = 4`.
 - `SIGNAL_CONFIG` may select another TOML path.
 - Environment variables do not override individual scientific values.
 - The operational `SIGNAL_LOG_DIR` may select the append-only log destination;
@@ -41,7 +41,8 @@ validation.
 
 ## Supersession
 
-ADR-0011 partially supersedes the earlier "record every effective value" goal:
+ADR-0013 updates the strict schema version to 4 for required observational
+signal settings and the minimum noisy-window run length. ADR-0011 partially supersedes the earlier "record every effective value" goal:
 the compact JSON records the config checksum and versioned method IDs rather than
 duplicating every effective value, which stays in the TOML. ADR-0007's strict
 TOML selection, environment policy, and deterministic resolution remain in

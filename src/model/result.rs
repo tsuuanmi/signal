@@ -1,4 +1,4 @@
-//! Compact serializable `signal.analysis/v3` contract.
+//! Compact serializable `signal.analysis/v4` contract.
 
 use serde::Serialize;
 
@@ -13,6 +13,7 @@ pub struct AnalysisResult {
     pub(crate) schema_version: &'static str,
     pub(crate) meta: MetaResult,
     pub(crate) sequence: SequenceResult,
+    pub(crate) signal: SignalResult,
     pub(crate) alignment: AlignmentResult,
     pub(crate) variants: Vec<VariantResult>,
     pub(crate) warnings: WarningSummaryResult,
@@ -49,6 +50,7 @@ pub struct ReferenceResult {
 #[derive(Debug, Serialize)]
 pub struct MethodsResult {
     pub(crate) basecalling: &'static str,
+    pub(crate) signal_processing: &'static str,
     pub(crate) quality_control: &'static str,
     pub(crate) trimming: &'static str,
     pub(crate) alignment: &'static str,
@@ -69,6 +71,31 @@ pub struct SequenceResult {
 pub struct IntervalResult {
     pub(crate) start: usize,
     pub(crate) end: usize,
+}
+
+/// Observation-only rolling signal features and merged noisy regions.
+#[derive(Debug, Serialize)]
+pub struct SignalResult {
+    pub(crate) windows: Vec<SignalWindowResult>,
+    pub(crate) noisy_regions: Vec<NoisyRegionResult>,
+}
+
+/// One full-width, stride-one rolling signal window.
+#[derive(Debug, Serialize)]
+pub struct SignalWindowResult {
+    pub(crate) calls: IntervalResult,
+    pub(crate) samples: IntervalResult,
+    pub(crate) minimum_primary_snr: f64,
+    pub(crate) maximum_secondary_snr: f64,
+    pub(crate) candidate_noisy: bool,
+}
+
+/// A union of overlapping or adjacent candidate-noisy windows.
+#[derive(Debug, Serialize)]
+pub struct NoisyRegionResult {
+    pub(crate) calls: IntervalResult,
+    pub(crate) samples: IntervalResult,
+    pub(crate) minimum_primary_snr: f64,
 }
 
 /// Selected alignment only; losing orientation candidates are omitted.

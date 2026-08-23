@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Defines the compact serializable `signal.analysis/v3` document contract.
+Defines the compact serializable `signal.analysis/v4` document contract.
 
 ## Responsibilities
 
-- Represent the selected run identity, sequence, alignment, reported variants, and
-  a compact warning summary.
+- Represent the selected run identity, sequence, signal annotations, alignment,
+  reported variants, and a compact warning summary.
 - Provide the typed structs that `report::json` serializes deterministically.
 - Omit decoded bulk data, per-call tables, losing orientation candidates, and the
   complete reference/configuration, which remain internal to the algorithms.
@@ -18,12 +18,16 @@ No serialization logic, filesystem access, or algorithm execution.
 
 ## Key types and functions
 
-- `AnalysisResult`: `schema_version`, `meta`, `sequence`, `alignment`, `variants`,
+- `AnalysisResult`: `schema_version`, `meta`, `sequence`, `signal`, `alignment`,
+  `variants`,
   and `warnings`.
 - `MetaResult` with `TraceResult` (input identity), `ReferenceResult`,
-  `MethodsResult` (versioned method IDs, including `signal.peak_recall/v2` and
-  `signal.primary_difference/v3`), and `configuration_sha256`.
+  `MethodsResult` (versioned method IDs, including `signal.peak_recall/v2`,
+  `signal.windowed_snr/v1`, and `signal.primary_difference/v3`), and
+  `configuration_sha256`.
 - `SequenceResult`: primary, ambiguity, retained sequence, and trim interval.
+- `SignalResult`, `SignalWindowResult`, and `NoisyRegionResult`: bounded rolling
+  SNR features and merged call/sample intervals.
 - `AlignmentResult`: the selected alignment only — orientation, score, metrics,
   `reference_segments`, `wraps_origin`, `operation_runs`, and gapped rows.
 - `VariantResult` with a `calls` vector of `VariantCallResult` for each
@@ -41,7 +45,7 @@ No serialization logic, filesystem access, or algorithm execution.
 
 ## Invariants and errors
 
-- `schema_version` is `signal.analysis/v3`.
+- `schema_version` is `signal.analysis/v4`.
 - Call `position` is skipped for inserted calls; `vendor_score` is skipped when
   the ABIF input has no PCON value.
 - The document is deterministic: identical inputs produce identical output.

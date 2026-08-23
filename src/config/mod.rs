@@ -9,5 +9,6 @@ pub(crate) use defaults::{
 };
 pub(crate) use load::load;
 pub(crate) use types::{
-    AlignmentConfig, BasecallingConfig, Config, QualityControlConfig, VariantCallingConfig,
+    AlignmentConfig, BasecallingConfig, Config, QualityControlConfig, SignalProcessingConfig,
+    VariantCallingConfig,
 };

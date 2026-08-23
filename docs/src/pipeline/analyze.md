@@ -13,9 +13,9 @@ analysis.
   kind, contig, position, and rejection reasons without alleles.
 - Record terminal failures with the active stage while omitting raw scientific
   payloads.
-- Load inputs, then run basecalling, quality control, alignment, and configured
-  variant calling in order.
-- Assemble the compact `signal.analysis/v3` document, serialize it, and publish it
+- Load inputs, then run basecalling, observation-only signal processing, quality
+  control, alignment, and configured variant calling in order.
+- Assemble the compact `signal.analysis/v4` document, serialize it, and publish it
   atomically to `results/<trace-stem>.json` without overwriting an existing target.
 
 ## Non-responsibilities
@@ -46,21 +46,22 @@ logic.
 
 ## Dependencies
 
-- `input`, `logger`, `basecalling`, `quality_control`, `alignment`,
-  `variant_calling`, `report`.
+- `input`, `logger`, `basecalling`, `signal_processing`, `quality_control`,
+  `alignment`, `variant_calling`, `report`.
 - `cli` for `AnalyzeArgs`.
 - `error` for `Result`.
 
 ## Biological semantics
 
 The stage order reflects the analysis flow: decode the chromatogram, re-call
-bases, score quality and trim ends, align the retained read, and extract
-primary-sequence differences.
+bases, annotate rolling SNR and candidate-noisy regions, score quality and trim
+ends, align the retained read, and extract primary-sequence differences.
 
 ## Tests
 
 No dedicated unit tests; `tests/analyze.rs` verifies ordered stage events,
-aggregate metrics, payload omissions, removed-variant reasons, warning levels,
+aggregate metrics including signal-window/region counts, payload omissions,
+removed-variant reasons, warning levels,
 and stage-aware failures across the complete pipeline.
 
 ## Status

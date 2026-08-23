@@ -9,9 +9,9 @@ use serde_json::Value;
 use tempfile::tempdir;
 
 use support::{
-    output_path, write_abif, write_abif_with_channel_order, write_abif_with_peak_heights,
-    write_abif_with_ploc, write_abif_with_short_pbas, write_abif_with_unused_p2ba,
-    write_abif_with_vendor, write_config, write_reference,
+    output_path, write_abif, write_abif_with_background_noise, write_abif_with_channel_order,
+    write_abif_with_peak_heights, write_abif_with_ploc, write_abif_with_short_pbas,
+    write_abif_with_unused_p2ba, write_abif_with_vendor, write_config, write_reference,
 };
 
 const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
@@ -37,16 +37,25 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     let second_bytes = fs::read(output_path(second.path(), &second.path().join("trace.ab1")))?;
     assert_eq!(first_bytes, second_bytes);
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.analysis/v3");
+    assert_eq!(value["schema_version"], "signal.analysis/v4");
     assert_eq!(value["alignment"]["orientation"], "forward");
     assert_eq!(
         value["meta"]["methods"]["basecalling"],
         "signal.peak_recall/v2"
     );
     assert_eq!(
+        value["meta"]["methods"]["signal_processing"],
+        "signal.windowed_snr/v1"
+    );
+    assert_eq!(
         value["meta"]["methods"]["variant_calling"],
         "signal.primary_difference/v3"
     );
+    assert_eq!(
+        value["signal"]["windows"].as_array().map(Vec::len),
+        Some(19)
+    );
+    assert!(value["signal"]["noisy_regions"].is_array());
     assert!(value.get("analysis").is_none());
     assert!(value.pointer("/meta/input/size_bytes").is_none());
     let text = std::str::from_utf8(&first_bytes)?;
@@ -60,6 +69,7 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
         "event=analysis_started",
         "event=inputs_loaded",
         "event=basecalling_completed",
+        "event=signal_processing_completed",
         "event=quality_control_completed",
         "event=alignment_completed",
         "event=variant_calling_completed",
@@ -73,6 +83,9 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     assert!(log.lines().all(|line| line.contains("run_id=")));
     assert!(log.contains("calls=28 canonical_primary=28 unresolved_primary=0"));
     assert!(log.contains("retained=28"));
+    assert!(log.contains(
+        "windows=19 noisy_windows=0 noisy_regions=0 noisy_calls=0 window_size_bases=10 minimum_noisy_windows=2"
+    ));
     assert!(log.contains("orientation=Forward"));
     assert!(log.contains("reported=0 snv=0 insertion=0 deletion=0 excluded=0"));
     assert!(log.contains("minimum_peak_height=150"));
@@ -211,6 +224,62 @@ fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>
     assert_eq!(call["peaks"]["G"]["height"], 1000);
     assert!(call["quality"]["relative_score"].is_number());
     assert_eq!(call["quality"]["phred_calibrated"], false);
+    Ok(())
+}
+
+#[test]
+fn annotates_noisy_region_without_filtering_supported_snv() -> Result<(), Box<dyn std::error::Error>>
+{
+    let low_threshold = tempdir()?;
+    let high_threshold = tempdir()?;
+    let mut query = QUERY.to_owned();
+    query.replace_range(10..11, "T");
+    let mut results = Vec::new();
+
+    for (directory, threshold) in [(&low_threshold, 0.1), (&high_threshold, 10_000.0)] {
+        let trace = directory.path().join("trace.ab1");
+        let reference = directory.path().join("reference.fa");
+        let config = directory.path().join("signal.toml");
+        write_abif_with_background_noise(&trace, &query, 7..14, 300)?;
+        write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+        write_config(&config, "linear")?;
+        let config_text = fs::read_to_string(&config)?;
+        fs::write(
+            &config,
+            config_text.replace(
+                "minimum_primary_snr=3.0",
+                &format!("minimum_primary_snr={threshold}"),
+            ),
+        )?;
+        run(&trace, &reference, &config, directory.path())?.success();
+        results.push(read_result(directory.path(), &trace)?);
+    }
+
+    assert_eq!(results[0]["sequence"], results[1]["sequence"]);
+    assert_eq!(results[0]["alignment"], results[1]["alignment"]);
+    assert_eq!(results[0]["variants"], results[1]["variants"]);
+    assert!(
+        results[0]["signal"]["noisy_regions"]
+            .as_array()
+            .is_some_and(Vec::is_empty)
+    );
+
+    let variants = results[1]["variants"]
+        .as_array()
+        .ok_or("variants is not an array")?;
+    assert_eq!(variants.len(), 1);
+    assert_eq!(variants[0]["kind"], "SNV");
+    assert_eq!(variants[0]["calls"][0]["index"], 10);
+    let regions = results[1]["signal"]["noisy_regions"]
+        .as_array()
+        .ok_or("noisy_regions is not an array")?;
+    assert!(regions.iter().any(|region| {
+        region["calls"]["start"]
+            .as_u64()
+            .is_some_and(|start| start <= 10)
+            && region["calls"]["end"].as_u64().is_some_and(|end| end > 10)
+    }));
+    assert_eq!(results[1]["warnings"]["excluded_variant_candidates"], 0);
     Ok(())
 }
 

@@ -8,8 +8,8 @@ and one append-only operational log.
 ## Responsibilities
 
 - Re-export `analyze` as the module boundary.
-- Sequence validated input, basecalling, QC, alignment, variant calling, and
-  atomic reporting while recording stage summaries through `logger`.
+- Sequence validated input, basecalling, observational signal processing, QC,
+  alignment, variant calling, and atomic reporting while recording stage summaries through `logger`.
 
 ## Non-responsibilities
 

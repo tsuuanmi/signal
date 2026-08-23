@@ -4,13 +4,16 @@ Signal loads exactly one strict TOML file selected by `SIGNAL_CONFIG` or `config
 
 Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions, non-finite numbers, invalid ranges, and config sources above 1 MiB are errors. No scientific value falls back silently.
 
-## Schema version 2
+## Schema version 4
 
 | Section | Key | Value | Validation |
 |---|---|---:|---|
-| root | `schema_version` | `2` | exactly 2 |
+| root | `schema_version` | `4` | exactly 4 |
 | `reference` | `topology` | `circular` | `linear` or `circular` |
 | `basecalling` | `secondary_peak_ratio` | `0.33` | finite `(0,1]` |
+| `signal_processing` | `window_size_bases` | `10` | integer `5..=10` |
+| | `minimum_primary_snr` | `3.0` | finite and positive |
+| | `minimum_noisy_windows` | `2` | integer at least `2` |
 | `quality_control` | `trim_window_size` | `10` | positive |
 | | `best_section_fraction` | `0.10` | finite `(0,1]` |
 | | `max_relative_quality_score` | `60` | positive `u8` |
@@ -28,7 +31,7 @@ Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions
 | | `relative_quality_threshold` | `30` | less than `max_relative_quality_score`; comparison is strict `>` |
 | | `regions` | `[[16024, 16365], [73, 340], [438, 576]]` | non-empty inclusive 1-based ranges within `1..=50000` |
 
-The region list is treated as a union in the supplied reference coordinate system. Region order and overlap do not change eligibility. The compact JSON records the raw config checksum and versioned method IDs. Effective values remain in the strict TOML selected for the run; the local path is omitted.
+Signal-processing values control observation-only annotations and never change calls, trim bounds, alignments, or variants. The region list is treated as a union in the supplied reference coordinate system. Region order and overlap do not change eligibility. The compact JSON records the raw config checksum and versioned method IDs. Effective values remain in the strict TOML selected for the run; the local path is omitted.
 
 ## `.env`
 

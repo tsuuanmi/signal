@@ -52,8 +52,9 @@ batch behavior to Signal itself.
 
 ## Analysis output privacy
 
-The compact JSON contains the trace basename, called sequences, alignment, variants,
-and local peaks/quality for variant-associated calls. It excludes complete channel
+The compact JSON contains the trace basename, called sequences, rolling
+signal-quality windows and candidate-noisy intervals, alignment, variants, and
+local peaks/quality for variant-associated calls. It excludes complete channel
 arrays and arbitrary ABIF sample, plate, well, instrument, and run free text. A
 result can still identify a sample, so derived JSON follows the same approval and
 redistribution policy as its AB1 source. Append-only logs can contain trace/reference

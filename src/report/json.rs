@@ -7,9 +7,11 @@ use crate::model::basecalls::BaseCalls;
 use crate::model::quality::QualityControlResult;
 use crate::model::reference::Reference;
 use crate::model::result::{
-    AlignmentResult, AnalysisResult, IntervalResult, MetaResult, MethodsResult, ReferenceResult,
-    SequenceResult, TraceResult, WarningSummaryResult,
+    AlignmentResult, AnalysisResult, IntervalResult, MetaResult, MethodsResult, NoisyRegionResult,
+    ReferenceResult, SequenceResult, SignalResult, SignalWindowResult, TraceResult,
+    WarningSummaryResult,
 };
+use crate::model::signal::SignalAnalysis;
 use crate::model::trace::Chromatogram;
 use crate::model::variant::VariantCallingResult;
 use crate::report::variant;
@@ -20,24 +22,60 @@ pub(crate) struct CompletedAnalysis {
     pub(crate) trace: Chromatogram,
     pub(crate) reference: Reference,
     pub(crate) calls: BaseCalls,
+    pub(crate) signal: SignalAnalysis,
     pub(crate) quality: QualityControlResult,
     pub(crate) alignment: Alignment,
     pub(crate) variants: VariantCallingResult,
 }
 
-/// Builds the compact v3 document without filesystem side effects.
+/// Builds the compact v4 document without filesystem side effects.
 pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     let CompletedAnalysis {
         config,
         trace,
         reference,
         calls,
+        signal,
         quality,
         alignment,
         variants,
     } = completed;
     let warnings = warning_summary(&calls, &alignment, variants.excluded_count());
     let variant_results = variant::project(variants.reported, &calls, &quality)?;
+    let signal_result = SignalResult {
+        windows: signal
+            .windows
+            .into_iter()
+            .map(|window| SignalWindowResult {
+                calls: IntervalResult {
+                    start: window.call_start_0based,
+                    end: window.call_end_0based_exclusive,
+                },
+                samples: IntervalResult {
+                    start: window.sample_start_0based,
+                    end: window.sample_end_0based_exclusive,
+                },
+                minimum_primary_snr: window.minimum_primary_snr,
+                maximum_secondary_snr: window.maximum_secondary_snr,
+                candidate_noisy: window.candidate_noisy,
+            })
+            .collect(),
+        noisy_regions: signal
+            .noisy_regions
+            .into_iter()
+            .map(|region| NoisyRegionResult {
+                calls: IntervalResult {
+                    start: region.call_start_0based,
+                    end: region.call_end_0based_exclusive,
+                },
+                samples: IntervalResult {
+                    start: region.sample_start_0based,
+                    end: region.sample_end_0based_exclusive,
+                },
+                minimum_primary_snr: region.minimum_primary_snr,
+            })
+            .collect(),
+    };
     let reference_segments = alignment
         .reference_segments
         .into_iter()
@@ -48,7 +86,7 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
         .collect();
 
     Ok(AnalysisResult {
-        schema_version: "signal.analysis/v3",
+        schema_version: "signal.analysis/v4",
         meta: MetaResult {
             program: "signal",
             version: env!("CARGO_PKG_VERSION"),
@@ -65,6 +103,7 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
             configuration_sha256: config.source_sha256,
             methods: MethodsResult {
                 basecalling: "signal.peak_recall/v2",
+                signal_processing: "signal.windowed_snr/v1",
                 quality_control: "signal.apollo_relative_quality/v1",
                 trimming: "signal.apollo_end_trim/v1",
                 alignment: "signal.gotoh_semiglobal/v1",
@@ -80,6 +119,7 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
                 end: quality.trim_end_0based_exclusive,
             },
         },
+        signal: signal_result,
         alignment: AlignmentResult {
             orientation: alignment.orientation,
             score: alignment.score,

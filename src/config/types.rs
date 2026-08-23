@@ -13,6 +13,7 @@ use crate::model::reference::ReferenceTopology;
 pub struct Config {
     pub(crate) reference: ReferenceConfig,
     pub(crate) basecalling: BasecallingConfig,
+    pub(crate) signal_processing: SignalProcessingConfig,
     pub(crate) quality_control: QualityControlConfig,
     pub(crate) alignment: AlignmentConfig,
     pub(crate) variant_calling: VariantCallingConfig,
@@ -30,6 +31,14 @@ pub struct ReferenceConfig {
 #[derive(Debug, Clone)]
 pub struct BasecallingConfig {
     pub(crate) secondary_peak_ratio: f64,
+}
+
+/// Observation-only rolling signal-quality settings.
+#[derive(Debug, Clone)]
+pub struct SignalProcessingConfig {
+    pub(crate) window_size_bases: usize,
+    pub(crate) minimum_primary_snr: f64,
+    pub(crate) minimum_noisy_windows: usize,
 }
 
 /// Relative score and trimming settings.
@@ -69,6 +78,7 @@ pub(super) struct RawConfig {
     schema_version: u32,
     reference: RawReferenceConfig,
     basecalling: RawBasecallingConfig,
+    signal_processing: RawSignalProcessingConfig,
     quality_control: RawQualityControlConfig,
     alignment: RawAlignmentConfig,
     variant_calling: RawVariantCallingConfig,
@@ -84,6 +94,14 @@ struct RawReferenceConfig {
 #[serde(deny_unknown_fields)]
 struct RawBasecallingConfig {
     secondary_peak_ratio: f64,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct RawSignalProcessingConfig {
+    window_size_bases: usize,
+    minimum_primary_snr: f64,
+    minimum_noisy_windows: usize,
 }
 
 #[derive(Debug, Deserialize)]
@@ -119,9 +137,9 @@ struct RawVariantCallingConfig {
 
 impl RawConfig {
     pub(super) fn validate(self, source_path: PathBuf, source_sha256: String) -> Result<Config> {
-        if self.schema_version != 2 {
+        if self.schema_version != 4 {
             return Err(Error::Config(format!(
-                "unsupported schema_version {}; expected 2",
+                "unsupported schema_version {}; expected 4",
                 self.schema_version
             )));
         }
@@ -129,6 +147,20 @@ impl RawConfig {
             "basecalling.secondary_peak_ratio",
             self.basecalling.secondary_peak_ratio,
         )?;
+        if !(5..=10).contains(&self.signal_processing.window_size_bases) {
+            return Err(Error::Config(
+                "signal_processing.window_size_bases must be in 5..=10".into(),
+            ));
+        }
+        require_positive_finite(
+            "signal_processing.minimum_primary_snr",
+            self.signal_processing.minimum_primary_snr,
+        )?;
+        if self.signal_processing.minimum_noisy_windows < 2 {
+            return Err(Error::Config(
+                "signal_processing.minimum_noisy_windows must be at least 2".into(),
+            ));
+        }
         if self.quality_control.trim_window_size == 0 {
             return Err(Error::Config(
                 "quality_control.trim_window_size must be positive".into(),
@@ -218,6 +250,11 @@ impl RawConfig {
             basecalling: BasecallingConfig {
                 secondary_peak_ratio: self.basecalling.secondary_peak_ratio,
             },
+            signal_processing: SignalProcessingConfig {
+                window_size_bases: self.signal_processing.window_size_bases,
+                minimum_primary_snr: self.signal_processing.minimum_primary_snr,
+                minimum_noisy_windows: self.signal_processing.minimum_noisy_windows,
+            },
             quality_control: QualityControlConfig {
                 trim_window_size: self.quality_control.trim_window_size,
                 best_section_fraction: self.quality_control.best_section_fraction,
@@ -250,6 +287,13 @@ fn require_fraction(name: &str, value: f64) -> Result<()> {
     require_finite_range(name, value, f64::MIN_POSITIVE, 1.0)
 }
 
+fn require_positive_finite(name: &str, value: f64) -> Result<()> {
+    if !value.is_finite() || value <= 0.0 {
+        return Err(Error::Config(format!("{name} must be finite and positive")));
+    }
+    Ok(())
+}
+
 fn require_finite_range(name: &str, value: f64, minimum: f64, maximum: f64) -> Result<()> {
     if !value.is_finite() || value < minimum || value > maximum {
         return Err(Error::Config(format!(
@@ -263,7 +307,7 @@ fn require_finite_range(name: &str, value: f64, minimum: f64, maximum: f64) -> R
 mod tests {
     use super::*;
 
-    const VALID: &str = "schema_version=2\n[reference]\ntopology='circular'\n[basecalling]\nsecondary_peak_ratio=0.33\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.1\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.8\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[16024,16365],[73,340],[438,576]]\n";
+    const VALID: &str = "schema_version=4\n[reference]\ntopology='circular'\n[basecalling]\nsecondary_peak_ratio=0.33\n[signal_processing]\nwindow_size_bases=10\nminimum_primary_snr=3.0\nminimum_noisy_windows=2\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.1\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.8\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[16024,16365],[73,340],[438,576]]\n";
 
     fn validate(text: &str) -> std::result::Result<Config, Box<dyn std::error::Error>> {
         let raw: RawConfig = toml::from_str(text)?;
@@ -271,10 +315,13 @@ mod tests {
     }
 
     #[test]
-    fn accepts_variant_filter_list_of_lists() -> std::result::Result<(), Box<dyn std::error::Error>>
-    {
+    fn accepts_signal_settings_and_variant_filter_list_of_lists()
+    -> std::result::Result<(), Box<dyn std::error::Error>> {
         let config = validate(VALID)?;
 
+        assert_eq!(config.signal_processing.window_size_bases, 10);
+        assert_eq!(config.signal_processing.minimum_primary_snr, 3.0);
+        assert_eq!(config.signal_processing.minimum_noisy_windows, 2);
         assert_eq!(config.variant_calling.minimum_peak_height, 150);
         assert_eq!(config.variant_calling.relative_quality_threshold, 30);
         assert_eq!(
@@ -285,11 +332,30 @@ mod tests {
     }
 
     #[test]
-    fn rejects_old_schema_and_missing_filter_fields() {
-        assert!(validate(&VALID.replace("schema_version=2", "schema_version=1")).is_err());
+    fn rejects_old_schema_and_missing_required_fields() {
+        assert!(validate(&VALID.replace("schema_version=4", "schema_version=3")).is_err());
+        assert!(
+            toml::from_str::<RawConfig>(&VALID.replace("minimum_primary_snr=3.0\n", "")).is_err()
+        );
         assert!(
             toml::from_str::<RawConfig>(&VALID.replace("minimum_peak_height=150\n", "")).is_err()
         );
+    }
+
+    #[test]
+    fn rejects_invalid_signal_settings() {
+        for invalid in [
+            VALID.replace("window_size_bases=10", "window_size_bases=4"),
+            VALID.replace("window_size_bases=10", "window_size_bases=11"),
+            VALID.replace("minimum_noisy_windows=2", "minimum_noisy_windows=1"),
+            VALID.replace("minimum_primary_snr=3.0", "minimum_primary_snr=0.0"),
+            VALID.replace("minimum_primary_snr=3.0", "minimum_primary_snr=nan"),
+        ] {
+            assert!(
+                validate(&invalid).is_err(),
+                "unexpectedly accepted {invalid}"
+            );
+        }
     }
 
     #[test]

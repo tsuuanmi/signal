@@ -60,6 +60,8 @@ pub(crate) fn call(trace: &Chromatogram, config: &BasecallingConfig) -> Result<B
         calls.push(BaseCall {
             index_0based: index,
             ploc_0based: ploc,
+            window_start_0based: window.start,
+            window_end_0based_exclusive: window.end,
             peaks,
             primary,
             ambiguity,

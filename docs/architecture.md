@@ -22,13 +22,15 @@ CLI
              ↓
          basecalling    signal-derived calls at PLOC loci
              ↓
+         signal_processing rolling SNR + candidate-noisy regions (observation only)
+             ↓
          quality_control relative score + end-only trim interval
              ↓
          alignment      forward/reverse semi-global Gotoh, circular-aware
              ↓
          variant_calling normalized, configured-region/signal-filtered differences
              ↓
-         report         compact variant-focused JSON + atomic no-overwrite publish
+         report         compact signal/variant JSON + atomic no-overwrite publish
 ```
 
 The shared `checksum` module provides the stable SHA-256 identities used by
@@ -47,17 +49,18 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `trace` | canonical ABIF decode | base calling |
 | `reference` | one-record FASTA and identity | alignment |
 | `basecalling` | peak windows, peaks, primary/ambiguity calls | trimming and reference knowledge |
+| `signal_processing` | rolling sample-domain SNR features and merged candidate-noisy regions | channel mutation, calibrated quality, and variant eligibility |
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
 | `alignment` | bounded Gotoh, traceback, orientation, circular projection | variant extraction |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
-| `report` | compact JSON assembly, mapped-call peak/quality projection, atomic publish | scientific decisions |
+| `report` | compact JSON assembly, signal-window projection, mapped-call peak/quality projection, atomic publish | scientific decisions |
 | `pipeline` | sequencing the use case | algorithm internals |
 
-Dependencies point toward `model`, `config`, and `error`; cycles are forbidden.
+Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. `signal_processing` reads `Chromatogram` and `BaseCalls` but no algorithm module depends back on it.
 
 ## Coordinates and strand
 
-Trace samples and original call indexes are 0-based. Internal reference intervals are 0-based half-open. Variant positions are 1-based. Reverse alignments retain an explicit oriented-query to original-call mapping. Circular alignments may contain two reference segments when they cross the origin.
+Trace samples, rolling signal-window call indexes, and original call indexes are 0-based. Internal reference intervals are 0-based half-open. Variant positions are 1-based. Reverse alignments retain an explicit oriented-query to original-call mapping. Circular alignments may contain two reference segments when they cross the origin.
 
 ## Output transaction
 

@@ -7,5 +7,6 @@ pub(crate) mod nucleotide;
 pub(crate) mod quality;
 pub(crate) mod reference;
 pub(crate) mod result;
+pub(crate) mod signal;
 pub(crate) mod trace;
 pub(crate) mod variant;

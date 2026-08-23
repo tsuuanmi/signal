@@ -8,8 +8,8 @@ stages.
 ## Responsibilities
 
 - Define the effective `Config` and the per-stage configuration structs
-  (`ReferenceConfig`, `BasecallingConfig`, `QualityControlConfig`,
-  `AlignmentConfig`, `VariantCallingConfig`).
+  (`ReferenceConfig`, `BasecallingConfig`, `SignalProcessingConfig`,
+  `QualityControlConfig`, `AlignmentConfig`, `VariantCallingConfig`).
 - Define the strict `RawConfig` deserialization shape with unknown-key rejection.
 - Validate every value against the scientific contract and produce a typed
   `Config` with source identity.
@@ -28,9 +28,11 @@ No file I/O, environment handling, or algorithm execution.
 
 ## Invariants and errors
 
-- `schema_version` must equal `2`; otherwise `Error::Config`.
+- `schema_version` must equal `4`; otherwise `Error::Config`.
 - Fractions (`secondary_peak_ratio`, `best_section_fraction`, `minimum_identity`)
   must be finite and in `(0, 1]`.
+- `window_size_bases` must be in `5..=10`, `minimum_primary_snr` must be
+  finite and positive, and `minimum_noisy_windows` must be at least 2.
 - `trim_window_size`, `max_relative_quality_score`, `minimum_retained_bases`,
   `minimum_callable_bases` must be positive.
 - `trim_stringency` must be finite and in `[0, 9]`.
@@ -61,9 +63,9 @@ read ends are handled.
 
 ## Tests
 
-Unit tests cover schema version 2, required filter fields, list-of-lists parsing,
-threshold relationships, and invalid/empty/out-of-range regions. End-to-end tests
-exercise the selected strict config.
+Unit tests cover schema version 4, required signal/filter fields, signal bounds,
+list-of-lists parsing, threshold relationships, and invalid/empty/out-of-range
+regions. End-to-end tests exercise the selected strict config.
 
 ## Status
 

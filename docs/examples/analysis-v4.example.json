@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.analysis/v3",
+  "schema_version": "signal.analysis/v4",
   "meta": {
     "program": "signal",
     "version": "0.1.0",
@@ -16,6 +16,7 @@
     "configuration_sha256": "23456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef01",
     "methods": {
       "basecalling": "signal.peak_recall/v2",
+      "signal_processing": "signal.windowed_snr/v1",
       "quality_control": "signal.apollo_relative_quality/v1",
       "trimming": "signal.apollo_end_trim/v1",
       "alignment": "signal.gotoh_semiglobal/v1",
@@ -30,6 +31,24 @@
       "start": 0,
       "end": 5
     }
+  },
+  "signal": {
+    "windows": [
+      {
+        "calls": {
+          "start": 0,
+          "end": 5
+        },
+        "samples": {
+          "start": 0,
+          "end": 20
+        },
+        "minimum_primary_snr": 12.5,
+        "maximum_secondary_snr": 0.0,
+        "candidate_noisy": false
+      }
+    ],
+    "noisy_regions": []
   },
   "alignment": {
     "orientation": "forward",

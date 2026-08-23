@@ -42,6 +42,9 @@ pub enum Error {
     /// Signal-derived base re-calling failed.
     #[error("base re-calling failed: {0}")]
     Basecalling(String),
+    /// Observational signal-quality feature extraction failed.
+    #[error("signal processing failed: {0}")]
+    SignalProcessing(String),
     /// Quality scoring or end trimming failed.
     #[error("quality control failed: {0}")]
     QualityControl(String),

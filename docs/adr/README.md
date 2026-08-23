@@ -13,4 +13,5 @@
 | [0009](0009-biological-semantics.md) | Biologically explicit semantics | Accepted |
 | [0010](0010-circular-rcrs-alignment.md) | Circular rCRS direct alignment | Accepted |
 | [0011](0011-compact-variant-focused-json.md) | Compact variant-focused JSON | Superseded in part by ADR-0012 |
-| [0012](0012-concise-mapped-variant-calls.md) | Concise mapped variant calls | Accepted |
+| [0012](0012-concise-mapped-variant-calls.md) | Concise mapped variant calls | Superseded in part by ADR-0013 |
+| [0013](0013-observational-signal-quality.md) | Observational rolling signal quality | Accepted |

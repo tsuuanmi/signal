@@ -12,6 +12,7 @@ use crate::model::variant::VariantKind;
 use crate::pipeline::input;
 use crate::quality_control;
 use crate::report::{self, CompletedAnalysis};
+use crate::signal_processing;
 use crate::variant_calling;
 
 /// Runs one complete AB1-to-JSON analysis with one per-trace append-only log.
@@ -150,6 +151,30 @@ fn run_logged(
             vendor_compared,
             vendor_disagreements,
             inputs.config.basecalling.secondary_peak_ratio
+        ),
+    )?;
+
+    *stage = "signal_processing";
+    let stage_started = Instant::now();
+    let signal =
+        signal_processing::analyze(&inputs.trace, &calls, &inputs.config.signal_processing)?;
+    logger.info(
+        module_path!(),
+        line!(),
+        format_args!(
+            concat!(
+                "event=signal_processing_completed elapsed_ms={} windows={} noisy_windows={} ",
+                "noisy_regions={} noisy_calls={} window_size_bases={} minimum_noisy_windows={} ",
+                "minimum_primary_snr={:.4}"
+            ),
+            stage_started.elapsed().as_millis(),
+            signal.windows.len(),
+            signal.noisy_window_count(),
+            signal.noisy_regions.len(),
+            signal.noisy_call_count(),
+            inputs.config.signal_processing.window_size_bases,
+            inputs.config.signal_processing.minimum_noisy_windows,
+            inputs.config.signal_processing.minimum_primary_snr
         ),
     )?;
 
@@ -329,6 +354,7 @@ fn run_logged(
         trace: inputs.trace,
         reference: inputs.reference,
         calls,
+        signal,
         quality,
         alignment,
         variants,

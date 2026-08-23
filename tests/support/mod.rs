@@ -122,6 +122,50 @@ fn write_abif_fixture(
     p2ba: Option<Vec<u8>>,
     peak_heights: Option<Vec<i16>>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    write_abif_fixture_options(
+        path,
+        sequence,
+        vendor_primary,
+        pcon_element_type,
+        channel_order,
+        ploc_override,
+        p2ba,
+        peak_heights,
+        None,
+    )
+}
+
+pub fn write_abif_with_background_noise(
+    path: &Path,
+    sequence: &str,
+    noisy_calls: std::ops::Range<usize>,
+    amplitude: i16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    write_abif_fixture_options(
+        path,
+        sequence,
+        sequence.as_bytes(),
+        1,
+        *b"ACGT",
+        None,
+        None,
+        None,
+        Some((noisy_calls, amplitude)),
+    )
+}
+
+#[allow(clippy::too_many_arguments)]
+fn write_abif_fixture_options(
+    path: &Path,
+    sequence: &str,
+    vendor_primary: &[u8],
+    pcon_element_type: u16,
+    channel_order: [u8; 4],
+    ploc_override: Option<Vec<usize>>,
+    p2ba: Option<Vec<u8>>,
+    peak_heights: Option<Vec<i16>>,
+    background_noise: Option<(std::ops::Range<usize>, i16)>,
+) -> Result<(), Box<dyn std::error::Error>> {
     let spacing = 4_usize;
     let signal_locations: Vec<usize> = (0..sequence.len())
         .map(|index| 2 + index * spacing)
@@ -132,6 +176,25 @@ fn write_abif_fixture(
         return Err("synthetic peak-height count must equal signal sequence length".into());
     }
     let mut channels: [Vec<i16>; 4] = std::array::from_fn(|_| vec![0; sample_count]);
+    if let Some((noisy_calls, amplitude)) = background_noise {
+        if noisy_calls.start >= noisy_calls.end || noisy_calls.end > signal_locations.len() {
+            return Err("synthetic noisy-call range is invalid".into());
+        }
+        if amplitude <= 0 {
+            return Err("synthetic noise amplitude must be positive".into());
+        }
+        let sample_start = signal_locations[noisy_calls.start].saturating_sub(1);
+        let sample_end = signal_locations[noisy_calls.end - 1]
+            .saturating_add(2)
+            .min(sample_count);
+        for channel in &mut channels {
+            for (offset, value) in channel[sample_start..sample_end].iter_mut().enumerate() {
+                if offset % 2 == 0 {
+                    *value = amplitude;
+                }
+            }
+        }
+    }
     for (index, base) in sequence.bytes().enumerate() {
         let channel = channel_index(base)?;
         channels[channel][signal_locations[index]] = peak_heights[index];
@@ -230,7 +293,7 @@ pub fn write_config(path: &Path, topology: &str) -> Result<(), Box<dyn std::erro
     fs::write(
         path,
         format!(
-            "schema_version=2\n[reference]\ntopology='{topology}'\n[basecalling]\nsecondary_peak_ratio=0.33\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.10\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.80\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[1, 50000]]\n"
+            "schema_version=4\n[reference]\ntopology='{topology}'\n[basecalling]\nsecondary_peak_ratio=0.33\n[signal_processing]\nwindow_size_bases=10\nminimum_primary_snr=3.0\nminimum_noisy_windows=2\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.10\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.80\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[1, 50000]]\n"
         ),
     )?;
     Ok(())
