@@ -1,0 +1,11 @@
+//! Validated domain vocabulary shared by scientific stages.
+
+pub(crate) mod alignment;
+pub(crate) mod basecalls;
+pub(crate) mod coordinate;
+pub(crate) mod nucleotide;
+pub(crate) mod quality;
+pub(crate) mod reference;
+pub(crate) mod result;
+pub(crate) mod trace;
+pub(crate) mod variant;

@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://signal.invalid/schemas/analysis-v3.schema.json",
+  "title": "Signal compact analysis result v3",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "meta", "sequence", "alignment", "variants", "warnings"],
+  "properties": {
+    "schema_version": { "const": "signal.analysis/v3" },
+    "meta": { "$ref": "#/$defs/meta" },
+    "sequence": { "$ref": "#/$defs/sequence" },
+    "alignment": { "$ref": "#/$defs/alignment" },
+    "variants": { "type": "array", "items": { "$ref": "#/$defs/variant" } },
+    "warnings": { "$ref": "#/$defs/warnings" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "topology": { "enum": ["linear", "circular"] },
+    "orientation": { "enum": ["forward", "reverse"] },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["program", "version", "deterministic", "input", "reference", "configuration_sha256", "methods"],
+      "properties": {
+        "program": { "const": "signal" },
+        "version": { "type": "string", "minLength": 1 },
+        "deterministic": { "const": true },
+        "input": { "$ref": "#/$defs/input" },
+        "reference": { "$ref": "#/$defs/reference" },
+        "configuration_sha256": { "$ref": "#/$defs/sha256" },
+        "methods": { "$ref": "#/$defs/methods" }
+      }
+    },
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["file_name", "sha256"],
+      "properties": {
+        "file_name": { "type": "string", "minLength": 1 },
+        "sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "topology", "sequence_sha256"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "topology": { "$ref": "#/$defs/topology" },
+        "sequence_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "methods": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["basecalling", "quality_control", "trimming", "alignment", "variant_calling"],
+      "properties": {
+        "basecalling": { "const": "signal.peak_recall/v2" },
+        "quality_control": { "const": "signal.apollo_relative_quality/v1" },
+        "trimming": { "const": "signal.apollo_end_trim/v1" },
+        "alignment": { "const": "signal.gotoh_semiglobal/v1" },
+        "variant_calling": { "const": "signal.primary_difference/v2" }
+      }
+    },
+    "sequence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["primary", "ambiguity", "retained", "trim"],
+      "properties": {
+        "primary": { "type": "string", "pattern": "^[ACGTN]+$" },
+        "ambiguity": { "type": "string", "pattern": "^[ACGTRYSWKMN]+$" },
+        "retained": { "type": "string", "pattern": "^[ACGTN]+$" },
+        "trim": { "$ref": "#/$defs/interval" }
+      }
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "A zero-based half-open interval [start, end).",
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "alignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["orientation", "score", "metrics", "reference_segments", "wraps_origin", "operation_runs", "gapped_query", "gapped_reference"],
+      "properties": {
+        "orientation": { "$ref": "#/$defs/orientation" },
+        "score": { "type": "integer" },
+        "metrics": { "$ref": "#/$defs/metrics" },
+        "reference_segments": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "$ref": "#/$defs/interval" } },
+        "wraps_origin": { "type": "boolean" },
+        "operation_runs": { "type": "string", "pattern": "^([1-9][0-9]*[MID])+$" },
+        "gapped_query": { "type": "string", "pattern": "^[ACGTN-]+$" },
+        "gapped_reference": { "type": "string", "pattern": "^[ACGTN-]+$" }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_matches", "mismatches", "gap_opens", "callable_columns", "callable_identity", "unresolved_query_bases"],
+      "properties": {
+        "exact_matches": { "type": "integer", "minimum": 0 },
+        "mismatches": { "type": "integer", "minimum": 0 },
+        "gap_opens": { "type": "integer", "minimum": 0 },
+        "callable_columns": { "type": "integer", "minimum": 0 },
+        "callable_identity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "unresolved_query_bases": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contig", "position", "reference", "alternate", "kind", "classification", "normalization", "calls"],
+      "properties": {
+        "contig": { "type": "string", "minLength": 1 },
+        "position": { "type": "integer", "minimum": 1, "description": "One-based normalized biological reference position." },
+        "reference": { "type": "string", "pattern": "^[ACGT]+$" },
+        "alternate": { "type": "string", "pattern": "^[ACGT]+$" },
+        "kind": { "enum": ["SNV", "INS", "DEL"] },
+        "classification": { "const": "primary_sequence_difference" },
+        "normalization": { "enum": ["linear_left", "circular_canonical"] },
+        "calls": { "type": "array" }
+      },
+      "allOf": [
+        {
+          "if": { "properties": { "kind": { "const": "SNV" } }, "required": ["kind"] },
+          "then": { "properties": { "calls": { "minItems": 1, "items": { "$ref": "#/$defs/aligned_supporting_call" } } } }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "INS" } }, "required": ["kind"] },
+          "then": {
+            "properties": {
+              "calls": {
+                "minItems": 1,
+                "items": { "oneOf": [{ "$ref": "#/$defs/inserted_supporting_call" }, { "$ref": "#/$defs/flanking_call" }] },
+                "contains": { "$ref": "#/$defs/inserted_supporting_call" },
+                "minContains": 1
+              }
+            }
+          }
+        },
+        {
+          "if": { "properties": { "kind": { "const": "DEL" } }, "required": ["kind"] },
+          "then": { "properties": { "calls": { "minItems": 1, "items": { "$ref": "#/$defs/flanking_call" } } } }
+        }
+      ]
+    },
+    "call": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["role", "index", "ploc", "primary", "ambiguity", "peaks", "quality"],
+      "properties": {
+        "role": { "enum": ["supporting", "flanking"] },
+        "index": { "type": "integer", "minimum": 0, "description": "Zero-based index in the original ABIF call list." },
+        "position": { "type": "integer", "minimum": 1, "description": "One-based biological reference position for this aligned call; absent for inserted calls." },
+        "ploc": { "type": "integer", "minimum": 0, "description": "Zero-based ABIF PLOC sample index for this original trace call." },
+        "primary": { "type": "string", "pattern": "^[ACGTN]$" },
+        "ambiguity": { "type": "string", "pattern": "^[ACGTRYSWKMN]$" },
+        "peaks": { "$ref": "#/$defs/peaks" },
+        "quality": { "$ref": "#/$defs/quality" }
+      }
+    },
+    "aligned_supporting_call": {
+      "allOf": [
+        { "$ref": "#/$defs/call" },
+        { "properties": { "role": { "const": "supporting" } }, "required": ["position"] }
+      ]
+    },
+    "inserted_supporting_call": {
+      "allOf": [
+        { "$ref": "#/$defs/call" },
+        { "properties": { "role": { "const": "supporting" } }, "not": { "required": ["position"] } }
+      ]
+    },
+    "flanking_call": {
+      "allOf": [
+        { "$ref": "#/$defs/call" },
+        { "properties": { "role": { "const": "flanking" } }, "required": ["position"] }
+      ]
+    },
+    "peaks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "C", "G", "T"],
+      "properties": {
+        "A": { "$ref": "#/$defs/peak" },
+        "C": { "$ref": "#/$defs/peak" },
+        "G": { "$ref": "#/$defs/peak" },
+        "T": { "$ref": "#/$defs/peak" }
+      }
+    },
+    "peak": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["height", "position", "source"],
+      "properties": {
+        "height": { "type": "integer" },
+        "position": { "type": "integer", "minimum": 0, "description": "Zero-based ABIF channel-sample index; channels may peak at different samples within one call window." },
+        "source": { "enum": ["local_maximum", "ploc_fallback"] }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["relative_score", "penalty", "phred_calibrated", "vendor_score_applies"],
+      "properties": {
+        "relative_score": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "penalty": { "type": "integer", "minimum": 0 },
+        "phred_calibrated": { "const": false },
+        "vendor_score": { "type": "integer", "minimum": 0, "maximum": 255 },
+        "vendor_score_applies": { "type": "boolean" }
+      }
+    },
+    "warnings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "unresolved_primary_calls", "multi_channel_unresolved_calls", "vendor_disagreements", "excluded_variant_candidates", "reference_origin_wrap"],
+      "properties": {
+        "total": { "type": "integer", "minimum": 0 },
+        "unresolved_primary_calls": { "type": "integer", "minimum": 0 },
+        "multi_channel_unresolved_calls": { "type": "integer", "minimum": 0 },
+        "vendor_disagreements": { "type": "integer", "minimum": 0 },
+        "excluded_variant_candidates": { "type": "integer", "minimum": 0 },
+        "reference_origin_wrap": { "type": "boolean" }
+      }
+    }
+  }
+}

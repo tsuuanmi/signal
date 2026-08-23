@@ -1,0 +1,49 @@
+# `src/model/basecalls.rs`
+
+## Purpose
+
+Defines the signal-derived call records and their peak evidence.
+
+## Responsibilities
+
+- Represent per-channel peaks, the primary/ambiguity calls, qualifying channels,
+  and vendor-agreement state needed by downstream analysis.
+- Represent the ordered call list and the derived primary and ambiguity sequences.
+
+## Non-responsibilities
+
+No peak detection, ratio thresholding, or call orchestration.
+
+## Key types and functions
+
+- `PeakSource`: `LocalMaximum` or `PlocFallback`.
+- `ChannelPeak`: base, height, zero-based position, and source.
+- `BaseCall`: original index, PLOC position, per-channel peaks, primary,
+  ambiguity, qualifying channels, and vendor agreement.
+- `BaseCalls`: ordered calls plus `primary_sequence` and `ambiguity_sequence`,
+  with `len()` and `is_empty()`.
+
+## Invariants and errors
+
+- Calls, primary sequence, and ambiguity sequence have equal lengths.
+- `BaseCalls::len()` equals the number of call loci.
+
+## Dependencies
+
+- `model::nucleotide` for `Nucleotide`.
+- `serde` only for serializing the `PeakSource` enum in compact reports.
+
+## Biological semantics
+
+Each call records all four channel peaks and every channel that reached the
+ambiguity threshold, capturing clean, mixed, and unresolved positions. The
+vendor agreement flag allows quality applicability checks without influencing
+the signal-derived result.
+
+## Tests
+
+No dedicated unit tests; behavior is exercised through `basecalling::call`.
+
+## Status
+
+Implemented.
