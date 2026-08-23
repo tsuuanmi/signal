@@ -20,6 +20,7 @@ All notable changes to this project are documented here.
 - Exact one-to-one Rust source manuals, normative pipeline documentation, biological limitations, and Apollo deviation records.
 - Shared SHA-256 identity helper in `src/checksum.rs`, used by config, trace, and reference loading.
 - Locked uv environment and typed schema validator for reproducible JSON contract checks in development and CI.
+- External `scripts/analyze_samples.py` wrapper for safe per-sample local-corpus orchestration without changing the one-file CLI.
 
 ### Changed
 

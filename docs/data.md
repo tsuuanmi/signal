@@ -33,6 +33,21 @@ A directory, manifest, glob, or list is not accepted by the MVP. Selecting files
 from the local corpus is external test orchestration, not behavior of
 `signal analyze`.
 
+For the current local corpus, the external wrapper analyzes every trace belonging
+to the first ten non-empty sample IDs and groups outputs by sample:
+
+```bash
+uv run python scripts/analyze_samples.py
+```
+
+The defaults read `data/MS_010426_001.txt`, search
+`data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write
+`results/<sample-id>/<trace-stem>.json`. Existing result files are skipped rather
+than overwritten. Run `uv run python scripts/analyze_samples.py --help` to change
+the manifest, trace directory, reference, configuration, output directory, binary,
+or sample limit. This wrapper invokes the one-file CLI once per matching AB1; it
+does not add batch behavior to Signal itself.
+
 ## Analysis output privacy
 
 The compact JSON contains the trace basename, called sequences, alignment, variants,

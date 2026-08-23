@@ -15,6 +15,8 @@ cargo run --release -- analyze sample.ab1 \
 
 Signal reads `SIGNAL_CONFIG` or `config/signal.toml` and writes exactly one new file: `results/sample.json`. It creates `results/` when needed and refuses to overwrite an existing result. The binary does not parse `.env`.
 
+For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads the first ten IDs from `data/MS_010426_001.txt` and writes every matching trace result under `results/<sample-id>/`. See [`docs/data.md`](docs/data.md); the Signal CLI itself remains one-file-per-invocation.
+
 ## Scope
 
 - exactly one canonical analyzed ABIF/AB1 file per invocation;
