@@ -47,7 +47,9 @@ All notable changes to this project are documented here.
 
 ### Fixed
 
-- Synchronize batch result directories after atomic publication and roll back a new destination when durability cannot be confirmed.
+- Reject batch cleanup roots that overlap inputs or each other, preventing selected cleanup from deleting protected data.
+- Synchronize batch result directories and newly created parent entries after atomic publication, rolling back a new destination when durability cannot be confirmed.
+- Preserve every selected channel peak's internal sample position while keeping it omitted from compact v5.
 - Accept uppercase IUPAC vendor base evidence and both one-byte ABIF PCON element representations without changing signal-derived calls.
 - Avoid stale PID-only temporary-output name collisions and remove a just-published target when final synchronization fails.
 - Select the best span-valid circular traceback when a higher-scoring unbounded candidate exists in the doubled reference.

@@ -106,6 +106,7 @@ mod tests {
                 peaks: std::array::from_fn(|channel| ChannelPeak {
                     base: Nucleotide::ALL[channel],
                     height: 1,
+                    position_0based: ploc,
                     source: PeakSource::PlocFallback,
                 }),
                 primary: 'A',

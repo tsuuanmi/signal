@@ -28,6 +28,8 @@ No ABIF parsing, end trimming, reference alignment, or variant calling.
 ## Invariants and errors
 
 - Calls derive from the four signal channels at validated PLOC loci.
+- Every selected peak position must remain inside its call window; a violated
+  invariant returns `Error::Basecalling`.
 - A non-positive or exactly tied strongest peak yields an unresolved `N` call.
 - Qualifying channels are those above the secondary-peak ratio: one channel gives
   a canonical call, two give a two-base IUPAC code, three keep the strongest

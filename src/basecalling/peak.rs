@@ -65,13 +65,14 @@ pub(crate) fn peaks(trace: &Chromatogram, window: CallWindow, ploc: usize) -> [C
                 selected = Some((position, value));
             }
         }
-        let (height, source) = selected.map_or_else(
-            || (channel[ploc], PeakSource::PlocFallback),
-            |(_, height)| (height, PeakSource::LocalMaximum),
+        let (position, height, source) = selected.map_or_else(
+            || (ploc, channel[ploc], PeakSource::PlocFallback),
+            |(position, height)| (position, height, PeakSource::LocalMaximum),
         );
         ChannelPeak {
             base: Nucleotide::ALL[channel_index],
             height,
+            position_0based: position,
             source,
         }
     })
@@ -103,10 +104,10 @@ mod tests {
             vendor: VendorEvidence::default(),
         };
         let selected = peaks(&trace, CallWindow { start: 1, end: 6 }, 3);
-        assert_eq!(selected[0].height, 10);
-        assert_eq!(selected[1].height, 20);
-        assert_eq!(selected[2].height, 30);
-        assert_eq!(selected[3].height, 3);
+        assert_eq!((selected[0].position_0based, selected[0].height), (2, 10));
+        assert_eq!((selected[1].position_0based, selected[1].height), (3, 20));
+        assert_eq!((selected[2].position_0based, selected[2].height), (4, 30));
+        assert_eq!((selected[3].position_0based, selected[3].height), (3, 3));
         assert_eq!(selected[3].source, PeakSource::PlocFallback);
     }
 }

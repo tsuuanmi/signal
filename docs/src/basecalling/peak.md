@@ -11,8 +11,8 @@ strongest positive local peak per channel.
   position, with edge windows derived from the local spacing.
 - For each channel, find the strongest positive local maximum inside the window,
   falling back to the PLOC sample when no positive local maximum exists.
-- Return only each channel's base, selected height, and selection source; peak
-  sample positions are no longer retained.
+- Return each channel's base, selected height, 0-based sample position, and
+  selection source.
 
 ## Non-responsibilities
 
@@ -33,7 +33,9 @@ No ratio thresholding, IUPAC mapping, or call orchestration.
   PLOC position; violations return `Error::Basecalling`.
 - Midpoint overflow returns `Error::Basecalling`.
 - A peak is a positive local maximum; when none exists, the PLOC sample is used
-  and recorded as `PeakSource::PlocFallback`.
+  and recorded as `PeakSource::PlocFallback` at the PLOC position.
+- Every selected peak position remains within its call window; call orchestration
+  rejects a violated invariant.
 
 ## Dependencies
 

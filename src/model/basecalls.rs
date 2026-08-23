@@ -19,6 +19,7 @@ pub enum PeakSource {
 pub struct ChannelPeak {
     pub(crate) base: Nucleotide,
     pub(crate) height: i32,
+    pub(crate) position_0based: usize,
     pub(crate) source: PeakSource,
 }
 

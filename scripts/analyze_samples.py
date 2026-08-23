@@ -87,10 +87,33 @@ def discover_workload(trace_dir: Path, selected: list[str]) -> Workload:
     return workload
 
 
+def paths_overlap(left: Path, right: Path) -> bool:
+    """Return whether either resolved path contains the other."""
+    return left == right or left in right.parents or right in left.parents
+
+
+def validate_cleanup_roots(
+    output_dir: Path, log_dir: Path, protected: tuple[Path, ...]
+) -> None:
+    """Reject destructive roots that overlap each other or protected inputs."""
+    if paths_overlap(output_dir, log_dir):
+        raise ValueError(f"output and log roots overlap: {output_dir} and {log_dir}")
+    for root, label in ((output_dir, "output"), (log_dir, "log")):
+        for protected_path in protected:
+            if paths_overlap(root, protected_path):
+                raise ValueError(
+                    f"{label} root overlaps protected path: {root} and {protected_path}"
+                )
+
+
 def cleanup_targets(
-    output_dir: Path, log_dir: Path, workload: Workload
+    output_dir: Path,
+    log_dir: Path,
+    workload: Workload,
+    protected: tuple[Path, ...] = (),
 ) -> tuple[list[Path], list[Path]]:
     """Validate and return selected result directories and log files to remove."""
+    validate_cleanup_roots(output_dir, log_dir, protected)
     result_targets: list[Path] = []
     log_targets: set[Path] = set()
     for sample, traces in workload.items():
@@ -121,10 +144,15 @@ def cleanup_targets(
 
 
 def clean_previous_results(
-    output_dir: Path, log_dir: Path, workload: Workload
+    output_dir: Path,
+    log_dir: Path,
+    workload: Workload,
+    protected: tuple[Path, ...] = (),
 ) -> tuple[int, int]:
     """Remove only preflighted selected-sample result directories and logs."""
-    result_targets, log_targets = cleanup_targets(output_dir, log_dir, workload)
+    result_targets, log_targets = cleanup_targets(
+        output_dir, log_dir, workload, protected
+    )
     for result in result_targets:
         shutil.rmtree(result)
         print(f"CLEAN results {displayed(result)}")
@@ -196,9 +224,31 @@ def sync_directory(directory: Path) -> None:
         os.close(descriptor)
 
 
+def create_result_directory(directory: Path) -> list[Path]:
+    """Create a result directory and return parents needing synchronization."""
+    if directory.is_symlink():
+        raise OSError(f"refusing symlinked result directory: {directory}")
+    missing: list[Path] = []
+    current = directory
+    while not current.exists():
+        missing.append(current)
+        if current.parent == current:
+            break
+        current = current.parent
+    if current.exists() and not current.is_dir():
+        raise OSError(f"result directory ancestor is not a directory: {current}")
+    directory.mkdir(parents=True, exist_ok=True)
+    if directory.is_symlink() or not directory.is_dir():
+        raise OSError(f"result directory is not a regular directory: {directory}")
+    return [created.parent for created in missing]
+
+
 def publish_result(generated: Path, destination: Path) -> tuple[bool, str]:
     """Publish one generated result atomically without overwrite."""
-    destination.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        directory_parents = create_result_directory(destination.parent)
+    except OSError as directory_error:
+        return False, f"could not prepare {destination.parent}: {directory_error}"
     staged: Path | None = None
     published = False
     error = ""
@@ -222,6 +272,8 @@ def publish_result(generated: Path, destination: Path) -> tuple[bool, str]:
         staged.unlink()
         staged = None
         sync_directory(destination.parent)
+        for parent in dict.fromkeys(directory_parents):
+            sync_directory(parent)
     except FileExistsError:
         error = f"result appeared while analysis was running: {destination}"
     except OSError as publication_error:
@@ -287,7 +339,8 @@ def main(argv: list[str] | None = None) -> int:
             raise ValueError(f"trace directory does not exist: {trace_dir}")
         selected = sample_ids(manifest, args.limit)
         workload = discover_workload(trace_dir, selected)
-        cleanup_targets(output_dir, log_dir, workload)
+        protected = (manifest, reference, config, trace_dir, binary)
+        cleanup_targets(output_dir, log_dir, workload, protected)
     except (OSError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
@@ -302,7 +355,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         cleaned_results, cleaned_logs = clean_previous_results(
-            output_dir, log_dir, workload
+            output_dir, log_dir, workload, protected
         )
     except (OSError, ValueError) as error:
         print(f"error: cleanup failed: {error}", file=sys.stderr)

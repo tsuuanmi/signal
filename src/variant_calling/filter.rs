@@ -146,6 +146,7 @@ mod tests {
                 peaks: std::array::from_fn(|channel| ChannelPeak {
                     base: Nucleotide::ALL[channel],
                     height,
+                    position_0based: index * 4,
                     source: PeakSource::LocalMaximum,
                 }),
                 primary: 'A',

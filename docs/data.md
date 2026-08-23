@@ -51,13 +51,16 @@ The wrapper performs a clean selected rerun:
 2. discover every selected trace and reject missing matches, ambiguous ownership,
    duplicate selected IDs, trace-stem/log collisions, unsafe target types, and
    symlinks;
-3. preflight all selected result/log cleanup targets;
+3. reject output/log roots that overlap each other or any manifest, trace,
+   reference, configuration, or binary path, then preflight every selected cleanup
+   target;
 4. build the release binary unless `--no-build` is supplied, then require a
    regular binary;
 5. destructively remove only `results/<selected-sample>/` directories and logs
    matching selected trace stems/sample identities;
 6. run each selected trace through the one-file CLI and atomically place each new
-   result without overwrite.
+   result without overwrite, synchronizing both the result directory and every
+   parent that gained a newly created directory entry.
 
 Cleanup never removes unselected sample directories or unrelated logs. It occurs
 only after successful preflight and build, but it is not transactional across the

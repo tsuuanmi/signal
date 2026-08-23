@@ -3,7 +3,7 @@
 use crate::basecalling::iupac;
 use crate::basecalling::peak;
 use crate::config::BasecallingConfig;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::model::basecalls::{BaseCall, BaseCalls};
 use crate::model::trace::Chromatogram;
 
@@ -15,6 +15,15 @@ pub(crate) fn call(trace: &Chromatogram, config: &BasecallingConfig) -> Result<B
 
     for (index, (&ploc, window)) in trace.base_locations.iter().zip(windows).enumerate() {
         let peaks = peak::peaks(trace, window, ploc);
+        if peaks
+            .iter()
+            .any(|peak| peak.position_0based < window.start || peak.position_0based >= window.end)
+        {
+            return Err(Error::Basecalling(format!(
+                "selected peak escaped call window {}..{} at call {index}",
+                window.start, window.end
+            )));
+        }
         let mut order = [0_usize, 1, 2, 3];
         order.sort_by(|left, right| {
             peaks[*right]

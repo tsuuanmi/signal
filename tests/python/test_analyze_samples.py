@@ -119,6 +119,26 @@ class AnalyzeSamplesTests(unittest.TestCase):
         self.assertTrue(previous.is_file())
         self.assertEqual(source.read_text(encoding="utf-8"), "keep")
 
+    def test_cleanup_roots_cannot_overlap_inputs_or_each_other(self) -> None:
+        dangerous_output = self.root / "danger"
+        protected_trace_dir = dangerous_output / "S1"
+        protected_trace_dir.mkdir(parents=True)
+        trace = protected_trace_dir / "run_S1_a.ab1"
+        trace.write_bytes(b"trace")
+
+        with self.assertRaisesRegex(ValueError, "output root overlaps protected"):
+            batch.cleanup_targets(
+                dangerous_output,
+                self.log_dir,
+                {"S1": [trace]},
+                (protected_trace_dir,),
+            )
+        self.assertTrue(trace.is_file())
+        with self.assertRaisesRegex(ValueError, "output and log roots overlap"):
+            batch.validate_cleanup_roots(
+                self.output_dir, self.output_dir / "S1" / "logs", ()
+            )
+
     def test_missing_trace_fails_before_cleanup(self) -> None:
         self.manifest.write_text("S1\n", encoding="utf-8")
         selected = self.output_dir / "S1"
@@ -198,9 +218,14 @@ class AnalyzeSamplesTests(unittest.TestCase):
         generated.write_text("new", encoding="utf-8")
         destination = self.output_dir / "S1" / "trace.json"
 
-        succeeded, detail = batch.publish_result(generated, destination)
+        with patch.object(
+            batch, "sync_directory", wraps=batch.sync_directory
+        ) as synchronized:
+            succeeded, detail = batch.publish_result(generated, destination)
         self.assertTrue(succeeded, detail)
         self.assertEqual(destination.read_text(encoding="utf-8"), "new")
+        synchronized.assert_any_call(destination.parent)
+        synchronized.assert_any_call(self.output_dir)
 
         generated.write_text("replacement", encoding="utf-8")
         succeeded, detail = batch.publish_result(generated, destination)

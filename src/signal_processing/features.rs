@@ -159,6 +159,7 @@ mod tests {
                 peaks: std::array::from_fn(|channel| ChannelPeak {
                     base: Nucleotide::ALL[channel],
                     height: if channel == primary_channel { 1_000 } else { 0 },
+                    position_0based: ploc,
                     source: if channel == primary_channel {
                         PeakSource::LocalMaximum
                     } else {
