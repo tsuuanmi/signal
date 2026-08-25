@@ -9,7 +9,7 @@ Apollo C++ is evidence for intended behavior, not authority for known unsafe, in
 | Apollo area | Signal | Treatment |
 |---|---|---|
 | `preprocessing/abif.h` | `trace` | strict bounds and canonical DATA.9-12/FWO/PLOC decode |
-| ABIF `basecall` | `basecalling` | PLOC-window signal re-calling, corrected ties/ambiguity |
+| ABIF `basecall` | `basecalling`; `signal basecall` | PLOC-window signal re-calling with corrected ties/ambiguity and one versioned JSON result; no Apollo FASTA/FASTQ/TSV compatibility surface |
 | no Apollo equivalent | `signal_processing` | observation-only rolling SNR and candidate-noisy regions |
 | quality helpers/`trim.h` | `quality_control` | safe penalty and end-trim behavior; score named relative |
 | `alignment/gotoh.h` | `alignment` | bounded deterministic semi-global affine DP |

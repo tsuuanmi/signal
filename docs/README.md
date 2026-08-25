@@ -2,9 +2,10 @@
 
 ## Product and method
 
-- [`pipeline.md`](pipeline.md): normative stage-by-stage scientific method.
+- [`pipeline.md`](pipeline.md): normative shared and reference-analysis scientific methods.
 - [`signal-processing.md`](signal-processing.md): rolling SNR method, limits, and deferred cleaning research.
-- [`json-output.md`](json-output.md): authoritative JSON field and coordinate contract.
+- [`basecall-output.md`](basecall-output.md): authoritative reference-free result contract.
+- [`json-output.md`](json-output.md): authoritative reference-analysis result contract.
 - [`requirements.md`](requirements.md): normative software requirements.
 - [`architecture.md`](architecture.md): module and dependency boundaries.
 - [`configuration.md`](configuration.md): strict TOML and environment behavior.
@@ -20,7 +21,8 @@
 
 ## Contracts and decisions
 
-- [`schemas/analysis-v5.schema.json`](schemas/analysis-v5.schema.json): compact Draft 2020-12 result schema.
-- [`examples/analysis-v5.example.json`](examples/analysis-v5.example.json): synthetic compact contract example.
+- [`schemas/analysis-v5.schema.json`](schemas/analysis-v5.schema.json): compact analysis schema.
+- [`schemas/basecalls-v1.schema.json`](schemas/basecalls-v1.schema.json): reference-free basecall schema.
+- [`examples/analysis-v5.example.json`](examples/analysis-v5.example.json) and [`examples/basecalls-v1.example.json`](examples/basecalls-v1.example.json): synthetic contract examples.
 - [`adr/README.md`](adr/README.md): architecture decision index.
 - [`src/`](src/): one-to-one manuals for every Rust source file.

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::fs;
 use std::path::{Path, PathBuf};
 
@@ -299,12 +301,23 @@ pub fn write_config(path: &Path, topology: &str) -> Result<(), Box<dyn std::erro
     Ok(())
 }
 
-pub fn output_path(workdir: &Path, trace: &Path) -> PathBuf {
-    let stem = trace
+pub fn analysis_output_path(workdir: &Path, trace: &Path) -> PathBuf {
+    workdir
+        .join("results")
+        .join(format!("{}.json", trace_stem(trace)))
+}
+
+pub fn basecall_output_path(workdir: &Path, trace: &Path) -> PathBuf {
+    workdir
+        .join("results")
+        .join(format!("{}.basecalls.json", trace_stem(trace)))
+}
+
+fn trace_stem(trace: &Path) -> &str {
+    trace
         .file_stem()
         .and_then(|value| value.to_str())
-        .unwrap_or("invalid");
-    workdir.join("results").join(format!("{stem}.json"))
+        .unwrap_or("invalid")
 }
 
 struct Record {

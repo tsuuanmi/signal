@@ -16,8 +16,8 @@ Accepts `cli::Cli`; returns `error::Result<()>`.
 
 ## Key types and functions
 
-- `run(cli: Cli) -> Result<()>`: dispatches one `Command::Analyze` to
-  `pipeline::analyze`.
+- `run(cli: Cli) -> Result<()>`: dispatches `Command::Analyze` and
+  `Command::Basecall` to their pipeline entry points.
 
 ## Invariants and errors
 

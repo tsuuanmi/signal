@@ -15,7 +15,7 @@ Defines typed failures crossing the Signal library boundary.
 - `Error` enum with variants for path, read, config parse, config value, ABIF,
   FASTA, basecalling, signal processing, quality control, alignment, variant,
   report assembly,
-  serialization, logging I/O, combined analysis/logging failure, and output
+  serialization, logging I/O, combined operation/logging failure, and output
   failures.
 
 ## Invariants and errors

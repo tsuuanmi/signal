@@ -6,9 +6,10 @@ Defines the stable command-line syntax and typed arguments.
 
 ## Responsibilities
 
-- Expose `signal analyze <trace.ab1> --reference <fasta>`, including generated help
-  and version information. Output is derived deterministically as
-  `results/<trace-stem>.json`; no output-path option is accepted.
+- Expose `signal analyze <trace.ab1> --reference <fasta>` and reference-free
+  `signal basecall <trace.ab1>`, including generated help and version information.
+  Outputs are derived as `results/<trace-stem>.json` and
+  `results/<trace-stem>.basecalls.json`; no output-path option is accepted.
 
 ## Inputs and outputs
 
@@ -18,9 +19,10 @@ Path existence and file content are validated later by input modules.
 ## Key types and functions
 
 - `Cli`: the top-level parser.
-- `Command::Analyze(AnalyzeArgs)`: the single supported command.
+- `Command::Analyze(AnalyzeArgs)`: reference-guided analysis.
+- `Command::Basecall(BasecallArgs)`: reference-free read processing.
 - `AnalyzeArgs`: one positional AB1 path and one required `--reference` FASTA path.
-  The output path is derived from the trace stem as `results/<trace-stem>.json`.
+- `BasecallArgs`: one positional AB1 path and no reference or output option.
 
 ## Invariants and errors
 

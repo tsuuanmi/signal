@@ -39,8 +39,8 @@ jobs:
         run: uv run basedpyright scripts/ tests/python/
       - name: Python tests
         run: uv run python -m unittest discover -s tests/python -p 'test_*.py'
-      - name: Validate analysis schema
-        run: uv run python scripts/validate_analysis_schema.py
+      - name: Validate result schemas
+        run: uv run python scripts/validate_result_schemas.py
       - name: Validate configuration templates
         shell: bash
         run: |

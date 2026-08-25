@@ -1,27 +1,25 @@
 # Signal Pipeline
 
-This document describes the implemented scientific pipeline of `signal analyze`.
-It is the authoritative description of the current Rust behavior. Every stage,
+This document describes the shared read-processing stages and the implemented scientific pipeline of `signal analyze`. `signal basecall` stops after the shared quality-control stage and publishes the reference-free contract described in [`basecall-output.md`](basecall-output.md). It is the authoritative description of the current Rust behavior. Every stage,
 substep, and formula below is derived from the source under `src/`; where this
 document and the source disagree, the source is ground truth and this document
 should be corrected.
 
-The scientific pipeline is deterministic: the same AB1 file, reference,
-effective configuration, and Signal version always produce the same result. Its
-scientific output is one compact JSON document (`results/<trace-stem>.json`). A
+The scientific pipeline is deterministic: the same required inputs, effective
+configuration, command, and Signal version always produce the same result. Each
+command creates one JSON document with its command-specific derived suffix. A
 separate nondeterministic append-only operational log records aggregate stage
 progress and failures without entering the JSON contract.
 
 ## Overview
 
 ```text
-AB1 file ──► decode ──► basecalling ──► signal_processing ──► quality_control ──► alignment ──► variant_calling ──► JSON
-FASTA ref ─┘
-TOML config ─┘
+AB1 + TOML ──► decode ──► basecalling ──► signal_processing ──► quality_control
+                                                                     ├─► basecalls/v1
+FASTA reference ─────────────────────────────────────────────────────┴─► alignment ─► variant_calling ─► analysis/v5
 ```
 
-The pipeline consumes exactly one AB1 trace, one single-record FASTA reference,
-and one strict TOML configuration. It runs six scientific stages in order. Each
+Both commands consume exactly one AB1 trace and one strict TOML configuration. `analyze` additionally consumes one single-record FASTA reference and runs alignment and variant calling. `basecall` performs no reference I/O and stops after the three shared scientific read stages. Each
 stage consumes the validated output of the previous stage and produces a new
 typed result; no stage mutates shared state.
 
@@ -31,8 +29,7 @@ typed result; no stage mutates shared state.
   channels, basecall positions (`PLOC.2`), and optional vendor evidence
   (`PBAS.2`, `PCON.2`). `P2BA.1` is ignored. Vendor base strings retain uppercase
   IUPAC symbols, and PCON accepts the ABIF one-byte byte or char representation.
-- **Reference:** one plain FASTA record of A/C/G/T/N bases, up to 50,000 bases,
-  interpreted as linear or circular per configuration.
+- **Reference (`analyze` only):** one plain FASTA record of A/C/G/T/N bases, up to 50,000 bases, interpreted as linear or circular per configuration. `basecall` does not accept or load a reference.
 - **Configuration:** one strict TOML file selected by `SIGNAL_CONFIG` or
   `config/signal.toml`. Unknown keys, missing sections, and out-of-range values
   are errors.

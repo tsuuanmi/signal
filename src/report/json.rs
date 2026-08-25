@@ -7,13 +7,13 @@ use crate::model::basecalls::BaseCalls;
 use crate::model::quality::QualityControlResult;
 use crate::model::reference::Reference;
 use crate::model::result::{
-    AlignmentResult, AnalysisResult, InputResult, IntervalResult, NoisyRegionResult,
-    ProvenanceResult, ReadResult, ReferenceResult, SignalQualityResult, WarningSummaryResult,
+    AlignmentResult, AnalysisResult, InputResult, IntervalResult, ProvenanceResult, ReadResult,
+    ReferenceResult, WarningSummaryResult,
 };
 use crate::model::signal::SignalAnalysis;
 use crate::model::trace::Chromatogram;
 use crate::model::variant::VariantCallingResult;
-use crate::report::variant;
+use crate::report::{signal, variant};
 
 /// Inputs consumed to build the immutable analysis document.
 pub(crate) struct CompletedAnalysis {
@@ -28,7 +28,7 @@ pub(crate) struct CompletedAnalysis {
 }
 
 /// Builds the compact v5 document without filesystem side effects.
-pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
+pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     let CompletedAnalysis {
         config,
         trace,
@@ -41,21 +41,7 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     } = completed;
     let warnings = warning_summary(&calls, variants.excluded_count());
     let variant_results = variant::project(variants.reported, &calls, &quality)?;
-    let noisy_regions = signal
-        .noisy_regions
-        .into_iter()
-        .map(|region| NoisyRegionResult {
-            calls: IntervalResult {
-                start: region.call_start_0based,
-                end: region.call_end_0based_exclusive,
-            },
-            samples: IntervalResult {
-                start: region.sample_start_0based,
-                end: region.sample_end_0based_exclusive,
-            },
-            minimum_primary_snr: region.minimum_primary_snr,
-        })
-        .collect();
+    let signal_quality = signal::project(signal);
     let reference_segments = alignment
         .reference_segments
         .into_iter()
@@ -86,7 +72,7 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
                 end: quality.trim_end_0based_exclusive,
             },
         },
-        signal_quality: SignalQualityResult { noisy_regions },
+        signal_quality,
         alignment: AlignmentResult {
             orientation: alignment.orientation,
             callable_bases: alignment.metrics.callable_columns,
@@ -101,8 +87,8 @@ pub(crate) fn build(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     })
 }
 
-/// Serializes with a trailing newline for stable text files.
-pub(crate) fn serialize(result: &AnalysisResult) -> Result<Vec<u8>> {
+/// Serializes any typed result with a trailing newline for stable text files.
+pub(crate) fn serialize<T: serde::Serialize>(result: &T) -> Result<Vec<u8>> {
     let mut bytes = serde_json::to_vec_pretty(result)?;
     bytes.push(b'\n');
     Ok(bytes)

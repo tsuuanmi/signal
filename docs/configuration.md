@@ -1,6 +1,6 @@
 # Configuration and Environment
 
-Signal loads exactly one strict TOML file selected by `SIGNAL_CONFIG` or `config/signal.toml`. The binary does not parse `.env`, and environment variables do not override individual scientific values.
+Both `analyze` and `basecall` load exactly one strict TOML file selected by `SIGNAL_CONFIG` or `config/signal.toml`. The binary does not parse `.env`, and environment variables do not override individual scientific values.
 
 Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions, non-finite numbers, invalid ranges, and config sources above 1 MiB are errors. No scientific value falls back silently.
 
@@ -31,7 +31,7 @@ Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions
 | | `relative_quality_threshold` | `30` | less than `max_relative_quality_score`; comparison is strict `>` |
 | | `regions` | `[[16024, 16365], [73, 340], [438, 576]]` | non-empty inclusive 1-based ranges within `1..=50000` |
 
-Signal-processing values control observation-only annotations and never change calls, trim bounds, alignments, or variants. The region list is treated as a union in the supplied reference coordinate system. Region order and overlap do not change eligibility. Compact output v5 records the raw configuration checksum but omits method constants and expanded effective values. Effective values and configuration schema version 4 remain in the strict TOML selected for the run; the local path is omitted.
+`basecall` consumes the basecalling, signal-processing, and quality-control settings; it still validates the complete schema and records the complete configuration checksum. Reference, alignment, and variant-calling settings are used only by `analyze`. Signal-processing values control observation-only annotations and never change calls, trim bounds, alignments, or variants. The region list is treated as a union in the supplied reference coordinate system. Region order and overlap do not change eligibility. Compact output v5 records the raw configuration checksum but omits method constants and expanded effective values. Effective values and configuration schema version 4 remain in the strict TOML selected for the run; the local path is omitted.
 
 ## `.env`
 

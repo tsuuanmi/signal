@@ -1,12 +1,11 @@
 #![forbid(unsafe_code)]
 
-//! Library boundary for the one-AB1 Signal analysis pipeline.
+//! Library boundary for one-AB1 Signal operations.
 //!
-//! The final module graph and child-file plan are documented in
-//! `docs/source-layout.md`. `lib.rs` remains the minimal dispatcher: it exposes
-//! stable boundary types, routes one [`cli::Command::Analyze`], and keeps
-//! configuration, input decoding, scientific stages, and reporting behind the
-//! pipeline boundary.
+//! The module graph is documented in `docs/source-layout.md`. `lib.rs` remains
+//! the minimal dispatcher: it exposes stable CLI and error boundaries, routes
+//! commands, and keeps configuration, decoding, scientific stages, and reporting
+//! behind the pipeline boundary.
 
 mod alignment;
 mod basecalling;
@@ -31,5 +30,6 @@ use error::Result;
 pub fn run(cli: Cli) -> Result<()> {
     match cli.command {
         Command::Analyze(args) => pipeline::analyze(&args),
+        Command::Basecall(args) => pipeline::basecall(&args),
     }
 }

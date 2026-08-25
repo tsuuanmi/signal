@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:signal:schema:basecalls:v1",
+  "title": "Signal reference-free basecalls v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "provenance", "read", "signal_quality", "warnings"],
+  "properties": {
+    "schema_version": { "const": "signal.basecalls/v1" },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "read": { "$ref": "#/$defs/read" },
+    "signal_quality": { "$ref": "#/$defs/signalQuality" },
+    "warnings": { "$ref": "#/$defs/warnings" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["software_version", "input", "configuration_sha256"],
+      "properties": {
+        "software_version": { "type": "string", "minLength": 1 },
+        "input": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["sha256"],
+          "properties": { "sha256": { "$ref": "#/$defs/sha256" } }
+        },
+        "configuration_sha256": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "read": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["call_count", "primary", "ambiguity", "retained", "trim"],
+      "properties": {
+        "call_count": { "type": "integer", "minimum": 1 },
+        "primary": { "type": "string", "minLength": 1, "pattern": "^[ACGTN]+$" },
+        "ambiguity": { "type": "string", "minLength": 1, "pattern": "^[ACGTRYSWKMBDHVN]+$" },
+        "retained": { "type": "string", "minLength": 1, "pattern": "^[ACGTN]+$" },
+        "trim": { "$ref": "#/$defs/interval" }
+      }
+    },
+    "noisyRegion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["calls", "samples", "minimum_primary_snr"],
+      "properties": {
+        "calls": { "$ref": "#/$defs/interval" },
+        "samples": { "$ref": "#/$defs/interval" },
+        "minimum_primary_snr": { "type": "number", "minimum": 0 }
+      }
+    },
+    "signalQuality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["noisy_regions"],
+      "properties": {
+        "noisy_regions": { "type": "array", "items": { "$ref": "#/$defs/noisyRegion" } }
+      }
+    },
+    "warnings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unresolved_primary_calls", "multi_channel_unresolved_calls", "vendor_disagreements"],
+      "properties": {
+        "unresolved_primary_calls": { "type": "integer", "minimum": 0 },
+        "multi_channel_unresolved_calls": { "type": "integer", "minimum": 0 },
+        "vendor_disagreements": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

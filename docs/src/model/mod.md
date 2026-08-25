@@ -6,8 +6,9 @@ Owns the validated domain types shared across scientific stages.
 
 ## Responsibilities
 
-- Declare the model submodules: `alignment`, `basecalls`, `coordinate`,
-  `nucleotide`, `quality`, `reference`, `result`, `signal`, `trace`, and `variant`.
+- Declare the model submodules: `alignment`, `basecall_result`, `basecalls`,
+  `coordinate`, `nucleotide`, `quality`, `reference`, `result`, `signal`, `trace`,
+  and `variant`.
 - Provide validated domain vocabulary with no I/O, CLI, configuration loading, or
   algorithm dependencies.
 
@@ -28,7 +29,8 @@ No filesystem access, argument parsing, logging, or algorithm execution.
   per-column coordinates without final gapped-row duplication.
 - `variant`: normalized `Variant`, `VariantKind`, alleles, mappings, and exclusion
   diagnostics without report-only labels.
-- `result`: compact `AnalysisResult` matching JSON schema v5.
+- `result`: compact `AnalysisResult` plus result records shared by both contracts.
+- `basecall_result`: reference-free `BasecallResult` matching basecalls schema v1.
 
 ## Invariants and errors
 

@@ -2,17 +2,17 @@
 
 ## 1. Purpose
 
-Signal is a deterministic Rust CLI for research analysis of one Sanger ABIF/AB1 chromatogram against one short reference. Normative terms **MUST**, **SHOULD**, and **MAY** apply to every `SRS-*` item.
+Signal is a deterministic Rust CLI for reference-free base re-calling and research analysis of one Sanger ABIF/AB1 chromatogram against one short reference. Normative terms **MUST**, **SHOULD**, and **MAY** apply to every `SRS-*` item.
 
 ## 2. Inputs and process boundary
 
-- **SRS-IN-001:** One invocation MUST accept exactly one regular non-empty AB1 path and one required regular non-empty FASTA path, then derive exactly one output target. Directories, lists, manifests, globs, and repeated traces MUST NOT be accepted.
+- **SRS-IN-001:** One invocation MUST accept exactly one regular non-empty AB1 path and derive exactly one output target. `analyze` MUST additionally require one regular non-empty FASTA path; `basecall` MUST NOT accept a reference. Directories, lists, manifests, globs, and repeated traces MUST NOT be accepted.
 - **SRS-IN-002:** AB1 bytes MUST begin with `ABIF`; every directory count, size, product, offset, inline payload, and allocation MUST be checked before use.
 - **SRS-IN-003:** Canonical decode MUST require `DATA.9-12`, `FWO_.1`, and `PLOC.2`; FWO MUST be an exact A/C/G/T permutation; channels MUST be equally sized; PLOC MUST be strictly increasing and in range.
 - **SRS-IN-004:** `PLOC.2` is required; `PBAS.2` and `PCON.2` MAY be consumed as optional vendor evidence. `P2BA.1` MUST be ignored. Uppercase IUPAC vendor bases and the ABIF one-byte byte/char PCON representations MUST be accepted. No alternate-tag fallback is permitted.
-- **SRS-IN-005:** FASTA MUST contain exactly one non-empty A/C/G/T/N record no longer than 50,000 bases.
+- **SRS-IN-005:** An `analyze` FASTA MUST contain exactly one non-empty A/C/G/T/N record no longer than 50,000 bases. `basecall` MUST perform no FASTA I/O.
 - **SRS-IN-006:** Empty, missing, malformed, unsupported, over-limit, or unreadable input MUST return a typed error without panic or result file.
-- **SRS-IN-010:** The command MUST be `signal analyze <trace.ab1> --reference <reference.fasta>` and derive `results/<trace-stem>.json`; no output-path compatibility option is permitted.
+- **SRS-IN-010:** The reference-guided command MUST be `signal analyze <trace.ab1> --reference <reference.fasta>` and derive `results/<trace-stem>.json`. The reference-free command MUST be `signal basecall <trace.ab1>` and derive `results/<trace-stem>.basecalls.json`. No output-path or format compatibility option is permitted.
 - **SRS-IN-011:** Help/version MUST succeed without reading analysis inputs.
 - **SRS-IN-012:** Invalid CLI arguments MUST produce concise stderr and nonzero status.
 
@@ -78,12 +78,12 @@ Signal is a deterministic Rust CLI for research analysis of one Sanger ABIF/AB1 
 
 ## 9. JSON output
 
-- **SRS-OUT-001:** A successful core CLI invocation MUST create exactly one analysis result at `results/<trace-stem>.json`; VCF/BCF, legacy JSON, duplicate compatibility output, and output-path compatibility options MUST NOT be created. Operational logging MUST remain a separate append-only sidecar.
-- **SRS-OUT-002:** JSON MUST validate against Draft 2020-12 `docs/schemas/analysis-v5.schema.json` and identify `signal.analysis/v5`. Strict configuration MUST remain schema version 4.
-- **SRS-OUT-003:** JSON MUST include compact provenance hashes/software, read call count and trim interval, merged candidate-noisy regions, the selected alignment summary, normalized variants with concise mapped calls, and warning counts.
-- **SRS-OUT-004:** JSON MUST omit trace filenames, full primary/ambiguity/retained sequences, individual rolling windows, gapped alignment rows, operation runs, alignment score and redundant metrics, method constants, full A/C/G/T peak objects, penalties/calibration flags, vendor data, expanded configuration, variant contig/classification/normalization labels, and redundant warning fields.
-- **SRS-OUT-005:** JSON MUST use concise context-defined coordinate names: biological `position` is 1-based; call `index` and `ploc` are 0-based; trim, reference-segment, and noisy-region `start`/`end` are 0-based half-open.
-- **SRS-OUT-006:** Core CLI output MUST be fully serialized, flushed, synchronized, and atomically published without overwriting. A failed core analysis MUST leave no JSON result and MUST NOT replace an existing target.
+- **SRS-OUT-001:** A successful core CLI invocation MUST create exactly one command-specific result: analysis at `results/<trace-stem>.json` or reference-free basecalls at `results/<trace-stem>.basecalls.json`. VCF/BCF, legacy JSON, duplicate compatibility output, and output-path/format compatibility options MUST NOT be created. Operational logging MUST remain a separate append-only sidecar.
+- **SRS-OUT-002:** Analysis JSON MUST validate against Draft 2020-12 `docs/schemas/analysis-v5.schema.json` and identify `signal.analysis/v5`. Basecall JSON MUST validate against `docs/schemas/basecalls-v1.schema.json` and identify `signal.basecalls/v1`. Strict configuration MUST remain schema version 4.
+- **SRS-OUT-003:** Both JSON contracts MUST include compact provenance hashes/software, read call count and trim interval, merged candidate-noisy regions, and warning counts. Analysis MUST additionally include the selected alignment summary and normalized variants with concise mapped calls; basecall MUST include primary, ambiguity, and retained sequences.
+- **SRS-OUT-004:** Analysis JSON MUST omit trace filenames, full primary/ambiguity/retained sequences, individual rolling windows, gapped alignment rows, operation runs, alignment score and redundant metrics, method constants, full A/C/G/T peak objects, penalties/calibration flags, vendor data, expanded configuration, variant contig/classification/normalization labels, and redundant warning fields. Basecall JSON MUST include full primary/ambiguity/retained sequences but omit reference, alignment, variants, rolling windows, per-call tables, peaks, penalties/calibration flags, and vendor data.
+- **SRS-OUT-005:** JSON MUST use concise context-defined coordinate names: biological `position` is 1-based; call `index` and `ploc` are 0-based; trim, reference-segment, and noisy-region `start`/`end` are 0-based half-open. Basecall primary and ambiguity lengths MUST equal `call_count`, and retained MUST equal the primary slice selected by trim.
+- **SRS-OUT-006:** Core CLI output MUST be fully serialized, flushed, synchronized, and atomically published without overwriting. A failed core operation MUST leave no JSON result and MUST NOT replace an existing target.
 - **SRS-OUT-007:** Deterministic output MUST omit timestamp, duration, host, random ID, local input/config paths, unordered maps, and all compatibility aliases.
 - **SRS-OUT-008:** Rust MUST append timestamped, run-correlated INFO/WARN/ERROR stage records to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`) without writing operational records to application stdout/stderr. Records MUST cover each processing-stage boundary with concise aggregate metrics and timings, MUST remain one physical line, and MUST omit complete sequences, peak arrays, configured region contents, alleles, operation strings, and JSON bodies.
 - **SRS-OUT-009:** Each excluded variant candidate MUST produce a WARN record containing its kind, contig, normalized position when available, and every rejection reason. Removed-variant records MUST omit reference and alternate alleles.

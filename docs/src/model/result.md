@@ -2,7 +2,8 @@
 
 ## Purpose
 
-Defines the compact serializable `signal.analysis/v5` document contract.
+Defines compact serializable `signal.analysis/v5` records and the input,
+interval, and merged signal-quality records shared with `signal.basecalls/v1`.
 
 ## Responsibilities
 
@@ -11,7 +12,8 @@ Defines the compact serializable `signal.analysis/v5` document contract.
   supporting evidence, and public warning counts.
 - Provide the typed structs that `report::json` serializes deterministically.
 - Keep bulk sequences, full channel arrays, per-call tables, detailed alignments,
-  vendor-only evidence, and operational-only warning categories out of JSON.
+  vendor-only evidence, and operational-only warning categories out of analysis
+  JSON; reference-free sequence fields live only in `basecall_result`.
 
 ## Non-responsibilities
 

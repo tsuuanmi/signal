@@ -3,16 +3,13 @@
 use std::time::Instant;
 
 use crate::alignment;
-use crate::basecalling;
 use crate::cli::AnalyzeArgs;
-use crate::error::{Error, Result};
+use crate::error::Result;
 use crate::logger::Logger;
-use crate::model::basecalls::PeakSource;
 use crate::model::variant::VariantKind;
-use crate::pipeline::input;
-use crate::quality_control;
+use crate::pipeline::read::ProcessedRead;
+use crate::pipeline::{input, read};
 use crate::report::{self, CompletedAnalysis};
-use crate::signal_processing;
 use crate::variant_calling;
 
 /// Runs one complete AB1-to-JSON analysis with one per-trace append-only log.
@@ -34,26 +31,13 @@ pub(crate) fn run(args: &AnalyzeArgs) -> Result<()> {
     let mut stage = "input_loading";
     match run_logged(args, &mut logger, &mut stage, analysis_started) {
         Ok(()) => Ok(()),
-        Err(analysis) => {
-            let logging = logger
-                .error(
-                    module_path!(),
-                    line!(),
-                    format_args!(
-                        "event=analysis_failed stage={stage} elapsed_ms={} error={:?}",
-                        analysis_started.elapsed().as_millis(),
-                        analysis.to_string()
-                    ),
-                )
-                .and_then(|()| logger.sync());
-            match logging {
-                Ok(()) => Err(analysis),
-                Err(logging) => Err(Error::AnalysisAndLog {
-                    analysis: Box::new(analysis),
-                    logging: Box::new(logging),
-                }),
-            }
-        }
+        Err(error) => Err(super::record_failure(
+            &mut logger,
+            "analysis_failed",
+            stage,
+            analysis_started,
+            error,
+        )),
     }
 }
 
@@ -65,7 +49,7 @@ fn run_logged(
 ) -> Result<()> {
     *stage = "input_loading";
     let stage_started = Instant::now();
-    let inputs = input::load(args)?;
+    let inputs = input::load_analysis(args)?;
     logger.info(
         module_path!(),
         line!(),
@@ -93,162 +77,12 @@ fn run_logged(
         ),
     )?;
 
-    *stage = "basecalling";
-    let stage_started = Instant::now();
-    let calls = basecalling::call(&inputs.trace, &inputs.config.basecalling)?;
-    let canonical_primary = calls
-        .calls
-        .iter()
-        .filter(|call| call.primary != 'N')
-        .count();
-    let unresolved_primary = calls.len() - canonical_primary;
-    let two_channel_iupac = calls
-        .calls
-        .iter()
-        .filter(|call| call.qualifying_channels.len() == 2 && call.ambiguity != 'N')
-        .count();
-    let multi_channel_unresolved = calls
-        .calls
-        .iter()
-        .filter(|call| call.qualifying_channels.len() > 2 && call.ambiguity == 'N')
-        .count();
-    let calls_with_fallback = calls
-        .calls
-        .iter()
-        .filter(|call| {
-            call.peaks
-                .iter()
-                .any(|peak| peak.source == PeakSource::PlocFallback)
-        })
-        .count();
-    let vendor_compared = calls
-        .calls
-        .iter()
-        .filter(|call| call.vendor_agrees.is_some())
-        .count();
-    let vendor_disagreements = calls
-        .calls
-        .iter()
-        .filter(|call| call.vendor_agrees == Some(false))
-        .count();
-    logger.info(
-        module_path!(),
-        line!(),
-        format_args!(
-            concat!(
-                "event=basecalling_completed elapsed_ms={} calls={} canonical_primary={} ",
-                "unresolved_primary={} two_channel_iupac={} multi_channel_unresolved={} ",
-                "calls_with_ploc_fallback={} vendor_compared={} vendor_disagreements={} ",
-                "secondary_peak_ratio={:.4}"
-            ),
-            stage_started.elapsed().as_millis(),
-            calls.len(),
-            canonical_primary,
-            unresolved_primary,
-            two_channel_iupac,
-            multi_channel_unresolved,
-            calls_with_fallback,
-            vendor_compared,
-            vendor_disagreements,
-            inputs.config.basecalling.secondary_peak_ratio
-        ),
-    )?;
-
-    *stage = "signal_processing";
-    let stage_started = Instant::now();
-    let signal =
-        signal_processing::analyze(&inputs.trace, &calls, &inputs.config.signal_processing)?;
-    let maximum_secondary_snr = signal
-        .windows
-        .iter()
-        .map(|window| window.maximum_secondary_snr)
-        .fold(0.0_f64, f64::max);
-    logger.info(
-        module_path!(),
-        line!(),
-        format_args!(
-            concat!(
-                "event=signal_processing_completed elapsed_ms={} windows={} noisy_windows={} ",
-                "noisy_regions={} noisy_calls={} window_size_bases={} minimum_noisy_windows={} ",
-                "minimum_primary_snr={:.4} maximum_secondary_snr={:.4}"
-            ),
-            stage_started.elapsed().as_millis(),
-            signal.windows.len(),
-            signal.noisy_window_count(),
-            signal.noisy_regions.len(),
-            signal.noisy_call_count(),
-            inputs.config.signal_processing.window_size_bases,
-            inputs.config.signal_processing.minimum_noisy_windows,
-            inputs.config.signal_processing.minimum_primary_snr,
-            maximum_secondary_snr
-        ),
-    )?;
-
-    *stage = "quality_control";
-    let stage_started = Instant::now();
-    let quality = quality_control::analyze(&inputs.trace, &calls, &inputs.config.quality_control)?;
-    let score_min = quality
-        .per_call
-        .iter()
-        .map(|quality| quality.relative_quality_score)
-        .min()
-        .unwrap_or(0);
-    let score_max = quality
-        .per_call
-        .iter()
-        .map(|quality| quality.relative_quality_score)
-        .max()
-        .unwrap_or(0);
-    let score_mean = if quality.per_call.is_empty() {
-        0.0
-    } else {
-        quality
-            .per_call
-            .iter()
-            .map(|quality| u64::from(quality.relative_quality_score))
-            .sum::<u64>() as f64
-            / quality.per_call.len() as f64
-    };
-    let max_penalty = quality
-        .per_call
-        .iter()
-        .map(|quality| quality.penalty)
-        .max()
-        .unwrap_or(0);
-    let vendor_quality_applicable = quality
-        .per_call
-        .iter()
-        .filter(|quality| quality.vendor_quality_applies)
-        .count();
-    let trimmed_left = quality.trim_start_0based;
-    let trimmed_right = calls
-        .len()
-        .saturating_sub(quality.trim_end_0based_exclusive);
-    let retained_fraction = quality.retained_sequence.len() as f64 / calls.len() as f64;
-    logger.info(
-        module_path!(),
-        line!(),
-        format_args!(
-            concat!(
-                "event=quality_control_completed elapsed_ms={} trim={}..{} retained={} ",
-                "trimmed_left={} trimmed_right={} retained_fraction={:.4} ",
-                "relative_score_min={} relative_score_mean={:.2} relative_score_max={} ",
-                "max_penalty={} vendor_quality_applicable={}"
-            ),
-            stage_started.elapsed().as_millis(),
-            quality.trim_start_0based,
-            quality.trim_end_0based_exclusive,
-            quality.retained_sequence.len(),
-            trimmed_left,
-            trimmed_right,
-            retained_fraction,
-            score_min,
-            score_mean,
-            score_max,
-            max_penalty,
-            vendor_quality_applicable
-        ),
-    )?;
+    let ProcessedRead {
+        calls,
+        signal,
+        quality,
+        warnings: read_warnings,
+    } = read::process(&inputs.trace, &inputs.config, logger, stage)?;
 
     *stage = "alignment";
     let stage_started = Instant::now();
@@ -354,16 +188,16 @@ fn run_logged(
 
     let excluded_variant_candidates = variants.excluded_count();
     let reference_origin_wrap = alignment.wraps_origin;
-    let warning_total = unresolved_primary
-        + multi_channel_unresolved
-        + vendor_disagreements
+    let warning_total = read_warnings.unresolved_primary_calls
+        + read_warnings.multi_channel_unresolved_calls
+        + read_warnings.vendor_disagreements
         + excluded_variant_candidates
         + usize::from(reference_origin_wrap);
 
     *stage = "reporting";
     let stage_started = Instant::now();
     let output = inputs.output.clone();
-    let result = report::build(CompletedAnalysis {
+    let result = report::build_analysis(CompletedAnalysis {
         config: inputs.config,
         trace: inputs.trace,
         reference: inputs.reference,
@@ -384,9 +218,9 @@ fn run_logged(
                     "excluded_variant_candidates={} reference_origin_wrap={}"
                 ),
                 warning_total,
-                unresolved_primary,
-                multi_channel_unresolved,
-                vendor_disagreements,
+                read_warnings.unresolved_primary_calls,
+                read_warnings.multi_channel_unresolved_calls,
+                read_warnings.vendor_disagreements,
                 excluded_variant_candidates,
                 reference_origin_wrap
             ),

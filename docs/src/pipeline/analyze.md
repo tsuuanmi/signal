@@ -10,16 +10,17 @@ logging plus result publication.
 - Open the per-trace Rust logger and emit ordered, run-correlated aggregate
   summaries and timings for input loading, basecalling, signal processing,
   quality control, alignment, variant calling, and publication readiness.
-- Run the pure scientific stages in order and pass every completed internal model
-  to `report::build`.
+- Delegate basecalling, signal processing, and quality control to the shared
+  `pipeline::read` path, then run reference-aware stages and pass completed models
+  to `report::build_analysis`.
 - Log signal-processing window/region counts and the maximum secondary SNR across
   internal windows; that aggregate is operational and not part of v5 JSON.
 - Emit one WARN record for each removed variant with kind, contig, position, and
   reasons but no alleles, followed by the final warning-category summary.
 - Assemble and serialize `signal.analysis/v5`, synchronize the mandatory
   pre-publication record, and atomically publish `results/<trace-stem>.json`.
-- Preserve the original analysis error, combining it with a terminal logging
-  failure as `Error::AnalysisAndLog`.
+- Preserve the original analysis error through the shared terminal failure policy,
+  combining it with a logging failure as `Error::OperationAndLog`.
 
 ## Non-responsibilities
 
@@ -29,7 +30,7 @@ alignment scoring/traceback, variant normalization, or JSON field definitions.
 ## Key types and functions
 
 - `run(args) -> Result<()>`: validates the trace stem, opens logging, tracks total
-  elapsed time/current stage, and applies combined analysis/logging error policy.
+  elapsed time/current stage, and delegates combined operation/logging error policy.
 - `run_logged(args, logger, stage, analysis_started) -> Result<()>`: sequences the
   complete stage flow and output transaction.
 
@@ -48,13 +49,12 @@ alignment scoring/traceback, variant normalization, or JSON field definitions.
   results into report assembly. Operational-only categories never enter the JSON
   model.
 - Stage failures propagate unchanged when the ERROR record synchronizes; if that
-  logging also fails, `Error::AnalysisAndLog` retains both errors.
+  logging also fails, `Error::OperationAndLog` retains both errors.
 
 ## Dependencies
 
-- `input`, `logger`, `basecalling`, `signal_processing`, `quality_control`,
-  `alignment`, `variant_calling`, and `report`.
-- `cli::AnalyzeArgs`, `error::{Error, Result}`, `PeakSource`, and `VariantKind`.
+- `input`, shared `read`, `logger`, `alignment`, `variant_calling`, and `report`.
+- `cli::AnalyzeArgs`, `error::Result`, `ProcessedRead`, and `VariantKind`.
 
 ## Biological semantics
 

@@ -86,6 +86,14 @@ names, filesystem paths, hashes, aggregate metrics, thresholds, stage errors, an
 removed-variant kinds/coordinates/reasons. They omit alleles and raw scientific
 payloads but still follow the same policy; `logs/` is ignored.
 
+## Reference-free basecall output privacy
+
+`results/<trace-stem>.basecalls.json` contains complete primary, ambiguity, and
+retained sequence strings. It is therefore more directly identifying than compact
+analysis v5 and follows the same approval, storage, retention, and redistribution
+policy as its source AB1. Its operational log records counts and stage metrics but
+never sequence strings or JSON bodies.
+
 ## Privacy and repository policy
 
 - `data/`, `results`, and `logs/` remain listed in `.gitignore`.

@@ -27,7 +27,7 @@ pub struct ProvenanceResult {
     pub(crate) configuration_sha256: String,
 }
 
-/// Trace identity without an identifying filename or decoded bulk data.
+/// Input trace identity without an identifying filename or decoded bulk data.
 #[derive(Debug, Serialize)]
 pub struct InputResult {
     pub(crate) sha256: String,
@@ -48,14 +48,14 @@ pub struct ReadResult {
     pub(crate) trim: IntervalResult,
 }
 
-/// A 0-based half-open interval.
+/// A shared 0-based half-open result interval.
 #[derive(Debug, Serialize)]
 pub struct IntervalResult {
     pub(crate) start: usize,
     pub(crate) end: usize,
 }
 
-/// Merged observation-only signal-quality regions.
+/// Shared merged observation-only signal-quality regions.
 #[derive(Debug, Serialize)]
 pub struct SignalQualityResult {
     pub(crate) noisy_regions: Vec<NoisyRegionResult>,

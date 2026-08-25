@@ -10,9 +10,10 @@ use serde_json::Value;
 use tempfile::tempdir;
 
 use support::{
-    output_path, write_abif, write_abif_with_background_noise, write_abif_with_channel_order,
-    write_abif_with_peak_heights, write_abif_with_ploc, write_abif_with_short_pbas,
-    write_abif_with_unused_p2ba, write_abif_with_vendor, write_config, write_reference,
+    analysis_output_path, write_abif, write_abif_with_background_noise,
+    write_abif_with_channel_order, write_abif_with_peak_heights, write_abif_with_ploc,
+    write_abif_with_short_pbas, write_abif_with_unused_p2ba, write_abif_with_vendor, write_config,
+    write_reference,
 };
 
 const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
@@ -34,8 +35,14 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
             .stderr(predicate::str::is_empty());
     }
 
-    let first_bytes = fs::read(output_path(first.path(), &first.path().join("trace.ab1")))?;
-    let second_bytes = fs::read(output_path(second.path(), &second.path().join("trace.ab1")))?;
+    let first_bytes = fs::read(analysis_output_path(
+        first.path(),
+        &first.path().join("trace.ab1"),
+    ))?;
+    let second_bytes = fs::read(analysis_output_path(
+        second.path(),
+        &second.path().join("trace.ab1"),
+    ))?;
     assert_eq!(first_bytes, second_bytes);
     let value: Value = serde_json::from_slice(&first_bytes)?;
     assert_eq!(value["schema_version"], "signal.analysis/v5");
@@ -172,7 +179,7 @@ fn rejects_non_increasing_ploc_without_output() -> Result<(), Box<dyn std::error
     run(&trace, &reference, &config, directory.path())?
         .failure()
         .stderr(predicate::str::contains("strictly increasing"));
-    assert!(!output_path(directory.path(), &trace).exists());
+    assert!(!analysis_output_path(directory.path(), &trace).exists());
     Ok(())
 }
 
@@ -191,7 +198,7 @@ fn rejects_out_of_range_ploc_without_output() -> Result<(), Box<dyn std::error::
     run(&trace, &reference, &config, directory.path())?
         .failure()
         .stderr(predicate::str::contains("outside channel samples"));
-    assert!(!output_path(directory.path(), &trace).exists());
+    assert!(!analysis_output_path(directory.path(), &trace).exists());
     Ok(())
 }
 
@@ -208,7 +215,7 @@ fn rejects_vendor_length_mismatch_without_output() -> Result<(), Box<dyn std::er
     run(&trace, &reference, &config, directory.path())?
         .failure()
         .stderr(predicate::str::contains("PBAS.2 length"));
-    assert!(!output_path(directory.path(), &trace).exists());
+    assert!(!analysis_output_path(directory.path(), &trace).exists());
     Ok(())
 }
 
@@ -605,7 +612,7 @@ fn malformed_abif_leaves_no_output() -> Result<(), Box<dyn std::error::Error>> {
     run(&trace, &reference, &config, directory.path())?
         .failure()
         .stderr(predicate::str::contains("invalid ABIF input"));
-    assert!(!output_path(directory.path(), &trace).exists());
+    assert!(!analysis_output_path(directory.path(), &trace).exists());
     let log = fs::read_to_string(directory.path().join("logs/trace.log"))?;
     assert!(log.contains(" | ERROR    | "));
     assert!(log.contains("event=analysis_failed stage=input_loading"));
@@ -622,7 +629,7 @@ fn refuses_to_overwrite_completed_output() -> Result<(), Box<dyn std::error::Err
     write_abif(&trace, QUERY)?;
     write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
     write_config(&config, "linear")?;
-    let output = output_path(directory.path(), &trace);
+    let output = analysis_output_path(directory.path(), &trace);
     fs::create_dir_all(output.parent().ok_or("output has no parent")?)?;
     fs::write(&output, b"owned")?;
 
@@ -648,7 +655,7 @@ fn assert_object_keys(value: &Value, expected: &[&str]) {
 }
 
 fn read_result(workdir: &Path, trace: &Path) -> Result<Value, Box<dyn std::error::Error>> {
-    Ok(serde_json::from_slice(&fs::read(output_path(
+    Ok(serde_json::from_slice(&fs::read(analysis_output_path(
         workdir, trace,
     ))?)?)
 }

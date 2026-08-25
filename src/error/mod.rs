@@ -58,12 +58,12 @@ pub enum Error {
     #[error("failed to assemble analysis report: {0}")]
     Report(String),
     /// A completed model could not be serialized.
-    #[error("failed to serialize analysis JSON: {0}")]
+    #[error("failed to serialize result JSON: {0}")]
     Serialize(#[from] serde_json::Error),
-    /// An analysis failed and its terminal error record also could not be persisted.
-    #[error("{analysis}; additionally failed to persist the analysis error log: {logging}")]
-    AnalysisAndLog {
-        analysis: Box<Error>,
+    /// An operation failed and its terminal error record also could not be persisted.
+    #[error("{operation}; additionally failed to persist the operation error log: {logging}")]
+    OperationAndLog {
+        operation: Box<Error>,
         logging: Box<Error>,
     },
     /// A log directory or append-only log file operation failed.

@@ -2,14 +2,14 @@
 
 ## Purpose
 
-Orchestrates the complete `analyze` use case: one AB1, one FASTA, one JSON result,
-and one append-only operational log.
+Defines orchestration boundaries for one-file `analyze` and reference-free
+`basecall` operations, each with one JSON result and append-only operational log.
 
 ## Responsibilities
 
-- Re-export `analyze` as the module boundary.
-- Sequence validated input, basecalling, observational signal processing, QC,
-  alignment, variant calling, and atomic reporting while recording stage summaries through `logger`.
+- Expose `analyze` and `basecall` as command boundaries.
+- Share validated input helpers, reference-independent read-stage orchestration,
+  and terminal operation/logging failure preservation.
 
 ## Non-responsibilities
 
@@ -18,10 +18,10 @@ logic.
 
 ## Key types and functions
 
-- `analyze(args) -> Result<()>`: the public entry point, re-exported from
-  `mod.rs`.
-- Child modules: `input` (path validation and loading), `analyze` (stage
-  sequencing).
+- `analyze(args)` and `basecall(args)`: command entry points.
+- Child modules: `input` (command-specific loading), `read` (shared basecalling,
+  signal, and QC stages), and command-specific `analyze`/`basecall` sequencing.
+- `record_failure`: shared terminal error-log and synchronization policy.
 
 ## Invariants and errors
 
@@ -31,8 +31,8 @@ logic.
 
 ## Dependencies
 
-- `cli` for `AnalyzeArgs`.
-- `error` for `Result`.
+- `cli` for `AnalyzeArgs` and `BasecallArgs`.
+- `error`, `logger`, and `Instant` for the shared failure boundary.
 
 ## Apollo mapping
 
@@ -46,8 +46,8 @@ ADR-0001, ADR-0002, ADR-0007; `SRS-IN-001`, `SRS-CFG-001` through
 
 ## Tests
 
-The end-to-end `tests/analyze.rs` integration tests exercise the complete
-pipeline.
+The end-to-end `tests/analyze.rs` and `tests/basecall.rs` integration tests
+exercise both command pipelines.
 
 ## Status
 

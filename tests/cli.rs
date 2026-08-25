@@ -9,7 +9,29 @@ fn help_succeeds() {
         .arg("--help")
         .assert()
         .success()
-        .stdout(predicate::str::contains("Analyze Sanger sequencing traces"));
+        .stdout(predicate::str::contains("Process Sanger sequencing traces"));
+}
+
+#[test]
+fn basecall_requires_a_trace() {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_signal"));
+    command
+        .arg("basecall")
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+fn basecall_rejects_reference_option() {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_signal"));
+    command
+        .args(["basecall", "trace.ab1", "--reference", "reference.fa"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "unexpected argument '--reference'",
+        ));
 }
 
 #[test]

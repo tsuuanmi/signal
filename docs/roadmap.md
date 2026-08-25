@@ -2,8 +2,8 @@
 
 ## Implemented MVP
 
-- strict one-file CLI, TOML configuration, typed errors, and resource caps;
-- bounds-checked canonical ABIF decode and one-record FASTA loading;
+- strict one-file analyze/basecall CLI, TOML configuration, typed errors, and resource caps;
+- bounds-checked canonical ABIF decode, reference-free basecalls-v1 output, and one-record FASTA loading for analysis;
 - signal-derived PLOC re-calling with explicit ambiguity evidence;
 - observation-only rolling SNR windows and merged candidate-noisy regions;
 - uncalibrated relative quality and end-only trimming;

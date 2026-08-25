@@ -2,15 +2,15 @@
 
 ## Purpose
 
-Assembles the compact `signal.analysis/v5` document and serializes it
-deterministically.
+Assembles compact `signal.analysis/v5` and provides deterministic serialization
+shared by typed result contracts.
 
 ## Responsibilities
 
 - Consume `CompletedAnalysis`, containing config, trace, reference, base calls,
   signal analysis, quality control, selected alignment, and variant calling.
-- Project merged noisy regions into call/sample intervals with minimum primary
-  SNR; individual signal windows and maximum secondary SNR remain internal.
+- Delegate merged noisy-region projection to `report::signal`; individual signal
+  windows and maximum secondary SNR remain internal.
 - Project the selected alignment into orientation, callable bases/identity,
   unresolved bases, gap opens, reference segments, and wrap status only.
 - Build deterministic provenance and read metadata without trace filename or
@@ -27,10 +27,10 @@ feature computation, or scientific decision logic.
 ## Key types and functions
 
 - `CompletedAnalysis`: all completed internal stage outputs consumed by assembly.
-- `build(completed) -> Result<AnalysisResult>`: assembles the v5 document without
+- `build_analysis(completed) -> Result<AnalysisResult>`: assembles v5 without
   filesystem side effects.
-- `serialize(result) -> Result<Vec<u8>>`: deterministic pretty JSON bytes with a
-  trailing newline.
+- `serialize<T: Serialize>(result) -> Result<Vec<u8>>`: deterministic pretty JSON
+  bytes with a trailing newline for analysis and basecall results.
 - `warning_summary(...) -> WarningSummaryResult`: counts the three public JSON
   categories: unresolved primary calls, multi-channel unresolved calls, and
   excluded variant candidates.
@@ -53,7 +53,7 @@ feature computation, or scientific decision logic.
 - `config` for `Config`.
 - `model::alignment`, `model::basecalls`, `model::quality`, `model::reference`,
   `model::result`, `model::signal`, `model::trace`, and `model::variant`.
-- `variant` for projecting variant-associated calls.
+- `signal` and `variant` for shared noisy-region and analysis-call projection.
 - `error` for `Result`; `serde_json` for serialization.
 
 ## Biological semantics

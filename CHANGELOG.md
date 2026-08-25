@@ -15,6 +15,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Reference-free `signal basecall <trace.ab1>` with one atomic no-overwrite `signal.basecalls/v1` JSON result containing full primary/ambiguity/retained sequences, trim bounds, merged noisy regions, provenance, and warning counts through the same validated read-processing stages as reference analysis.
 - Deterministic `signal.windowed_snr/v1` analysis with local median/first-difference-MAD estimates, finite SNR features, and merged call/sample candidate-noisy regions requiring at least two candidate windows by default.
 - Complete one-AB1 Rust analysis pipeline with strict TOML configuration and typed errors.
 - Bounds-checked canonical ABIF decode, single-record FASTA identity, and internal four-channel signal evidence.
