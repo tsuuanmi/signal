@@ -37,7 +37,7 @@ A future machine-learning path should preserve the compact production contracts 
 
 This is a direction record, not an implementation commitment. No `features` module, training schema, CLI command, or training output exists or should be created until the delivery phases below approve a task, corpus, feature registry, label registry, and closed schema. See [ADR-0016](adr/0016-defer-ml-feature-boundary.md) for the formal decision.
 
-A training exporter conflicts with the current one-file CLI contract: `SRS-IN-001` and `SRS-IN-010` require exactly one AB1 producing exactly one derived command-specific JSON with no output-path or format switches. An opt-in exporter therefore requires an approved ADR and SRS update establishing its invocation contract (subcommand or flag, output path, overwrite semantics) before any `report::training` or pipeline integration.
+A training exporter conflicts with the current one-file CLI contract: `SRS-IN-001`, `SRS-IN-010`, and `SRS-OUT-001` fix each command to one input and exactly one command-specific JSON output with no duplicate compatibility output. An opt-in exporter therefore requires an approved ADR and SRS update establishing its invocation contract (separate subcommand, output path, overwrite semantics) before any `report::training` or pipeline integration.
 
 Conceptually, one training example contains:
 
@@ -107,7 +107,7 @@ Full channel arrays should also be deferred. If engineered features prove insuff
 
 ### Feature module boundaries
 
-The existing scientific workflow should remain unchanged. One explicit `features` subsystem sits after raw-data processing and all command-specific scientific stages, immediately before assembly of the final result-plus-features JSON. Extraction, engineering, and serialization are different responsibilities and must not be combined in pipeline or report code.
+The existing scientific workflow should remain unchanged. One explicit `features` subsystem sits after raw-data processing and all command-specific scientific stages, immediately before assembly of the independently versioned training JSON. Extraction, engineering, and serialization are different responsibilities and must not be combined in pipeline or report code.
 
 ```text
 AB1 + configuration
