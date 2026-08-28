@@ -17,3 +17,4 @@
 | [0013](0013-observational-signal-quality.md) | Observational rolling signal quality | Accepted |
 | [0014](0014-compact-result-summary.md) | Compact v5 result summary | Accepted |
 | [0015](0015-reference-free-basecalling.md) | Reference-free basecall JSON | Accepted |
+| [0016](0016-defer-ml-feature-boundary.md) | Defer ML feature boundary to separate training contract | Accepted |

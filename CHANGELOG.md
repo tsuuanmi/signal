@@ -15,6 +15,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- ML-ready JSON roadmap documenting a future opt-in versioned training envelope, post-pipeline feature extraction and engineering boundary, feature catalog, potential ML use cases, label governance, target-relative leakage classification, survivorship-bias tracking, privacy and data-minimization rules, and phased delivery gates without changing the compact production contracts.
+- ADR-0016 recording the decision to defer ML feature scaffolding, keep `signal.analysis/v5` and `signal.basecalls/v1` unchanged, and require a future ADR, SRS update, closed schema, and approved task/corpus before any training exporter implementation.
 - Reference-free `signal basecall <trace.ab1>` with one atomic no-overwrite `signal.basecalls/v1` JSON result containing full primary/ambiguity/retained sequences, trim bounds, merged noisy regions, provenance, and warning counts through the same validated read-processing stages as reference analysis.
 - Deterministic `signal.windowed_snr/v1` analysis with local median/first-difference-MAD estimates, finite SNR features, and merged call/sample candidate-noisy regions requiring at least two candidate windows by default.
 - Complete one-AB1 Rust analysis pipeline with strict TOML configuration and typed errors.
