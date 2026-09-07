@@ -18,6 +18,8 @@
 - [`data.md`](data.md): local AB1 privacy and provenance policy.
 - [`roadmap.md`](roadmap.md): completed MVP and post-MVP candidates.
 - [`UPDATE.md`](UPDATE.md): detailed mtDNA processing improvement plan.
+- [`TODO.md`](TODO.md): ROI-prioritized mtDNA work queue.
+- [`tracy_review.md`](tracy_review.md): Tracy-informed technical design notes.
 - [`delivery-record.md`](delivery-record.md): delivery record and acceptance criteria.
 
 ## Contracts and decisions
