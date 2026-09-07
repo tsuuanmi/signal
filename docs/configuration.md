@@ -31,6 +31,8 @@ Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions
 | | `relative_quality_threshold` | `30` | less than `max_relative_quality_score`; comparison is strict `>` |
 | | `regions` | `[[16024, 16365], [73, 340], [438, 576]]` | non-empty inclusive 1-based ranges within `1..=50000` |
 
+For a uniquely strongest basecalling peak, `secondary_peak_ratio` applies both to each channel's selected peak relative to that primary peak and to the channel signal sampled at the primary peak position. Both comparisons are inclusive; this prevents a remote maximum elsewhere in the same PLOC window from qualifying as ambiguity evidence.
+
 `basecall` consumes the basecalling, signal-processing, and quality-control settings; it still validates the complete schema and records the complete configuration checksum. Reference, alignment, and variant-calling settings are used only by `analyze`. Signal-processing values control observation-only annotations and never change calls, trim bounds, alignments, or variants. The region list is treated as a union in the supplied reference coordinate system. Region order and overlap do not change eligibility. Compact output v5 records the raw configuration checksum but omits method constants and expanded effective values. Effective values and configuration schema version 4 remain in the strict TOML selected for the run; the local path is omitted.
 
 ## `.env`

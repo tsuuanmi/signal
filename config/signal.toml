@@ -6,7 +6,7 @@ schema_version = 4
 topology = "circular"
 
 [basecalling]
-# A second channel must reach this fraction of the strongest positive peak.
+# A channel's selected peak and signal at the primary peak must reach this fraction.
 secondary_peak_ratio = 0.33
 
 [signal_processing]

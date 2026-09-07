@@ -44,12 +44,14 @@ pub(crate) fn call(trace: &Chromatogram, config: &BasecallingConfig) -> Result<B
             ('N', 'N', Vec::new())
         } else {
             let top_index = order[0];
+            let primary_peak_position = peaks[top_index].position_0based;
             let qualifying_channels = order
                 .iter()
                 .filter(|channel| {
-                    peaks[**channel].height > 0
-                        && f64::from(peaks[**channel].height) / f64::from(top_height)
-                            >= config.secondary_peak_ratio
+                    let selected_height = peaks[**channel].height;
+                    let colocated_height = trace.channels[**channel][primary_peak_position];
+                    reaches_ratio(selected_height, top_height, config.secondary_peak_ratio)
+                        && reaches_ratio(colocated_height, top_height, config.secondary_peak_ratio)
                 })
                 .map(|channel| peaks[*channel].base)
                 .collect::<Vec<_>>();
@@ -81,6 +83,10 @@ pub(crate) fn call(trace: &Chromatogram, config: &BasecallingConfig) -> Result<B
         calls,
         primary_sequence,
     })
+}
+
+fn reaches_ratio(height: i32, top_height: i32, minimum_ratio: f64) -> bool {
+    height > 0 && f64::from(height) / f64::from(top_height) >= minimum_ratio
 }
 
 #[cfg(test)]
@@ -140,6 +146,130 @@ mod tests {
             },
         )?;
         assert_eq!(calls.primary_sequence, "NN");
+        Ok(())
+    }
+
+    #[test]
+    fn off_locus_secondary_peak_does_not_create_ambiguity() -> Result<()> {
+        let chromatogram = trace([
+            vec![0, 1, 100, 1, 0, 1, 100, 1],
+            vec![0, 0, 1, 40, 0, 40, 1, 0],
+            vec![0; 8],
+            vec![0; 8],
+        ]);
+        let calls = call(
+            &chromatogram,
+            &BasecallingConfig {
+                secondary_peak_ratio: 0.33,
+            },
+        )?;
+        assert_eq!(calls.primary_sequence, "AA");
+        assert_eq!(
+            calls
+                .calls
+                .iter()
+                .map(|call| call.ambiguity)
+                .collect::<String>(),
+            "AA"
+        );
+        assert!(
+            calls
+                .calls
+                .iter()
+                .all(|call| call.qualifying_channels.len() == 1
+                    && call.qualifying_channels[0].as_char() == 'A')
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn overlapping_offset_secondary_peak_still_qualifies() -> Result<()> {
+        let chromatogram = trace([
+            vec![0, 1, 100, 1, 0, 1, 100, 1],
+            vec![0, 20, 40, 50, 0, 50, 40, 20],
+            vec![0; 8],
+            vec![0; 8],
+        ]);
+        let calls = call(
+            &chromatogram,
+            &BasecallingConfig {
+                secondary_peak_ratio: 0.33,
+            },
+        )?;
+        assert_eq!(calls.primary_sequence, "AA");
+        assert_eq!(
+            calls
+                .calls
+                .iter()
+                .map(|call| call.ambiguity)
+                .collect::<String>(),
+            "MM"
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn offset_secondary_signal_at_exact_ratio_threshold_qualifies() -> Result<()> {
+        let chromatogram = trace([
+            vec![0, 1, 100, 1, 0, 1, 100, 1],
+            vec![0, 20, 50, 60, 0, 60, 50, 20],
+            vec![0; 8],
+            vec![0; 8],
+        ]);
+        let calls = call(
+            &chromatogram,
+            &BasecallingConfig {
+                secondary_peak_ratio: 0.5,
+            },
+        )?;
+        assert!(
+            calls
+                .calls
+                .iter()
+                .all(|call| call.ambiguity == 'M' && call.qualifying_channels.len() == 2)
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn ploc_fallback_primary_always_qualifies() -> Result<()> {
+        let chromatogram = trace([(0..8).collect(), vec![0; 8], vec![0; 8], vec![0; 8]]);
+        let calls = call(
+            &chromatogram,
+            &BasecallingConfig {
+                secondary_peak_ratio: 1.0,
+            },
+        )?;
+        assert_eq!(calls.primary_sequence, "AA");
+        assert!(calls.calls.iter().all(|call| {
+            call.peaks[0].source == crate::model::basecalls::PeakSource::PlocFallback
+                && call.qualifying_channels.len() == 1
+                && call.qualifying_channels[0].as_char() == 'A'
+        }));
+        Ok(())
+    }
+
+    #[test]
+    fn ploc_fallback_secondary_must_be_colocated() -> Result<()> {
+        let chromatogram = trace([
+            vec![0, 100, 1, 0, 0, 100, 1, 0],
+            vec![0, 1, 40, 41, 42, 43, 44, 45],
+            vec![0; 8],
+            vec![0; 8],
+        ]);
+        let calls = call(
+            &chromatogram,
+            &BasecallingConfig {
+                secondary_peak_ratio: 0.33,
+            },
+        )?;
+        assert_eq!(calls.calls[0].primary, 'A');
+        assert_eq!(calls.calls[0].ambiguity, 'A');
+        assert_eq!(
+            calls.calls[0].peaks[1].source,
+            crate::model::basecalls::PeakSource::PlocFallback
+        );
+        assert_eq!(calls.calls[0].qualifying_channels.len(), 1);
         Ok(())
     }
 

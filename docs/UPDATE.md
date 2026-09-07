@@ -308,66 +308,31 @@ The existing basecalling module can consume this evidence.
 
 ---
 
-## 5.1 Current Problem
+## 5.1 Remaining Problem
 
-The existing logic approximately performs:
+`signal.peak_recall/v3` still selects the strongest A/C/G/T peak independently anywhere in each PLOC window, but a secondary channel now qualifies only when it also reaches the configured ratio at the primary peak sample. This removes the simplest remote-maximum ambiguity while preserving primary selection.
+
+The remaining logic is approximately:
 
 ```text
 for each PLOC call window:
-    find highest A peak anywhere in window
-    find highest C peak anywhere in window
-    find highest G peak anywhere in window
-    find highest T peak anywhere in window
-
-    compare heights
+    find highest A/C/G/T peaks independently
+    choose the uniquely strongest primary peak
+    require secondary selected-peak strength
+    require secondary signal at the primary peak sample
 ```
 
-This can create false ambiguity.
+The one-sample overlap gate is not yet a complete peak-geometry model. For example, a broad or poorly separated neighboring C peak can have a selected height of 400 against a primary A height of 1000 and still exceed 330 at the A apex. Both v3 ratios then pass even if the complete C peak geometry belongs to a neighboring event.
 
-Example:
-
-```text
-window:
-
-           A
-           /\
-          /  \
----------/----\---------------------
-
-                         C
-                         /\
-------------------------/--\--------
-
-```
-
-Suppose:
-
-```text
-A peak = 1000
-C peak = 400
-```
-
-The ratio is:
-
-```text
-400 / 1000 = 0.40
-```
-
-With:
-
-```toml
-secondary_peak_ratio = 0.33
-```
-
-the site could be interpreted as an A/C mixed call even though the C peak belongs to a neighboring nucleotide event.
+Conversely, when the C signal at the A apex is below 330, v3 correctly rejects it even though `400 / 1000 = 0.40` exceeds the configured `secondary_peak_ratio = 0.33`. A future locus-evidence model should distinguish the remaining overlapping and compressed-peak cases using explicit peak positions, widths, prominence, and local spacing.
 
 ---
 
 # 6. Peak Co-localization
 
-Secondary alleles should only be considered meaningful when they are spatially compatible with the primary event.
+The v3 primary-sample gate is the initial conservative co-localization rule. A future locus-evidence model should evaluate complete peak geometry before treating secondary signal as meaningful.
 
-Suggested rule:
+Suggested richer rule:
 
 ```text
 major_peak_position = p
@@ -3682,7 +3647,7 @@ P0 should make Signal scientifically stronger without making large biological cl
 Deliver:
 
 ```text
-1. peak co-localization
+1. spacing-aware peak co-localization beyond the v3 primary-sample gate
 
 2. explicit per-locus evidence
 
@@ -3771,7 +3736,7 @@ Deliver:
 
 # 105. Recommended PR Sequence
 
-A practical implementation should use smaller reviewable PRs.
+A practical implementation should use smaller reviewable PRs. The completed `signal.peak_recall/v3` precursor rejects remote secondary maxima with the existing ratio at the primary peak sample; the sequence below starts with the richer evidence foundation still required.
 
 ---
 
@@ -3811,9 +3776,9 @@ ties
 
 ---
 
-## PR 2 — Basecalling v3
+## PR 2 — Basecalling v4
 
-Change call logic to consume locus/peak evidence.
+Change call logic to consume the richer locus/peak evidence.
 
 Major changes:
 
@@ -3828,10 +3793,10 @@ existing primary/IUPAC behavior remains conservative
 Introduce:
 
 ```text
-signal.peak_recall/v3
+signal.peak_recall/v4
 ```
 
-Compare outputs against current v2 on regression fixtures.
+Compare outputs against current v3 on regression fixtures.
 
 ---
 

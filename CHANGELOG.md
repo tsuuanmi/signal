@@ -35,7 +35,7 @@ All notable changes to this project are documented here.
 - MVP output is one compact `results/<trace-stem>.json`; the earlier JSON-plus-VCF plan is superseded.
 - Quality is explicitly uncalibrated relative score; vendor PCON remains separate.
 - rCRS topology is circular and origin-spanning alignments/indels have explicit canonical coordinates.
-- Basecalling is `signal.peak_recall/v2`: one/two/three qualifying channels behave canonical / strongest+IUPAC / strongest+unresolved-ambiguity, and four produce unresolved primary+ambiguity N.
+- Basecalling is `signal.peak_recall/v3`: qualifying channels must pass the configured ratio at both their selected peak and the uniquely strongest primary peak sample, rejecting remote secondary maxima while preserving primary selection, tie handling, PLOC fallback, and one/two/three/four-channel call semantics.
 - Variant calling is `signal.primary_difference/v3`: normalized anchors must lie in configured inclusive regions; SNV and every inserted-base supporting call must meet the configured maximum-channel peak floor and strictly exceed the relative-quality threshold; deletion and insertion flanks are exempt.
 - Alignment scores are 64-bit (`i64`) while configuration score deltas remain 32-bit (`i32`).
 - Origin crossing is represented once by `alignment.wraps_origin`; Rust still counts it in the operational warning summary without duplicating it in JSON.

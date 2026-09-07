@@ -8,8 +8,9 @@ validated ABIF PLOC loci.
 ## Responsibilities
 
 - Re-export `call` as the module boundary.
-- Build basecall windows, detect channel peaks, choose primary calls, calculate
-  secondary ratios, emit IUPAC ambiguity, and retain trace positions.
+- Build basecall windows, detect channel peaks, choose primary calls, require
+  secondary strength at both the selected peak and primary peak sample, emit
+  IUPAC ambiguity, and retain trace positions.
 
 ## Non-responsibilities
 
@@ -26,8 +27,10 @@ No ABIF parsing, end trimming, reference alignment, or variant calling.
 
 Calls derive from the four signal channels at validated PLOC loci. Vendor PBAS
 calls are evidence only and never replace the signal-derived call. Output arrays
-have validated equal lengths. A tie or non-positive strongest peak yields an
-unresolved `N` call; one/two/three qualifying channels produce canonical /
+have validated equal lengths. A secondary channel qualifies only when both its
+selected peak and its signal at the primary peak sample reach the configured
+ratio. A tie or non-positive strongest peak yields an unresolved `N` call;
+one/two/three qualifying channels produce canonical /
 strongest+IUPAC / strongest+unresolved-ambiguity calls, and four produce
 unresolved `N` for both primary and ambiguity.
 
@@ -48,8 +51,10 @@ ADR-0003; `SRS-BC-001` through `SRS-BC-005`.
 
 ## Tests
 
-Unit tests in `call` cover unambiguous calls and exact-tie resolution. The
-end-to-end `tests/analyze.rs` integration tests exercise the full re-calling path.
+Unit tests in `call` cover unambiguous calls, exact-tie resolution, remote and
+overlapping secondary peaks, inclusive ratio boundaries, PLOC fallback, and
+three/four-channel behavior. The end-to-end `tests/analyze.rs` and
+`tests/basecall.rs` integration tests exercise the shared re-calling path.
 
 ## Status
 

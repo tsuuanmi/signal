@@ -49,8 +49,9 @@ No ratio thresholding, IUPAC mapping, or call orchestration.
 Each PLOC locus is a vendor-identified base position. The window around it
 captures the local signal for that base. Selecting the strongest positive local
 maximum per channel recovers the peak height used to rank channels and apply the
-secondary-peak threshold; the downstream model needs the height/source but not a
-separate selected-peak coordinate.
+secondary-peak threshold. Call orchestration also uses the uniquely strongest
+selected peak's coordinate to sample every channel at the same primary event;
+each channel's selected coordinate remains retained as internal evidence.
 
 ## Tests
 

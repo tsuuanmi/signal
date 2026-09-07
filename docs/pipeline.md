@@ -51,7 +51,7 @@ four channel arrays, the basecall positions, and optional vendor evidence. ABIF
 version, channel order, and sample count are validated during decode but are not
 duplicated as retained metadata.
 
-## Stage 2 — Basecalling (`signal.peak_recall/v2`)
+## Stage 2 — Basecalling (`signal.peak_recall/v3`)
 
 Re-calls every vendor-defined locus from the channel signals. Vendor base
 strings are retained as evidence but never replace signal-derived re-calling.
@@ -82,10 +82,17 @@ its base, height, position, and source (`local_maximum` or `ploc_fallback`).
 
 The four channel peaks are ranked by height (ties broken by channel order
 A < C < G < T). Let `top` be the highest height. If `top <= 0` or the second
-peak ties `top`, the call is unresolved (`N`). Otherwise:
+peak ties `top`, the call is unresolved (`N`). Otherwise, let
+`primary_peak_position` be the selected peak position of the uniquely strongest
+channel:
 
-- **Qualifying channels** are those with positive height and
-  `height / top >= secondary_peak_ratio`.
+- **Qualifying channels** have a positive selected peak satisfying
+  `selected_height / top >= secondary_peak_ratio` and positive channel signal at
+  `primary_peak_position` satisfying
+  `signal_at_primary_peak / top >= secondary_peak_ratio`.
+- The two conditions are an intersection with the v2 selected-peak rule, so a
+  remote maximum elsewhere in the same call window cannot create ambiguity and
+  no new secondary channel can qualify.
 - **Primary** is the strongest base when one to three channels qualify; four qualifying channels produce `N`.
 - **Ambiguity** depends on the number of qualifying channels: one base maps to
   itself (canonical); two bases map to the standard two-base IUPAC symbol; three

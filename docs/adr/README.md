@@ -18,3 +18,4 @@
 | [0014](0014-compact-result-summary.md) | Compact v5 result summary | Accepted |
 | [0015](0015-reference-free-basecalling.md) | Reference-free basecall JSON | Accepted |
 | [0016](0016-defer-ml-feature-boundary.md) | Defer ML feature boundary to separate training contract | Accepted |
+| [0017](0017-primary-sample-peak-colocalization.md) | Gate secondary calls at the primary peak sample | Accepted |

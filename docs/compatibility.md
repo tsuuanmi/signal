@@ -29,6 +29,7 @@ For an approved fixture, raw decoded bytes, channel remapping, PLOC positions, u
 - `P2BA.1` is ignored; only optional `PBAS.2` and `PCON.2` vendor evidence is consumed;
 - exact strongest-channel ties become N instead of favoring a channel by iteration order;
 - three qualifying channels keep the strongest primary with unresolved N ambiguity; four qualifying channels yield unresolved N for both primary and ambiguity;
+- `signal.peak_recall/v3` requires each qualifying channel to pass the selected-peak ratio and the same ratio at the primary peak sample, preventing a remote channel maximum in the call window from creating ambiguity;
 - per-channel PLOC fallback is kept and Apollo's collective midpoint rescue is not ported;
 - the Rust Gotoh traceback breaks ties by state preference Match > Deletion > Insertion, which may differ from C++ tie behavior on equally scoring paths;
 - alignments below `minimum_callable_bases` or `minimum_identity` fail rather than being silently accepted;
