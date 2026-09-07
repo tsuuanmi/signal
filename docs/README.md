@@ -17,6 +17,7 @@
 - [`compatibility.md`](compatibility.md): Apollo mapping and intentional corrections.
 - [`data.md`](data.md): local AB1 privacy and provenance policy.
 - [`roadmap.md`](roadmap.md): completed MVP and post-MVP candidates.
+- [`UPDATE.md`](UPDATE.md): detailed mtDNA processing improvement plan.
 - [`delivery-record.md`](delivery-record.md): delivery record and acceptance criteria.
 
 ## Contracts and decisions

@@ -17,13 +17,14 @@ use support::{
 };
 
 const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
+const REPRESENTATIVE_TRACE_STEM: &str = "E01_20260504_2544522_HV1F_13";
 
 #[test]
 fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>> {
     let first = tempdir()?;
     let second = tempdir()?;
     for directory in [first.path(), second.path()] {
-        let trace = directory.join("trace.ab1");
+        let trace = directory.join(format!("{REPRESENTATIVE_TRACE_STEM}.ab1"));
         let reference = directory.join("reference.fa");
         let config = directory.join("signal.toml");
         write_abif(&trace, QUERY)?;
@@ -35,14 +36,22 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
             .stderr(predicate::str::is_empty());
     }
 
-    let first_bytes = fs::read(analysis_output_path(
-        first.path(),
-        &first.path().join("trace.ab1"),
-    ))?;
-    let second_bytes = fs::read(analysis_output_path(
-        second.path(),
-        &second.path().join("trace.ab1"),
-    ))?;
+    let first_trace = first
+        .path()
+        .join(format!("{REPRESENTATIVE_TRACE_STEM}.ab1"));
+    let second_trace = second
+        .path()
+        .join(format!("{REPRESENTATIVE_TRACE_STEM}.ab1"));
+    let first_output = analysis_output_path(first.path(), &first_trace);
+    assert_eq!(
+        first_output,
+        first
+            .path()
+            .join("results")
+            .join(format!("{REPRESENTATIVE_TRACE_STEM}.json"))
+    );
+    let first_bytes = fs::read(first_output)?;
+    let second_bytes = fs::read(analysis_output_path(second.path(), &second_trace))?;
     assert_eq!(first_bytes, second_bytes);
     let value: Value = serde_json::from_slice(&first_bytes)?;
     assert_eq!(value["schema_version"], "signal.analysis/v5");
@@ -98,8 +107,17 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     for obsolete in ["evidence", "position_1based", "_0based", "_exclusive"] {
         assert!(!text.contains(obsolete));
     }
-    assert!(!first.path().join("results/trace.vcf").exists());
-    let log = fs::read_to_string(first.path().join("logs/trace.log"))?;
+    assert!(
+        !first
+            .path()
+            .join(format!("results/{REPRESENTATIVE_TRACE_STEM}.vcf"))
+            .exists()
+    );
+    let log = fs::read_to_string(
+        first
+            .path()
+            .join(format!("logs/{REPRESENTATIVE_TRACE_STEM}.log")),
+    )?;
     let mut search_start = 0;
     for event in [
         "event=analysis_started",
