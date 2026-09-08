@@ -38,8 +38,9 @@ feature computation, or scientific decision logic.
 ## Invariants and errors
 
 - `schema_version` is `signal.analysis/v5`.
-- Provenance contains software version, input SHA-256, reference identity, and
-  configuration SHA-256; method identifiers and trace filename are absent.
+- Provenance contains input SHA-256, reference identity, and configuration
+  SHA-256; software/build identity, method identifiers, and trace filename are
+  absent.
 - Read output contains only call count and trim bounds; complete primary,
   ambiguity, and retained sequences are absent.
 - Alignment output contains no score, columns, gapped rows, or operation runs.

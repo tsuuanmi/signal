@@ -52,10 +52,7 @@ fn writes_deterministic_reference_free_json() -> Result<(), Box<dyn std::error::
             "warnings",
         ],
     );
-    assert_object_keys(
-        &value["provenance"],
-        &["software_version", "input", "configuration_sha256"],
-    );
+    assert_object_keys(&value["provenance"], &["input", "configuration_sha256"]);
     assert_object_keys(
         &value["read"],
         &["call_count", "primary", "ambiguity", "retained", "trim"],

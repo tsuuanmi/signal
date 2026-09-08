@@ -69,12 +69,7 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     );
     assert_object_keys(
         &value["provenance"],
-        &[
-            "software_version",
-            "input",
-            "reference",
-            "configuration_sha256",
-        ],
+        &["input", "reference", "configuration_sha256"],
     );
     assert_object_keys(&value["read"], &["call_count", "trim"]);
     assert_object_keys(

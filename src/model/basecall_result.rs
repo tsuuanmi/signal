@@ -14,10 +14,9 @@ pub struct BasecallResult {
     pub(crate) warnings: BasecallWarningSummaryResult,
 }
 
-/// Deterministic identities for a basecall operation.
+/// Deterministic input identities for a basecall operation.
 #[derive(Debug, Serialize)]
 pub struct BasecallProvenanceResult {
-    pub(crate) software_version: &'static str,
     pub(crate) input: InputResult,
     pub(crate) configuration_sha256: String,
 }

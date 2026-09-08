@@ -6,7 +6,7 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
-- Replace `signal.analysis/v4` with compact `signal.analysis/v5`: retain provenance hashes/software, call count and trim, merged noisy regions, alignment summary, normalized variants with concise call mappings, and warning counts; remove filenames, full sequences, rolling windows, gapped rows, method constants, full peaks, vendor data, and redundant fields without a compatibility output.
+- Replace `signal.analysis/v4` with compact `signal.analysis/v5`: retain input/reference/configuration identities, call count and trim, merged noisy regions, alignment summary, normalized variants with concise call mappings, and warning counts; remove filenames, full sequences, rolling windows, gapped rows, method constants, full peaks, vendor data, and redundant fields without a compatibility output.
 - Replace `signal.analysis/v3` with `signal.analysis/v4`, adding bounded rolling signal-quality windows, merged candidate-noisy regions, and a signal-processing method identity without a v3 compatibility path.
 - Replace strict configuration schema version 3 with version 4, requiring the minimum two-window noisy-interval setting.
 - Replace `signal.analysis/v1` with compact `signal.analysis/v3`: omit bulk records; use concise coordinate names and direct mapped variant `calls` with A/C/G/T peaks plus relative/vendor quality.
@@ -60,6 +60,7 @@ All notable changes to this project are documented here.
 
 ### Removed
 
+- Removed the temporary `software_version` field from analysis and reference-free basecall provenance; software/build provenance is deferred until a stable versioning strategy is defined.
 - Not-implemented scaffold behavior and all planned VCF/BCF compatibility paths.
 - Misleading fully de novo terminology, hardcoded poly-C/HV behavior, and genotype/heteroplasmy claims from MVP scope.
 - `src/reference/checksum.rs`; SHA-256 is consolidated into the shared `src/checksum.rs`.

@@ -95,6 +95,8 @@ def rejected_analysis_shapes(
     unknown_field["signal_quality"]["windows"] = []
     removed_section = copy.deepcopy(example)
     removed_section["sequence"] = {"primary": "ACGT"}
+    removed_software_version = copy.deepcopy(example)
+    removed_software_version["provenance"]["software_version"] = "0.1.0"
 
     return [
         ("SNV with no calls", document("SNV", [])),
@@ -109,6 +111,7 @@ def rejected_analysis_shapes(
         ("noisy region with negative primary SNR", negative_metric),
         ("signal quality with removed windows", unknown_field),
         ("document with removed sequence section", removed_section),
+        ("analysis provenance with removed software version", removed_software_version),
     ]
 
 
@@ -125,12 +128,15 @@ def rejected_basecall_shapes(
     unknown_field["read"]["relative_quality"] = []
     reference = copy.deepcopy(example)
     reference["provenance"]["reference"] = {"name": "unexpected"}
+    software_version = copy.deepcopy(example)
+    software_version["provenance"]["software_version"] = "0.1.0"
     return [
         ("basecall primary with unsupported symbol", invalid_primary),
         ("basecall empty retained sequence", empty_retained),
         ("basecall negative trim start", negative_trim),
         ("basecall read with unknown field", unknown_field),
         ("basecall provenance with reference", reference),
+        ("basecall provenance with software version", software_version),
     ]
 
 

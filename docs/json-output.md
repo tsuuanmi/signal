@@ -11,7 +11,7 @@ The authoritative contract is [`schemas/analysis-v5.schema.json`](schemas/analys
 | Field | Meaning |
 |---|---|
 | `schema_version` | Always `signal.analysis/v5`. |
-| `provenance` | Software version plus input, reference, and configuration identities. |
+| `provenance` | Input, reference, and configuration identities. |
 | `read` | Original call count and the retained 0-based half-open trim interval. |
 | `signal_quality` | Merged candidate-noisy call/sample regions only. |
 | `alignment` | Selected-orientation alignment summary and reference segments. |
@@ -24,12 +24,11 @@ All objects are closed by the schema. Compact v5 deliberately omits trace filena
 
 `provenance` retains the information needed to identify a deterministic run without exposing the trace filename:
 
-- `software_version`;
 - input AB1 `sha256`;
 - reference `name`, `topology`, and sequence `sha256`;
 - `configuration_sha256`.
 
-The local input/configuration paths, expanded configuration, program constants, timestamps, host data, and method identifiers are not serialized. Effective scientific settings remain in the strict configuration selected for the run.
+Software/build identity, local input/configuration paths, expanded configuration, program constants, timestamps, host data, and method identifiers are not serialized. Software/build provenance is deferred until a stable versioning strategy is defined. Effective scientific settings remain in the strict configuration selected for the run.
 
 ## Read and signal-quality summary
 

@@ -13,9 +13,10 @@ Every object is closed and `schema_version` is `signal.basecalls/v1`.
 
 ## Fields
 
-- `provenance`: software version, input AB1 SHA-256, and complete strict
-  configuration SHA-256. The trace filename, local paths, timestamps, and host
-  data are omitted.
+- `provenance`: input AB1 SHA-256 and complete strict configuration SHA-256.
+  Software/build identity, the trace filename, local paths, timestamps, and host
+  data are omitted; software/build provenance is deferred until a stable
+  versioning strategy is defined.
 - `read.call_count`: number of decoded PLOC call loci.
 - `read.primary`: strongest conservative signal-derived base at each locus.
 - `read.ambiguity`: canonical/IUPAC ambiguity symbol at each locus.

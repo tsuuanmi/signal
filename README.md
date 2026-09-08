@@ -23,7 +23,7 @@ For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads
 - exactly one canonical analyzed ABIF/AB1 file per invocation;
 - reference-free `signal.basecalls/v1` JSON with full primary/ambiguity/retained sequences, trim bounds, merged noisy regions, provenance, and warning counts;
 - for `analyze`, exactly one non-empty plain FASTA record, at most 50,000 bases;
-- compact `signal.analysis/v5` JSON with provenance hashes/software, call count and trim bounds, merged noisy regions, an alignment summary, normalized variants with concise call mappings, and warning counts;
+- compact `signal.analysis/v5` JSON with input/reference/configuration identities, call count and trim bounds, merged noisy regions, an alignment summary, normalized variants with concise call mappings, and warning counts;
 - explicit linear/circular topology; bundled rCRS defaults to circular;
 - configured inclusive biological regions, with a bundled peak floor of 150 and relative-quality eligibility for SNVs and inserted bases;
 - primary-sequence SNVs and normalized insertions/deletions up to 50 bp.

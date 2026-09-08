@@ -54,7 +54,6 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
     Ok(AnalysisResult {
         schema_version: "signal.analysis/v5",
         provenance: ProvenanceResult {
-            software_version: env!("CARGO_PKG_VERSION"),
             input: InputResult {
                 sha256: trace.source_sha256,
             },

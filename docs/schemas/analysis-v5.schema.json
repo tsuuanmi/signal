@@ -28,9 +28,8 @@
     "provenance": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["software_version", "input", "reference", "configuration_sha256"],
+      "required": ["input", "reference", "configuration_sha256"],
       "properties": {
-        "software_version": { "type": "string", "minLength": 1 },
         "input": {
           "type": "object",
           "additionalProperties": false,

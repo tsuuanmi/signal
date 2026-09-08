@@ -69,7 +69,6 @@ pub(crate) fn build(completed: CompletedBasecall) -> Result<BasecallResult> {
     Ok(BasecallResult {
         schema_version: "signal.basecalls/v1",
         provenance: BasecallProvenanceResult {
-            software_version: env!("CARGO_PKG_VERSION"),
             input: InputResult {
                 sha256: trace.source_sha256,
             },

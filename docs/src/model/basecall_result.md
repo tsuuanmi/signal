@@ -6,7 +6,8 @@ Defines the serializable `signal.basecalls/v1` reference-free result contract.
 
 ## Responsibilities
 
-- Represent software/input/configuration provenance.
+- Represent input and configuration identities; software/build provenance is
+  intentionally deferred.
 - Represent complete primary, ambiguity, and retained sequences with call count
   and trim bounds.
 - Reuse shared interval and merged signal-quality result types.

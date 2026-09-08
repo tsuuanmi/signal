@@ -18,10 +18,9 @@ pub struct AnalysisResult {
     pub(crate) warnings: WarningSummaryResult,
 }
 
-/// Deterministic identities needed to reproduce an analysis.
+/// Deterministic input identities retained for an analysis.
 #[derive(Debug, Serialize)]
 pub struct ProvenanceResult {
-    pub(crate) software_version: &'static str,
     pub(crate) input: InputResult,
     pub(crate) reference: ReferenceResult,
     pub(crate) configuration_sha256: String,

@@ -1,7 +1,6 @@
 {
   "schema_version": "signal.analysis/v5",
   "provenance": {
-    "software_version": "0.1.0",
     "input": {
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
     },

@@ -7,7 +7,7 @@
 
 `signal.analysis/v4` exposed bounded rolling signal windows, complete called and retained sequences, gapped alignment rows, method identifiers, and rich per-variant peak/vendor evidence. Those fields were useful while establishing the scientific stages, but they duplicated internal state and produced a result larger and more identifying than downstream review requires.
 
-The stable review needs are narrower: deterministic provenance, read/trim extent, merged noisy regions, alignment quality/placement, normalized differences with enough mapped supporting evidence to audit configured eligibility, and warning counts. Full scientific evidence remains available from the identified AB1, reference, configuration, and software revision; it need not be duplicated in every JSON result.
+The stable review needs are narrower: deterministic input identities, read/trim extent, merged noisy regions, alignment quality/placement, normalized differences with enough mapped supporting evidence to audit configured eligibility, and warning counts. Full scientific evidence remains available from the identified AB1, reference, and configuration; it need not be duplicated in every JSON result. Software/build provenance is deferred during pre-release development until a stable versioning strategy is defined.
 
 Configuration and result contracts have independent version domains. The signal-processing settings introduced with strict configuration schema version 4 remain scientifically current even though the JSON projection changes.
 
@@ -25,7 +25,7 @@ Adopt `signal.analysis/v5` as the only scientific result.
 
 V5 retains:
 
-- `software_version`, input AB1 SHA-256, reference name/topology/SHA-256, and configuration SHA-256;
+- input AB1 SHA-256, reference name/topology/SHA-256, and configuration SHA-256;
 - original read call count and 0-based half-open trim interval;
 - merged candidate-noisy call/sample regions with minimum primary SNR;
 - selected alignment orientation, callable bases/identity, unresolved bases, gap opens, reference segments, and origin-wrap flag;
@@ -49,7 +49,7 @@ Strict configuration remains schema version 4. Signal emits no v4 compatibility 
 
 ## Consequences
 
-Results are smaller, less identifying, and focused on review decisions while retaining deterministic identities and the exact compact evidence used for supporting-call eligibility. Consumers must migrate to v5 and use the schema rather than rely on removed fields. Detailed reconstruction requires the source AB1, reference, configuration, and identified software version.
+Results are smaller, less identifying, and focused on review decisions while retaining deterministic input identities and the exact compact evidence used for supporting-call eligibility. Consumers must use the schema rather than rely on removed draft fields. Detailed reconstruction requires the source AB1, reference, and configuration; software/build identity is intentionally unavailable in the current pre-release JSON contract.
 
 Rolling windows, complete sequences, full peaks, vendor evidence, and traceback artifacts remain internal algorithm inputs or diagnostics; removing them from JSON does not change scientific behavior. Candidate-noisy regions remain observation-only. The core CLI continues atomic no-overwrite publication and separate append-only operational logging.
 

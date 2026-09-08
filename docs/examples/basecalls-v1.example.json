@@ -1,7 +1,6 @@
 {
   "schema_version": "signal.basecalls/v1",
   "provenance": {
-    "software_version": "0.1.0",
     "input": {
       "sha256": "a48e07b87c6c8e84bdb99a8fb4d4935522627134a6f0d6f7f471a20bf49f0c13"
     },

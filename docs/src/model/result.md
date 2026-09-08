@@ -24,8 +24,8 @@ projection.
 
 - `AnalysisResult`: `schema_version`, `provenance`, `read`, `signal_quality`,
   `alignment`, `variants`, and `warnings`.
-- `ProvenanceResult`: software version, input SHA-256, reference identity, and
-  configuration SHA-256. `InputResult` deliberately omits the trace filename;
+- `ProvenanceResult`: input SHA-256, reference identity, and configuration
+  SHA-256. `InputResult` deliberately omits the trace filename;
   `ReferenceResult` carries name, topology, and sequence SHA-256.
 - `ReadResult`: total `call_count` and the retained 0-based half-open `trim`
   interval. Complete called and retained sequences are not serialized.
