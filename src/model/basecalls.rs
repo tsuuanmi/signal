@@ -23,6 +23,17 @@ pub struct ChannelPeak {
     pub(crate) source: PeakSource,
 }
 
+/// Raw A/C/G/T observations at the uniquely strongest primary event.
+///
+/// Channel order follows `Nucleotide::ALL`: A, C, G, T.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct PrimaryPeakEvidence {
+    /// Selected sample position of the uniquely strongest primary channel.
+    pub(crate) position_0based: usize,
+    /// Raw analyzed A/C/G/T channel values at `position_0based`.
+    pub(crate) channel_heights: [i32; 4],
+}
+
 /// One signal-derived base call.
 #[derive(Debug, Clone)]
 pub struct BaseCall {
@@ -31,6 +42,11 @@ pub struct BaseCall {
     pub(crate) window_start_0based: usize,
     pub(crate) window_end_0based_exclusive: usize,
     pub(crate) peaks: [ChannelPeak; 4],
+    #[allow(
+        dead_code,
+        reason = "retained for later internal scientific stages without public projection"
+    )]
+    pub(crate) primary_peak_evidence: Option<PrimaryPeakEvidence>,
     pub(crate) primary: char,
     pub(crate) ambiguity: char,
     pub(crate) qualifying_channels: Vec<Nucleotide>,

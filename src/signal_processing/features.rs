@@ -166,6 +166,10 @@ mod tests {
                         PeakSource::PlocFallback
                     },
                 }),
+                primary_peak_evidence: Some(crate::model::basecalls::PrimaryPeakEvidence {
+                    position_0based: ploc,
+                    channel_heights: std::array::from_fn(|channel| channels[channel][ploc]),
+                }),
                 primary: primary.as_char(),
                 ambiguity: primary.as_char(),
                 qualifying_channels: vec![primary],

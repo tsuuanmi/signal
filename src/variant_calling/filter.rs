@@ -149,6 +149,7 @@ mod tests {
                     position_0based: index * 4,
                     source: PeakSource::LocalMaximum,
                 }),
+                primary_peak_evidence: None,
                 primary: 'A',
                 ambiguity: 'A',
                 qualifying_channels: vec![Nucleotide::A],

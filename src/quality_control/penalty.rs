@@ -109,6 +109,7 @@ mod tests {
                     position_0based: ploc,
                     source: PeakSource::PlocFallback,
                 }),
+                primary_peak_evidence: None,
                 primary: 'A',
                 ambiguity,
                 qualifying_channels: vec![Nucleotide::A],
