@@ -1,7 +1,9 @@
 //! Observation-only rolling signal-quality analysis.
 
+mod call_metrics;
 mod features;
 mod regions;
+mod statistics;
 
 use crate::config::SignalProcessingConfig;
 use crate::error::Result;
@@ -16,8 +18,10 @@ pub(crate) fn analyze(
     config: &SignalProcessingConfig,
 ) -> Result<SignalAnalysis> {
     let windows = features::calculate(trace, calls, config)?;
+    let call_metrics = call_metrics::calculate(trace, calls, &windows, config)?;
     let noisy_regions = regions::merge(&windows, config.minimum_noisy_windows);
     Ok(SignalAnalysis {
+        call_metrics,
         windows,
         noisy_regions,
     })

@@ -6,10 +6,7 @@ use crate::model::basecalls::BaseCalls;
 use crate::model::signal::SignalWindow;
 use crate::model::trace::Chromatogram;
 
-const NORMAL_MAD_SCALE: f64 = 0.674_489_75;
-const FIRST_DIFFERENCE_SCALE: f64 = std::f64::consts::SQRT_2;
-const MINIMUM_NOISE_SIGMA: f64 = 1.0;
-const OUTPUT_PRECISION: f64 = 1_000_000.0;
+use super::statistics;
 
 /// Computes one feature record per full-width, stride-one base window.
 pub(super) fn calculate(
@@ -40,9 +37,10 @@ pub(super) fn calculate(
         let mut baselines = [0.0; 4];
         let mut noise_sigmas = [0.0; 4];
         for channel in 0..4 {
-            let samples = &trace.channels[channel][sample_start..sample_end];
-            baselines[channel] = median_i32(samples)?;
-            noise_sigmas[channel] = noise_sigma(samples)?;
+            let statistics =
+                statistics::estimate(&trace.channels[channel][sample_start..sample_end])?;
+            baselines[channel] = statistics.baseline;
+            noise_sigmas[channel] = statistics.noise_sigma;
         }
 
         let mut minimum_primary_snr = f64::INFINITY;
@@ -50,7 +48,7 @@ pub(super) fn calculate(
         for call in selected {
             let mut ranked = [0_usize, 1, 2, 3];
             let corrected = std::array::from_fn::<_, 4, _>(|channel| {
-                (f64::from(call.peaks[channel].height) - baselines[channel]).max(0.0)
+                statistics::corrected_amplitude(call.peaks[channel].height, baselines[channel])
             });
             ranked.sort_by(|left, right| {
                 corrected[*right]
@@ -60,13 +58,15 @@ pub(super) fn calculate(
             let primary = ranked[0];
             let secondary = ranked[1];
             minimum_primary_snr =
-                minimum_primary_snr.min(corrected[primary] / noise_sigmas[primary]);
-            maximum_secondary_snr =
-                maximum_secondary_snr.max(corrected[secondary] / noise_sigmas[secondary]);
+                minimum_primary_snr.min(statistics::snr(corrected[primary], noise_sigmas[primary]));
+            maximum_secondary_snr = maximum_secondary_snr.max(statistics::snr(
+                corrected[secondary],
+                noise_sigmas[secondary],
+            ));
         }
 
-        let minimum_primary_snr = round_metric(minimum_primary_snr);
-        let maximum_secondary_snr = round_metric(maximum_secondary_snr);
+        let minimum_primary_snr = statistics::round_metric(minimum_primary_snr);
+        let maximum_secondary_snr = statistics::round_metric(maximum_secondary_snr);
         windows.push(SignalWindow {
             call_start_0based: call_start,
             call_end_0based_exclusive: call_end,
@@ -78,60 +78,6 @@ pub(super) fn calculate(
         });
     }
     Ok(windows)
-}
-
-fn median_i32(values: &[i32]) -> Result<f64> {
-    if values.is_empty() {
-        return Err(Error::SignalProcessing(
-            "cannot calculate a median from an empty sample interval".into(),
-        ));
-    }
-    let mut sorted = values.to_vec();
-    sorted.sort_unstable();
-    Ok(median_sorted_i32(&sorted))
-}
-
-fn median_sorted_i32(sorted: &[i32]) -> f64 {
-    let middle = sorted.len() / 2;
-    if sorted.len() % 2 == 0 {
-        (f64::from(sorted[middle - 1]) + f64::from(sorted[middle])) / 2.0
-    } else {
-        f64::from(sorted[middle])
-    }
-}
-
-fn noise_sigma(samples: &[i32]) -> Result<f64> {
-    if samples.len() < 2 {
-        return Err(Error::SignalProcessing(
-            "noise estimation requires at least two channel samples".into(),
-        ));
-    }
-    let mut differences = samples
-        .windows(2)
-        .map(|pair| f64::from(pair[1]) - f64::from(pair[0]))
-        .collect::<Vec<_>>();
-    differences.sort_by(f64::total_cmp);
-    let center = median_sorted_f64(&differences);
-    let mut deviations = differences
-        .into_iter()
-        .map(|difference| (difference - center).abs())
-        .collect::<Vec<_>>();
-    deviations.sort_by(f64::total_cmp);
-    let mad = median_sorted_f64(&deviations);
-    Ok((mad / (NORMAL_MAD_SCALE * FIRST_DIFFERENCE_SCALE)).max(MINIMUM_NOISE_SIGMA))
-}
-
-fn median_sorted_f64(sorted: &[f64]) -> f64 {
-    let middle = sorted.len() / 2;
-    if sorted.len() % 2 == 0 {
-        (sorted[middle - 1] + sorted[middle]) / 2.0
-    } else {
-        sorted[middle]
-    }
-}
-
-fn round_metric(value: f64) -> f64 {
-    (value * OUTPUT_PRECISION).round() / OUTPUT_PRECISION
 }
 
 #[cfg(test)]
@@ -193,19 +139,6 @@ mod tests {
     }
 
     #[test]
-    fn flat_samples_use_the_quantization_floor() -> Result<()> {
-        assert_eq!(noise_sigma(&[4, 4, 4, 4])?, 1.0);
-        Ok(())
-    }
-
-    #[test]
-    fn median_handles_even_and_odd_sample_counts() -> Result<()> {
-        assert_eq!(median_i32(&[4, 1, 3])?, 3.0);
-        assert_eq!(median_i32(&[4, 1, 3, 2])?, 2.5);
-        Ok(())
-    }
-
-    #[test]
     fn computes_full_windows_and_keeps_exact_threshold_clean() -> Result<()> {
         let (trace, calls) = evidence(7);
         let windows = calculate(
@@ -221,6 +154,7 @@ mod tests {
         assert_eq!(windows[0].call_start_0based, 0);
         assert_eq!(windows[0].call_end_0based_exclusive, 5);
         assert_eq!(windows[0].minimum_primary_snr, 1_000.0);
+        assert_eq!(windows[0].maximum_secondary_snr, 0.0);
         assert!(!windows[0].candidate_noisy);
         assert!(
             windows

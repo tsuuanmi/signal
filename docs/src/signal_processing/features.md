@@ -7,7 +7,8 @@ Calculates bounded rolling baseline, noise, and peak-SNR observations from analy
 ## Responsibilities
 
 - Build full-width, stride-one base-call windows from retained basecalling sample intervals.
-- Estimate each channel baseline by median and noise sigma from first-difference MAD.
+- Reuse shared median-baseline and first-difference-MAD noise primitives for each
+  channel.
 - Apply a one-channel-unit noise floor so every result remains finite.
 - Baseline-correct and rank the four selected channel peaks per call.
 - Retain minimum primary SNR, maximum secondary SNR, and the configured
@@ -18,7 +19,8 @@ Calculates bounded rolling baseline, noise, and peak-SNR observations from analy
 
 ## Non-responsibilities
 
-No channel mutation, smoothing, peak selection, calibrated quality, region merging, trimming, or variant filtering.
+No channel mutation, smoothing, peak selection, per-call primary-event metrics,
+calibrated quality, region merging, trimming, or variant filtering.
 
 ## Formula
 
@@ -34,7 +36,11 @@ A window is candidate-noisy only when its rounded minimum primary SNR is strictl
 
 ## Errors and tests
 
-A read shorter than `window_size_bases`, an invalid sample interval, or insufficient channel samples returns `Error::SignalProcessing`. Unit tests cover medians, the quantization floor, full windows, finite metrics, exact threshold equality, and short reads.
+A read shorter than `window_size_bases`, an invalid sample interval, or a shared
+statistics failure returns `Error::SignalProcessing`. Unit tests cover full
+windows, rolling primary/secondary SNR regression values, finite metrics, exact
+threshold equality, and short reads. Statistical primitive tests live in
+`statistics`.
 
 ## Status
 
