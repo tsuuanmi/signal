@@ -344,6 +344,28 @@ fn annotates_noisy_region_without_filtering_supported_snv() -> Result<(), Box<dy
 }
 
 #[test]
+fn reports_extracted_snv_at_peak_floor() -> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut query = QUERY.to_owned();
+    query.replace_range(10..11, "T");
+    let mut peaks = vec![1000; query.len()];
+    peaks[10] = 150;
+    write_abif_with_peak_heights(&trace, &query, peaks)?;
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["variants"].as_array().map(Vec::len), Some(1));
+    assert_eq!(value["variants"][0]["kind"], "SNV");
+    assert_eq!(value["warnings"]["excluded_variant_candidates"], 0);
+    Ok(())
+}
+
+#[test]
 fn filters_extracted_snv_below_peak_floor() -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempdir()?;
     let trace = directory.path().join("trace.ab1");
