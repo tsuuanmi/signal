@@ -24,7 +24,7 @@ primary-sequence variant calling
 versioned JSON result
 ```
 
-See [ADR-0021](adr/0021-freeze-scientific-core-mvp.md).
+See [ADR-0021](adr/0021-scientific-core-confidence-floor.md).
 
 ## MVP acceptance priorities
 
