@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::model::result::{AlignmentResult, ReferenceResult};
-use crate::model::sample_evidence::LocusDifferenceState;
+use crate::model::sample_evidence::LocusState;
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
 /// Successful compact sample-evidence document.
@@ -40,11 +40,11 @@ pub(crate) struct SampleLocusDifferenceResult {
     pub(crate) observations: Vec<SampleLocusDifferenceObservationResult>,
 }
 
-/// One read's non-reference observation at a locus.
+/// One covering read's observation at a differential locus.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleLocusDifferenceObservationResult {
     pub(crate) read: usize,
-    pub(crate) state: LocusDifferenceState,
+    pub(crate) state: LocusState,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) base: Option<char>,
     #[serde(skip_serializing_if = "Option::is_none")]
