@@ -189,6 +189,6 @@ See [CI and verification lanes](docs/operations/ci.md) and [production readiness
 
 ## Agent development
 
-Coding agents should start with [AGENTS.md](AGENTS.md), which routes changes through the same SRS, architecture, invariant, method, contract, source-mirror, test, and validation hierarchy used by human contributors.
+Coding agents should start with [AGENTS.md](AGENTS.md). It defines a reusable discover → understand → plan → implement → verify → reconcile → review → report workflow, then expects the agent to discover this repository's own requirements, architecture, contracts, tests, and validation sources rather than relying on hard-coded file paths.
 
 The repository intentionally treats documentation as part of the correctness system, not as an after-the-fact description of the code.
