@@ -6,7 +6,8 @@ use crate::model::result::{IntervalResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
     SampleEvidenceResult, SampleLocusObservationResult, SampleLocusResult, SampleProvenanceResult,
-    SampleReadResult, SampleVariantResult, SampleVariantSupportResult,
+    SampleReadAlignmentResult, SampleReadResult, SampleVariantCallResult, SampleVariantResult,
+    SampleVariantSupportResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
@@ -35,16 +36,25 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         .map(|read| SampleReadResult {
             name: read.input_name,
             sha256: read.input_sha256,
-            orientation: read.orientation,
-            reference_segments: read
-                .reference_segments
-                .into_iter()
-                .map(|segment| IntervalResult {
-                    start: segment.start_0based,
-                    end: segment.end_0based_exclusive,
-                })
-                .collect(),
-            wraps_origin: read.wraps_origin,
+            alignment: SampleReadAlignmentResult {
+                orientation: read.alignment.orientation,
+                score: read.alignment.score,
+                callable_bases: read.alignment.callable_bases,
+                identity: read.alignment.identity,
+                mismatches: read.alignment.mismatches,
+                gap_opens: read.alignment.gap_opens,
+                unresolved_bases: read.alignment.unresolved_bases,
+                reference_segments: read
+                    .alignment
+                    .reference_segments
+                    .into_iter()
+                    .map(|segment| IntervalResult {
+                        start: segment.start_0based,
+                        end: segment.end_0based_exclusive,
+                    })
+                    .collect(),
+                wraps_origin: read.alignment.wraps_origin,
+            },
         })
         .collect();
 
@@ -87,6 +97,16 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                     orientation: support.orientation,
                     eligible: support.eligible,
                     exclusion_reasons: support.exclusion_reasons,
+                    calls: support
+                        .calls
+                        .into_iter()
+                        .map(|call| SampleVariantCallResult {
+                            role: call.role,
+                            index: call.call_index_0based,
+                            position: call.reference_position_1based,
+                            ploc: call.ploc_0based,
+                        })
+                        .collect(),
                 })
                 .collect(),
         })
