@@ -420,7 +420,10 @@ mod tests {
             evidence.variants[0].support[0].calls[0].role,
             VariantCallRole::Supporting
         );
-        assert_eq!(evidence.variants[0].support[0].calls[0].call_index_0based, 0);
+        assert_eq!(
+            evidence.variants[0].support[0].calls[0].call_index_0based,
+            0
+        );
         assert_eq!(
             evidence.variants[0].support[0].calls[0].reference_position_1based,
             Some(73)
@@ -459,11 +462,7 @@ mod tests {
         assert_eq!(evidence.variants[0].support.len(), 2);
         assert_eq!(evidence.variants[0].support[0].input_sha256, "a");
         assert!(evidence.variants[0].support[0].eligible);
-        assert!(
-            evidence.variants[0].support[0]
-                .exclusion_reasons
-                .is_empty()
-        );
+        assert!(evidence.variants[0].support[0].exclusion_reasons.is_empty());
         assert_eq!(evidence.variants[0].support[1].input_sha256, "b");
         assert!(!evidence.variants[0].support[1].eligible);
         assert_eq!(
