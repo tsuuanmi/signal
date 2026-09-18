@@ -1,35 +1,97 @@
 # Signal Documentation
 
-## Product and method
+This is the documentation entry point for humans and coding agents.
 
-- [`pipeline.md`](pipeline.md): normative shared and reference-analysis scientific methods.
-- [`signal-processing.md`](signal-processing.md): rolling SNR method, limits, and deferred cleaning research.
-- [`basecall-output.md`](basecall-output.md): authoritative reference-free result contract.
-- [`json-output.md`](json-output.md): authoritative reference-analysis result contract.
-- [`requirements.md`](requirements.md): normative software requirements.
-- [`architecture.md`](architecture.md): module and dependency boundaries.
-- [`configuration.md`](configuration.md): strict TOML and environment behavior.
+Signal documentation is organized by **authority and responsibility**. Do not infer current production behavior from a research note or roadmap item.
 
-## Engineering and validation
+## Read order for a change
 
-- [`source-layout.md`](source-layout.md): implemented Rust source ownership.
-- [`validation.md`](validation.md): unit, integration, schema, adversarial, and release evidence.
-- [`development-readiness.md`](development-readiness.md): three-lens MVP design gate and current start-development assessment.
-- [`adr/0018-production-readiness-release-contract.md`](adr/0018-production-readiness-release-contract.md): production release quality contract.
-- [`adr/0019-scientific-evidence-hierarchy.md`](adr/0019-scientific-evidence-hierarchy.md): evidence-to-claim hierarchy for Sanger/mtDNA.
-- [`adr/0020-rust-as-correctness-architecture.md`](adr/0020-rust-as-correctness-architecture.md): why Signal uses Rust to move invariants into the programming model.
-- [`compatibility.md`](compatibility.md): Apollo mapping and intentional corrections.
-- [`data.md`](data.md): local AB1 privacy and provenance policy.
-- [`roadmap.md`](roadmap.md): completed MVP and post-MVP candidates.
-- [`UPDATE.md`](UPDATE.md): detailed mtDNA processing improvement plan.
-- [`TODO.md`](TODO.md): ROI-prioritized mtDNA work queue.
-- [`tracy_review.md`](tracy_review.md): Tracy-informed technical design notes.
-- [`delivery-record.md`](delivery-record.md): delivery record and acceptance criteria.
+1. [Requirements](requirements.md) — what the system is intended to do.
+2. [Architecture](architecture/README.md) and [system invariants](architecture/invariants.md) — where the behavior belongs and what must always remain true.
+3. [Accepted/proposed ADRs](adr/README.md) — why relevant decisions were made.
+4. [Methods](methods/README.md) — current scientific/algorithmic behavior.
+5. [Contracts](contracts/README.md) — public/machine-visible interfaces and coordinate semantics.
+6. [Source mirror](src/README.md) and affected source — implementation ownership and current executable behavior.
+7. [Traceability](traceability.md) and [validation](validation/README.md) — tests/evidence that protect the behavior.
 
-## Contracts and decisions
+## Authority
 
-- [`schemas/analysis-v5.schema.json`](schemas/analysis-v5.schema.json): compact analysis schema.
-- [`schemas/basecalls-v1.schema.json`](schemas/basecalls-v1.schema.json): reference-free basecall schema.
-- [`examples/analysis-v5.example.json`](examples/analysis-v5.example.json) and [`examples/basecalls-v1.example.json`](examples/basecalls-v1.example.json): synthetic contract examples.
-- [`adr/README.md`](adr/README.md): architecture decision index.
-- [`src/`](src/): one-to-one manuals for every Rust source file.
+| Documentation | Role |
+|---|---|
+| [SRS](requirements.md) | normative intended behavior |
+| JSON schemas / config contract | exact machine-visible contract for the named version |
+| [ADRs](adr/README.md) | decision and rationale |
+| [Architecture + invariants](architecture/README.md) | boundaries and cross-cutting truths |
+| [Methods](methods/README.md) | detailed current scientific/algorithmic semantics |
+| source code | actual behavior executed by the current revision |
+| [docs/src](src/README.md) | descriptive module ownership; must track source |
+| [Validation](validation/README.md) | how claims are verified |
+| [Roadmap](roadmap.md) | future direction; non-normative |
+| [Research](research/README.md) | exploratory work; non-normative |
+
+If source and normative production documentation disagree, surface the mismatch. Do not silently choose whichever artifact is convenient. See [documentation governance](governance/documentation.md).
+
+## Product and requirements
+
+- [Requirements / SRS](requirements.md)
+- [Roadmap](roadmap.md)
+- [Development readiness](development-readiness.md)
+- [Glossary](glossary.md)
+
+## Architecture and decisions
+
+- [Architecture index](architecture/README.md)
+- [System overview](architecture.md)
+- [System invariants](architecture/invariants.md)
+- [Source layout](source-layout.md)
+- [ADR index](adr/README.md)
+- [Traceability](traceability.md)
+
+## Current methods
+
+- [Method index](methods/README.md)
+- [Pipeline](pipeline.md)
+- [Signal processing](signal-processing.md)
+
+## Contracts
+
+- [Contract index](contracts/README.md)
+- [Coordinate contract](contracts/coordinates.md)
+- [Configuration](configuration.md)
+- [Reference-free basecall output](basecall-output.md)
+- [Reference analysis output](json-output.md)
+- [Schemas](schemas/)
+- [Examples](examples/)
+
+## Implementation manuals
+
+- [Source mirror](src/README.md) — mirrors `src/**/*.rs`.
+
+Every mirrored source file has a same-relative-path manual. Manuals describe ownership, inputs/outputs, invariants, dependencies, failure modes, and traceability rather than translating code line by line.
+
+## Validation and operations
+
+- [Validation index](validation/README.md)
+- [Validation strategy](validation.md)
+- [Development/release operations](operations/README.md)
+- [CI lanes](operations/ci.md)
+- [Release operations](operations/release.md)
+- [Security and trust boundaries](operations/security.md)
+- [Data policy](data.md)
+- [Delivery record](delivery-record.md)
+
+## Governance
+
+- [Governance index](governance/README.md)
+- [Documentation governance](governance/documentation.md)
+- [Compatibility](compatibility.md)
+- [Changelog](../CHANGELOG.md)
+
+## Research
+
+Research lives only under [`docs/research/`](research/README.md) and does not change production behavior until promoted through the root ADR/SRS/contract process.
+
+- [Signal research](research/Signal/README.md)
+- Tracy research is developed separately under `docs/research/Tracy/` (PR #2).
+
+The old catch-all Signal research files were moved into `docs/research/Signal/` so they cannot be mistaken for production requirements.
