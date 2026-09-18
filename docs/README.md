@@ -13,7 +13,9 @@
 ## Engineering and validation
 
 - [`source-layout.md`](source-layout.md): implemented Rust source ownership.
-- [`validation.md`](validation.md): unit, integration, schema, and release evidence.
+- [`validation.md`](validation.md): unit, integration, schema, adversarial, and release evidence.
+- [`adr/0018-production-readiness-release-contract.md`](adr/0018-production-readiness-release-contract.md): production release quality contract.
+- [`adr/0019-scientific-evidence-hierarchy.md`](adr/0019-scientific-evidence-hierarchy.md): evidence-to-claim hierarchy for Sanger/mtDNA.
 - [`compatibility.md`](compatibility.md): Apollo mapping and intentional corrections.
 - [`data.md`](data.md): local AB1 privacy and provenance policy.
 - [`roadmap.md`](roadmap.md): completed MVP and post-MVP candidates.
