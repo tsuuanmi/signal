@@ -157,24 +157,30 @@ def rejected_sample_shapes(
     unknown_field = copy.deepcopy(example)
     unknown_field["consensus"] = "ACGT"
     empty_support = copy.deepcopy(example)
-    empty_support["events"][0]["support"] = []
+    empty_support["variants"][0]["support"] = []
     eligible_with_reason = copy.deepcopy(example)
-    eligible_with_reason["events"][0]["support"][0]["exclusion_reasons"] = [
+    eligible_with_reason["variants"][0]["support"][0]["exclusion_reasons"] = [
         "peak_below_minimum"
     ]
     ineligible_without_reason = copy.deepcopy(example)
-    ineligible_without_reason["events"][0]["support"][0]["eligible"] = False
+    ineligible_without_reason["variants"][0]["support"][0]["eligible"] = False
+    missing_read_name = copy.deepcopy(example)
+    missing_read_name["variants"][0]["support"][0].pop("read_name")
+    missing_call_pointer = copy.deepcopy(example)
+    missing_call_pointer["variants"][0]["support"][0]["calls"][0].pop("ploc")
     return [
         ("sample evidence with no reads", missing_reads),
         ("sample evidence with invalid sample id", invalid_sample_id),
         ("deletion observation carrying a base", verbose_deletion),
         ("sample evidence with consensus field", unknown_field),
-        ("sample event with no supporting reads", empty_support),
-        ("eligible sample event support with exclusion reason", eligible_with_reason),
+        ("sample variant with no supporting reads", empty_support),
+        ("eligible sample variant support with exclusion reason", eligible_with_reason),
         (
-            "ineligible sample event support without exclusion reason",
+            "ineligible sample variant support without exclusion reason",
             ineligible_without_reason,
         ),
+        ("sample variant support without read name", missing_read_name),
+        ("sample variant call without ploc", missing_call_pointer),
     ]
 
 
