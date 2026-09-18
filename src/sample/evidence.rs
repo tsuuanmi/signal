@@ -59,7 +59,6 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
             input_sha256: read.input_sha256.clone(),
             alignment: SampleReadAlignmentEvidence {
                 orientation: read.alignment.orientation,
-                score: read.alignment.score,
                 callable_bases: read.alignment.metrics.callable_columns,
                 identity: read.alignment.metrics.callable_identity,
                 mismatches: read.alignment.metrics.mismatches,
