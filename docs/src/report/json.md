@@ -7,7 +7,7 @@ shared by typed result contracts.
 
 ## Responsibilities
 
-- Consume `CompletedAnalysis`, containing config, reference, and one complete\n  `ReadObservation` produced by the scientific pipeline.
+- Consume `CompletedAnalysis`, containing the reference record and one complete\n  `ReadObservation` produced by the scientific pipeline. The observation owns input and configuration identities.
 - Delegate merged noisy-region projection to `report::signal`; individual signal
   windows and maximum secondary SNR remain internal.
 - Project the selected alignment into orientation, callable bases/identity,
