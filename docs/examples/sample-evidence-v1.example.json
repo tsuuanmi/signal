@@ -17,7 +17,6 @@
         "orientation": "reverse",
         "callable_bases": 290,
         "identity": 0.996551724137931,
-        "mismatches": 1,
         "gap_opens": 1,
         "unresolved_bases": 0,
         "reference_segments": [
@@ -36,7 +35,6 @@
         "orientation": "forward",
         "callable_bases": 275,
         "identity": 0.9854545454545455,
-        "mismatches": 4,
         "gap_opens": 1,
         "unresolved_bases": 0,
         "reference_segments": [
