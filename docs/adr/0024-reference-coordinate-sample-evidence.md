@@ -47,8 +47,7 @@ provenance only; it never affects placement or scientific reconciliation.
   and event merging.
 - Forward and reverse observations are directly comparable because
   `AlignmentColumn.query_base` is already oriented to the reference strand.
-- Low-quality/excluded read-level differences remain visible as locus observations
-  but do not become normalized event support.
+- Reference-locus differences remain visible as aligned locus observations even when read-level variant eligibility excludes the corresponding SNV; excluded events do not become normalized event support.
 - The evidence contract is intentionally not a consensus or sample-variant
   interpretation contract.
 
