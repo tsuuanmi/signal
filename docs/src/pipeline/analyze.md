@@ -10,9 +10,7 @@ logging plus result publication.
 - Open the per-trace Rust logger and emit ordered, run-correlated aggregate
   summaries and timings for input loading, basecalling, signal processing,
   quality control, alignment, variant calling, and publication readiness.
-- Delegate basecalling, signal processing, and quality control to the shared
-  `pipeline::read` path, then run reference-aware stages, materialize one
-  `ReadObservation`, and pass that typed boundary to `report::build_analysis`.
+- Delegate complete one-read scientific processing to `pipeline::observation`, then pass the resulting `ReadObservation` to `report::build_analysis`.
 - Log signal-processing window/region counts and the maximum secondary SNR across
   internal windows; that aggregate is operational and not part of v5 JSON.
 - Emit one WARN record for each removed variant with kind, contig, position, and
@@ -56,10 +54,8 @@ definitions.
 
 ## Dependencies
 
-- `input`, shared `read`, `logger`, `alignment`, `variant_calling`, and
-  `report`.
-- `cli::AnalyzeArgs`, `error::Result`, `model::ReadObservation`,
-  `ProcessedRead`, and `VariantKind`.
+- `input`, shared `observation`, `logger`, and `report`.
+- `cli::AnalyzeArgs` and `error::Result`.
 
 ## Biological semantics
 
