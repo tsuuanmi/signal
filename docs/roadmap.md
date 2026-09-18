@@ -38,11 +38,13 @@ Before improving variant logic, prove that Signal reads the relevant ABIF struct
 - optional vendor evidence where documented;
 - malformed and inconsistent input rejection.
 
-The decoded signal is the evidence foundation. Every later stage depends on it.
+The decoded analyzed signal is the evidence foundation. Every later stage depends on it.
+
+The ABIF container parser must also remain specification-conformant: generic directory parsing should reject truncated/overflowing payloads but must not reject a valid entry merely because `data_size` contains permitted trailing/padded bytes beyond `element_size × element_count`. Scientific tags such as `DATA.9-12`, `FWO_.1`, and `PLOC.2` are validated more strictly at their decoder boundary.
 
 ### 2. Base-call correctly enough to trust the read
 
-The first scientific target is a conservative primary sequence plus explicit ambiguity.
+The first scientific target is a conservative primary sequence plus explicit ambiguity. For the MVP this is deliberately **re-calling at `PLOC.2` loci**, not de novo discovery of base-event locations.
 
 The basecaller must:
 
