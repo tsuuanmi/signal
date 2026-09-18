@@ -5,8 +5,8 @@ use crate::model::reference::Reference;
 use crate::model::result::{IntervalResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
-    SampleEventResult, SampleEventSupportResult, SampleEvidenceResult,
-    SampleLocusObservationResult, SampleLocusResult, SampleProvenanceResult, SampleReadResult,
+    SampleEvidenceResult, SampleLocusObservationResult, SampleLocusResult, SampleProvenanceResult,
+    SampleReadResult, SampleVariantResult, SampleVariantSupportResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
@@ -33,6 +33,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         .reads
         .into_iter()
         .map(|read| SampleReadResult {
+            name: read.input_name,
             sha256: read.input_sha256,
             orientation: read.orientation,
             reference_segments: read
@@ -57,6 +58,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                 .observations
                 .into_iter()
                 .map(|observation| SampleLocusObservationResult {
+                    read_name: observation.input_name,
                     read_sha256: observation.input_sha256,
                     orientation: observation.orientation,
                     state: observation.state,
@@ -68,18 +70,19 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         })
         .collect();
 
-    let events = evidence
-        .events
+    let variants = evidence
+        .variants
         .into_iter()
-        .map(|event| SampleEventResult {
-            position: event.position_1based,
-            reference: event.reference,
-            alternate: event.alternate,
-            kind: event.kind,
-            support: event
+        .map(|variant| SampleVariantResult {
+            position: variant.position_1based,
+            reference: variant.reference,
+            alternate: variant.alternate,
+            kind: variant.kind,
+            support: variant
                 .support
                 .into_iter()
-                .map(|support| SampleEventSupportResult {
+                .map(|support| SampleVariantSupportResult {
+                    read_name: support.input_name,
                     read_sha256: support.input_sha256,
                     orientation: support.orientation,
                     eligible: support.eligible,
@@ -102,6 +105,6 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         },
         reads,
         loci,
-        events,
+        variants,
     })
 }
