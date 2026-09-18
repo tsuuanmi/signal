@@ -11,7 +11,7 @@ Signal documentation is organized by **authority and responsibility**. Do not in
 3. [Accepted/proposed ADRs](adr/README.md) — why relevant decisions were made.
 4. [Methods](methods/README.md) — current scientific/algorithmic behavior.
 5. [Contracts](contracts/README.md) — public/machine-visible interfaces and coordinate semantics.
-6. [Source mirror](src/README.md) and affected source — implementation ownership and current executable behavior.
+6. [Source mirror](source-mirror.md) and affected source — implementation ownership and current executable behavior.
 7. [Traceability](traceability.md) and [validation](validation/README.md) — tests/evidence that protect the behavior.
 
 ## Authority
@@ -24,7 +24,7 @@ Signal documentation is organized by **authority and responsibility**. Do not in
 | [Architecture + invariants](architecture/README.md) | boundaries and cross-cutting truths |
 | [Methods](methods/README.md) | detailed current scientific/algorithmic semantics |
 | source code | actual behavior executed by the current revision |
-| [docs/src](src/README.md) | descriptive module ownership; must track source |
+| [docs/src](source-mirror.md) | descriptive module ownership; must track source |
 | [Validation](validation/README.md) | how claims are verified |
 | [Roadmap](roadmap.md) | future direction; non-normative |
 | [Research](research/README.md) | exploratory work; non-normative |
@@ -65,7 +65,7 @@ If source and normative production documentation disagree, surface the mismatch.
 
 ## Implementation manuals
 
-- [Source mirror](src/README.md) — mirrors `src/**/*.rs`.
+- [Source mirror](source-mirror.md) — mirrors `src/**/*.rs`.
 
 Every mirrored source file has a same-relative-path manual. Manuals describe ownership, inputs/outputs, invariants, dependencies, failure modes, and traceability rather than translating code line by line.
 
