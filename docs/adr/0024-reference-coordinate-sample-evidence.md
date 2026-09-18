@@ -1,6 +1,6 @@
 # ADR-0024: Reference-coordinate sample evidence contract
 
-- **Status:** Accepted
+- **Status:** Superseded in part by ADR-0025
 - **Date:** 2026-09-18
 
 ## Context
@@ -56,3 +56,7 @@ provenance only; it never affects placement or scientific reconciliation.
 No consensus sequence, majority voting, conflict adjudication, haplogroup
 interpretation, heteroplasmy/genotype inference, metadata-driven placement,
 canonical F/R pair object, or compatibility alias is introduced.
+
+## Follow-up
+
+ADR-0025 replaces the dense public loci table with a SHA-sorted read registry and sparse differential loci in signal.sample_evidence/v2. ADR-0024 remains the historical basis for independent read placement, normalized variant aggregation, filtered-observation retention, and the no-consensus boundary.
