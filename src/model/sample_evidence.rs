@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::model::alignment::{Orientation, ReferenceSegment};
-use crate::model::variant::VariantKind;
+use crate::model::variant::{VariantExclusionReason, VariantKind};
 
 /// How one aligned read observes one reference locus.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -43,14 +43,16 @@ pub(crate) struct LocusEvidence {
     pub(crate) observations: Vec<LocusObservation>,
 }
 
-/// One read supporting a normalized reportable variant event.
+/// One read observing a normalized event, with configured eligibility retained.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct EventSupport {
     pub(crate) input_sha256: String,
     pub(crate) orientation: Orientation,
+    pub(crate) eligible: bool,
+    pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
 }
 
-/// One normalized variant event with factorized read support.
+/// One normalized observed variant event with factorized read support.
 #[derive(Debug, Clone)]
 pub(crate) struct EventEvidence {
     pub(crate) position_1based: usize,
