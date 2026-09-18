@@ -256,7 +256,6 @@
         "orientation",
         "callable_bases",
         "identity",
-        "mismatches",
         "gap_opens",
         "unresolved_bases",
         "reference_segments",
@@ -274,10 +273,6 @@
           "type": "number",
           "minimum": 0,
           "maximum": 1
-        },
-        "mismatches": {
-          "type": "integer",
-          "minimum": 0
         },
         "gap_opens": {
           "type": "integer",
