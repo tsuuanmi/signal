@@ -32,7 +32,7 @@ pub(crate) struct SampleReadResult {
     pub(crate) alignment: AlignmentResult,
 }
 
-/// Non-reference evidence retained at one covered reference locus.
+/// Evidence at one locus retained because at least one covering read differs.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleLocusDifferenceResult {
     pub(crate) position: usize,
