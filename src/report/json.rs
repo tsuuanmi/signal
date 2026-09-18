@@ -20,6 +20,7 @@ pub(crate) struct CompletedAnalysis {
 pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     let CompletedAnalysis { reference, read } = completed;
     let ReadObservation {
+        input_name: _,
         input_sha256,
         reference_sha256,
         configuration_sha256,
