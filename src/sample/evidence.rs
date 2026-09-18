@@ -6,10 +6,10 @@ use crate::error::{Error, Result};
 use crate::model::alignment::AlignmentColumn;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
-    LocusEvidence, LocusObservation, LocusState, SampleEvidence, SampleReadEvidence,
-    VariantEvidence, VariantSupport,
+    LocusEvidence, LocusObservation, LocusState, SampleEvidence, SampleReadAlignmentEvidence,
+    SampleReadEvidence, VariantCallEvidence, VariantEvidence, VariantSupport,
 };
-use crate::model::variant::VariantKind;
+use crate::model::variant::{VariantCallMapping, VariantKind};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct VariantKey {
@@ -57,9 +57,17 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
         placements.push(SampleReadEvidence {
             input_name: read.input_name.clone(),
             input_sha256: read.input_sha256.clone(),
-            orientation: read.alignment.orientation,
-            reference_segments: read.alignment.reference_segments.clone(),
-            wraps_origin: read.alignment.wraps_origin,
+            alignment: SampleReadAlignmentEvidence {
+                orientation: read.alignment.orientation,
+                score: read.alignment.score,
+                callable_bases: read.alignment.metrics.callable_columns,
+                identity: read.alignment.metrics.callable_identity,
+                mismatches: read.alignment.metrics.mismatches,
+                gap_opens: read.alignment.metrics.gap_opens,
+                unresolved_bases: read.alignment.metrics.unresolved_query_bases,
+                reference_segments: read.alignment.reference_segments.clone(),
+                wraps_origin: read.alignment.wraps_origin,
+            },
         });
 
         for column in &read.alignment.columns {
@@ -96,6 +104,7 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
                 orientation: read.alignment.orientation,
                 eligible: observed.eligible(),
                 exclusion_reasons: observed.exclusion_reasons.clone(),
+                calls: variant_calls(read, &variant.calls)?,
             });
         }
     }
@@ -138,6 +147,47 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
         loci,
         variants,
     })
+}
+
+fn variant_calls(
+    read: &ReadObservation,
+    mappings: &[VariantCallMapping],
+) -> Result<Vec<VariantCallEvidence>> {
+    mappings
+        .iter()
+        .map(|mapping| {
+            let call = read
+                .calls
+                .calls
+                .get(mapping.call_index_0based)
+                .ok_or_else(|| {
+                    Error::Sample(format!(
+                        "variant references missing call index {}",
+                        mapping.call_index_0based
+                    ))
+                })?;
+            if call.index_0based != mapping.call_index_0based {
+                return Err(Error::Sample(format!(
+                    "variant call index {} does not match base-call record",
+                    mapping.call_index_0based
+                )));
+            }
+            let reference_position_1based = mapping
+                .reference_position_0based
+                .map(|position| {
+                    position
+                        .checked_add(1)
+                        .ok_or_else(|| Error::Sample("reference coordinate overflow".into()))
+                })
+                .transpose()?;
+            Ok(VariantCallEvidence {
+                role: mapping.role,
+                call_index_0based: mapping.call_index_0based,
+                reference_position_1based,
+                ploc_0based: call.ploc_0based,
+            })
+        })
+        .collect()
 }
 
 fn locus_observation(read: &ReadObservation, column: &AlignmentColumn) -> Result<LocusObservation> {
@@ -201,7 +251,8 @@ mod tests {
     use crate::model::read_observation::ReadObservation;
     use crate::model::signal::SignalAnalysis;
     use crate::model::variant::{
-        ObservedVariant, Variant, VariantCallingResult, VariantExclusionReason, VariantKind,
+        ObservedVariant, Variant, VariantCallMapping, VariantCallRole, VariantCallingResult,
+        VariantExclusionReason, VariantKind,
     };
 
     use super::*;
