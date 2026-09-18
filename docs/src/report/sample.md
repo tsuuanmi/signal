@@ -2,11 +2,13 @@
 
 ## Purpose
 
-Projects internal `SampleEvidence` into `signal.sample_evidence/v1`.
+Projects internal `SampleEvidence` into `signal.sample_evidence/v2`.
 
 ## Responsibilities
 
-Validate the evidence/reference identity and map domain records into compact, deterministic public result records, including read provenance, selected-alignment summaries, and per-read variant eligibility, exclusion reasons, and call pointers.
+Validate the evidence/reference identity and map domain records into compact deterministic public result records: one read registry, sparse differential loci, and normalized variant support with indexed reads and concise call pointers.
+
+Reuse the shared compact `AlignmentResult` shape rather than defining sample-specific alignment semantics.
 
 ## Non-responsibilities
 
