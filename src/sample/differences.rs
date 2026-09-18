@@ -67,7 +67,9 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
                     "reference base disagrees at position {position_1based}"
                 )));
             }
-            entry.observations.push(observation(read_index, read, column)?);
+            entry
+                .observations
+                .push(observation(read_index, read, column)?);
         }
     }
 
