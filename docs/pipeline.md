@@ -303,6 +303,12 @@ The read has already located itself at this boundary. Its orientation and covere
 
 ## Output
 
+`analyze` publishes `signal.analysis/v5` at `results/<trace-stem>.json`.
+`sample` publishes `signal.sample_evidence/v1` at
+`results/<sample-id>.sample.json`; its detailed semantics are defined in
+[`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
+publisher and keep operational logs outside deterministic JSON.
+
 The completed `signal.analysis/v5` result contains compact provenance
 hashes/software, read count and trim bounds, merged candidate-noisy regions, the
 selected alignment summary, normalized variants with concise call mappings and
