@@ -10,8 +10,7 @@ processed read after reference placement.
 - Group input, reference, and configuration identities with signal-derived
   calls, signal-quality observations, quality-control result, selected alignment,
   and read-level variants for one read.
-- Establish the explicit boundary between one-read processing and future
-  sample-level reconciliation.
+- Establish the explicit boundary between one-read processing and sample-level reconciliation.
 - Preserve evidence-derived orientation and mapped reference segments from the
   selected alignment.
 - Retain the UTF-8 source basename as reviewer-facing provenance while keeping assay names, primer labels, filename semantics, declared direction, and canonical F/R pairing outside the scientific placement model.
