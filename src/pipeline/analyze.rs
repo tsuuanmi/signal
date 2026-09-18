@@ -209,7 +209,6 @@ fn run_logged(
     let stage_started = Instant::now();
     let output = inputs.output.clone();
     let result = report::build_analysis(CompletedAnalysis {
-        config: inputs.config,
         reference: inputs.reference,
         read,
     })?;
