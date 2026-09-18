@@ -197,16 +197,19 @@ This makes cross-amplicon overlap natural.
 
 ## Amplicon and direction are evidence dimensions
 
-The sample layer should know read identity, sequencing direction, amplicon
-identity, primer identity when available, technical replicate group when
-available, mapped reference span, and assay/run grouping when relevant.
+The sample layer always knows read identity, derived orientation, and mapped
+reference span from the authoritative alignment.
 
-These fields describe support topology; they do not decide which reads are
-allowed to meet.
+Amplicon identity, primer identity, nominal direction, technical replicate
+group, and assay/run grouping are optional declared metadata when available.
 
-Thus HV1F and HV1R are same-amplicon opposite-direction support, while HV2F and
-HV3R may be different-amplicon opposite-direction support. Both can contribute
-at a shared coordinate.
+These fields enrich support topology and provenance; they do not decide which
+reads are allowed to meet.
+
+Thus HV1F and HV1R may be described as same-amplicon opposite-direction support
+when those labels are supplied, while HV2F and HV3R may be described as
+different-amplicon overlap. Both can contribute at a shared coordinate even when
+no assay labels are supplied.
 
 ## Do not compress support topology into one ordinal enum
 
@@ -234,10 +237,14 @@ Prefer factorized support:
 ~~~rust
 struct SupportTopology {
     read_count: usize,
+
+    // Derived from alignment.
     forward_read_count: usize,
     reverse_read_count: usize,
-    amplicon_count: usize,
-    technical_replicate_group_count: usize,
+
+    // Optional declared assay grouping.
+    declared_amplicon_count: Option<usize>,
+    technical_replicate_group_count: Option<usize>,
 }
 ~~~
 
