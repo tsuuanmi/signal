@@ -1,46 +1,46 @@
 {
   "schema_version": "signal.sample_evidence/v2",
-  "sample_id": "LN_26_AB0444",
+  "sample_id": "sample-001",
   "provenance": {
     "reference": {
       "name": "rCRS",
       "topology": "circular",
       "sha256": "f156ff3f65bbcc80c7ebb9936dceb96b1477b4f8f535c4e1dbe7baea225cbc66"
     },
-    "configuration_sha256": "6f526a5b62a1dc836c57a6241462cca9294fe87cdc4aa12b36b060aa420154f9"
+    "configuration_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
   },
   "reads": [
     {
-      "name": "E11_20260404_LN_26_AB0444_HV2F_14.ab1",
-      "sha256": "34c4aef2f30f0da02f5886403d239a7d1034e3c74ee8326a98a04b2f52791934",
+      "name": "read-a.ab1",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "alignment": {
         "orientation": "forward",
-        "callable_bases": 560,
-        "identity": 0.9875,
+        "callable_bases": 120,
+        "identity": 0.98,
         "unresolved_bases": 0,
-        "gap_opens": 1,
+        "gap_opens": 0,
         "reference_segments": [
           {
-            "start": 60,
-            "end": 620
+            "start": 100,
+            "end": 220
           }
         ],
         "wraps_origin": false
       }
     },
     {
-      "name": "E11_20260404_LN_26_AB0444_HV3R_14.ab1",
-      "sha256": "c711c1be61ac090b3838a1cb42c1a44b3c9bf2818f3537c91eb28d542fff3f37",
+      "name": "read-b.ab1",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "alignment": {
         "orientation": "reverse",
-        "callable_bases": 436,
-        "identity": 0.9885321100917431,
+        "callable_bases": 120,
+        "identity": 0.975,
         "unresolved_bases": 0,
-        "gap_opens": 1,
+        "gap_opens": 0,
         "reference_segments": [
           {
-            "start": 146,
-            "end": 582
+            "start": 140,
+            "end": 260
           }
         ],
         "wraps_origin": false
@@ -56,35 +56,35 @@
           "read": 0,
           "state": "alternate",
           "base": "T",
-          "index": 132,
+          "index": 49,
           "relative_quality": 56
         },
         {
           "read": 1,
-          "state": "alternate",
-          "base": "T",
-          "index": 457,
+          "state": "reference",
+          "base": "C",
+          "index": 110,
           "relative_quality": 52
         }
       ]
     },
     {
-      "position": 310,
+      "position": 199,
       "reference": "T",
       "observations": [
         {
           "read": 0,
           "state": "alternate",
           "base": "C",
-          "index": 294,
-          "relative_quality": 60
+          "index": 98,
+          "relative_quality": 56
         },
         {
           "read": 1,
           "state": "alternate",
           "base": "C",
-          "index": 295,
-          "relative_quality": 56
+          "index": 61,
+          "relative_quality": 48
         }
       ]
     }
@@ -103,9 +103,30 @@
           "calls": [
             {
               "role": "supporting",
-              "index": 132,
+              "index": 49,
               "position": 150,
-              "ploc": 1605
+              "ploc": 612
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "position": 199,
+      "reference": "T",
+      "alternate": "C",
+      "kind": "SNV",
+      "support": [
+        {
+          "read": 0,
+          "eligible": true,
+          "exclusion_reasons": [],
+          "calls": [
+            {
+              "role": "supporting",
+              "index": 98,
+              "position": 199,
+              "ploc": 1200
             }
           ]
         },
@@ -118,75 +139,9 @@
           "calls": [
             {
               "role": "supporting",
-              "index": 457,
-              "position": 150,
-              "ploc": 5494
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "position": 309,
-      "reference": "C",
-      "alternate": "CCT",
-      "kind": "INS",
-      "support": [
-        {
-          "read": 0,
-          "eligible": true,
-          "exclusion_reasons": [],
-          "calls": [
-            {
-              "role": "supporting",
-              "index": 292,
-              "ploc": 3520
-            },
-            {
-              "role": "supporting",
-              "index": 293,
-              "ploc": 3532
-            },
-            {
-              "role": "flanking",
-              "index": 291,
-              "position": 309,
-              "ploc": 3508
-            },
-            {
-              "role": "flanking",
-              "index": 294,
-              "position": 310,
-              "ploc": 3544
-            }
-          ]
-        },
-        {
-          "read": 1,
-          "eligible": true,
-          "exclusion_reasons": [],
-          "calls": [
-            {
-              "role": "supporting",
-              "index": 296,
-              "ploc": 3582
-            },
-            {
-              "role": "supporting",
-              "index": 297,
-              "ploc": 3593
-            },
-            {
-              "role": "flanking",
-              "index": 295,
-              "position": 310,
-              "ploc": 3570
-            },
-            {
-              "role": "flanking",
-              "index": 298,
-              "position": 309,
-              "ploc": 3606
+              "index": 61,
+              "position": 199,
+              "ploc": 744
             }
           ]
         }
