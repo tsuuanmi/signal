@@ -6,7 +6,7 @@
 
 - exact `src/**/*.rs` ↔ `docs/src/**/*.md` mirror;
 - strict TOML parse plus range/relational checks;
-- Draft 2020-12 analysis-v5 and basecalls-v1 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
+- Draft 2020-12 analysis-v5, basecalls-v1, and sample-evidence-v2 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
 - Markdown links, rustdoc, rCRS source checksum/length, `.env` policy;
 - no repository backups or accidental patient/sample fixtures.
 
@@ -21,11 +21,11 @@
 - Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
 - forward/reverse mapping, circular origin, ambiguous placement/orientation;
 - SNV, insertion, deletion, N exclusion, length caps, linear/circular normalization, evidence;
-- deterministic serialization and atomic no-overwrite publication.
+- deterministic sample read ordering, sparse differential-locus retention, indexed variant support, deterministic serialization, and atomic no-overwrite publication.
 
 ### Integration tests
 
-Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v1 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v5 JSON, internal rolling-window behavior and merged noisy-region projection, observation-only variant behavior, exact forward/reverse SNV call-to-position/PLOC mapping, insertion calls without invented reference positions, deletion flanks without invented support metrics, indel-normalization mapping preservation, circular segments, supporting-call maximum peak/relative quality, strict config v4, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, unselected-artifact preservation, and partial-output behavior after a later failure.
+Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v1 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v5 JSON, internal rolling-window behavior and merged noisy-region projection, observation-only variant behavior, exact forward/reverse SNV call-to-position/PLOC mapping, insertion calls without invented reference positions, deletion flanks without invented support metrics, indel-normalization mapping preservation, circular segments, supporting-call maximum peak/relative quality, strict config v4, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v2 schema rejection cases plus batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
 
 ### Differential and real-trace validation
 
