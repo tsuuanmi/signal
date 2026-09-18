@@ -257,6 +257,59 @@ class AnalyzeSamplesTests(unittest.TestCase):
         self.assertIn("directory sync failed", detail)
         self.assertFalse(destination.exists())
 
+    def test_run_sample_publishes_sample_named_json(self) -> None:
+        traces = [
+            self.trace_dir / "run_S1_a.ab1",
+            self.trace_dir / "run_S1_b.ab1",
+        ]
+        for trace in traces:
+            trace.write_bytes(b"trace")
+        destination = self.output_dir / "S1" / "S1.json"
+
+        def execute(
+            command: list[str],
+            *,
+            cwd: Path,
+            env: dict[str, str],
+            check: bool,
+            capture_output: bool,
+            text: bool,
+        ) -> SimpleNamespace:
+            self.assertEqual(
+                command,
+                [
+                    str(self.binary),
+                    "sample",
+                    "S1",
+                    *(str(trace) for trace in traces),
+                    "--reference",
+                    str(self.reference),
+                ],
+            )
+            self.assertEqual(env["SIGNAL_CONFIG"], str(self.config))
+            self.assertEqual(env["SIGNAL_LOG_DIR"], str(self.log_dir))
+            self.assertFalse(check)
+            self.assertTrue(capture_output)
+            self.assertTrue(text)
+            generated = cwd / "results" / "S1.sample.json"
+            generated.parent.mkdir()
+            generated.write_text("sample", encoding="utf-8")
+            return SimpleNamespace(returncode=0, stderr="")
+
+        with patch.object(batch.subprocess, "run", side_effect=execute):
+            succeeded, detail = batch.run_sample(
+                self.binary,
+                "S1",
+                traces,
+                self.reference,
+                self.config,
+                self.log_dir,
+                destination,
+            )
+
+        self.assertTrue(succeeded, detail)
+        self.assertEqual(destination.read_text(encoding="utf-8"), "sample")
+
     def test_failed_trace_skips_sample_json(self) -> None:
         self.manifest.write_text("S1\n", encoding="utf-8")
         traces = [
