@@ -34,7 +34,7 @@ signal feature computation, or scientific decision logic.
 - `build_analysis(completed) -> Result<AnalysisResult>`: validates the model and
   assembles v5 without filesystem side effects.
 - `serialize<T: Serialize>(result) -> Result<Vec<u8>>`: deterministic pretty
-  JSON bytes with a trailing newline for analysis and basecall results.
+  JSON bytes with a trailing newline for analysis, basecall, and sample results.
 - `warning_summary(...) -> WarningSummaryResult`: counts unresolved primary
   calls, multi-channel unresolved calls, and excluded variant candidates.
 
