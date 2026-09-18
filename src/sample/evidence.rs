@@ -357,16 +357,16 @@ mod tests {
             "reference",
             "config",
             Orientation::Forward,
-            vec![
-                column('N', 'A', Some(0), 10),
-                column('-', 'C', None, 11),
-            ],
+            vec![column('N', 'A', Some(0), 10), column('-', 'C', None, 11)],
             Vec::new(),
         );
 
         let evidence = aggregate(&[read])?;
 
-        assert_eq!(evidence.loci[0].observations[0].state, LocusState::Unresolved);
+        assert_eq!(
+            evidence.loci[0].observations[0].state,
+            LocusState::Unresolved
+        );
         assert_eq!(evidence.loci[1].observations[0].state, LocusState::Deletion);
         assert_eq!(evidence.loci[1].observations[0].base, None);
         Ok(())
