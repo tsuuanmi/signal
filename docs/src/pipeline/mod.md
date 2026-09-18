@@ -2,12 +2,11 @@
 
 ## Purpose
 
-Defines orchestration boundaries for one-file `analyze` and reference-free
-`basecall` operations, each with one JSON result and append-only operational log.
+Defines orchestration boundaries for single-read `analyze`/`basecall` and multi-read `sample` operations.
 
 ## Responsibilities
 
-- Expose `analyze` and `basecall` as command boundaries.
+- Expose `analyze`, `basecall`, and `sample` as command boundaries.
 - Share validated input helpers, reference-independent read-stage orchestration,
   and terminal operation/logging failure preservation.
 
@@ -18,9 +17,8 @@ logic.
 
 ## Key types and functions
 
-- `analyze(args)` and `basecall(args)`: command entry points.
-- Child modules: `input` (command-specific loading), `read` (shared basecalling,
-  signal, and QC stages), and command-specific `analyze`/`basecall` sequencing.
+- `analyze(args)`, `basecall(args)`, and `sample(args)`: command entry points.
+- Child modules: `input` (command-specific loading), `read` (reference-independent stages), `observation` (shared read-level reference-guided science), and command-specific `analyze`/`basecall`/`sample` sequencing.
 - `record_failure`: shared terminal error-log and synchronization policy.
 
 ## Invariants and errors
