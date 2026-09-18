@@ -476,3 +476,33 @@ same orientation and mapped segments
 ~~~
 
 regardless of filename or optional amplicon/direction labels.
+
+
+## Support topology must distinguish derived and declared dimensions
+
+Not every support dimension has the same epistemic status.
+
+Derived from scientific alignment:
+
+~~~text
+read count
+mapped span
+forward/reverse orientation counts
+coverage at each coordinate/event
+~~~
+
+Optional declared metadata:
+
+~~~text
+amplicon label
+primer label
+technical replicate group
+nominal direction
+~~~
+
+Therefore an unlabeled sample still has complete coordinate and orientation
+support topology. Amplicon/primer grouping enriches provenance when supplied but
+is not required for reconciliation.
+
+In data models, optional assay grouping should remain visibly optional rather
+than being synthesized from filenames.

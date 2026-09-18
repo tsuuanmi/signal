@@ -325,10 +325,14 @@ Prefer a factorized structure such as:
 ```rust
 pub struct SupportTopology {
     pub read_count: usize,
+
+    // Derived orientation counts from alignment.
     pub forward_read_count: usize,
     pub reverse_read_count: usize,
-    pub amplicon_count: usize,
-    pub technical_replicate_group_count: usize,
+
+    // Optional declared assay grouping; absent for unlabeled inputs.
+    pub declared_amplicon_count: Option<usize>,
+    pub technical_replicate_group_count: Option<usize>,
 }
 ```
 
@@ -371,7 +375,7 @@ Compact output might summarize:
     "reads": 3,
     "forward": 2,
     "reverse": 1,
-    "amplicons": 2
+    "declared_amplicons": 2
   }
 }
 ```

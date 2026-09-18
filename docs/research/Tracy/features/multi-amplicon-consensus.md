@@ -176,10 +176,14 @@ Retain factorized support:
 ```rust
 pub struct SupportSummary {
     pub total_reads: usize,
+
+    // Derived from alignment orientation.
     pub forward_reads: usize,
     pub reverse_reads: usize,
-    pub amplicons: usize,
-    pub technical_replicate_groups: usize,
+
+    // Present only when the user/assay declared these groups.
+    pub declared_amplicons: Option<usize>,
+    pub technical_replicate_groups: Option<usize>,
 }
 ```
 
