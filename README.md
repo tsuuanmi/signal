@@ -4,7 +4,7 @@ Signal is a focused Rust tool for deterministic Sanger ABIF/AB1 processing. It c
 
 ## Status
 
-The JSON-only MVP pipeline is implemented. Its output is an auditable research analysis record, not a diagnostic report. Real-trace release validation requires approved, provenanced AB1 evidence as described in [`docs/data.md`](docs/data.md).
+The JSON-only MVP pipeline is implemented. Its output is an auditable research analysis record, not a diagnostic report. The project is now hardening toward an evidence-backed production release profile: source-quality gates alone are not sufficient; an exact release also needs dependency, adversarial-input, artifact-provenance, performance, and approved real-trace evidence. See [`docs/adr/0018-production-readiness-release-contract.md`](docs/adr/0018-production-readiness-release-contract.md) and [`docs/data.md`](docs/data.md).
 
 ## Run
 
@@ -32,7 +32,7 @@ Directories, manifests, globs, batch discovery, SCF, VCF/BCF, FM indexing, two-a
 
 ## Biological interpretation
 
-Signal reports differences between the conservative signal-derived primary sequence and the supplied reference. Its rolling SNR annotation and relative quality score are not Phred-calibrated; candidate-noisy regions do not suppress calls or variants. Vendor PBAS/PCON may be consumed internally but are not emitted in compact v5. A single trace cannot establish zygosity, homoplasmy, low-level heteroplasmy, phase, or clinical significance.
+Signal reports differences between the conservative signal-derived primary sequence and the supplied reference. Its rolling SNR annotation and relative quality score are not Phred-calibrated; candidate-noisy regions do not suppress calls or variants. Vendor PBAS/PCON may be consumed internally but are not emitted in compact v5. A single trace cannot establish zygosity, homoplasmy, quantitative heteroplasmy, phase, contamination, or clinical significance. Signal treats decoded channel evidence, per-locus observations, read interpretation, and future sample-level conclusions as distinct layers; see [`docs/adr/0019-scientific-evidence-hierarchy.md`](docs/adr/0019-scientific-evidence-hierarchy.md).
 
 ## Development
 
