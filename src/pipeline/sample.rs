@@ -78,9 +78,7 @@ fn run_logged(
             line!(),
             format_args!(
                 "event=sample_read_started read_index={} trace_name={:?} trace_sha256={}",
-                index,
-                trace.source_name,
-                trace.source_sha256
+                index, trace.source_name, trace.source_sha256
             ),
         )?;
         let completed =
