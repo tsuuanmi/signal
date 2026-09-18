@@ -1,0 +1,12 @@
+# Tracy Research Architecture Decision Records
+
+These ADRs govern the Tracy research direction only. They do not change production Signal behavior until a corresponding root-level ADR/SRS change is accepted and implemented.
+
+| ADR | Status | Decision |
+|---|---|---|
+| [0001](0001-preserve-evidence-beyond-primary-calls.md) | Accepted for research | Preserve chromatogram evidence beyond the primary call. |
+| [0002](0002-reuse-gotoh-with-pluggable-scoring.md) | Accepted for research | Reuse one Gotoh core and generalize substitution scoring. |
+| [0003](0003-layer-sample-analysis-above-single-trace-core.md) | Accepted for research | Layer sample consensus above the single-trace core. |
+| [0004](0004-do-not-port-diploid-semantics-to-mtdna.md) | Accepted for research | Do not directly port Tracy's diploid interpretation to mtDNA. |
+| [0005](0005-reference-guided-consensus-before-de-novo.md) | Accepted for research | Prefer reference-guided multi-trace consensus before de novo assembly. |
+| [0006](0006-separate-research-evidence-contracts.md) | Accepted for research | Keep bulk research evidence outside compact production result schemas. |

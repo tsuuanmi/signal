@@ -1,94 +1,40 @@
-# Tracy Research Notes
+# Tracy Research
 
-This directory contains curated research and design notes about what Signal can
-learn from [gear-genomics/tracy](https://github.com/gear-genomics/tracy) and how
-those ideas could fit Signal's current Rust architecture.
+This directory is the structured research documentation for what Signal can learn from [gear-genomics/tracy](https://github.com/gear-genomics/tracy).
 
-These notes are **non-normative**. They describe future directions, not current
-Signal behavior. Current behavior remains defined by the Rust source,
-[`../../pipeline.md`](../../pipeline.md), [`../../architecture.md`](../../architecture.md),
-and the versioned output schemas.
+It intentionally mirrors the organization of the root Signal documentation: requirements, architecture, ADRs, validation, roadmap, implementation notes, and focused method documents. These files are **research design**, not current production behavior. A research decision becomes normative only when it is promoted into the root Signal requirements/ADR/schema set and implemented.
 
-The existing [`../../tracy_review.md`](../../tracy_review.md) remains the
-long-form source review. This directory is the shorter decision-oriented layer.
+## Requirements and architecture
+
+- [`requirements.md`](requirements.md): Tracy-informed research SRS.
+- [`architecture.md`](architecture.md): proposed architecture and dependency boundaries.
+- [`adr/README.md`](adr/README.md): research architecture decisions.
+- [`implementation.md`](implementation.md): incremental PR and module plan.
+
+## Method research
+
+- [`overview.md`](overview.md): Tracy context and current Signal overlap.
+- [`features/locus-evidence.md`](features/locus-evidence.md): peak geometry, co-localization, and locus refinement.
+- [`features/evidence-profiles.md`](features/evidence-profiles.md): preserving per-locus A/C/G/T evidence.
+- [`features/profile-alignment.md`](features/profile-alignment.md): profile-to-reference and profile-to-profile alignment.
+- [`features/sample-analysis.md`](features/sample-analysis.md): ReadObservation, read admission, and sample-level consensus.
+- [`features/mixed-signal-indels.md`](features/mixed-signal-indels.md): persistent mixed signal, indel shifts, and homopolymer context.
+- [`features/multi-amplicon-consensus.md`](features/multi-amplicon-consensus.md): tiled mtDNA reads, sample-level variants, and calibration boundaries.
+- [`deferred.md`](deferred.md): Tracy capabilities intentionally not prioritized.
+
+## Planning and evidence
+
+- [`roi.md`](roi.md): compact ROI ranking.
+- [`validation.md`](validation.md): validation ladder and benchmark strategy.
+- [`roadmap.md`](roadmap.md): staged research order.
+- [`references.md`](references.md): Tracy source areas and Signal mappings.
 
 ## Research question
 
-The useful question is not "which Tracy features can Signal copy?" It is:
+> Which Tracy ideas improve biological correctness or preserve useful chromatogram evidence without weakening Signal's deterministic, typed, auditable design?
 
-> Which Tracy ideas improve biological correctness or preserve useful signal
-> evidence without weakening Signal's deterministic, typed, auditable design?
+The goal is not feature parity and not a Rust port of Tracy. The main lesson is to retain useful A/C/G/T evidence beyond the primary call and introduce new interpretation only behind explicit biological and engineering contracts.
 
-Signal already covers much of Tracy's low-level foundation: ABIF decoding,
-PLOC-based re-calling, primary and ambiguity calls, end trimming, affine-gap
-alignment, orientation selection, and SNV/small-indel extraction. The highest
-value therefore comes from the parts of Tracy that keep chromatogram evidence
-alive beyond basecalling.
+## Core principle
 
-## Core lesson
-
-Tracy frequently reasons with nucleotide profiles rather than reducing every
-locus immediately to one base. Signal already retains channel peaks, ambiguity,
-local SNR observations, call coordinates, and quality evidence, but its current
-reference path ultimately aligns the retained primary sequence.
-
-The main research direction is therefore:
-
-```text
-chromatogram
-    |
-    v
-base calls + signal evidence
-    |
-    +------------------+
-    |                  |
-    v                  v
-primary sequence   evidence profile
-    |                  |
-    |             evidence-aware
-    |               alignment
-    |                  |
-    +---------+--------+
-              |
-              v
-       variant evidence
-```
-
-Primary sequence remains useful, but it should be one interpretation of the
-chromatogram rather than the only downstream representation.
-
-## Documents
-
-- [`roi.md`](roi.md): features and ideas ranked by expected return on investment.
-- [`implementation.md`](implementation.md): how the high-ROI ideas map onto
-  Signal's current modules and an incremental PR sequence.
-- [`../../tracy_review.md`](../../tracy_review.md): detailed source-level review.
-
-## Principles
-
-1. **Preserve evidence before adding interpretation.** Prefer richer typed
-   evidence over early genotype, heteroplasmy, or clinical claims.
-2. **Improve the single-trace core before adding sample-level complexity.**
-3. **Do not inherit Tracy's diploid assumptions for mtDNA.**
-4. **Keep current production schemas stable until a feature has a validated
-   contract and biological meaning.**
-5. **Prefer small independent PRs with measurable biological or engineering
-   benefit over a Tracy-sized feature port.**
-6. **Keep deterministic behavior, explicit coordinate mappings, bounded
-   algorithms, and typed invariants.**
-
-## Recommended sequence
-
-```text
-1. Mixed/ambiguity evidence in simple-variant eligibility
-2. Evidence profile model
-3. Evidence-aware alignment
-4. Forward/reverse trace reconciliation
-5. Reference-guided multi-trace sample consensus
-6. Mixed-signal / post-indel shift research
-7. Optional derived interoperability outputs
-```
-
-Genome-scale indexing, de novo assembly, SCF support, genotype decomposition,
-and VCF/BCF are not current priorities unless a concrete Signal use case makes
-their value exceed their complexity.
+> Primary sequence should remain one interpretation of the chromatogram, not the only representation of the chromatogram.

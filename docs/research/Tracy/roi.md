@@ -1,5 +1,7 @@
 # Tracy Ideas Ranked by ROI
 
+This is the compact prioritization layer. Detailed rationale lives in the focused research documents linked from [`README.md`](README.md).
+
 This ranking is relative to Signal's current scope: deterministic Sanger AB1
 processing for short references, with basecalling, alignment, and conservative
 variant reporting already implemented.

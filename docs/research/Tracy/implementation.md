@@ -1,5 +1,7 @@
 # Implementation Direction
 
+This plan is constrained by [`requirements.md`](requirements.md), [`architecture.md`](architecture.md), and the research ADRs under [`adr/`](adr/README.md). Detailed scientific rationale lives in the focused feature notes; this file focuses on integration order and PR boundaries.
+
 This document translates the high-ROI Tracy lessons into Signal's current
 architecture. It is a design sequence, not an approved implementation contract.
 
