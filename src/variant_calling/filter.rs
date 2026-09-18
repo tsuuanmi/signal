@@ -286,6 +286,16 @@ mod tests {
 
         assert_eq!(result.reported.len(), 1);
         assert_eq!(result.reported[0].position_1based, 3);
+        assert_eq!(result.observed.len(), 3);
+        assert_eq!(
+            result.observed[0].exclusion_reasons,
+            vec![VariantExclusionReason::PeakBelowMinimum]
+        );
+        assert_eq!(
+            result.observed[1].exclusion_reasons,
+            vec![VariantExclusionReason::RelativeQualityNotAboveThreshold]
+        );
+        assert!(result.observed[2].eligible());
         assert_eq!(result.excluded_count(), 2);
         assert_eq!(
             result.excluded[0].reasons,
