@@ -397,7 +397,7 @@ mod tests {
             vec![snv(73, "A", "G")],
         );
 
-        let evidence = aggregate(&[forward, reverse])?;
+        let evidence = aggregate(&[reverse, forward])?;
 
         assert_eq!(evidence.reads.len(), 2);
         assert_eq!(evidence.reads[0].input_name, "a.ab1");
@@ -540,7 +540,7 @@ mod tests {
         );
         assert!(aggregate(&[first.clone(), incompatible]).is_err());
 
-        let duplicate = observation(
+        let mut duplicate = observation(
             "a",
             "reference",
             "config",
@@ -548,6 +548,7 @@ mod tests {
             vec![column('A', 'A', Some(0), 0)],
             Vec::new(),
         );
+        duplicate.input_name = "renamed-copy.ab1".into();
         assert!(aggregate(&[first, duplicate]).is_err());
     }
 }
