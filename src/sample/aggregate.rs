@@ -373,6 +373,21 @@ mod tests {
     }
 
     #[test]
+    fn rejects_duplicate_normalized_variant_identity_within_one_read() {
+        let variant = snv(73, "A", "G");
+        let read = observation(
+            "a",
+            "reference",
+            "config",
+            Orientation::Forward,
+            vec![column('G', 'A', Some(0), 72)],
+            vec![variant.clone(), variant],
+        );
+
+        assert!(aggregate(&[read]).is_err());
+    }
+
+    #[test]
     fn rejects_incompatible_or_duplicate_reads_even_when_renamed() {
         let first = observation(
             "a",
