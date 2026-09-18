@@ -11,7 +11,7 @@ src/
 ├── logger.rs
 ├── checksum.rs
 ├── config/{mod,defaults,types,load}.rs
-├── model/{mod,coordinate,nucleotide,trace,basecalls,signal,quality,reference,alignment,variant,result,basecall_result}.rs
+├── model/{mod,coordinate,nucleotide,trace,basecalls,signal,quality,reference,alignment,variant,result,basecall_result,read_observation,sample_evidence,sample_result}.rs
 ├── trace/{mod,reader,abif,decode}.rs
 ├── reference/{mod,fasta}.rs
 ├── basecalling/{mod,iupac,peak,call}.rs
@@ -19,8 +19,9 @@ src/
 ├── quality_control/{mod,penalty,quality,trim}.rs
 ├── alignment/{mod,scoring,gotoh,traceback,orient}.rs
 ├── variant_calling/{mod,mapping,extract,normalize,filter}.rs
-├── report/{mod,json,basecall,signal,variant,atomic}.rs
-└── pipeline/{mod,input,read,analyze,basecall}.rs
+├── sample/{mod,evidence}.rs
+├── report/{mod,json,basecall,sample,signal,variant,atomic}.rs
+└── pipeline/{mod,input,read,observation,analyze,basecall,sample}.rs
 ```
 
 ## Dependency direction
@@ -28,7 +29,7 @@ src/
 ```text
 main -> cli -> lib dispatcher -> pipeline
 pipeline shared read -> config + trace + basecalling + signal_processing + quality_control
-pipeline analyze -> reference + alignment + variant_calling; pipeline basecall -> no reference
+pipeline observation -> reference + alignment + variant_calling; analyze/sample reuse observation; basecall -> no reference
 pipeline commands -> report + logger
 all stages -> model + error
 model -> no filesystem, CLI, or algorithm module
@@ -46,6 +47,6 @@ report -> completed models; no scientific computation
 - `extract` finds events; `mapping` binds original calls to aligned reference positions; `normalize` defines canonical alleles/positions; `filter` applies configured region and supporting-signal eligibility.
 - `logger` appends timestamped per-trace operational records without entering scientific stages or JSON.
 - `json` assembles analysis v5 and owns shared serialization; `basecall` assembles basecalls v1; `signal` is the one merged-region projection; `variant` projects mapped analysis calls; `atomic` is the one no-overwrite publisher.
-- `input` loads command-specific resources; `read` sequences the shared reference-independent stages; `analyze` and `basecall` own only their command-specific flows.
+- `input` loads command-specific resources; `read` sequences reference-independent stages; `observation` owns one authoritative reference-guided read path; `sample/evidence` aggregates completed observations; command modules own only orchestration and publication.
 
 VCF has no source file or compatibility path in the MVP.
