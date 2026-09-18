@@ -44,7 +44,7 @@ pub(crate) struct LocusEvidence {
 }
 
 /// One read supporting a normalized reportable variant event.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct EventSupport {
     pub(crate) input_sha256: String,
     pub(crate) orientation: Orientation,
