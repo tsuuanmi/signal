@@ -18,14 +18,12 @@ No scoring, traceback, or strand selection.
 ## Key types and functions
 
 - `Orientation`: `Forward` or `Reverse`; serialized as `snake_case`.
-- `ReferenceSegment`: a half-open segment on the original reference.
+- `ReferenceSegment`: a half-open segment on the original reference with an internal overlap predicate for sample reconciliation.
 - `AlignmentMetrics`: exact matches, mismatches, gap opens, callable columns,
   callable identity, and unresolved query bases.
 - `AlignmentColumn`: one aligned column with query/reference bases and optional
   original indices.
-- `Alignment`: the selected internal alignment only — orientation, `i64` score,
-  reference segments, origin-wrap flag, metrics, and columns. Gapped rows and
-  operation runs are not retained in this final model.
+- `Alignment`: the selected internal alignment only — orientation, `i64` score,\n  reference segments, origin-wrap flag, metrics, and columns. `overlaps_reference`\n  detects shared mapped coordinates across one- or two-segment circular placements.\n  Gapped rows and operation runs are not retained in this final model.
 
 ## Invariants and errors
 
@@ -45,10 +43,7 @@ The alignment records how the retained read maps onto the reference, including
 which strand it matches and whether a circular alignment wraps the origin. This
 is the basis for variant extraction.
 
-## Tests
-
-No dedicated unit tests; behavior is exercised through `alignment` and the
-integration tests.
+## Tests\n\nUnit tests cover linear overlap, half-open boundary non-overlap, and overlap across circular-origin split segments; alignment behavior remains covered by integration tests.
 
 ## Status
 
