@@ -165,6 +165,7 @@ pub(crate) fn build(
 
     Ok(CompletedObservation {
         read: ReadObservation {
+            input_name: trace.source_name.clone(),
             input_sha256: trace.source_sha256.clone(),
             reference_sha256: reference.sequence_sha256.clone(),
             configuration_sha256: config.source_sha256.clone(),
