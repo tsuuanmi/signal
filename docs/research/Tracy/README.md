@@ -54,7 +54,8 @@ The source audit sharpens the original direction:
 10. process every trace independently before any sample-level merge;
 11. reconcile all overlapping reads by coordinate/event rather than pre-merging F/R pairs;
 12. treat consensus sequence as a projection of sample evidence, not the source of sample variants;
-13. preserve Signal's existing strengths in circular topology, normalization, typed provenance, and conservative biological semantics.
+13. derive each read's orientation and covered reference span from alignment evidence rather than assay labels;
+14. preserve Signal's existing strengths in circular topology, normalization, typed provenance, and conservative biological semantics.
 
 ## Core principle
 

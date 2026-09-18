@@ -430,3 +430,49 @@ then reason across traces
 
 Signal should improve the second half by preserving typed evidence instead of
 collapsing the growing sample into character-majority consensus.
+
+
+## Coverage and orientation are derived observations
+
+Names such as HV1F, HV1R, HV2F, or HV3R must not be scientific placement
+instructions.
+
+For the default mtDNA workflow:
+
+~~~text
+AB1
+ -> independent read pipeline
+ -> alignment against complete circular reference
+ -> derived orientation
+ -> derived mapped reference segments
+~~~
+
+Only after those values exist may optional assay metadata be compared against
+them.
+
+Therefore:
+
+~~~text
+filename / amplicon label / nominal direction
+    !=
+alignment prior
+~~~
+
+A read mislabeled as HV2F but mapping strongly to another region should remain
+mapped to the evidence-supported region and receive a metadata/QC discrepancy.
+
+This also means an unlabeled set of AB1 files can still be reconciled: the
+system discovers overlap from their mapped coordinates.
+
+A useful reproducibility invariant is:
+
+~~~text
+same AB1
++ same reference
++ same config
++ same Signal version
+=
+same orientation and mapped segments
+~~~
+
+regardless of filename or optional amplicon/direction labels.

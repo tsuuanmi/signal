@@ -43,52 +43,48 @@ This avoids unnecessary de novo MSA complexity.
 
 ---
 
-## 45. Expected Amplicon Regions
+## 45. Infer Covered Region From the Read
 
-If the manifest provides an expected region, Signal should use it.
+Signal should not require the caller to know whether an input trace is HV1,
+HV2, HV3, forward, or reverse before analysis.
 
-Instead of:
-
-```text
-align each read against all 16,569 bases
-```
-
-prefer:
+For the current mtDNA reference size, prefer:
 
 ```text
-expected region
-      |
-      v
-region + margin
-      |
-      v
-localized circular slice
-      |
-      v
-alignment
+AB1 evidence
+    |
+    v
+align against complete circular mtDNA reference
+    |
+    v
+derived orientation + mapped segments
 ```
 
-Example:
+rather than:
 
 ```text
-expected:
-16000..16450
-
-margin:
-100 bp
-
-search:
-15900..16550
+declared amplicon/region
+    |
+    v
+restrict search to expected slice
 ```
 
-with circular projection as needed.
+The latter can turn assay metadata into a self-fulfilling placement prior and can
+hide mislabeled files.
 
-Benefits:
+Optional amplicon/primer/direction metadata can be checked **after** mapping:
 
-* faster alignment;
-* lower false-placement risk;
-* better QC;
-* easier detection of wrong amplicons.
+```text
+derived placement
+    +
+declared label
+    ->
+metadata consistency QC
+```
+
+For a future reference too large for direct alignment, candidate search should
+still be driven by read sequence/evidence by default. Metadata-assisted search
+would need to be explicit and separately versioned.
 
 ---
 
@@ -97,34 +93,25 @@ Benefits:
 Possible warnings:
 
 ```text
-mapped_outside_expected_region
-
-unexpected_orientation
-
 low_overlap
-
 low_identity
-
 ambiguous_placement
-
-origin_wrap_unexpected
-
-expected_primer_context_absent
+metadata_amplicon_mismatch
+metadata_direction_mismatch
+metadata_primer_context_mismatch
 ```
 
 Possible object:
 
 ```rust
 pub struct MappingQc {
-    pub expected_region_match: bool,
-
-    pub expected_orientation_match: bool,
-
     pub placement_unique: bool,
-
+    pub declared_metadata_consistent: Option<bool>,
     pub warnings: Vec<MappingWarning>,
 }
 ```
+
+Metadata mismatch is evaluated after the scientific mapping exists.
 
 ---
 
@@ -390,10 +377,10 @@ Example:
   "reference": "A",
   "alternate": "G",
   "support": {
-    "level": "bidirectional",
+    "reads": 2,
     "forward_reads": 1,
     "reverse_reads": 1,
-    "independent_amplicons": 1
+    "declared_amplicons": 1
   },
   "confidence": "strong"
 }

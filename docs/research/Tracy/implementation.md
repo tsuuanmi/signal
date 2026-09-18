@@ -266,7 +266,9 @@ properties of each read. They must not force pair-first collapse.
 
 A sample-level layer can own:
 
-- trace identity and orientation;
+- trace identity;
+- orientation and mapped segments derived by the read alignment;
+- optional declared amplicon/primer/direction metadata for post-mapping QC;
 - reference-coordinate overlap and admission criteria;
 - per-locus evidence reconciliation;
 - nucleotide versus gap/indel event support;
@@ -372,9 +374,11 @@ Recommended independent PRs:
 
 5. **Generic SampleEvidence / ReadObservation reconciliation**
    - immutable independently processed reads;
+   - orientation and coverage discovered from alignment, not assumed from labels;
    - reference-coordinate and indel-event aggregation;
+   - optional metadata retained only for provenance/post-mapping QC;
    - factorized direction/amplicon/replicate support;
-   - validate first on an F/R pair and then on cross-amplicon overlap.
+   - validate first on an F/R pair and then on unlabeled/cross-amplicon overlap.
 
 6. **Reference-guided sample interpretation**
    - arbitrary overlapping trace sets such as HV1F/HV1R/HV2F/HV3R;

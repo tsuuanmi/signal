@@ -84,26 +84,30 @@ reference:
   name: rCRS
 
 reads:
-  - id: HV1_F
-    trace: SAMPLE_001_HV1_F.ab1
-    amplicon: HV1
-    direction: forward
-    primer: L15997
-    expected_region:
-      start: 15950
-      end: 16450
+  - id: READ_001
+    trace: SAMPLE_001_read_001.ab1
+    labels:
+      amplicon: HV1
+      nominal_direction: forward
+      primer: L15997
 
-  - id: HV1_R
-    trace: SAMPLE_001_HV1_R.ab1
-    amplicon: HV1
-    direction: reverse
-    primer: H16401
-    expected_region:
-      start: 15950
-      end: 16450
+  - id: READ_002
+    trace: SAMPLE_001_read_002.ab1
+    labels:
+      amplicon: HV1
+      nominal_direction: reverse
+      primer: H16401
 ```
 
-Manifest provenance should become part of sample-level reproducibility.
+The labels are optional provenance/QC metadata. They do **not** define where the
+read is allowed to align.
+
+The scientific placement is derived from the chromatogram against the configured
+reference. After mapping, Signal may compare derived orientation/coverage with
+declared labels and emit a metadata-mismatch warning.
+
+A sample should also be analyzable when the user supplies only read IDs and
+trace paths and does not know which mtDNA region each read covers.
 
 ---
 
@@ -119,13 +123,14 @@ pub struct ReadObservation {
 
     pub trace_sha256: String,
 
+    // Derived from the authoritative alignment.
     pub orientation: Orientation,
 
-    pub amplicon: Option<String>,
-
-    pub expected_region: Option<ReferenceRegion>,
-
+    // Derived from the authoritative alignment; may wrap the circular origin.
     pub mapped_segments: Vec<ReferenceSegment>,
+
+    // Optional user/assay metadata retained for provenance and post-mapping QC.
+    pub labels: Option<ReadLabels>,
 
     pub positions: Vec<PositionObservation>,
 
@@ -199,9 +204,6 @@ pub enum ReadAdmissionReason {
     InsufficientOverlap,
     PoorSignal,
     ExcessiveAmbiguity,
-    UnexpectedAmplicon,
-    UnexpectedOrientation,
-    OutsideExpectedRegion,
     AmbiguousPlacement,
     InsufficientRetainedBases,
     ExcessiveNoisyRegions,
@@ -211,6 +213,10 @@ pub enum ReadAdmissionReason {
 A rejected trace should remain represented in the sample result with the reason.
 
 It should simply not influence consensus.
+
+A disagreement between derived mapping and optional manifest labels should
+normally be a QC warning rather than a placement constraint or automatic read
+rejection.
 
 ---
 

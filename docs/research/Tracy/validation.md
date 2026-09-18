@@ -82,8 +82,11 @@ incomplete/suspicious instrument peak-location metadata if available
 ~~~
 
 Each file should have source, opaque sample identity, assay context, truth status,
-expected region/direction, reference, instrument/run metadata where permitted,
-and a documented reason it belongs in the corpus.
+reference, instrument/run metadata where permitted, and a documented reason it
+belongs in the corpus.
+
+Known region/direction labels may be retained as validation truth, but the
+algorithm under test must not receive them as default placement constraints.
 
 ### Level 5: independent truth
 
@@ -204,6 +207,9 @@ HV2F + HV3R cross-amplicon overlap
 two same-direction traces from different amplicons
 two opposite-direction traces from different amplicons
 missing canonical partner
+unlabeled reads whose overlap must be discovered from alignment
+intentionally mislabeled amplicon/direction metadata
+same AB1 under different filenames/labels with invariant placement
 one rejected read plus overlapping accepted reads
 one globally accepted read with a locally suppressed noisy tail
 three-way overlap with one high-quality discordant read

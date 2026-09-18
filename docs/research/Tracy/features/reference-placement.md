@@ -157,3 +157,28 @@ candidate search != final alignment
 reference guidance != observed sample evidence
 topology belongs in both placement and alignment contracts
 ~~~
+
+
+## Assay metadata must not become the default placement prior
+
+For current mtDNA analysis, the complete circular reference is small enough that
+Signal should discover the read placement from the read evidence itself.
+
+Do not use a filename or declared amplicon such as HV2 as an implicit instruction
+to search only an HV2 slice.
+
+Optional assay metadata belongs after mapping:
+
+~~~text
+read evidence -> authoritative placement -> metadata consistency QC
+~~~
+
+not before:
+
+~~~text
+metadata -> restricted placement -> apparent confirmation
+~~~
+
+If large-reference scaling later makes unrestricted search expensive, any
+metadata-assisted candidate restriction must be opt-in, explicit in method
+provenance, and validated against an unrestricted/search-based placement path.

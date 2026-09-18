@@ -19,3 +19,4 @@ These ADRs govern the Tracy research direction only. They do not change producti
 | [0013](0013-process-each-trace-before-sample-reconciliation.md) | Accepted for research | Complete the authoritative single-read pipeline before any sample merge. |
 | [0014](0014-reconcile-by-reference-coordinate-not-fr-pair.md) | Accepted for research | Reconcile arbitrary overlaps by coordinate/event rather than collapsing named F/R pairs. |
 | [0015](0015-consensus-sequence-is-a-projection.md) | Accepted for research | Keep sample evidence authoritative; consensus sequence is a downstream projection. |
+| [0016](0016-derive-read-coverage-from-alignment.md) | Accepted for research | Derive orientation/coverage from alignment evidence; assay labels are post-mapping metadata by default. |

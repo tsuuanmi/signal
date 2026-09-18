@@ -52,6 +52,10 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-PLACE-003:** Failure of an exact/seed search shall not be interpreted as evidence that no biological alignment exists.
 - **TR-SRS-PLACE-004:** Candidate placement shall preserve circular topology; origin-crossing queries shall not require manual reference rotation.
 - **TR-SRS-PLACE-005:** Ambiguous/repetitive placements shall remain explicit unless the authoritative aligner resolves them under a documented rule.
+- **TR-SRS-PLACE-006:** For the default mtDNA workflow, mapped coverage and orientation shall be derived from read/reference alignment rather than from filename, amplicon label, declared direction, primer label, or expected-region metadata.
+- **TR-SRS-PLACE-007:** Optional assay metadata may be compared against derived placement for provenance/QC but shall not constrain placement by default.
+- **TR-SRS-PLACE-008:** The same AB1 analyzed with the same reference/configuration/method version shall produce the same placement regardless of filename or optional assay labels.
+- **TR-SRS-PLACE-009:** Any future metadata-assisted candidate restriction shall be explicit, optional, separately versioned, and validated against an evidence-driven placement path.
 - **TR-SRS-REF-001:** A reference may guide coordinates, normalization, topology, and interpretation but shall not count as an independent sample observation by default.
 - **TR-SRS-REF-002:** Any future reference prior that influences consensus shall be explicitly named/versioned and distinguish prior contribution from observed read support.
 - **TR-SRS-REF-003:** Local reference slices used for sensitive alignment shall carry an explicit mapping to the parent coordinate system before genome-level annotation or projection.
@@ -82,7 +86,7 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-SAMPLE-012:** Every trace shall complete the authoritative single-read pipeline before entering sample reconciliation; the same trace evidence shall not depend on which other sample reads are present.
 - **TR-SRS-SAMPLE-013:** Sample reconciliation shall consume immutable `ReadObservation` values and shall not re-basecall, silently re-trim, or mutate read evidence to agree with other reads.
 - **TR-SRS-SAMPLE-014:** Reads shall be reconciled by normalized reference coordinate/event identity, not by requiring an exclusive forward/reverse pair.
-- **TR-SRS-SAMPLE-015:** Direction, amplicon, primer, and replicate relationships shall remain explicit support/provenance dimensions and shall not be collapsed before sample interpretation.
+- **TR-SRS-SAMPLE-015:** When supplied, direction, amplicon, primer, and replicate labels shall remain explicit support/provenance dimensions and shall not be collapsed before sample interpretation; derived orientation/coverage remains authoritative.
 - **TR-SRS-SAMPLE-016:** Missing a canonical F/R partner shall not by itself reject an otherwise admissible read.
 - **TR-SRS-SAMPLE-017:** Global read admission and per-locus contribution eligibility shall remain distinct decisions.
 - **TR-SRS-SAMPLE-018:** The authoritative sample model shall preserve nucleotide and indel-event evidence, support topology, conflicts, coverage, and read provenance before any consensus-sequence projection.

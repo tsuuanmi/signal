@@ -77,11 +77,16 @@ circular cases.
 
 Map each accepted trace into immutable reference-coordinate observations.
 
+Orientation and coverage are discovered from the read/reference alignment. They
+are not pre-assigned from HV1/HV2/HV3 or F/R labels.
+
 This layer preserves:
 
 ```text
 trace identity
-orientation
+derived orientation
+derived mapped segments
+optional declared assay labels
 source call/PLOC mapping
 nucleotide evidence
 local quality/artifact state
