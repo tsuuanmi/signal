@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::model::alignment::{Orientation, ReferenceSegment};
-use crate::model::variant::{VariantExclusionReason, VariantKind};
+use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
 /// How one aligned read observes one reference locus.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
@@ -15,14 +15,26 @@ pub(crate) enum LocusState {
     Deletion,
 }
 
-/// One read placement retained in sample evidence.
+/// Concise evidence supporting one selected read placement.
+#[derive(Debug, Clone)]
+pub(crate) struct SampleReadAlignmentEvidence {
+    pub(crate) orientation: Orientation,
+    pub(crate) score: i64,
+    pub(crate) callable_bases: usize,
+    pub(crate) identity: f64,
+    pub(crate) mismatches: usize,
+    pub(crate) gap_opens: usize,
+    pub(crate) unresolved_bases: usize,
+    pub(crate) reference_segments: Vec<ReferenceSegment>,
+    pub(crate) wraps_origin: bool,
+}
+
+/// One read retained in sample evidence.
 #[derive(Debug, Clone)]
 pub(crate) struct SampleReadEvidence {
     pub(crate) input_name: String,
     pub(crate) input_sha256: String,
-    pub(crate) orientation: Orientation,
-    pub(crate) reference_segments: Vec<ReferenceSegment>,
-    pub(crate) wraps_origin: bool,
+    pub(crate) alignment: SampleReadAlignmentEvidence,
 }
 
 /// One aligned observation at a reference locus.
@@ -45,6 +57,15 @@ pub(crate) struct LocusEvidence {
     pub(crate) observations: Vec<LocusObservation>,
 }
 
+/// One trace call directly supporting or flanking a normalized variant.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct VariantCallEvidence {
+    pub(crate) role: VariantCallRole,
+    pub(crate) call_index_0based: usize,
+    pub(crate) reference_position_1based: Option<usize>,
+    pub(crate) ploc_0based: usize,
+}
+
 /// One read observing a normalized variant, with configured eligibility retained.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct VariantSupport {
@@ -53,6 +74,7 @@ pub(crate) struct VariantSupport {
     pub(crate) orientation: Orientation,
     pub(crate) eligible: bool,
     pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
+    pub(crate) calls: Vec<VariantCallEvidence>,
 }
 
 /// One normalized observed variant with factorized read support.
