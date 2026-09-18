@@ -1,4 +1,4 @@
-//! Deterministic aggregation of read observations into coordinate/event evidence.
+//! Deterministic aggregation of read observations into coordinate/variant evidence.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -6,13 +6,13 @@ use crate::error::{Error, Result};
 use crate::model::alignment::AlignmentColumn;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
-    EventEvidence, EventSupport, LocusEvidence, LocusObservation, LocusState, SampleEvidence,
-    SampleReadEvidence,
+    LocusEvidence, LocusObservation, LocusState, SampleEvidence, SampleReadEvidence,
+    VariantEvidence, VariantSupport,
 };
 use crate::model::variant::VariantKind;
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
-struct EventKey {
+struct VariantKey {
     position_1based: usize,
     reference: String,
     alternate: String,
@@ -24,7 +24,7 @@ struct LocusBuilder {
     observations: Vec<LocusObservation>,
 }
 
-/// Aggregates independently processed reads without using filenames or pair labels.
+/// Aggregates independently processed reads without using filenames or pair labels as merge keys.
 pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
     let first = reads
         .first()
@@ -35,7 +35,7 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
     let mut identities = BTreeSet::new();
     let mut placements = Vec::with_capacity(reads.len());
     let mut loci: BTreeMap<usize, LocusBuilder> = BTreeMap::new();
-    let mut events: BTreeMap<EventKey, Vec<EventSupport>> = BTreeMap::new();
+    let mut variants: BTreeMap<VariantKey, Vec<VariantSupport>> = BTreeMap::new();
 
     for read in reads {
         if read.reference_sha256 != reference_sha256 {
@@ -55,6 +55,7 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
         }
 
         placements.push(SampleReadEvidence {
+            input_name: read.input_name.clone(),
             input_sha256: read.input_sha256.clone(),
             orientation: read.alignment.orientation,
             reference_segments: read.alignment.reference_segments.clone(),
@@ -83,13 +84,14 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
 
         for observed in &read.variants.observed {
             let variant = &observed.variant;
-            let key = EventKey {
+            let key = VariantKey {
                 position_1based: variant.position_1based,
                 reference: variant.reference.clone(),
                 alternate: variant.alternate.clone(),
                 kind: variant.kind,
             };
-            events.entry(key).or_default().push(EventSupport {
+            variants.entry(key).or_default().push(VariantSupport {
+                input_name: read.input_name.clone(),
                 input_sha256: read.input_sha256.clone(),
                 orientation: read.alignment.orientation,
                 eligible: observed.eligible(),
@@ -114,12 +116,12 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
         })
         .collect();
 
-    let events = events
+    let variants = variants
         .into_iter()
         .map(|(key, mut support)| {
             support.sort_by(|left, right| left.input_sha256.cmp(&right.input_sha256));
             support.dedup_by(|left, right| left.input_sha256 == right.input_sha256);
-            EventEvidence {
+            VariantEvidence {
                 position_1based: key.position_1based,
                 reference: key.reference,
                 alternate: key.alternate,
@@ -134,7 +136,7 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
         configuration_sha256,
         reads: placements,
         loci,
-        events,
+        variants,
     })
 }
 
@@ -146,6 +148,7 @@ fn locus_observation(read: &ReadObservation, column: &AlignmentColumn) -> Result
     }
     if column.query_base == '-' {
         return Ok(LocusObservation {
+            input_name: read.input_name.clone(),
             input_sha256: read.input_sha256.clone(),
             orientation: read.alignment.orientation,
             state: LocusState::Deletion,
@@ -174,6 +177,7 @@ fn locus_observation(read: &ReadObservation, column: &AlignmentColumn) -> Result
     };
 
     Ok(LocusObservation {
+        input_name: read.input_name.clone(),
         input_sha256: read.input_sha256.clone(),
         orientation: read.alignment.orientation,
         state,
@@ -232,6 +236,7 @@ mod tests {
             })
             .collect();
         ReadObservation {
+            input_name: format!("{input_sha256}.ab1"),
             input_sha256: input_sha256.into(),
             reference_sha256: reference_sha256.into(),
             configuration_sha256: configuration_sha256.into(),
@@ -302,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    fn aggregates_reference_coordinate_observations_and_normalized_events() -> Result<()> {
+    fn aggregates_reference_coordinate_observations_and_normalized_variants() -> Result<()> {
         let forward = observation(
             "a",
             "reference",
@@ -323,22 +328,25 @@ mod tests {
         let evidence = aggregate(&[forward, reverse])?;
 
         assert_eq!(evidence.reads.len(), 2);
+        assert_eq!(evidence.reads[0].input_name, "a.ab1");
         assert_eq!(evidence.loci.len(), 1);
         assert_eq!(evidence.loci[0].position_1based, 73);
         assert_eq!(evidence.loci[0].observations.len(), 2);
+        assert_eq!(evidence.loci[0].observations[0].input_name, "a.ab1");
         assert!(
             evidence.loci[0]
                 .observations
                 .iter()
                 .all(|item| item.state == LocusState::Alternate && item.base == Some('G'))
         );
-        assert_eq!(evidence.events.len(), 1);
-        assert_eq!(evidence.events[0].support.len(), 2);
+        assert_eq!(evidence.variants.len(), 1);
+        assert_eq!(evidence.variants[0].support.len(), 2);
+        assert_eq!(evidence.variants[0].support[0].input_name, "a.ab1");
         Ok(())
     }
 
     #[test]
-    fn preserves_filtered_event_observation_without_reporting_it() -> Result<()> {
+    fn preserves_filtered_variant_observation_without_reporting_it() -> Result<()> {
         let variant = snv(73, "A", "G");
         let forward = observation(
             "a",
@@ -362,15 +370,19 @@ mod tests {
 
         let evidence = aggregate(&[forward, reverse])?;
 
-        assert_eq!(evidence.events.len(), 1);
-        assert_eq!(evidence.events[0].support.len(), 2);
-        assert_eq!(evidence.events[0].support[0].input_sha256, "a");
-        assert!(evidence.events[0].support[0].eligible);
-        assert!(evidence.events[0].support[0].exclusion_reasons.is_empty());
-        assert_eq!(evidence.events[0].support[1].input_sha256, "b");
-        assert!(!evidence.events[0].support[1].eligible);
+        assert_eq!(evidence.variants.len(), 1);
+        assert_eq!(evidence.variants[0].support.len(), 2);
+        assert_eq!(evidence.variants[0].support[0].input_sha256, "a");
+        assert!(evidence.variants[0].support[0].eligible);
+        assert!(
+            evidence.variants[0].support[0]
+                .exclusion_reasons
+                .is_empty()
+        );
+        assert_eq!(evidence.variants[0].support[1].input_sha256, "b");
+        assert!(!evidence.variants[0].support[1].eligible);
         assert_eq!(
-            evidence.events[0].support[1].exclusion_reasons,
+            evidence.variants[0].support[1].exclusion_reasons,
             vec![VariantExclusionReason::PeakBelowMinimum]
         );
         Ok(())
