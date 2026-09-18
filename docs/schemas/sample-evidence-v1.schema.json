@@ -10,7 +10,7 @@
     "provenance",
     "reads",
     "loci",
-    "events"
+    "variants"
   ],
   "properties": {
     "schema_version": {
@@ -37,10 +37,10 @@
         "$ref": "#/$defs/locus"
       }
     },
-    "events": {
+    "variants": {
       "type": "array",
       "items": {
-        "$ref": "#/$defs/event"
+        "$ref": "#/$defs/variant"
       }
     }
   },
@@ -117,28 +117,20 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "name",
         "sha256",
-        "orientation",
-        "reference_segments",
-        "wraps_origin"
+        "alignment"
       ],
       "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
         "sha256": {
           "$ref": "#/$defs/sha256"
         },
-        "orientation": {
-          "$ref": "#/$defs/orientation"
-        },
-        "reference_segments": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 2,
-          "items": {
-            "$ref": "#/$defs/interval"
-          }
-        },
-        "wraps_origin": {
-          "type": "boolean"
+        "alignment": {
+          "$ref": "#/$defs/readAlignment"
         }
       }
     },
@@ -146,6 +138,7 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "read_name",
         "read_sha256",
         "orientation",
         "state",
@@ -154,6 +147,10 @@
         "relative_quality"
       ],
       "properties": {
+        "read_name": {
+          "type": "string",
+          "minLength": 1
+        },
         "read_sha256": {
           "$ref": "#/$defs/sha256"
         },
@@ -186,11 +183,16 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "read_name",
         "read_sha256",
         "orientation",
         "state"
       ],
       "properties": {
+        "read_name": {
+          "type": "string",
+          "minLength": 1
+        },
         "read_sha256": {
           "$ref": "#/$defs/sha256"
         },
@@ -238,16 +240,111 @@
         }
       }
     },
-    "eventSupport": {
+    "exclusionReason": {
+      "enum": [
+        "non_canonical_allele",
+        "indel_length_exceeded",
+        "outside_configured_region",
+        "peak_below_minimum",
+        "relative_quality_not_above_threshold"
+      ]
+    },
+    "readAlignment": {
       "type": "object",
       "additionalProperties": false,
       "required": [
+        "orientation",
+        "callable_bases",
+        "identity",
+        "mismatches",
+        "gap_opens",
+        "unresolved_bases",
+        "reference_segments",
+        "wraps_origin"
+      ],
+      "properties": {
+        "orientation": {
+          "$ref": "#/$defs/orientation"
+        },
+        "callable_bases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "identity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "mismatches": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "gap_opens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolved_bases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reference_segments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/interval"
+          }
+        },
+        "wraps_origin": {
+          "type": "boolean"
+        }
+      }
+    },
+    "variantCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "index",
+        "ploc"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "supporting",
+            "flanking"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ploc": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "variantSupport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read_name",
         "read_sha256",
         "orientation",
         "eligible",
-        "exclusion_reasons"
+        "exclusion_reasons",
+        "calls"
       ],
       "properties": {
+        "read_name": {
+          "type": "string",
+          "minLength": 1
+        },
         "read_sha256": {
           "$ref": "#/$defs/sha256"
         },
@@ -262,6 +359,12 @@
           "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/exclusionReason"
+          }
+        },
+        "calls": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/variantCall"
           }
         }
       },
@@ -294,7 +397,7 @@
         }
       ]
     },
-    "event": {
+    "variant": {
       "type": "object",
       "additionalProperties": false,
       "required": [
@@ -329,19 +432,10 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": {
-            "$ref": "#/$defs/eventSupport"
+            "$ref": "#/$defs/variantSupport"
           }
         }
       }
-    },
-    "exclusionReason": {
-      "enum": [
-        "non_canonical_allele",
-        "indel_length_exceeded",
-        "outside_configured_region",
-        "peak_below_minimum",
-        "relative_quality_not_above_threshold"
-      ]
     }
   }
 }
