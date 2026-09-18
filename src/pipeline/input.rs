@@ -1,8 +1,8 @@
-//! One-file path validation and command-specific input loading.
+//! Path validation and command-specific input loading.
 
 use std::path::{Path, PathBuf};
 
-use crate::cli::{AnalyzeArgs, BasecallArgs};
+use crate::cli::{AnalyzeArgs, BasecallArgs, SampleArgs};
 use crate::config::{self, Config};
 use crate::error::{Error, Result};
 use crate::model::reference::Reference;
@@ -21,6 +21,14 @@ pub(crate) struct AnalysisInputs {
 pub(crate) struct BasecallInputs {
     pub(crate) config: Config,
     pub(crate) trace: Chromatogram,
+    pub(crate) output: PathBuf,
+}
+
+/// Inputs for one multi-read sample evidence operation.
+pub(crate) struct SampleInputs {
+    pub(crate) config: Config,
+    pub(crate) traces: Vec<Chromatogram>,
+    pub(crate) reference: Reference,
     pub(crate) output: PathBuf,
 }
 
@@ -51,6 +59,35 @@ pub(crate) fn load_basecall(args: &BasecallArgs) -> Result<BasecallInputs> {
     Ok(BasecallInputs {
         config,
         trace,
+        output,
+    })
+}
+
+/// Validates and loads one or more sample traces against one shared reference.
+pub(crate) fn load_sample(args: &SampleArgs) -> Result<SampleInputs> {
+    validate_sample_id(&args.sample_id)?;
+    if args.traces.is_empty() {
+        return Err(Error::Sample(
+            "sample analysis requires at least one AB1 trace".into(),
+        ));
+    }
+    for trace_path in &args.traces {
+        require_regular_file(trace_path, "AB1")?;
+    }
+    require_regular_file(&args.reference, "reference")?;
+    let config = load_config()?;
+    let output = sample_output_path(&args.sample_id);
+    validate_output(&output)?;
+    let traces = args
+        .traces
+        .iter()
+        .map(|path| trace::load(path))
+        .collect::<Result<Vec<_>>>()?;
+    let reference = reference::load(&args.reference, config.reference.topology)?;
+    Ok(SampleInputs {
+        config,
+        traces,
+        reference,
         output,
     })
 }
@@ -107,6 +144,10 @@ fn basecall_output_path(trace: &Path) -> Result<PathBuf> {
     Ok(PathBuf::from("results").join(format!("{}.basecalls.json", trace_stem(trace)?)))
 }
 
+fn sample_output_path(sample_id: &str) -> PathBuf {
+    PathBuf::from("results").join(format!("{sample_id}.sample.json"))
+}
+
 /// Returns the validated UTF-8 trace stem shared by result and log paths.
 pub(super) fn trace_stem(trace: &Path) -> Result<&str> {
     trace
@@ -118,4 +159,17 @@ pub(super) fn trace_stem(trace: &Path) -> Result<&str> {
             path: trace.to_path_buf(),
             reason: "file stem must be valid non-empty UTF-8".into(),
         })
+}
+
+/// Validates the sample identifier used for deterministic result/log names.
+pub(super) fn validate_sample_id(sample_id: &str) -> Result<()> {
+    let mut characters = sample_id.chars();
+    let valid_first = characters.next().is_some_and(|value| value.is_ascii_alphanumeric());
+    let valid_rest = characters.all(|value| value.is_ascii_alphanumeric() || matches!(value, '_' | '.' | '-'));
+    if sample_id.len() > 128 || !valid_first || !valid_rest {
+        return Err(Error::Sample(
+            "sample id must be 1..=128 ASCII characters, start with an alphanumeric character, and contain only alphanumeric, '_', '.', or '-'".into(),
+        ));
+    }
+    Ok(())
 }
