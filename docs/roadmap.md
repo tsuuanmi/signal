@@ -140,7 +140,7 @@ The following are intentionally deferred:
 9. ML-based calling, correction, or training export;
 10. SCF, VCF/BCF, multi-contig references, and genome-scale indexing.
 
-Research notes may continue to exist in `TODO.md`, `UPDATE.md`, and `tracy_review.md`, but they are not active delivery commitments.
+Research notes live under `docs/research/<topic>/` and are not active delivery commitments until promoted through the root ADR/SRS/contract process.
 
 ## Validation before expansion
 
