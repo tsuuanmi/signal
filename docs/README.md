@@ -92,6 +92,6 @@ Every mirrored source file has a same-relative-path manual. Manuals describe own
 Research lives only under [`docs/research/`](research/README.md) and does not change production behavior until promoted through the root ADR/SRS/contract process.
 
 - [Signal research](research/Signal/README.md)
-- Tracy research is developed separately under `docs/research/Tracy/` (PR #2).
+- Tracy research follows the same model under `docs/research/Tracy/` once that research subtree is integrated.
 
 The old catch-all Signal research files were moved into `docs/research/Signal/` so they cannot be mistaken for production requirements.
