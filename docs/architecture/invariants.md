@@ -31,6 +31,9 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-READ-003:** Cross-read reconciliation uses normalized reference-coordinate/event space rather than canonical F/R pairs as exclusive merge keys.
 - **INV-READ-004:** A missing canonical partner does not invalidate an otherwise admitted read; optional assay metadata remains provenance or post-mapping QC unless a separately specified method explicitly says otherwise.
 - **INV-SAMPLE-001:** A future consensus sequence is a downstream projection, not the authoritative source of sample variants or discordance.
+- **INV-SAMPLE-002:** Missing locus coverage is distinct from reference support; only an aligned read observation can support a locus state.
+- **INV-SAMPLE-003:** Normalized event support is keyed by biological event identity and preserves each contributing read SHA-256 plus derived orientation.
+- **INV-SAMPLE-004:** Duplicate trace content cannot be counted twice within one sample evidence result.
 
 ## Pipeline
 
