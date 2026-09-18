@@ -1,48 +1,181 @@
 # Signal
 
-Signal is a focused Rust tool for deterministic Sanger ABIF/AB1 processing. It can re-call and trim one trace without a reference, or analyze one trace against one short reference FASTA. Both paths re-call bases from analyzed A/C/G/T channels at ABIF PLOC loci, annotate rolling signal-to-noise features and candidate-noisy regions, and score/trim poor read ends; reference analysis additionally aligns either strand and reports normalized primary-sequence SNVs and small indels.
+Signal is a deterministic Rust system for Sanger ABIF/AB1 analysis.
 
-## Status
+It reads analyzed A/C/G/T chromatogram channels, re-calls bases at validated ABIF PLOC loci, performs read-quality handling, aligns the retained read to a short reference in either orientation, and reports auditable primary-sequence differences through versioned JSON contracts.
 
-The JSON-only MVP pipeline is implemented. Its output is an auditable scientific analysis record, not a diagnostic report. The project is now hardening toward an evidence-backed production release profile: source-quality gates alone are not sufficient; an exact release also needs dependency, adversarial-input, artifact-provenance, performance, and approved real-trace evidence. See [`docs/adr/0018-production-readiness-release-contract.md`](docs/adr/0018-production-readiness-release-contract.md) and [`docs/data.md`](docs/data.md).
+Signal is designed as scientific software rather than as a generic sequence-conversion utility. The goal is not maximum feature count. The goal is to make signal processing, biological interpretation, and software correctness explicit enough to inspect, test, validate, and evolve safely.
 
-## Run
+## Design principles
+
+Signal is developed through three complementary lenses:
+
+- **signal processing** — preserve what the chromatogram actually measured and make derived transformations explicit;
+- **biology** — report only claims supported by the available evidence and preserve unresolved states instead of guessing;
+- **engineering** — encode important invariants in types, module boundaries, schemas, tests, and release gates wherever practical.
+
+Rust is an architectural choice, not a branding choice. Signal uses Rust to move correctness from developer discipline into the programming model: validated states, explicit errors, immutable evidence, ownership boundaries, exhaustive state handling, and machine-checked invariants.
+
+The compiler cannot prove biological correctness. Real scientific claims still require independent data and validation.
+
+## Current status
+
+The JSON-based single-trace pipeline is implemented and is being hardened toward an evidence-backed production release profile.
+
+Current supported behavior includes:
+
+- strict bounded ABIF/AB1 decoding;
+- canonical analyzed A/C/G/T channels using ABIF channel-order metadata;
+- signal-derived re-calling at validated `PLOC.2` loci;
+- explicit primary and ambiguity states;
+- observational rolling signal-to-noise annotations;
+- deterministic read-quality scoring and end trimming;
+- forward/reverse semi-global alignment to one short reference;
+- linear and circular reference handling;
+- primary-sequence SNVs and supported small insertions/deletions;
+- direct mappings from reported variants back to trace calls;
+- closed versioned JSON schemas;
+- atomic no-overwrite result publication;
+- typed failures and bounded resource use.
+
+The core confidence floor is deliberately simpler than the full current implementation:
+
+```text
+AB1
+ ↓
+validated chromatogram decode
+ ↓
+signal-derived base re-calling
+ ↓
+basic QC / trimming
+ ↓
+forward-or-reverse alignment
+ ↓
+primary-sequence variant calling
+ ↓
+versioned JSON
+```
+
+The confidence floor defines what must be understood and validated first. It is not a reason to remove known-good capabilities that already exceed it.
+
+## Scientific interpretation
+
+Signal distinguishes source evidence from interpretation.
+
+```text
+analyzed chromatogram channels
+        ↓
+per-locus observations
+        ↓
+read interpretation
+        ↓
+reference differences
+```
+
+A single chromatogram does **not** establish genotype, quantitative heteroplasmy, phase, contamination, pathogenicity, or clinical significance.
+
+Important boundaries:
+
+- `PBAS.2` / `PCON.2` are optional vendor evidence; they do not determine Signal's final call;
+- `PLOC.2` is currently the locus authority for the re-calling method;
+- rolling SNR and relative quality are not Phred-calibrated error probabilities;
+- secondary or mixed signal is an observation, not automatically heteroplasmy;
+- unresolved evidence remains unresolved;
+- normalized variant representation must not erase the trace evidence from which it was observed.
+
+See [ADR-0019](docs/adr/0019-scientific-evidence-hierarchy.md) and the [system invariants](docs/architecture/invariants.md).
+
+## Quick start
+
+Reference-free base calling:
 
 ```bash
 cargo run --release -- basecall sample.ab1
+```
+
+Reference-guided analysis:
+
+```bash
 cargo run --release -- analyze sample.ab1 \
   --reference references/rCRS.fasta
 ```
 
-Signal reads `SIGNAL_CONFIG` or `config/signal.toml`. `basecall` atomically writes `results/sample.basecalls.json`; `analyze` atomically writes `results/sample.json`. Each command appends concise stage records to `logs/sample.log`. Records include aggregate counts, thresholds, timings, warnings, and stage-aware failures, but never sequences, per-call peak arrays, or JSON bodies. `SIGNAL_LOG_DIR` can select another log directory. Existing results are never overwritten; per-trace logs are append-only. The binary does not parse `.env`.
+Signal reads `SIGNAL_CONFIG` or `config/signal.toml`.
 
-For local corpus orchestration, `uv run python scripts/analyze_samples.py` reads the first 89 IDs from `data/MS_010426_001.txt`, preflights the complete selected workload, builds the release binary unless `--no-build` is used, then removes only the selected sample result directories and matching selected logs before rerunning every selected trace. Ambiguous matches, identity collisions, and symlinked cleanup targets are rejected before deletion; artifacts for unselected samples are preserved. A later per-trace failure may leave partial new outputs from earlier successful traces. See [`docs/data.md`](docs/data.md); the core Signal CLI remains one-file-per-invocation and never overwrites an existing result.
+Successful core commands publish exactly one command-specific JSON result without overwriting an existing result:
 
-## Scope
+```text
+basecall -> results/<trace-stem>.basecalls.json
+analyze  -> results/<trace-stem>.json
+```
 
-- exactly one canonical analyzed ABIF/AB1 file per invocation;
-- reference-free `signal.basecalls/v1` JSON with full primary/ambiguity/retained sequences, trim bounds, merged noisy regions, provenance, and warning counts;
-- for `analyze`, exactly one non-empty plain FASTA record, at most 50,000 bases;
-- compact `signal.analysis/v5` JSON with input/reference/configuration identities, call count and trim bounds, merged noisy regions, an alignment summary, normalized variants with concise call mappings, and warning counts;
-- explicit linear/circular topology; bundled rCRS defaults to circular;
-- configured inclusive biological regions, with a bundled peak floor of 150 and relative-quality eligibility for SNVs and inserted bases;
-- primary-sequence SNVs and normalized insertions/deletions up to 50 bp.
+Operational logs are separate append-only sidecars under `logs/` by default.
 
-Directories, manifests, globs, batch discovery, SCF, VCF/BCF, FM indexing, two-allele decomposition, heteroplasmy fraction, genotype, pathogenicity, consensus, and assembly are outside the MVP.
+## Output contracts
 
-## Biological interpretation
+Current public result contracts are:
 
-Signal reports differences between the conservative signal-derived primary sequence and the supplied reference. Its rolling SNR annotation and relative quality score are not Phred-calibrated; candidate-noisy regions do not suppress calls or variants. Vendor PBAS/PCON may be consumed internally but are not emitted in compact v5. A single trace cannot establish zygosity, homoplasmy, quantitative heteroplasmy, phase, contamination, or clinical significance. Signal treats decoded channel evidence, per-locus observations, read interpretation, and future sample-level conclusions as distinct layers; see [`docs/adr/0019-scientific-evidence-hierarchy.md`](docs/adr/0019-scientific-evidence-hierarchy.md).
+- `signal.basecalls/v1` — reference-free primary/ambiguity/retained read result;
+- `signal.analysis/v5` — compact reference-guided analysis result.
+
+The schemas, examples, coordinate conventions, and human-readable semantics live under [docs/contracts](docs/contracts/README.md).
+
+Public schemas are versioned contracts. Incompatible output changes require a new schema version rather than silent mutation of an existing version.
+
+## Documentation
+
+Start with [docs/README.md](docs/README.md).
+
+The documentation system is organized by authority:
+
+```text
+SRS
+ ↓
+architecture + invariants
+ ↓
+ADRs
+ ↓
+current methods + public contracts
+ ↓
+docs/src implementation mirror
+ ↓
+source + tests
+ ↓
+validation + release evidence
+```
+
+Exploratory work lives under `docs/research/<topic>/` and is non-normative until promoted into the root production SRS/ADR/contract system.
+
+Key entry points:
+
+- [requirements / SRS](docs/requirements.md)
+- [architecture](docs/architecture/README.md)
+- [system invariants](docs/architecture/invariants.md)
+- [ADR index](docs/adr/README.md)
+- [current methods](docs/methods/README.md)
+- [contracts](docs/contracts/README.md)
+- [source mirror](docs/src/README.md)
+- [validation](docs/validation/README.md)
+- [traceability](docs/traceability.md)
+- [research](docs/research/README.md)
+- [roadmap](docs/roadmap.md)
 
 ## Development
 
-Create the locked validation environment with `uv sync --locked`. Activation is optional (`source .venv/bin/activate`); the documented commands use `uv run` directly.
+Create the locked development environment:
+
+```bash
+uv sync --locked
+```
+
+Required repository checks:
 
 ```bash
 uv run ruff format --check scripts/
 uv run ruff check scripts/
 uv run basedpyright scripts/
 uv run python scripts/validate_result_schemas.py
+
 cargo fmt --all --check
 cargo check --all-targets
 cargo clippy --all-targets -- -D warnings
@@ -50,4 +183,12 @@ cargo test --all-targets
 cargo doc --no-deps
 ```
 
-Start with [`docs/README.md`](docs/README.md). It defines documentation authority, navigation, contracts, validation, research boundaries, and traceability. Every mirrored `src/**/*.rs` file has a same-relative-path manual under [`docs/src/`](docs/src/).
+Longer-running or release-oriented validation such as fuzzing, dependency audit, mutation testing, performance measurement, and approved real-AB1 regression belongs to the extended validation/release lanes rather than being added mechanically to every pull request.
+
+See [CI and verification lanes](docs/operations/ci.md) and [production readiness](docs/adr/0018-production-readiness-release-contract.md).
+
+## Agent development
+
+Coding agents should start with [AGENTS.md](AGENTS.md), which routes changes through the same SRS, architecture, invariant, method, contract, source-mirror, test, and validation hierarchy used by human contributors.
+
+The repository intentionally treats documentation as part of the correctness system, not as an after-the-fact description of the code.
