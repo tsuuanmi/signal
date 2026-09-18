@@ -114,8 +114,8 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
     let events = events
         .into_iter()
         .map(|(key, mut support)| {
-            support.sort();
-            support.dedup();
+            support.sort_by(|left, right| left.input_sha256.cmp(&right.input_sha256));
+            support.dedup_by(|left, right| left.input_sha256 == right.input_sha256);
             EventEvidence {
                 position_1based: key.position_1based,
                 reference: key.reference,
