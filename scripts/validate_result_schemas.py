@@ -171,7 +171,10 @@ def rejected_sample_shapes(
         ("sample evidence with consensus field", unknown_field),
         ("sample event with no supporting reads", empty_support),
         ("eligible sample event support with exclusion reason", eligible_with_reason),
-        ("ineligible sample event support without exclusion reason", ineligible_without_reason),
+        (
+            "ineligible sample event support without exclusion reason",
+            ineligible_without_reason,
+        ),
     ]
 
 
