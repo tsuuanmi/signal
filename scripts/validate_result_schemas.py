@@ -168,6 +168,8 @@ def rejected_sample_shapes(
     missing_read_name["variants"][0]["support"][0].pop("read_name")
     missing_call_pointer = copy.deepcopy(example)
     missing_call_pointer["variants"][0]["support"][0]["calls"][0].pop("ploc")
+    empty_variant_calls = copy.deepcopy(example)
+    empty_variant_calls["variants"][0]["support"][0]["calls"] = []
     return [
         ("sample evidence with no reads", missing_reads),
         ("sample evidence with invalid sample id", invalid_sample_id),
@@ -181,6 +183,7 @@ def rejected_sample_shapes(
         ),
         ("sample variant support without read name", missing_read_name),
         ("sample variant call without ploc", missing_call_pointer),
+        ("sample variant support without mapped calls", empty_variant_calls),
     ]
 
 
