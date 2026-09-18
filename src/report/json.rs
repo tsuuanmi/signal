@@ -1,6 +1,5 @@
 //! Compact typed assembly and deterministic JSON serialization.
 
-use crate::config::Config;
 use crate::error::Result;
 use crate::model::reference::Reference;
 use crate::model::read_observation::ReadObservation;
@@ -12,26 +11,28 @@ use crate::report::{signal, variant};
 
 /// Inputs consumed to build the immutable analysis document.
 pub(crate) struct CompletedAnalysis {
-    pub(crate) config: Config,
     pub(crate) reference: Reference,
     pub(crate) read: ReadObservation,
 }
 
 /// Builds the compact v5 document without filesystem side effects.
 pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisResult> {
-    let CompletedAnalysis {
-        config,
-        reference,
-        read,
-    } = completed;
+    let CompletedAnalysis { reference, read } = completed;
     let ReadObservation {
         input_sha256,
+        reference_sha256,
+        configuration_sha256,
         calls,
         signal,
         quality,
         alignment,
         variants,
     } = read;
+    if reference_sha256 != reference.sequence_sha256 {
+        return Err(crate::error::Error::Report(
+            "read observation reference identity does not match report reference".into(),
+        ));
+    }
     let warnings = warning_summary(&calls, variants.excluded_count());
     let variant_results = variant::project(variants.reported, &calls, &quality)?;
     let signal_quality = signal::project(signal);
@@ -55,7 +56,7 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
                 topology: reference.topology,
                 sha256: reference.sequence_sha256,
             },
-            configuration_sha256: config.source_sha256,
+            configuration_sha256,
         },
         read: ReadResult {
             call_count: calls.len(),
