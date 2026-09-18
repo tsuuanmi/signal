@@ -7,8 +7,8 @@ Owns the validated domain types shared across scientific stages.
 ## Responsibilities
 
 - Declare the model submodules: `alignment`, `basecall_result`, `basecalls`,
-  `coordinate`, `nucleotide`, `quality`, `reference`, `result`, `signal`, `trace`,
-  and `variant`.
+  `coordinate`, `nucleotide`, `quality`, `read_observation`, `reference`, `result`,
+  `signal`, `trace`, and `variant`.
 - Provide validated domain vocabulary with no I/O, CLI, configuration loading, or
   algorithm dependencies.
 
@@ -24,7 +24,7 @@ No filesystem access, argument parsing, logging, or algorithm execution.
 - `basecalls`: primary/ambiguous calls with trace positions.
 - `signal`: rolling SNR windows and merged candidate-noisy regions.
 - `quality`: quality vector, trim bounds, and QC result.
-- `reference`: name, sequence, topology, and checksums.
+- `read_observation`: complete one-read scientific products after evidence-derived placement.\n- `reference`: name, sequence, topology, and checksums.
 - `alignment`: selected orientation, score, reference segments, metrics, and
   per-column coordinates without final gapped-row duplication.
 - `variant`: normalized `Variant`, `VariantKind`, alleles, mappings, and exclusion
