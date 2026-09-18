@@ -14,6 +14,7 @@
 
 - [`source-layout.md`](source-layout.md): implemented Rust source ownership.
 - [`validation.md`](validation.md): unit, integration, schema, adversarial, and release evidence.
+- [`development-readiness.md`](development-readiness.md): three-lens MVP design gate and current start-development assessment.
 - [`adr/0018-production-readiness-release-contract.md`](adr/0018-production-readiness-release-contract.md): production release quality contract.
 - [`adr/0019-scientific-evidence-hierarchy.md`](adr/0019-scientific-evidence-hierarchy.md): evidence-to-claim hierarchy for Sanger/mtDNA.
 - [`adr/0020-rust-as-correctness-architecture.md`](adr/0020-rust-as-correctness-architecture.md): why Signal uses Rust to move invariants into the programming model.
