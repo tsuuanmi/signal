@@ -182,69 +182,6 @@
         }
       }
     },
-    "calledDifference": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "read",
-        "state",
-        "base",
-        "index",
-        "relative_quality"
-      ],
-      "properties": {
-        "read": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "state": {
-          "enum": [
-            "alternate",
-            "unresolved"
-          ]
-        },
-        "base": {
-          "type": "string",
-          "pattern": "^[ACGTN]$"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "relative_quality": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        }
-      }
-    },
-    "deletionDifference": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "read",
-        "state"
-      ],
-      "properties": {
-        "read": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "state": {
-          "const": "deletion"
-        }
-      }
-    },
-    "differenceObservation": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/calledDifference"
-        },
-        {
-          "$ref": "#/$defs/deletionDifference"
-        }
-      ]
-    },
     "locusDifference": {
       "type": "object",
       "additionalProperties": false,
@@ -267,8 +204,12 @@
           "minItems": 1,
           "uniqueItems": true,
           "items": {
-            "$ref": "#/$defs/differenceObservation"
-          }
+            "$ref": "#/$defs/locusObservation"
+          },
+          "contains": {
+            "$ref": "#/$defs/nonReferenceObservation"
+          },
+          "minContains": 1
         }
       }
     },
@@ -411,6 +352,94 @@
           }
         }
       }
+    },
+    "calledObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "state",
+        "base",
+        "index",
+        "relative_quality"
+      ],
+      "properties": {
+        "read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "enum": [
+            "reference",
+            "alternate",
+            "unresolved"
+          ]
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^[ACGTN]$"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "relative_quality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "deletionObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "state"
+      ],
+      "properties": {
+        "read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "const": "deletion"
+        }
+      }
+    },
+    "locusObservation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/calledObservation"
+        },
+        {
+          "$ref": "#/$defs/deletionObservation"
+        }
+      ]
+    },
+    "nonReferenceCalledObservation": {
+      "type": "object",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "alternate",
+            "unresolved"
+          ]
+        }
+      }
+    },
+    "nonReferenceObservation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/nonReferenceCalledObservation"
+        },
+        {
+          "$ref": "#/$defs/deletionObservation"
+        }
+      ]
     }
   }
 }
