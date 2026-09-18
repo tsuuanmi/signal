@@ -10,11 +10,7 @@ proved scientifically explicit but operationally noisy: every covered reference
 position repeated read name, SHA-256, orientation, state, call index, and relative
 quality even when all reads simply matched the reference.
 
-Review of the LN_26_AB0444 sample output made the imbalance concrete. The document
-contained 1,027 locus records and 1,814 locus observations; 1,793 observations were
-reference matches, while only 12 loci contained any non-reference state. The
-resulting sample JSON was roughly 703 KB even though the scientifically interesting
-difference set was small.
+Exploratory review of a local four-read mtDNA sample output made the imbalance concrete. The document contained 1,027 locus records and 1,814 locus observations; 1,793 observations were reference matches, while only 12 loci contained any non-reference state. The resulting sample JSON was roughly 703 KB even though the scientifically interesting difference set was small. No local sample identifier, filename, hash, or derived sample document is committed as validation evidence; synthetic tests enforce the resulting representation invariants.
 
 Read identity, orientation, and mapped reference segments are already known once
 the independent read observations have been placed. Repeating those facts at every
@@ -78,8 +74,7 @@ exists in sample evidence.
 ### Versioning
 
 The shape change is incompatible with v1, so it is a new schema version rather
-than a mutation of the accepted v1 schema. The v1 schema/example and implementation
-are removed instead of maintained as a compatibility layer.
+than a mutation of the accepted v1 schema. The v1 schema/example and implementation are removed instead of maintained as a compatibility layer. The v2 repository example is synthetic and non-identifying.
 
 ## Consequences
 
