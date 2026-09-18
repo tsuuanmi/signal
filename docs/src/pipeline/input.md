@@ -23,7 +23,8 @@ No directory scanning, globs, manifests, or multi-file discovery.
 
 - `AnalysisInputs`: loaded config, chromatogram, reference, and analysis target.
 - `BasecallInputs`: loaded config, chromatogram, and reference-free target.
-- `load_analysis(args)` and `load_basecall(args)`: command-specific entry points.
+- `SampleInputs`: loaded config, one or more chromatograms, shared reference, and sample-evidence target.
+- `load_analysis(args)`, `load_basecall(args)`, and `load_sample(args)`: command-specific entry points.
 - `require_regular_file(path, kind)`: shared path-type validation.
 - `trace_stem(trace) -> Result<&str>`: validates and shares the UTF-8 stem used by
   result and log paths.
@@ -39,7 +40,7 @@ No directory scanning, globs, manifests, or multi-file discovery.
 
 ## Dependencies
 
-- `cli` for `AnalyzeArgs` and `BasecallArgs`.
+- `cli` for `AnalyzeArgs`, `BasecallArgs`, and `SampleArgs`.
 - `config`, `reference`, `trace`.
 - `model::reference` and `model::trace`.
 - `error` for `Error`/`Result`.
