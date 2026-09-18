@@ -25,4 +25,4 @@
 | [0021](0021-scientific-core-confidence-floor.md) | Define a scientific core confidence floor | Accepted |
 | [0022](0022-documentation-knowledge-system.md) | Govern documentation as an executable knowledge system | Accepted |
 | [0023](0023-evidence-derived-read-placement-and-sample-boundary.md) | Derive read placement from evidence and reconcile samples from read observations | Accepted |
-| [0024](0024-reference-coordinate-sample-evidence.md) | Aggregate independently placed reads in reference-coordinate/event space | Accepted |
+| [0024](0024-reference-coordinate-sample-evidence.md) | Aggregate independently placed reads in reference-coordinate/variant space | Accepted |
