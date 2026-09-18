@@ -1,9 +1,8 @@
-//! Command-line argument definitions for one-file trace operations.
+//! Command-line argument definitions for focused Signal operations.
 //!
-//! Both commands accept one positional AB1 path. `analyze` additionally requires
-//! one reference FASTA. Output paths are derived deterministically; directories,
-//! manifests, globs, lists, and repeated trace arguments are not accepted.
-//! Configuration is selected by `SIGNAL_CONFIG`.
+//! Single-read commands accept exactly one AB1 path. The sample command accepts
+//! one user-supplied sample identifier plus one or more AB1 paths and derives one
+//! sample-evidence result. Configuration is selected by `SIGNAL_CONFIG`.
 
 use std::path::PathBuf;
 
@@ -25,6 +24,8 @@ pub enum Command {
     Analyze(AnalyzeArgs),
     /// Re-call and quality-trim one AB1 trace without a reference.
     Basecall(BasecallArgs),
+    /// Aggregate independently analyzed AB1 traces into sample evidence.
+    Sample(SampleArgs),
 }
 
 /// Arguments for the end-to-end reference analysis pipeline.
@@ -43,4 +44,19 @@ pub struct AnalyzeArgs {
 pub struct BasecallArgs {
     /// Input ABIF/AB1 trace.
     pub trace: PathBuf,
+}
+
+/// Arguments for reference-coordinate sample evidence aggregation.
+#[derive(Debug, Args)]
+pub struct SampleArgs {
+    /// Stable sample identifier used only for result/log naming and provenance.
+    pub sample_id: String,
+
+    /// Independently processed ABIF/AB1 traces belonging to the sample.
+    #[arg(required = true, num_args = 1..)]
+    pub traces: Vec<PathBuf>,
+
+    /// Single-contig reference FASTA shared by every trace.
+    #[arg(long)]
+    pub reference: PathBuf,
 }
