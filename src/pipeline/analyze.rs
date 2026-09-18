@@ -191,6 +191,8 @@ fn run_logged(
     let reference_origin_wrap = alignment.wraps_origin;
     let read = ReadObservation {
         input_sha256: inputs.trace.source_sha256.clone(),
+        reference_sha256: inputs.reference.sequence_sha256.clone(),
+        configuration_sha256: inputs.config.source_sha256.clone(),
         calls,
         signal,
         quality,
