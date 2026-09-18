@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::model::alignment::Orientation;
-use crate::model::result::{IntervalResult, ReferenceResult};
+use crate::model::result::{AlignmentResult, ReferenceResult};
 use crate::model::sample_evidence::LocusState;
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
@@ -30,20 +30,7 @@ pub(crate) struct SampleProvenanceResult {
 pub(crate) struct SampleReadResult {
     pub(crate) name: String,
     pub(crate) sha256: String,
-    pub(crate) alignment: SampleReadAlignmentResult,
-}
-
-/// Concise evidence supporting the selected alignment and placement.
-#[derive(Debug, Serialize)]
-pub(crate) struct SampleReadAlignmentResult {
-    pub(crate) orientation: Orientation,
-    pub(crate) callable_bases: usize,
-    pub(crate) identity: f64,
-    pub(crate) mismatches: usize,
-    pub(crate) gap_opens: usize,
-    pub(crate) unresolved_bases: usize,
-    pub(crate) reference_segments: Vec<IntervalResult>,
-    pub(crate) wraps_origin: bool,
+    pub(crate) alignment: AlignmentResult,
 }
 
 /// Evidence at one covered reference locus.
