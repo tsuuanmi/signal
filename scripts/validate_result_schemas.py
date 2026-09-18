@@ -16,6 +16,8 @@ ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v5.schema.json"
 ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v5.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v1.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v1.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v1.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v1.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -137,6 +139,32 @@ def rejected_basecall_shapes(
         ("basecall read with unknown field", unknown_field),
         ("basecall provenance with reference", reference),
         ("basecall provenance with software version", software_version),
+    ]
+
+
+
+def rejected_sample_shapes(
+    example: dict[str, Any],
+) -> list[tuple[str, dict[str, Any]]]:
+    missing_reads = copy.deepcopy(example)
+    missing_reads["reads"] = []
+    invalid_sample_id = copy.deepcopy(example)
+    invalid_sample_id["sample_id"] = "../sample"
+    verbose_deletion = copy.deepcopy(example)
+    observation = copy.deepcopy(verbose_deletion["loci"][0]["observations"][0])
+    observation["state"] = "deletion"
+    observation["base"] = "C"
+    verbose_deletion["loci"][0]["observations"] = [observation]
+    unknown_field = copy.deepcopy(example)
+    unknown_field["consensus"] = "ACGT"
+    empty_support = copy.deepcopy(example)
+    empty_support["events"][0]["support"] = []
+    return [
+        ("sample evidence with no reads", missing_reads),
+        ("sample evidence with invalid sample id", invalid_sample_id),
+        ("deletion observation carrying a base", verbose_deletion),
+        ("sample evidence with consensus field", unknown_field),
+        ("sample event with no supporting reads", empty_support),
     ]
 
 
