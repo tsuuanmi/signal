@@ -1,12 +1,13 @@
-//! Projection of sample scientific evidence into the public JSON contract.
+//! Projection of compact sample scientific evidence into the public JSON contract.
 
 use crate::error::{Error, Result};
 use crate::model::reference::Reference;
 use crate::model::result::{AlignmentResult, IntervalResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
-    SampleEvidenceResult, SampleLocusObservationResult, SampleLocusResult, SampleProvenanceResult,
-    SampleReadResult, SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
+    SampleEvidenceResult, SampleLocusDifferenceObservationResult, SampleLocusDifferenceResult,
+    SampleProvenanceResult, SampleReadResult, SampleVariantCallResult, SampleVariantResult,
+    SampleVariantSupportResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
@@ -16,7 +17,7 @@ pub(crate) struct CompletedSampleEvidence {
     pub(crate) evidence: SampleEvidence,
 }
 
-/// Builds `signal.sample_evidence/v1` without filesystem side effects.
+/// Builds `signal.sample_evidence/v2` without filesystem side effects.
 pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidenceResult> {
     let CompletedSampleEvidence {
         sample_id,
@@ -55,19 +56,17 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         })
         .collect();
 
-    let loci = evidence
-        .loci
+    let locus_differences = evidence
+        .locus_differences
         .into_iter()
-        .map(|locus| SampleLocusResult {
-            position: locus.position_1based,
-            reference: locus.reference_base,
-            observations: locus
+        .map(|difference| SampleLocusDifferenceResult {
+            position: difference.position_1based,
+            reference: difference.reference_base,
+            observations: difference
                 .observations
                 .into_iter()
-                .map(|observation| SampleLocusObservationResult {
-                    read_name: observation.input_name,
-                    read_sha256: observation.input_sha256,
-                    orientation: observation.orientation,
+                .map(|observation| SampleLocusDifferenceObservationResult {
+                    read: observation.read_index,
                     state: observation.state,
                     base: observation.base,
                     index: observation.call_index_0based,
@@ -89,9 +88,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                 .support
                 .into_iter()
                 .map(|support| SampleVariantSupportResult {
-                    read_name: support.input_name,
-                    read_sha256: support.input_sha256,
-                    orientation: support.orientation,
+                    read: support.read_index,
                     eligible: support.eligible,
                     exclusion_reasons: support.exclusion_reasons,
                     calls: support
@@ -110,7 +107,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         .collect();
 
     Ok(SampleEvidenceResult {
-        schema_version: "signal.sample_evidence/v1",
+        schema_version: "signal.sample_evidence/v2",
         sample_id,
         provenance: SampleProvenanceResult {
             reference: ReferenceResult {
@@ -121,7 +118,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
             configuration_sha256: evidence.configuration_sha256,
         },
         reads,
-        loci,
+        locus_differences,
         variants,
     })
 }
