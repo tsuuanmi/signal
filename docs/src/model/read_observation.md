@@ -6,7 +6,7 @@ Defines the complete scientific observation produced from one independently proc
 
 ## Responsibilities
 
-- Group the input identity, signal-derived calls, signal-quality observations, quality-control result, selected alignment, and read-level variants for one read.
+- Group input, reference, and configuration identities with signal-derived calls, signal-quality observations, quality-control result, selected alignment, and read-level variants for one read.
 - Establish the explicit boundary between one-read processing and future sample-level reconciliation.
 - Preserve evidence-derived orientation and mapped reference segments from the selected alignment.
 - Keep assay names, primer labels, filenames, declared direction, and canonical F/R pairing outside the scientific placement model.
@@ -17,7 +17,7 @@ No sample consensus, cross-read conflict resolution, amplicon classification, me
 
 ## Key type
 
-- `ReadObservation`: immutable ownership bundle for one admitted read's scientific products.
+- `ReadObservation`: immutable ownership bundle for one admitted read's scientific products.\n- `is_compatible_with`: requires identical reference and scientific configuration identities.\n- `overlaps_reference`: detects coordinate overlap only between compatible observations, including circular split segments.
 
 ## Invariants
 
