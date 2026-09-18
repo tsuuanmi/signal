@@ -1,20 +1,19 @@
-//! Serializable `signal.sample_evidence/v1` contract.
+//! Serializable `signal.sample_evidence/v2` contract.
 
 use serde::Serialize;
 
-use crate::model::alignment::Orientation;
 use crate::model::result::{AlignmentResult, ReferenceResult};
-use crate::model::sample_evidence::LocusState;
+use crate::model::sample_evidence::LocusDifferenceState;
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
-/// Successful sample-evidence document.
+/// Successful compact sample-evidence document.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleEvidenceResult {
     pub(crate) schema_version: &'static str,
     pub(crate) sample_id: String,
     pub(crate) provenance: SampleProvenanceResult,
     pub(crate) reads: Vec<SampleReadResult>,
-    pub(crate) loci: Vec<SampleLocusResult>,
+    pub(crate) locus_differences: Vec<SampleLocusDifferenceResult>,
     pub(crate) variants: Vec<SampleVariantResult>,
 }
 
@@ -33,21 +32,19 @@ pub(crate) struct SampleReadResult {
     pub(crate) alignment: AlignmentResult,
 }
 
-/// Evidence at one covered reference locus.
+/// Non-reference evidence retained at one covered reference locus.
 #[derive(Debug, Serialize)]
-pub(crate) struct SampleLocusResult {
+pub(crate) struct SampleLocusDifferenceResult {
     pub(crate) position: usize,
     pub(crate) reference: char,
-    pub(crate) observations: Vec<SampleLocusObservationResult>,
+    pub(crate) observations: Vec<SampleLocusDifferenceObservationResult>,
 }
 
-/// One read's aligned observation at a locus.
+/// One read's non-reference observation at a locus.
 #[derive(Debug, Serialize)]
-pub(crate) struct SampleLocusObservationResult {
-    pub(crate) read_name: String,
-    pub(crate) read_sha256: String,
-    pub(crate) orientation: Orientation,
-    pub(crate) state: LocusState,
+pub(crate) struct SampleLocusDifferenceObservationResult {
+    pub(crate) read: usize,
+    pub(crate) state: LocusDifferenceState,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) base: Option<char>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -69,9 +66,7 @@ pub(crate) struct SampleVariantResult {
 /// One read contributing to a normalized variant.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleVariantSupportResult {
-    pub(crate) read_name: String,
-    pub(crate) read_sha256: String,
-    pub(crate) orientation: Orientation,
+    pub(crate) read: usize,
     pub(crate) eligible: bool,
     pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
     pub(crate) calls: Vec<SampleVariantCallResult>,
