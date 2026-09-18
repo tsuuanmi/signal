@@ -24,6 +24,14 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-BIO-003:** A single chromatogram produces read-level evidence, not a sample-level biological conclusion.
 - **INV-BIO-004:** A derived confidence value is not an error probability or Phred score unless separately calibrated and validated.
 
+## Read placement and sample boundaries
+
+- **INV-READ-001:** Every trace is scientifically processed and placed independently before any cross-read reconciliation.
+- **INV-READ-002:** Read orientation and covered reference segments are derived from alignment evidence; filename, amplicon/HV label, primer label, and declared F/R direction do not constrain default placement.
+- **INV-READ-003:** Cross-read reconciliation uses normalized reference-coordinate/event space rather than canonical F/R pairs as exclusive merge keys.
+- **INV-READ-004:** A missing canonical partner does not invalidate an otherwise admitted read; optional assay metadata remains provenance or post-mapping QC unless a separately specified method explicitly says otherwise.
+- **INV-SAMPLE-001:** A future consensus sequence is a downstream projection, not the authoritative source of sample variants or discordance.
+
 ## Pipeline
 
 - **INV-PIPE-001:** Scientific stages consume validated output from earlier stages and do not silently re-parse or reinterpret external inputs.
