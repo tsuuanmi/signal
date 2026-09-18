@@ -2,62 +2,61 @@
 
 ## Purpose
 
-Validates one-file cardinality and path types, then loads every input exactly
-once.
+Validates command-specific path cardinality and filesystem types, then loads each
+declared input exactly once.
 
 ## Responsibilities
 
-- Require command-specific AB1 and optional analysis-reference inputs to be
-  non-empty regular files.
+- Require every declared AB1 and reference input to be a non-empty regular file.
 - Load the strict configuration and require its source file to exist.
-- Derive `results/<trace-stem>.json` for analysis or
-  `results/<trace-stem>.basecalls.json` for basecall, rejecting an existing target
-  or a parent path that exists but is not a directory.
-- Load the chromatogram and, only for analysis, the reference into validated models.
+- Derive the command-specific output target and reject an existing target or a
+  parent path that exists but is not a directory.
+- Load one chromatogram for `analyze`/`basecall`, or one or more chromatograms
+  for `sample`; load the reference only for reference-guided commands.
+- Validate the sample identifier used only for deterministic sample result/log
+  naming.
 
 ## Non-responsibilities
 
-No directory scanning, globs, manifests, or multi-file discovery.
+No directory scanning, globs, manifests, scientific placement, reconciliation, or
+algorithm execution.
 
 ## Key types and functions
 
 - `AnalysisInputs`: loaded config, chromatogram, reference, and analysis target.
 - `BasecallInputs`: loaded config, chromatogram, and reference-free target.
-- `SampleInputs`: loaded config, one or more chromatograms, shared reference, and sample-evidence target.
-- `load_analysis(args)`, `load_basecall(args)`, and `load_sample(args)`: command-specific entry points.
-- `require_regular_file(path, kind)`: shared path-type validation.
-- `trace_stem(trace) -> Result<&str>`: validates and shares the UTF-8 stem used by
-  result and log paths.
+- `SampleInputs`: loaded config, one or more chromatograms, shared reference, and
+  sample-evidence target.
+- `load_analysis(args)`, `load_basecall(args)`, and `load_sample(args)`:
+  command-specific entry points.
+- `trace_stem(trace) -> Result<&str>`: validates the UTF-8 stem used by
+  single-read result/log paths.
+- `validate_sample_id(sample_id)`: accepts 1..=128 ASCII characters beginning
+  with an alphanumeric and otherwise limited to alphanumeric, `_`, `.`, or
+  `-`.
 
 ## Invariants and errors
 
-- The trace, and the reference for analysis, must be non-empty regular files;
-  otherwise `Error::Read` or `Error::Path`.
-- The output target must not already exist; otherwise `Error::Path`.
-- The output parent path must not exist as a non-directory; otherwise
-  `Error::Path`. A missing parent is permitted and created at publication time.
-- The configuration source file must exist; otherwise `Error::Read`.
+- Required files must be non-empty regular files.
+- Output targets must not already exist.
+- A missing output parent is allowed and created only at publication time.
+- Sample IDs affect naming/provenance only; they never influence placement.
+- No manifest/list compatibility input is accepted by the core CLI.
 
 ## Dependencies
 
 - `cli` for `AnalyzeArgs`, `BasecallArgs`, and `SampleArgs`.
-- `config`, `reference`, `trace`.
-- `model::reference` and `model::trace`.
-- `error` for `Error`/`Result`.
+- `config`, `reference`, `trace`, validated model types, and `error`.
 
 ## Biological semantics
 
-None; this module is purely about input validation and loading.
+None; this module validates and loads declared inputs only.
 
 ## Tests
 
-No dedicated unit tests; behavior is exercised through the integration tests.
+CLI/integration tests exercise command cardinality, invalid paths, invalid sample
+IDs, and no-overwrite behavior.
 
 ## Status
 
 Implemented.
-
-
-## Sample inputs
-
-`load_sample` validates a 1..=128 character ASCII sample ID, one or more regular non-empty AB1 paths, one shared reference, the authoritative configuration, and the derived `results/<sample-id>.sample.json` target before decoding traces. Sample IDs are naming/provenance only and never influence placement.
