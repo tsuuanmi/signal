@@ -25,3 +25,4 @@
 | [0020](0020-rust-as-correctness-architecture.md) | Use Rust as correctness architecture, not only as an implementation language | Accepted |
 | [0021](0021-scientific-core-confidence-floor.md) | Define a scientific core confidence floor | Accepted |
 | [0022](0022-documentation-knowledge-system.md) | Govern documentation as an executable knowledge system | Accepted |
+| [0023](0023-evidence-derived-read-placement-and-sample-boundary.md) | Derive read placement from evidence and reconcile samples from read observations | Accepted |\n
