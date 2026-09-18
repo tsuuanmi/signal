@@ -8,7 +8,7 @@ Defines internal sample-level scientific evidence after independent read analysi
 
 - Retain every contributing read by SHA-256, derived orientation, mapped reference segments, and circular-origin status.
 - Represent covered reference loci as per-read aligned observations with explicit `reference`, `alternate`, `unresolved`, or `deletion` state.
-- Retain normalized reportable variant events separately from raw locus observations, with factorized read/orientation support.
+- Retain normalized canonical variant observations separately from locus observations, with factorized read/orientation support plus configured eligibility and exclusion reasons.
 - Bind the sample evidence to one reference and one scientific configuration identity.
 
 ## Non-responsibilities
