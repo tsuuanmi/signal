@@ -19,7 +19,6 @@ pub(crate) enum LocusState {
 #[derive(Debug, Clone)]
 pub(crate) struct SampleReadAlignmentEvidence {
     pub(crate) orientation: Orientation,
-    pub(crate) score: i64,
     pub(crate) callable_bases: usize,
     pub(crate) identity: f64,
     pub(crate) mismatches: usize,
