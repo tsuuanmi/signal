@@ -2,23 +2,50 @@
 
 `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>`
 writes one deterministic `results/<sample-id>.sample.json` document identified as
-`signal.sample_evidence/v1`. The authoritative schema is
-[`schemas/sample-evidence-v1.schema.json`](schemas/sample-evidence-v1.schema.json)
+`signal.sample_evidence/v2`. The authoritative schema is
+[`schemas/sample-evidence-v2.schema.json`](schemas/sample-evidence-v2.schema.json)
 and the example is
-[`examples/sample-evidence-v1.example.json`](examples/sample-evidence-v1.example.json).
+[`examples/sample-evidence-v2.example.json`](examples/sample-evidence-v2.example.json).
 
 The sample identifier is validated naming/provenance data only. It does not
 constrain read placement, orientation, overlap, or variant reconciliation.
 
-## Reads
+## Reads and coverage
 
-`reads[]` contains one record per unique input SHA-256. `name` is the UTF-8 AB1 basename retained for reviewer-facing provenance; `sha256` remains the stable content identity. The nested `alignment` object contains the evidence-derived orientation, callable-base count, callable identity, gap-open count, unresolved-base count, one or two 0-based half-open reference segments, and origin-wrap status. Records are sorted by SHA-256, so input argument order does not change the scientific ordering. Renaming an input changes provenance display only; it does not affect placement or reconciliation.
+`reads[]` is the one registry of contributing reads. Records are sorted by
+SHA-256, so CLI argument order does not change the scientific document.
 
-## Loci
+Each record contains:
 
-`loci[]` contains only reference positions observed by at least one aligned read.
-Each locus has a 1-based `position`, the reference base, and one or more read
-observations.
+- `name`: UTF-8 AB1 basename for reviewer-facing provenance;
+- `sha256`: stable content identity;
+- `alignment`: the evidence-derived orientation, callable-base count and
+  identity, unresolved-base count, gap-open count, mapped reference segments, and
+  origin-wrap state.
+
+Every `read` integer elsewhere in the document is the 0-based index into this
+array. Read name, SHA-256, and orientation are intentionally not repeated in locus
+or variant records.
+
+Filename semantics are never scientific placement input. Renaming a file changes
+display provenance only; duplicate detection, ordering, placement, overlap, and
+variant reconciliation remain content/alignment driven.
+
+`reference_segments` are 0-based half-open. For a segment
+`{"start": S, "end": E}`, the covered 1-based biological positions are
+`S + 1` through `E`, inclusive. A position outside every segment for a read is
+uncovered by that read.
+
+## Sparse locus differences
+
+`locus_differences[]` contains only reference positions where at least one
+covering read is not a canonical reference match. Dense per-position reference
+records are deliberately omitted.
+
+At a retained locus, `observations[]` contains every read that covers that locus,
+including any read that agrees with the reference. This keeps explicit
+reference-support quality at scientifically interesting positions without
+serializing thousands of routine reference matches.
 
 Observation states are:
 
@@ -27,33 +54,63 @@ Observation states are:
 - `unresolved`: query or reference base is not canonically comparable;
 - `deletion`: the selected alignment contains a query gap at that reference base.
 
-Every locus observation retains `read_name` plus `read_sha256`, so reviewers can identify the contributing file without using filenames as scientific keys. Non-deletion observations retain the reference-oriented aligned `base`, original 0-based call `index`, and uncalibrated `relative_quality`. Deletions do not fabricate call or quality evidence.
+Called observations retain `base`, original 0-based call `index`, and
+uncalibrated `relative_quality`. Deletions do not fabricate call or quality
+evidence.
 
-A read absent from a locus contributes no observation. Absence is uncovered
-evidence, never implicit reference support.
+The compact default is therefore explicit:
+
+- inside a read's mapped reference segments, absence of that locus from
+  `locus_differences[]` means that read is a canonical reference match there;
+- outside the read's mapped segments, the position is uncovered;
+- at a retained differential locus, the explicit observations are authoritative.
+
+This preserves the distinction between reference support and missing coverage
+without emitting routine reference loci one by one.
+
+Inserted query columns have no reference-coordinate locus. They are represented
+through normalized variant evidence rather than fabricated locus observations.
 
 ## Variants
 
 `variants[]` aggregates normalized canonical read-level observations by
 `(position, reference, alternate, kind)` before configured eligibility removes
-them from the single-read report. Each support record contains `read_name`, `read_sha256`, the derived orientation, an `eligible` flag, the exact configured `exclusion_reasons`, and concise `calls[]` pointers. A call pointer carries its role, original 0-based call `index`, optional 1-based aligned reference `position`, and 0-based ABIF `ploc`, allowing a reviewer to drill into the corresponding per-read analysis without duplicating chromatogram payloads.
+them from the single-read report.
+
+Each support record contains:
+
+- `read`: index into top-level `reads[]`;
+- `eligible`: whether the read-level candidate satisfies configured reporting
+  eligibility;
+- `exclusion_reasons`: exact failed configured rules when ineligible;
+- `calls[]`: concise original-call pointers.
+
+A call pointer contains its role, original 0-based call `index`, optional
+1-based aligned reference `position`, and 0-based ABIF `ploc`. This permits a
+reviewer to drill into the corresponding per-read analysis without duplicating
+chromatogram payloads.
 
 An eligible support has an empty exclusion list. An ineligible support retains one
 or more reasons such as `outside_configured_region`,
 `peak_below_minimum`, or
-`relative_quality_not_above_threshold`. Thus a normalized variant observed by two
-reads remains a two-read observation even if only one read satisfies reporting
-thresholds.
+`relative_quality_not_above_threshold`. A normalized variant observed by a read
+remains sample evidence even when that read is not eligible for single-read
+reporting.
 
-Locus evidence and variant evidence intentionally answer different questions.
-`loci[]` preserves aligned reference-position observations, including canonical
-mismatches that cannot become a normalized/reportable variant. `variants[]` preserves
-normalized canonical variant identity plus per-read eligibility. Non-canonical or
-over-limit differences that cannot form a valid normalized variant remain exclusion
-diagnostics rather than fabricated variant records.
+## Contract boundary
+
+v2 is intentionally sparse and difference-focused. It does not serialize
+per-base quality for loci where every covering read agrees with the reference.
+The scientific pipeline still processes each read independently before sample
+aggregation; future interpretation that needs additional focused evidence should
+derive it from those read observations rather than reintroducing a dense
+whole-coverage table.
+
+The current implementation emits v2 only. There is no v1 alias or compatibility
+output.
 
 ## Non-goals
 
-The v1 contract contains no consensus sequence, sample-level adjudicated variant verdict,
-majority-vote result, genotype, heteroplasmy estimate, haplogroup interpretation,
-F/R pair object, primer/HV label, or filename-derived placement.
+The v2 contract contains no consensus sequence, sample-level adjudicated variant
+verdict, majority-vote result, genotype, heteroplasmy estimate, haplogroup
+interpretation, F/R pair object, primer/HV label, or filename-derived placement.
