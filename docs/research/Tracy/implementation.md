@@ -70,8 +70,8 @@ src/model/variant.rs
 src/variant_calling/filter.rs
 docs/src/model/variant.md
 docs/src/variant_calling/filter.md
-docs/pipeline.md
-docs/json-output.md or next schema docs if warnings change
+docs/methods/pipeline.md
+docs/contracts/README.md and the versioned schema if warnings change
 focused tests
 ```
 
