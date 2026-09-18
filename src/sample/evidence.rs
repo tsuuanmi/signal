@@ -245,7 +245,8 @@ mod tests {
     use crate::model::alignment::{
         Alignment, AlignmentColumn, AlignmentMetrics, Orientation, ReferenceSegment,
     };
-    use crate::model::basecalls::BaseCalls;
+    use crate::model::basecalls::{BaseCall, BaseCalls, ChannelPeak, PeakSource};
+    use crate::model::nucleotide::Nucleotide;
     use crate::model::quality::{CallQuality, QualityControlResult};
     use crate::model::read_observation::ReadObservation;
     use crate::model::signal::SignalAnalysis;
@@ -291,8 +292,26 @@ mod tests {
             reference_sha256: reference_sha256.into(),
             configuration_sha256: configuration_sha256.into(),
             calls: BaseCalls {
-                calls: Vec::new(),
-                primary_sequence: String::new(),
+                calls: (0..call_count)
+                    .map(|index_0based| BaseCall {
+                        index_0based,
+                        ploc_0based: index_0based * 10,
+                        window_start_0based: index_0based * 10,
+                        window_end_0based_exclusive: index_0based * 10 + 1,
+                        peaks: Nucleotide::ALL.map(|base| ChannelPeak {
+                            base,
+                            height: 100,
+                            position_0based: index_0based * 10,
+                            source: PeakSource::LocalMaximum,
+                        }),
+                        primary_peak_evidence: None,
+                        primary: 'G',
+                        ambiguity: 'G',
+                        qualifying_channels: vec![Nucleotide::G],
+                        vendor_agrees: None,
+                    })
+                    .collect(),
+                primary_sequence: "G".repeat(call_count),
             },
             signal: SignalAnalysis {
                 call_metrics: Vec::new(),
@@ -352,7 +371,11 @@ mod tests {
             reference: reference.into(),
             alternate: alternate.into(),
             kind: VariantKind::Snv,
-            calls: Vec::new(),
+            calls: vec![VariantCallMapping {
+                role: VariantCallRole::Supporting,
+                call_index_0based: 0,
+                reference_position_0based: Some(position_1based - 1),
+            }],
         }
     }
 
@@ -392,6 +415,18 @@ mod tests {
         assert_eq!(evidence.variants.len(), 1);
         assert_eq!(evidence.variants[0].support.len(), 2);
         assert_eq!(evidence.variants[0].support[0].input_name, "a.ab1");
+        assert_eq!(evidence.variants[0].support[0].calls.len(), 1);
+        assert_eq!(
+            evidence.variants[0].support[0].calls[0].role,
+            VariantCallRole::Supporting
+        );
+        assert_eq!(evidence.variants[0].support[0].calls[0].call_index_0based, 0);
+        assert_eq!(
+            evidence.variants[0].support[0].calls[0].reference_position_1based,
+            Some(73)
+        );
+        assert_eq!(evidence.variants[0].support[0].calls[0].ploc_0based, 0);
+        assert_eq!(evidence.reads[0].alignment.callable_bases, 0);
         Ok(())
     }
 
