@@ -15,7 +15,7 @@ pub(crate) struct SampleEvidenceResult {
     pub(crate) provenance: SampleProvenanceResult,
     pub(crate) reads: Vec<SampleReadResult>,
     pub(crate) loci: Vec<SampleLocusResult>,
-    pub(crate) events: Vec<SampleEventResult>,
+    pub(crate) variants: Vec<SampleVariantResult>,
 }
 
 /// Scientific identities shared by every sample read.
@@ -28,6 +28,7 @@ pub(crate) struct SampleProvenanceResult {
 /// Concise placement of one independently processed sample read.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleReadResult {
+    pub(crate) name: String,
     pub(crate) sha256: String,
     pub(crate) orientation: Orientation,
     pub(crate) reference_segments: Vec<IntervalResult>,
@@ -45,6 +46,7 @@ pub(crate) struct SampleLocusResult {
 /// One read's aligned observation at a locus.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleLocusObservationResult {
+    pub(crate) read_name: String,
     pub(crate) read_sha256: String,
     pub(crate) orientation: Orientation,
     pub(crate) state: LocusState,
@@ -56,19 +58,20 @@ pub(crate) struct SampleLocusObservationResult {
     pub(crate) relative_quality: Option<u8>,
 }
 
-/// One normalized observed event and its supporting reads.
+/// One normalized observed variant and its supporting reads.
 #[derive(Debug, Serialize)]
-pub(crate) struct SampleEventResult {
+pub(crate) struct SampleVariantResult {
     pub(crate) position: usize,
     pub(crate) reference: String,
     pub(crate) alternate: String,
     pub(crate) kind: VariantKind,
-    pub(crate) support: Vec<SampleEventSupportResult>,
+    pub(crate) support: Vec<SampleVariantSupportResult>,
 }
 
-/// One read contributing to a normalized event.
+/// One read contributing to a normalized variant.
 #[derive(Debug, Serialize)]
-pub(crate) struct SampleEventSupportResult {
+pub(crate) struct SampleVariantSupportResult {
+    pub(crate) read_name: String,
     pub(crate) read_sha256: String,
     pub(crate) orientation: Orientation,
     pub(crate) eligible: bool,
