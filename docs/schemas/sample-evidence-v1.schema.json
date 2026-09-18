@@ -360,7 +360,9 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/variantCall"
-          }
+          },
+          "minItems": 1,
+          "uniqueItems": true
         }
       },
       "allOf": [
