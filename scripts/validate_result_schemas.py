@@ -158,12 +158,20 @@ def rejected_sample_shapes(
     unknown_field["consensus"] = "ACGT"
     empty_support = copy.deepcopy(example)
     empty_support["events"][0]["support"] = []
+    eligible_with_reason = copy.deepcopy(example)
+    eligible_with_reason["events"][0]["support"][0]["exclusion_reasons"] = [
+        "peak_below_minimum"
+    ]
+    ineligible_without_reason = copy.deepcopy(example)
+    ineligible_without_reason["events"][0]["support"][0]["eligible"] = False
     return [
         ("sample evidence with no reads", missing_reads),
         ("sample evidence with invalid sample id", invalid_sample_id),
         ("deletion observation carrying a base", verbose_deletion),
         ("sample evidence with consensus field", unknown_field),
         ("sample event with no supporting reads", empty_support),
+        ("eligible sample event support with exclusion reason", eligible_with_reason),
+        ("ineligible sample event support without exclusion reason", ineligible_without_reason),
     ]
 
 
