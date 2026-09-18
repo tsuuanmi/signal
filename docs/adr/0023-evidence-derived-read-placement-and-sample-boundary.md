@@ -18,7 +18,7 @@ Signal adopts the following production architecture:
 1. Every trace is processed independently through signal-derived calling, signal analysis, quality control, evidence-driven reference alignment, and read-level variant extraction.
 2. The resulting one-read scientific product is represented by `ReadObservation`.
 3. Read orientation and covered reference segments are derived from alignment evidence, not filename, HV label, primer name, declared F/R direction, or an expected-region constraint.
-4. Future sample reconciliation will consume `ReadObservation[]` in normalized reference-coordinate/event space.
+4. Future sample reconciliation will consume `ReadObservation[]` in normalized reference-coordinate/variant space.
 5. Canonical F/R pairing, amplicon, primer, and replicate identity are optional provenance/support dimensions, not exclusive merge keys.
 6. A consensus sequence, when introduced, is a downstream projection. Sample variants and discordance must not be defined by diffing a flattened consensus string.
 
