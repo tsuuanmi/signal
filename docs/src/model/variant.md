@@ -7,7 +7,7 @@ original trace calls.
 
 ## Responsibilities
 
-- Represent normalized observed candidates, configured-eligible reported variants, the variant stage output, and each variant-associated call's role and original-call identity.
+- Represent normalized observed variants, configured-eligible reported variants, the variant stage output, and each variant-associated call's role and original-call identity.
 - Carry optional biological reference positions for each mapped call.
 - Represent every excluded candidate with a stable reason list and a concise,
   allele-free identity for pipeline logging.
