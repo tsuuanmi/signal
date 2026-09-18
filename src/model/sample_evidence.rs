@@ -5,10 +5,11 @@ use serde::Serialize;
 use crate::model::alignment::{Orientation, ReferenceSegment};
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
-/// Non-reference state retained for one aligned reference locus.
+/// How one read observes a locus retained because at least one read differs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
-pub(crate) enum LocusDifferenceState {
+pub(crate) enum LocusState {
+    Reference,
     Alternate,
     Unresolved,
     Deletion,
@@ -34,17 +35,17 @@ pub(crate) struct SampleReadEvidence {
     pub(crate) alignment: SampleReadAlignmentEvidence,
 }
 
-/// One non-reference observation at a covered reference locus.
+/// One observation at a covered locus retained because the sample differs there.
 #[derive(Debug, Clone)]
 pub(crate) struct LocusDifferenceObservation {
     pub(crate) read_index: usize,
-    pub(crate) state: LocusDifferenceState,
+    pub(crate) state: LocusState,
     pub(crate) base: Option<char>,
     pub(crate) call_index_0based: Option<usize>,
     pub(crate) relative_quality: Option<u8>,
 }
 
-/// Non-reference observations retained at one reference locus.
+/// All covering-read observations retained at one differential reference locus.
 #[derive(Debug, Clone)]
 pub(crate) struct LocusDifferenceEvidence {
     pub(crate) position_1based: usize,
