@@ -366,19 +366,11 @@ Compact output might summarize:
     "forward": 2,
     "reverse": 1,
     "amplicons": 2
-  },
-  "observations": {
-    "total": 3,
-    "forward": 2,
-    "reverse": 1
   }
 }
 ```
 
 Full low-level evidence can remain internal or available in a separate research/debug format.
-
----
-
 
 ---
 
