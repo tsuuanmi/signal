@@ -2,8 +2,8 @@
 
 use crate::error::Result;
 use crate::model::basecalls::BaseCalls;
-use crate::model::reference::Reference;
 use crate::model::read_observation::ReadObservation;
+use crate::model::reference::Reference;
 use crate::model::result::{
     AlignmentResult, AnalysisResult, InputResult, IntervalResult, ProvenanceResult, ReadResult,
     ReferenceResult, WarningSummaryResult,
