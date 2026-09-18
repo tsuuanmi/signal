@@ -106,11 +106,11 @@ fn run_logged(
         module_path!(),
         line!(),
         format_args!(
-            "event=sample_aggregation_completed elapsed_ms={} reads={} loci={} events={}",
+            "event=sample_aggregation_completed elapsed_ms={} reads={} loci={} variants={}",
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
             evidence.loci.len(),
-            evidence.events.len()
+            evidence.variants.len()
         ),
     )?;
 
@@ -124,7 +124,7 @@ fn run_logged(
     })?;
     let reads = result.reads.len();
     let loci = result.loci.len();
-    let events = result.events.len();
+    let variants = result.variants.len();
     let schema_version = result.schema_version;
     let bytes = report::serialize(&result)?;
 
@@ -135,14 +135,14 @@ fn run_logged(
         format_args!(
             concat!(
                 "event=sample_result_ready_for_publication elapsed_ms={} total_elapsed_ms={} ",
-                "schema={} reads={} loci={} events={} read_warnings={} output_path={:?} bytes={}"
+                "schema={} reads={} loci={} variants={} read_warnings={} output_path={:?} bytes={}"
             ),
             stage_started.elapsed().as_millis(),
             started.elapsed().as_millis(),
             schema_version,
             reads,
             loci,
-            events,
+            variants,
             warning_total,
             output.display().to_string(),
             bytes.len()
