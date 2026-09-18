@@ -5,8 +5,8 @@ use crate::model::reference::Reference;
 use crate::model::result::{IntervalResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
-    SampleEventResult, SampleEventSupportResult, SampleEvidenceResult, SampleLocusObservationResult,
-    SampleLocusResult, SampleProvenanceResult, SampleReadResult,
+    SampleEventResult, SampleEventSupportResult, SampleEvidenceResult,
+    SampleLocusObservationResult, SampleLocusResult, SampleProvenanceResult, SampleReadResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
