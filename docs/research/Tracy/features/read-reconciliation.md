@@ -342,12 +342,14 @@ Before a read contributes, evaluate it independently:
 
 - valid read pipeline result;
 - sufficient retained evidence;
-- acceptable reference placement;
-- expected-region consistency when configured;
-- orientation consistency when configured;
+- unique/acceptable evidence-derived reference placement;
 - artifact burden;
 - alignment quality;
-- enough overlap with the sample target.
+- enough mapped evidence to contribute locally.
+
+Optional declared amplicon/direction/primer metadata is checked only after
+mapping and should normally produce provenance/QC warnings rather than change
+placement or admission.
 
 A weak read should not be admitted merely because other reads support the same
 sequence. That would allow sample expectation to leak backward into read
@@ -506,3 +508,46 @@ is not required for reconciliation.
 
 In data models, optional assay grouping should remain visibly optional rather
 than being synthesized from filenames.
+
+
+## Concrete placement handoff from current Signal
+
+The sample layer should not rediscover read coverage.
+
+Current single-read alignment already returns:
+
+~~~text
+orientation
+reference_segments
+wraps_origin
+alignment columns
+alignment metrics
+~~~
+
+These are the authoritative placement facts.
+
+Therefore the handoff should be:
+
+~~~text
+QualityControlResult
+   ->
+align_best(...)
+   ->
+Alignment
+   ->
+ReadObservation::from_alignment(...)
+~~~
+
+not:
+
+~~~text
+filename/HV label
+   ->
+guess region
+   ->
+sample-specific aligner
+~~~
+
+For a set of unlabeled traces, each `Alignment.reference_segments` determines
+which sample coordinates that read can contribute to. Pairing and overlap then
+emerge from coordinates rather than file naming.

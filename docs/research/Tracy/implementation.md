@@ -415,3 +415,82 @@ At minimum:
 For consensus or mixed-template work, real-data claims require approved
 replicates or controlled mixtures with known truth. Tracy is a design reference,
 not ground truth for Signal.
+
+
+## Implementation note: self-locating reads require no new HV-region detector
+
+The current production alignment core already implements the essential
+placement mechanism needed by sample analysis.
+
+`alignment::gotoh::align()` is semi-global with free reference flanks:
+
+- query must be consumed;
+- query may start at any reference column;
+- all reference endpoints are considered after the query is consumed.
+
+`traceback::decode()` returns the resulting `start_reference` and
+`end_reference`.
+
+`alignment::orient::align_best()` already:
+
+- tries native and reverse-complement query orientation;
+- rejects unresolved orientation ties;
+- rejects multiple equally scoring placements;
+- enforces callable/identity thresholds;
+- projects linear/circular results into `reference_segments`;
+- records origin wrapping.
+
+Therefore the sample implementation should first introduce a read-level domain
+object that **reuses** the selected `Alignment` instead of writing a second
+placement algorithm.
+
+Suggested integration:
+
+~~~text
+existing analyze/read pipeline
+        |
+        v
+Alignment
+        |
+        v
+ReadObservation
+        |
+        +--> orientation
+        +--> reference_segments
+        +--> alignment columns
+        +--> call/PLOC evidence
+        +--> local contribution eligibility
+        |
+        v
+SampleEvidence aggregation
+~~~
+
+The future evidence-profile scorer may change how alignment cells are scored,
+but it should preserve this placement contract.
+
+### Do not copy Tracy's orientation tie behavior
+
+Tracy has inconsistent equality choices:
+
+- `sage.h`: forward only when `gsFwd > gsRev`; equality selects reverse;
+- reference-guided `assemble.h`: forward when `gsFwd >= gsRev`; equality
+  selects forward;
+- pairwise `consensus.h`: equality selects reverse.
+
+Signal's current explicit failure on an unresolved orientation tie is preferable
+and should remain an invariant.
+
+### Do not use pairwise consensus to locate reads
+
+Tracy pairwise consensus discovers relative orientation/overlap only. It has no
+genomic coordinate frame.
+
+For Signal sample analysis:
+
+~~~text
+reference alignment first
+sample reconciliation second
+~~~
+
+Pairwise trace-to-trace comparison may later be useful as a consistency signal,
+but it must not replace authoritative reference-coordinate placement.

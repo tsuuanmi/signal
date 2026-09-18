@@ -43,3 +43,51 @@ region.
 If a future large-reference workflow introduces metadata-assisted candidate
 search for performance, that behavior must be explicit, optional, separately
 versioned, and must retain an unbiased fallback/validation path.
+
+
+## Implementation rationale from Tracy
+
+Tracy demonstrates two ways to achieve evidence-driven placement.
+
+For a short FASTA, it uses semi-global profile alignment with free reference
+flanks. The query trace must align, while unused reference prefix/suffix does
+not penalize the score. The traceback therefore determines the covered reference
+interval.
+
+For a large indexed genome, Tracy uses exact k-mer anchoring only to propose a
+candidate local slice, then performs profile alignment inside that slice.
+
+The common invariant is:
+
+~~~text
+read evidence
+    ->
+placement algorithm
+    ->
+mapped region
+~~~
+
+not:
+
+~~~text
+declared assay region
+    ->
+restricted search
+    ->
+mapped region
+~~~
+
+## Signal implementation consequence
+
+Current Signal already has the required short-reference primitive.
+
+`gotoh::align()` returns a traceback-derived `start_reference` and
+`end_reference`. `align_best()` independently evaluates forward and
+reverse-complement query orientations and projects the selected placement into
+one or two `reference_segments` for circular references.
+
+Future sample code should consume those fields directly.
+
+This ADR therefore does not require a new region classifier. It requires that
+sample-level APIs preserve and trust the existing evidence-derived placement and
+keep optional assay labels downstream.

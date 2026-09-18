@@ -223,3 +223,52 @@ local observations.
 
 A two-read F/R fixture validates the generic model; it must not be a separate
 implementation path.
+
+
+## Self-location validation
+
+Before sample reconciliation is promoted, directly test the placement invariant
+that users do not need to declare the covered region.
+
+Required cases:
+
+1. **filename invariance**
+   - same AB1 copied/renamed to HV1F, HV3R, and an opaque name;
+   - identical orientation and reference segments are required.
+
+2. **metadata invariance**
+   - same AB1 with no labels, correct labels, and deliberately wrong labels;
+   - scientific placement must be unchanged;
+   - only post-mapping metadata/QC may differ.
+
+3. **internal-reference placement**
+   - reads beginning at several different mtDNA coordinates;
+   - verify exact half-open mapped segments.
+
+4. **reverse orientation**
+   - reverse-direction read without a direction label;
+   - orientation must be inferred from alignment.
+
+5. **cross-origin read**
+   - read spanning the circular origin;
+   - verify two reference segments and `wraps_origin = true`.
+
+6. **placement ambiguity**
+   - repetitive/equally scoring placements;
+   - must remain explicit rather than resolved by filename or expected amplicon.
+
+7. **orientation tie**
+   - equal forward/reverse support;
+   - must fail explicitly under the current Signal contract.
+
+8. **cross-amplicon overlap discovery**
+   - independently mapped reads whose spans partially overlap;
+   - sample aggregation must discover overlap from coordinates alone.
+
+9. **pairwise-vs-reference distinction**
+   - two traces that overlap each other but are not yet reference-mapped;
+   - pairwise overlap must not be treated as genomic coverage.
+
+The first implementation should test these properties using the current
+primary-sequence aligner before introducing evidence-profile scoring. The same
+tests then become regression tests for the future profile-aware scorer.
