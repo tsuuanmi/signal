@@ -93,7 +93,7 @@ pub struct ExcludedVariant {
     pub(crate) reasons: Vec<VariantExclusionReason>,
 }
 
-/// One normalized canonical event observed before configured eligibility filtering.
+/// One normalized canonical variant observed before configured eligibility filtering.
 #[derive(Debug, Clone)]
 pub struct ObservedVariant {
     pub(crate) variant: Variant,
