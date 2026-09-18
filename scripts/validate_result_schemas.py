@@ -193,7 +193,10 @@ def rejected_sample_shapes(
     return [
         ("sample evidence with no reads", missing_reads),
         ("sample evidence with invalid sample id", invalid_sample_id),
-        ("sparse difference locus with only reference observations", all_reference_locus),
+        (
+            "sparse difference locus with only reference observations",
+            all_reference_locus,
+        ),
         ("deletion difference carrying called-base fields", verbose_deletion),
         ("sample evidence with negative read reference", negative_read),
         ("sample support with repeated read identity", repeated_identity),
