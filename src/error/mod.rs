@@ -54,6 +54,9 @@ pub enum Error {
     /// Variant extraction or normalization failed.
     #[error("variant calling failed: {0}")]
     Variant(String),
+    /// Sample-level read evidence is inconsistent or invalid.
+    #[error("sample evidence failed: {0}")]
+    Sample(String),
     /// A completed model could not be assembled consistently.
     #[error("failed to assemble analysis report: {0}")]
     Report(String),
