@@ -81,7 +81,8 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
             entry.observations.push(observation);
         }
 
-        for variant in &read.variants.reported {
+        for observed in &read.variants.observed {
+            let variant = &observed.variant;
             let key = EventKey {
                 position_1based: variant.position_1based,
                 reference: variant.reference.clone(),
@@ -91,6 +92,8 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
             events.entry(key).or_default().push(EventSupport {
                 input_sha256: read.input_sha256.clone(),
                 orientation: read.alignment.orientation,
+                eligible: observed.eligible(),
+                exclusion_reasons: observed.exclusion_reasons.clone(),
             });
         }
     }
@@ -193,7 +196,9 @@ mod tests {
     use crate::model::quality::{CallQuality, QualityControlResult};
     use crate::model::read_observation::ReadObservation;
     use crate::model::signal::SignalAnalysis;
-    use crate::model::variant::{Variant, VariantCallingResult, VariantKind};
+    use crate::model::variant::{
+        ObservedVariant, Variant, VariantCallingResult, VariantExclusionReason, VariantKind,
+    };
 
     use super::*;
 
@@ -216,6 +221,14 @@ mod tests {
                 penalty: 0,
                 relative_quality_score: 50,
                 vendor_quality_applies: false,
+            })
+            .collect();
+        let observed = variants
+            .iter()
+            .cloned()
+            .map(|variant| ObservedVariant {
+                variant,
+                exclusion_reasons: Vec::new(),
             })
             .collect();
         ReadObservation {
@@ -257,6 +270,7 @@ mod tests {
             },
             variants: VariantCallingResult {
                 reported: variants,
+                observed,
                 excluded: Vec::new(),
             },
         }
@@ -320,6 +334,45 @@ mod tests {
         );
         assert_eq!(evidence.events.len(), 1);
         assert_eq!(evidence.events[0].support.len(), 2);
+        Ok(())
+    }
+
+    #[test]
+    fn preserves_filtered_event_observation_without_reporting_it() -> Result<()> {
+        let variant = snv(73, "A", "G");
+        let forward = observation(
+            "a",
+            "reference",
+            "config",
+            Orientation::Forward,
+            vec![column('G', 'A', Some(0), 72)],
+            vec![variant.clone()],
+        );
+        let mut reverse = observation(
+            "b",
+            "reference",
+            "config",
+            Orientation::Reverse,
+            vec![column('G', 'A', Some(0), 72)],
+            vec![variant],
+        );
+        reverse.variants.reported.clear();
+        reverse.variants.observed[0].exclusion_reasons =
+            vec![VariantExclusionReason::PeakBelowMinimum];
+
+        let evidence = aggregate(&[forward, reverse])?;
+
+        assert_eq!(evidence.events.len(), 1);
+        assert_eq!(evidence.events[0].support.len(), 2);
+        assert_eq!(evidence.events[0].support[0].input_sha256, "a");
+        assert!(evidence.events[0].support[0].eligible);
+        assert!(evidence.events[0].support[0].exclusion_reasons.is_empty());
+        assert_eq!(evidence.events[0].support[1].input_sha256, "b");
+        assert!(!evidence.events[0].support[1].eligible);
+        assert_eq!(
+            evidence.events[0].support[1].exclusion_reasons,
+            vec![VariantExclusionReason::PeakBelowMinimum]
+        );
         Ok(())
     }
 
