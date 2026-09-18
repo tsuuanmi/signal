@@ -6,14 +6,14 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 
 ## 2. Inputs and process boundary
 
-- **SRS-IN-001:** One invocation MUST accept exactly one regular non-empty AB1 path and derive exactly one output target. `analyze` MUST additionally require one regular non-empty FASTA path; `basecall` MUST NOT accept a reference. Directories, lists, manifests, globs, and repeated traces MUST NOT be accepted.
+- **SRS-IN-001:** `analyze` and `basecall` MUST accept exactly one regular non-empty AB1 path. `sample` MUST accept one sample identifier and one or more regular non-empty AB1 paths. Reference-guided commands MUST require one regular non-empty FASTA path; `basecall` MUST NOT accept a reference. Directories, manifest/list compatibility inputs, and globs MUST NOT be accepted by the core CLI.
 - **SRS-IN-002:** AB1 bytes MUST begin with `ABIF`; every directory count, size, product, offset, inline payload, and allocation MUST be checked before use.
 - **SRS-IN-003:** Canonical decode MUST require `DATA.9-12`, `FWO_.1`, and `PLOC.2`; FWO MUST be an exact A/C/G/T permutation; channels MUST be equally sized; PLOC MUST be strictly increasing and in range.
 - **SRS-IN-004:** `PLOC.2` is required; `PBAS.2` and `PCON.2` MAY be consumed as optional vendor evidence. `P2BA.1` MUST be ignored. Uppercase IUPAC vendor bases and the ABIF one-byte byte/char PCON representations MUST be accepted. No alternate-tag fallback is permitted.
 - **SRS-IN-005:** An `analyze` FASTA MUST contain exactly one non-empty A/C/G/T/N record no longer than 50,000 bases. `basecall` MUST perform no FASTA I/O.
 - **SRS-IN-006:** Empty, missing, malformed, unsupported, over-limit, or unreadable input MUST return a typed error without panic or result file.
 - **SRS-IN-007:** Generic ABIF directory parsing MUST follow the container specification rather than imposing scientific-tag assumptions globally. A directory item MUST contain at least its logical `element_size × element_count` payload; a larger `data_size` that is permitted by ABIF padding/reserved-space behavior MUST NOT by itself make the file invalid. Decoders for required scientific tags MAY impose stricter tag-specific type, element-size, cardinality, and semantic constraints.
-- **SRS-IN-010:** The reference-guided command MUST be `signal analyze <trace.ab1> --reference <reference.fasta>` and derive `results/<trace-stem>.json`. The reference-free command MUST be `signal basecall <trace.ab1>` and derive `results/<trace-stem>.basecalls.json`. No output-path or format compatibility option is permitted.
+- **SRS-IN-010:** The single-read reference-guided command MUST be `signal analyze <trace.ab1> --reference <reference.fasta>` and derive `results/<trace-stem>.json`. The reference-free command MUST be `signal basecall <trace.ab1>` and derive `results/<trace-stem>.basecalls.json`. The sample command MUST be `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>` and derive `results/<sample-id>.sample.json`. No output-path or format compatibility option is permitted.
 - **SRS-IN-011:** Help/version MUST succeed without reading analysis inputs.
 - **SRS-IN-012:** Invalid CLI arguments MUST produce concise stderr and nonzero status.
 
@@ -69,11 +69,11 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 
 ## 7.1 Future sample reconciliation contract
 
-- **SRS-SAMPLE-001:** Multi-read sample analysis MUST process every trace independently into a read observation before cross-read reconciliation.
+- **SRS-SAMPLE-001:** Multi-read sample analysis MUST process every trace independently through the same authoritative read-observation path used by single-read analysis before cross-read reconciliation.
 - **SRS-SAMPLE-002:** Cross-read overlap and support MUST be discovered from mapped reference coordinates/events rather than inferred from canonical F/R pair names.
 - **SRS-SAMPLE-003:** A usable read MUST NOT be rejected solely because a nominal F/R partner is missing.
-- **SRS-SAMPLE-004:** Future sample evidence MUST preserve factorized support topology, including contributing read identity and derived orientation; amplicon, primer, or replicate grouping is optional metadata and MUST NOT be treated as an exclusive scientific merge key.
-- **SRS-SAMPLE-005:** Future sample variants and discordance states MUST derive from aggregated read evidence. A consensus sequence MAY be emitted as a deterministic downstream projection but MUST NOT be the source from which sample variants are inferred.
+- **SRS-SAMPLE-004:** Sample evidence MUST preserve factorized support topology, including contributing input SHA-256 and derived orientation; amplicon, primer, filename, or replicate grouping MUST NOT be treated as an exclusive scientific merge key. Duplicate trace content MUST NOT contribute twice.
+- **SRS-SAMPLE-005:** Sample evidence MUST separate covered-locus alignment observations from normalized reportable variant-event support. Absence of a read observation at a locus MUST NOT count as reference support. Future sample variants and discordance states MUST derive from this evidence; a consensus sequence MAY be emitted only as a downstream projection.
 
 ## 8. Primary-sequence differences
 
@@ -91,8 +91,8 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 
 ## 9. JSON output
 
-- **SRS-OUT-001:** A successful core CLI invocation MUST create exactly one command-specific result: analysis at `results/<trace-stem>.json` or reference-free basecalls at `results/<trace-stem>.basecalls.json`. VCF/BCF, legacy JSON, duplicate compatibility output, and output-path/format compatibility options MUST NOT be created. Operational logging MUST remain a separate append-only sidecar.
-- **SRS-OUT-002:** Analysis JSON MUST validate against Draft 2020-12 `docs/schemas/analysis-v5.schema.json` and identify `signal.analysis/v5`. Basecall JSON MUST validate against `docs/schemas/basecalls-v1.schema.json` and identify `signal.basecalls/v1`. Strict configuration MUST remain schema version 4.
+- **SRS-OUT-001:** A successful core CLI invocation MUST create exactly one command-specific result: analysis at `results/<trace-stem>.json`, reference-free basecalls at `results/<trace-stem>.basecalls.json`, or sample evidence at `results/<sample-id>.sample.json`. VCF/BCF, legacy JSON, duplicate compatibility output, and output-path/format compatibility options MUST NOT be created. Operational logging MUST remain a separate append-only sidecar.
+- **SRS-OUT-002:** Analysis JSON MUST validate against Draft 2020-12 `docs/schemas/analysis-v5.schema.json` and identify `signal.analysis/v5`. Basecall JSON MUST validate against `docs/schemas/basecalls-v1.schema.json` and identify `signal.basecalls/v1`. Sample evidence JSON MUST validate against `docs/schemas/sample-evidence-v1.schema.json` and identify `signal.sample_evidence/v1`. Strict configuration MUST remain schema version 4.
 - **SRS-OUT-003:** Both JSON contracts MUST include compact input and configuration identities, read call count and trim interval, merged candidate-noisy regions, and warning counts. Analysis MUST additionally include reference identity, the selected alignment summary, and normalized variants with concise mapped calls; basecall MUST include primary, ambiguity, and retained sequences. Software/build provenance MUST remain absent until a stable versioning strategy is defined.
 - **SRS-OUT-004:** Analysis JSON MUST omit trace filenames, full primary/ambiguity/retained sequences, individual rolling windows, gapped alignment rows, operation runs, alignment score and redundant metrics, method constants, full A/C/G/T peak objects, penalties/calibration flags, vendor data, expanded configuration, variant contig/classification/normalization labels, and redundant warning fields. Basecall JSON MUST include full primary/ambiguity/retained sequences but omit reference, alignment, variants, rolling windows, per-call tables, peaks, penalties/calibration flags, and vendor data.
 - **SRS-OUT-005:** JSON MUST use concise context-defined coordinate names: biological `position` is 1-based; call `index` and `ploc` are 0-based; trim, reference-segment, and noisy-region `start`/`end` are 0-based half-open. Basecall primary and ambiguity lengths MUST equal `call_count`, and retained MUST equal the primary slice selected by trim.
