@@ -13,6 +13,8 @@ use crate::model::variant::VariantCallingResult;
 /// labels or filenames are not part of this scientific observation.
 pub(crate) struct ReadObservation {
     pub(crate) input_sha256: String,
+    pub(crate) reference_sha256: String,
+    pub(crate) configuration_sha256: String,
     pub(crate) calls: BaseCalls,
     pub(crate) signal: SignalAnalysis,
     pub(crate) quality: QualityControlResult,
