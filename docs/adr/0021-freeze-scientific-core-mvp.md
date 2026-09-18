@@ -16,7 +16,15 @@ The project needs a stable baseline before expanding scientific scope.
 
 ## Decision
 
-The active MVP will be defined by one narrow read-level vertical slice:
+The active MVP will be defined by one narrow read-level vertical slice and reviewed through three complementary lenses:
+
+- **signal processing:** what is measured in the chromatogram, what transformations are justified, and which evidence is preserved;
+- **biology:** what biological statement the evidence actually supports, and where Signal must remain unresolved or conservative;
+- **engineering:** how invariants, failure modes, determinism, schemas, and reproducibility are encoded so incorrect states are difficult to represent.
+
+No one lens is allowed to dominate the others. A mathematically elegant signal rule is insufficient if its biological meaning is unclear; a biologically plausible rule is insufficient if it cannot be implemented and validated deterministically; a strong Rust abstraction is insufficient if it models the wrong scientific concept.
+
+The active MVP is:
 
 ```text
 AB1
@@ -90,6 +98,8 @@ The following are explicitly **not required** to declare the basic MVP scientifi
 
 Existing implementations of deferred features do not need to be removed solely because they are outside the MVP. However, they must not block validation of the basic vertical slice, and they must not be presented as release-critical capabilities until separately validated.
 
+Normative SRS requirements for the active MVP must match this scope. Existing code may exceed the MVP, but the roadmap and SRS must not require deferred capabilities merely because they already exist.
+
 ### Scientific acceptance order
 
 The project should validate stages in biological dependency order:
@@ -144,3 +154,18 @@ real-data validation
 ## Guiding rule
 
 When choosing between adding a new feature and increasing confidence in the current biological core, prefer confidence in the core until the MVP acceptance evidence is complete.
+
+
+## Development readiness gate
+
+Implementation work may proceed when all of the following are true:
+
+1. the active MVP stages and non-goals are unambiguous;
+2. SRS requirements match the MVP scope without requiring deferred features;
+3. every stage has a defined input/output boundary and coordinate convention;
+4. failure and unresolved states are explicit rather than silently repaired;
+5. the public JSON schema represents only claims the MVP is prepared to make;
+6. each scientific rule has a validation strategy using synthetic and approved real traces;
+7. engineering gates are sufficient to protect the implemented invariants without becoming a feature project of their own.
+
+This gate does **not** require every threshold or algorithmic detail to be known in advance. Those may be refined during focused implementation and real-data validation, provided the stage boundary and biological claim remain stable.
