@@ -130,6 +130,9 @@ def cleanup_targets(
             candidate = log_dir / f"{trace.stem}.log"
             if candidate.exists() or candidate.is_symlink():
                 log_targets.add(candidate)
+        sample_log = log_dir / f"{sample}.sample.log"
+        if sample_log.exists() or sample_log.is_symlink():
+            log_targets.add(sample_log)
         for candidate in log_dir.glob(f"*_{sample}_*.log"):
             log_targets.add(candidate)
 
@@ -325,6 +328,45 @@ def run_analysis(
         return publish_result(generated, destination)
 
 
+def run_sample(
+    binary: Path,
+    sample: str,
+    traces: list[Path],
+    reference: Path,
+    config: Path,
+    log_dir: Path,
+    destination: Path,
+) -> tuple[bool, str]:
+    """Aggregate one sample and publish <sample>/<sample>.json without overwrite."""
+    with tempfile.TemporaryDirectory(prefix="signal-sample-") as temporary:
+        work = Path(temporary)
+        environment = os.environ.copy()
+        environment["SIGNAL_CONFIG"] = str(config)
+        environment["SIGNAL_LOG_DIR"] = str(log_dir)
+        completed = subprocess.run(
+            [
+                str(binary),
+                "sample",
+                sample,
+                *(str(trace) for trace in traces),
+                "--reference",
+                str(reference),
+            ],
+            cwd=work,
+            env=environment,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        if completed.returncode != 0:
+            detail = completed.stderr.strip() or f"exit status {completed.returncode}"
+            return False, detail
+        generated = work / "results" / f"{sample}.sample.json"
+        if not generated.is_file():
+            return False, f"sample analysis succeeded but did not create {generated}"
+        return publish_result(generated, destination)
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parser().parse_args(argv)
     try:
@@ -363,8 +405,11 @@ def main(argv: list[str] | None = None) -> int:
 
     completed_count = 0
     failed_count = 0
+    sample_completed_count = 0
+    sample_failed_count = 0
     trace_count = 0
     for sample, traces in workload.items():
+        sample_trace_failed = False
         for trace in traces:
             trace_count += 1
             destination = output_dir / sample / f"{trace.stem}.json"
@@ -377,14 +422,40 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 print(f"FAIL {trace.name}: {detail}", file=sys.stderr)
                 failed_count += 1
+                sample_trace_failed = True
+
+        if sample_trace_failed:
+            print(
+                f"SKIP {sample}: sample JSON not generated because a trace failed",
+                file=sys.stderr,
+            )
+            continue
+
+        sample_destination = output_dir / sample / f"{sample}.json"
+        succeeded, detail = run_sample(
+            binary,
+            sample,
+            traces,
+            reference,
+            config,
+            log_dir,
+            sample_destination,
+        )
+        if succeeded:
+            print(f"OK   {displayed(sample_destination)}")
+            sample_completed_count += 1
+        else:
+            print(f"FAIL {sample}: {detail}", file=sys.stderr)
+            sample_failed_count += 1
 
     print(
         "Summary: "
         f"samples={len(selected)} traces={trace_count} completed={completed_count} "
-        f"failed={failed_count} cleaned_results={cleaned_results} "
+        f"failed={failed_count} sample_json={sample_completed_count} "
+        f"sample_failed={sample_failed_count} cleaned_results={cleaned_results} "
         f"cleaned_logs={cleaned_logs}"
     )
-    return 1 if failed_count else 0
+    return 1 if failed_count or sample_failed_count else 0
 
 
 if __name__ == "__main__":
