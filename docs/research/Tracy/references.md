@@ -106,13 +106,11 @@ src/variants.h
 src/web.h
 ~~~
 
-`variants.h` is useful for coordinate provenance and interchange projection.
-`web.h` demonstrates downstream known-variant annotation but should not be part
-of Signal's deterministic core.
-
-Useful for preserving links among reference position, basecall position, raw
-signal position, and method identity. Genotype/GQ semantics are coupled to
-Tracy's decomposition and heuristic qualities and are not directly portable.
+`variants.h` is useful for preserving links among reference position, basecall
+position, raw signal position, and method identity. Its genotype/GQ semantics
+are coupled to Tracy's decomposition and heuristic qualities and are not
+directly portable. `web.h` demonstrates downstream known-variant annotation but
+should not be part of Signal's deterministic core.
 
 ## Public issues that expose useful failure modes
 

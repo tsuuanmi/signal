@@ -408,8 +408,13 @@ The source/issue audit changes the emphasis of the Tracy roadmap:
 
 ## 15. Public issue references
 
+- Tracy #12: trimming is end-only and based on relative normalized quality
+- Tracy #15/#34: exact indexed anchoring is faster but less sensitive than direct profile alignment
+- Tracy #27: reference guidance and reference participation in consensus are distinct semantics
+- Tracy #41: candidate search/alignment fail across a circular origin under a linear reference model
 - Tracy #50: "How are the base quality score generated?"
 - Tracy #58: "Base quality and consensus generation"
+- Tracy #79: local FASTA placement can rescue sensitivity but loses genome-coordinate annotation context
 - Tracy #85: consensus overlap controls; implemented in August 2026
 - Tracy #91: dependency on original instrument peak locations
 - Tracy #98: linear-reference limitation across circular origins

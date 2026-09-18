@@ -14,6 +14,5 @@ These ADRs govern the Tracy research direction only. They do not change producti
 | [0008](0008-consensus-must-remain-evidence-and-gap-aware.md) | Accepted for research | Do not collapse multi-read evidence into quality-blind character voting; model gaps explicitly. |
 | [0009](0009-ploc-is-an-explicit-external-prior.md) | Accepted for research | Treat PLOC as an explicit external event prior and diagnose incompleteness. |
 | [0010](0010-artifact-resilience-before-richer-interpretation.md) | Accepted for research | Validate artifact resilience before promoting richer profile-based interpretation. |
-
 | [0011](0011-reference-guides-coordinates-but-does-not-vote.md) | Accepted for research | Use reference for coordinates/context, not as an implicit sample observation. |
 | [0012](0012-candidate-placement-is-not-authoritative-alignment.md) | Accepted for research | Keep future indexed/seeded candidate search separate from final scientific alignment. |
