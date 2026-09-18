@@ -1,0 +1,74 @@
+//! Serializable `signal.sample_evidence/v1` contract.
+
+use serde::Serialize;
+
+use crate::model::alignment::Orientation;
+use crate::model::result::{IntervalResult, ReferenceResult};
+use crate::model::sample_evidence::LocusState;
+use crate::model::variant::VariantKind;
+
+/// Successful sample-evidence document.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleEvidenceResult {
+    pub(crate) schema_version: &'static str,
+    pub(crate) sample_id: String,
+    pub(crate) provenance: SampleProvenanceResult,
+    pub(crate) reads: Vec<SampleReadResult>,
+    pub(crate) loci: Vec<SampleLocusResult>,
+    pub(crate) events: Vec<SampleEventResult>,
+}
+
+/// Scientific identities shared by every sample read.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleProvenanceResult {
+    pub(crate) reference: ReferenceResult,
+    pub(crate) configuration_sha256: String,
+}
+
+/// Concise placement of one independently processed sample read.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleReadResult {
+    pub(crate) sha256: String,
+    pub(crate) orientation: Orientation,
+    pub(crate) reference_segments: Vec<IntervalResult>,
+    pub(crate) wraps_origin: bool,
+}
+
+/// Evidence at one covered reference locus.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleLocusResult {
+    pub(crate) position: usize,
+    pub(crate) reference: char,
+    pub(crate) observations: Vec<SampleLocusObservationResult>,
+}
+
+/// One read's aligned observation at a locus.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleLocusObservationResult {
+    pub(crate) read_sha256: String,
+    pub(crate) orientation: Orientation,
+    pub(crate) state: LocusState,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) base: Option<char>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) index: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) relative_quality: Option<u8>,
+}
+
+/// One normalized reportable event and its supporting reads.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleEventResult {
+    pub(crate) position: usize,
+    pub(crate) reference: String,
+    pub(crate) alternate: String,
+    pub(crate) kind: VariantKind,
+    pub(crate) support: Vec<SampleEventSupportResult>,
+}
+
+/// One read contributing to a normalized event.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleEventSupportResult {
+    pub(crate) read_sha256: String,
+    pub(crate) orientation: Orientation,
+}
