@@ -31,14 +31,18 @@ basic deterministic end QC / trimming
  ↓
 forward/reverse alignment to one short reference
  ↓
-simple canonical SNVs
+primary-sequence variants
  ↓
 versioned JSON
 ```
 
-The following are not required to begin or accept this core MVP:
+The confidence floor does not require every harder capability to be re-proven before development starts. It also does not require removing capabilities that already work well.
 
-- release-critical indel calling;
+Current small-indel, circular-reference, rolling-SNR, batch, and richer-evidence behavior may remain part of the supported baseline when their contracts and tests are sound.
+
+The following are not required as **new work** before development begins:
+
+- new indel models beyond current supported behavior;
 - repeat/poly-C special handling;
 - quantitative heteroplasmy or genotype inference;
 - sample consensus or multi-read aggregation;
@@ -46,7 +50,7 @@ The following are not required to begin or accept this core MVP:
 - ML;
 - advanced denoising, calibration, or independent locus discovery.
 
-Existing code for deferred capabilities may remain, but it does not enlarge the active MVP contract.
+Development starts from the current known-good product baseline, not from an artificially reduced implementation.
 
 ## Stage contracts that must be stable before implementation
 
@@ -110,13 +114,13 @@ Invariant:
 - call identity survives orientation changes;
 - ambiguous placement fails or remains explicit.
 
-### Simple SNV calling
+### Variant calling
 
 Input:
 - selected alignment plus original call evidence.
 
 Output:
-- canonical A/C/G/T primary-sequence substitutions only.
+- canonical primary-sequence differences supported by the current product contract; simple SNVs are the first validation anchor, while existing small-indel support is preserved when its evidence and normalization remain valid.
 
 Invariant:
 - unresolved query states do not become variants;
@@ -159,10 +163,10 @@ The project is ready to begin focused MVP implementation when:
 - [x] signal evidence and biological claims are separated;
 - [x] PLOC-based re-calling is explicitly the current basecalling boundary;
 - [x] input, stage, coordinate, error, and output boundaries are defined;
-- [x] simple SNVs are the first release-critical variant class;
+- [x] simple SNVs are the first validation anchor without regressing existing known-good indel support;
 - [x] harder biological interpretation is explicitly deferred;
 - [x] Rust engineering principles and release-quality direction are documented;
-- [ ] normative SRS is reconciled so deferred capabilities are not accidentally treated as core MVP acceptance criteria;
+- [x] normative SRS may retain intentional existing capabilities beyond the confidence floor; no artificial feature rollback is required;
 - [ ] the first approved real-AB1 validation set and expected truth records are identified.
 
 ## Current assessment
