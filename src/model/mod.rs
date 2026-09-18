@@ -9,6 +9,8 @@ pub(crate) mod quality;
 pub(crate) mod read_observation;
 pub(crate) mod reference;
 pub(crate) mod result;
+pub(crate) mod sample_evidence;
+pub(crate) mod sample_result;
 pub(crate) mod signal;
 pub(crate) mod trace;
 pub(crate) mod variant;
