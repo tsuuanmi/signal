@@ -5,8 +5,8 @@ use crate::error::{Error, Result};
 use crate::model::basecalls::BaseCalls;
 use crate::model::quality::QualityControlResult;
 use crate::model::variant::{
-    ExcludedVariant, Variant, VariantCallMapping, VariantCallRole, VariantCallingResult,
-    VariantExclusionReason, VariantKind,
+    ExcludedVariant, ObservedVariant, Variant, VariantCallMapping, VariantCallRole,
+    VariantCallingResult, VariantExclusionReason, VariantKind,
 };
 
 /// Removes normalized candidates outside configured regions or below supporting evidence floors.
@@ -17,6 +17,7 @@ pub(super) fn apply(
     config: &VariantCallingConfig,
 ) -> Result<VariantCallingResult> {
     let mut reported = Vec::with_capacity(extracted.reported.len());
+    let mut observed = Vec::with_capacity(extracted.reported.len());
     let mut excluded = extracted.excluded;
     for variant in extracted.reported {
         let mut reasons = Vec::new();
@@ -26,6 +27,10 @@ pub(super) fn apply(
         reasons.extend(supporting_evidence_reasons(
             &variant, calls, quality, config,
         )?);
+        observed.push(ObservedVariant {
+            variant: variant.clone(),
+            exclusion_reasons: reasons.clone(),
+        });
         if reasons.is_empty() {
             reported.push(variant);
         } else {
@@ -37,7 +42,11 @@ pub(super) fn apply(
             });
         }
     }
-    Ok(VariantCallingResult { reported, excluded })
+    Ok(VariantCallingResult {
+        reported,
+        observed,
+        excluded,
+    })
 }
 
 fn in_configured_region(position_1based: usize, regions: &[[usize; 2]]) -> bool {
@@ -234,6 +243,7 @@ mod tests {
                     vec![mapping(VariantCallRole::Supporting, 3)],
                 ),
             ],
+            observed: Vec::new(),
             excluded: vec![prior_exclusion()],
         };
 
@@ -268,6 +278,7 @@ mod tests {
                     )
                 })
                 .collect(),
+            observed: Vec::new(),
             excluded: Vec::new(),
         };
 
@@ -310,6 +321,7 @@ mod tests {
                     ],
                 ),
             ],
+            observed: Vec::new(),
             excluded: Vec::new(),
         };
 
@@ -333,6 +345,7 @@ mod tests {
                     mapping(VariantCallRole::Flanking, 1),
                 ],
             )],
+            observed: Vec::new(),
             excluded: Vec::new(),
         };
 
@@ -352,6 +365,7 @@ mod tests {
                 1,
                 vec![mapping(VariantCallRole::Supporting, 2)],
             )],
+            observed: Vec::new(),
             excluded: Vec::new(),
         };
 
