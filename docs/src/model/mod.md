@@ -34,7 +34,7 @@ No filesystem access, argument parsing, logging, or algorithm execution.
 - `result`: compact `AnalysisResult` plus result records shared by both
   contracts.
 - `basecall_result`: reference-free `BasecallResult` matching basecalls schema v1.
-- `sample_evidence`: internal cross-read coordinate/event evidence.
+- `sample_evidence`: internal cross-read coordinate/variant evidence.
 - `sample_result`: public `signal.sample_evidence/v1` records.
 
 ## Invariants and errors
