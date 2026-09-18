@@ -1,5 +1,7 @@
-//! Sample-level scientific reconciliation in reference-coordinate space.
+//! Sample-level evidence aggregation in reference-coordinate and variant space.
 
-mod evidence;
+mod aggregate;
+mod differences;
+mod variants;
 
-pub(crate) use evidence::aggregate;
+pub(crate) use aggregate::aggregate;
