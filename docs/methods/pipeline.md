@@ -1,6 +1,6 @@
 # Signal Pipeline
 
-This document describes the shared read-processing stages and the implemented scientific pipeline of `signal analyze`. `signal basecall` stops after the shared quality-control stage and publishes the reference-free contract described in [`basecall-output.md`](basecall-output.md). It is the authoritative description of the current Rust behavior. Every stage,
+This document describes the shared read-processing stages and the implemented scientific pipeline of `signal analyze`. `signal basecall` stops after the shared quality-control stage and publishes the reference-free contract indexed in [the public contracts](../contracts/README.md). It is the authoritative description of the current Rust behavior. Every stage,
 substep, and formula below is derived from the source under `src/`; where this
 document and the source disagree, the source is ground truth and this document
 should be corrected.
@@ -305,9 +305,9 @@ removed candidates by kind/contig/position/reasons and summarize final warning
 categories; ERROR records identify the active failed stage. Records omit complete
 sequences, alleles, region contents, per-call peaks, alignment strings, and JSON
 bodies. The JSON shape is defined in
-[`json-output.md`](json-output.md), validated by
-[`schemas/analysis-v5.schema.json`](schemas/analysis-v5.schema.json), and shown in
-[`examples/analysis-v5.example.json`](examples/analysis-v5.example.json).
+[the public contracts](../contracts/README.md), validated by
+[`schemas/analysis-v5.schema.json`](../schemas/analysis-v5.schema.json), and shown in
+[`examples/analysis-v5.example.json`](../examples/analysis-v5.example.json).
 
 ## Biological limitations
 

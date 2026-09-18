@@ -1,6 +1,6 @@
 # Tracy-Informed Research Architecture
 
-This document mirrors the role of root `docs/architecture.md` for Tracy-informed research. It is non-normative until a decision is promoted into root Signal documentation and source.
+This document mirrors the role of root `docs/architecture/overview.md` for Tracy-informed research. It is non-normative until a decision is promoted into root Signal documentation and source.
 
 ## 62. Proposed Source Layout
 

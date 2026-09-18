@@ -101,7 +101,7 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 
 ## 11. Compatibility, quality, and validation
 
-- **SRS-COMPAT-001:** Apollo comparisons MUST follow `compatibility.md`; known defects are intentional divergences, not parity failures.
+- **SRS-COMPAT-001:** Apollo comparisons MUST follow `governance/compatibility.md`; known defects are intentional divergences, not parity failures.
 - **SRS-COMPAT-002:** Approved differential evidence MUST compare exact decoded arrays and unaffected deterministic results; normalized variants compare by full tuple without ignoring extras/missing calls.
 - **SRS-NFR-001:** Production code MUST forbid unsafe Rust and avoid production `unwrap`/`expect`.
 - **SRS-NFR-002:** Scientific stage functions MUST be side-effect-free and return typed results; only pipeline-level operational logging and report publication write files.
@@ -109,5 +109,5 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 - **SRS-NFR-004:** Every Rust source MUST have an exact current `docs/src` counterpart.
 - **SRS-VAL-001:** Parser, calling, signal processing, QC, alignment, normalization, JSON, and atomic publication MUST have focused boundary/adversarial tests.
 - **SRS-VAL-002:** A synthetic canonical ABIF MUST exercise end-to-end forward/reverse and variant behavior without identifying data.
-- **SRS-VAL-003:** Real-trace release evidence MUST follow `data.md`; ignored local data MUST never be a build/test prerequisite.
+- **SRS-VAL-003:** Real-trace release evidence MUST follow `operations/data.md`; ignored local data MUST never be a build/test prerequisite.
 - **SRS-VAL-004:** Format, check, Clippy warnings-denied, all tests, rustdoc, schema/example validation, TOML validation, docs mirror, and rCRS identity gates MUST pass.

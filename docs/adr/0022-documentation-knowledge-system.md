@@ -99,7 +99,7 @@ Implementation manuals should reference these invariants rather than restating t
 
 ### 5. Traceability connects intent to evidence
 
-`docs/traceability.md` maps requirement families to:
+`docs/governance/traceability.md` maps requirement families to:
 
 - architecture/method documentation;
 - owning source modules;

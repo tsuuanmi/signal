@@ -63,8 +63,9 @@ Use stable role-based names over temporary project names.
 
 Prefer:
 
-- `requirements.md`, `architecture.md`, `validation.md`, `roadmap.md`;
+- a small set of root landmarks such as `requirements.md` and `roadmap.md`;
+- responsibility directories such as `architecture/`, `contracts/`, `validation/`, `operations/`, and `governance/`;
 - `docs/research/<topic>/` for explorations;
 - `docs/src/<same-relative-path>.md` for implementation manuals.
 
-Avoid new catch-all files such as `NOTES.md`, `NEW.md`, or `FINAL.md` when the content has an existing authoritative home.
+Do not add a standalone narrative file when an existing schema, source manual, ADR, method document, or responsibility index already owns the concept. Consolidate unique semantics into the authoritative home instead. Avoid catch-all files such as `NOTES.md`, `NEW.md`, or `FINAL.md`.
