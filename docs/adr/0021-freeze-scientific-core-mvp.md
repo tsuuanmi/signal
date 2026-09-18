@@ -130,7 +130,7 @@ Only after this baseline is trustworthy should the project add **new** harder ev
 
 ### Research notes versus commitments
 
-`docs/TODO.md`, `docs/UPDATE.md`, `docs/tracy_review.md`, and ML sections are research inputs and design notes.
+`docs/research/Signal/backlog.md`, `docs/research/Signal/improvement-plan.md`, Tracy research, and other `docs/research/<topic>/` content are research inputs and design notes.
 
 They are not the active product roadmap unless an item is promoted through:
 
