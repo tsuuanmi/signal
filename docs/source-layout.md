@@ -44,7 +44,7 @@ report -> completed models; no scientific computation
 - `features` estimates rolling sample-domain SNR; `regions` merges candidate-noisy intervals without changing calls.
 - `penalty`, `quality`, and `trim` keep distinct QC responsibilities.
 - `gotoh` computes DP; `traceback` reconstructs rows; `orient` applies strand/topology policy; `scoring` centralizes arithmetic.
-- `extract` finds events; `mapping` binds original calls to aligned reference positions; `normalize` defines canonical alleles/positions; `filter` applies configured region and supporting-signal eligibility.
+- `extract` finds primary-sequence differences; `mapping` binds original calls to aligned reference positions; `normalize` defines canonical alleles/positions; `filter` applies configured region and supporting-signal eligibility.
 - `logger` appends timestamped per-trace operational records without entering scientific stages or JSON.
 - `json` assembles analysis v5 and owns shared serialization; `basecall` assembles basecalls v1; `sample` projects sample-evidence v1; `signal` is the one merged-region projection; `variant` projects mapped analysis calls; `atomic` is the one no-overwrite publisher.
 - `input` loads command-specific resources; `read` sequences reference-independent stages; `observation` owns one authoritative reference-guided read path; `sample/evidence` aggregates completed observations; command modules own only orchestration and publication.
