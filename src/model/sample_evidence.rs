@@ -21,7 +21,6 @@ pub(crate) struct SampleReadAlignmentEvidence {
     pub(crate) orientation: Orientation,
     pub(crate) callable_bases: usize,
     pub(crate) identity: f64,
-    pub(crate) mismatches: usize,
     pub(crate) gap_opens: usize,
     pub(crate) unresolved_bases: usize,
     pub(crate) reference_segments: Vec<ReferenceSegment>,
