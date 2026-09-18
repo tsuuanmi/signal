@@ -1,0 +1,416 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:signal:schema:sample-evidence:v2",
+  "title": "Signal sample evidence v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "sample_id",
+    "provenance",
+    "reads",
+    "locus_differences",
+    "variants"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "signal.sample_evidence/v2"
+    },
+    "sample_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,127}$"
+    },
+    "provenance": {
+      "$ref": "#/$defs/provenance"
+    },
+    "reads": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/read"
+      }
+    },
+    "locus_differences": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/locusDifference"
+      }
+    },
+    "variants": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/variant"
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "orientation": {
+      "enum": [
+        "forward",
+        "reverse"
+      ]
+    },
+    "interval": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "reference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "topology",
+        "sha256"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "topology": {
+          "enum": [
+            "linear",
+            "circular"
+          ]
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "configuration_sha256"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/reference"
+        },
+        "configuration_sha256": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "read": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "sha256",
+        "alignment"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sha256": {
+          "$ref": "#/$defs/sha256"
+        },
+        "alignment": {
+          "$ref": "#/$defs/readAlignment"
+        }
+      }
+    },
+    "readAlignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "orientation",
+        "callable_bases",
+        "identity",
+        "gap_opens",
+        "unresolved_bases",
+        "reference_segments",
+        "wraps_origin"
+      ],
+      "properties": {
+        "orientation": {
+          "$ref": "#/$defs/orientation"
+        },
+        "callable_bases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "identity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "gap_opens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolved_bases": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reference_segments": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/interval"
+          }
+        },
+        "wraps_origin": {
+          "type": "boolean"
+        }
+      }
+    },
+    "calledDifference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "state",
+        "base",
+        "index",
+        "relative_quality"
+      ],
+      "properties": {
+        "read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "enum": [
+            "alternate",
+            "unresolved"
+          ]
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^[ACGTN]$"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "relative_quality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "deletionDifference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "state"
+      ],
+      "properties": {
+        "read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state": {
+          "const": "deletion"
+        }
+      }
+    },
+    "differenceObservation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/calledDifference"
+        },
+        {
+          "$ref": "#/$defs/deletionDifference"
+        }
+      ]
+    },
+    "locusDifference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "reference",
+        "observations"
+      ],
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reference": {
+          "type": "string",
+          "pattern": "^[ACGTN]$"
+        },
+        "observations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/differenceObservation"
+          }
+        }
+      }
+    },
+    "exclusionReason": {
+      "enum": [
+        "non_canonical_allele",
+        "indel_length_exceeded",
+        "outside_configured_region",
+        "peak_below_minimum",
+        "relative_quality_not_above_threshold"
+      ]
+    },
+    "variantCall": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "index",
+        "ploc"
+      ],
+      "properties": {
+        "role": {
+          "enum": [
+            "supporting",
+            "flanking"
+          ]
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ploc": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "variantSupport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "eligible",
+        "exclusion_reasons",
+        "calls"
+      ],
+      "properties": {
+        "read": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eligible": {
+          "type": "boolean"
+        },
+        "exclusion_reasons": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/exclusionReason"
+          }
+        },
+        "calls": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/variantCall"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "eligible": {
+                "const": true
+              }
+            },
+            "required": [
+              "eligible"
+            ]
+          },
+          "then": {
+            "properties": {
+              "exclusion_reasons": {
+                "maxItems": 0
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "exclusion_reasons": {
+                "minItems": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "variant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "reference",
+        "alternate",
+        "kind",
+        "support"
+      ],
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reference": {
+          "type": "string",
+          "pattern": "^[ACGT]+$"
+        },
+        "alternate": {
+          "type": "string",
+          "pattern": "^[ACGT]+$"
+        },
+        "kind": {
+          "enum": [
+            "SNV",
+            "INS",
+            "DEL"
+          ]
+        },
+        "support": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/variantSupport"
+          }
+        }
+      }
+    }
+  }
+}
