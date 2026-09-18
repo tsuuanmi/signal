@@ -12,7 +12,7 @@ constrain read placement, orientation, overlap, or variant reconciliation.
 
 ## Reads
 
-`reads[]` contains one record per unique input SHA-256. `name` is the UTF-8 AB1 basename retained for reviewer-facing provenance; `sha256` remains the stable content identity. The nested `alignment` object contains the evidence-derived orientation, callable-base count, callable identity, mismatch count, gap-open count, unresolved-base count, one or two 0-based half-open reference segments, and origin-wrap status. Records are sorted by SHA-256, so input argument order does not change the scientific ordering. Renaming an input changes provenance display only; it does not affect placement or reconciliation.
+`reads[]` contains one record per unique input SHA-256. `name` is the UTF-8 AB1 basename retained for reviewer-facing provenance; `sha256` remains the stable content identity. The nested `alignment` object contains the evidence-derived orientation, callable-base count, callable identity, gap-open count, unresolved-base count, one or two 0-based half-open reference segments, and origin-wrap status. Records are sorted by SHA-256, so input argument order does not change the scientific ordering. Renaming an input changes provenance display only; it does not affect placement or reconciliation.
 
 ## Loci
 
