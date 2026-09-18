@@ -298,9 +298,15 @@ mod tests {
         let observations = &evidence.locus_differences[0].observations;
         assert_eq!(observations.len(), 2);
         assert_eq!(observations[0].read_index, 0);
-        assert_eq!(observations[0].state, crate::model::sample_evidence::LocusState::Alternate);
+        assert_eq!(
+            observations[0].state,
+            crate::model::sample_evidence::LocusState::Alternate
+        );
         assert_eq!(observations[1].read_index, 1);
-        assert_eq!(observations[1].state, crate::model::sample_evidence::LocusState::Reference);
+        assert_eq!(
+            observations[1].state,
+            crate::model::sample_evidence::LocusState::Reference
+        );
         assert_eq!(observations[1].relative_quality, Some(50));
         Ok(())
     }
