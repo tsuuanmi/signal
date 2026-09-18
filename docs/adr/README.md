@@ -19,3 +19,6 @@
 | [0015](0015-reference-free-basecalling.md) | Reference-free basecall JSON | Accepted |
 | [0016](0016-defer-ml-feature-boundary.md) | Defer ML feature boundary to separate training contract | Accepted |
 | [0017](0017-primary-sample-peak-colocalization.md) | Gate secondary calls at the primary peak sample | Accepted |
+
+| [0018](0018-production-readiness-release-contract.md) | Production readiness is an explicit release contract | Proposed |
+| [0019](0019-scientific-evidence-hierarchy.md) | Separate signal evidence, read interpretation, and biological claims | Proposed |
