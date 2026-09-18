@@ -13,17 +13,19 @@ Defines the pairwise alignment records with explicit strand and coordinates.
 
 ## Non-responsibilities
 
-No scoring, traceback, or strand selection.
+No scoring, traceback, strand selection, or sample-level reconciliation.
 
 ## Key types and functions
 
 - `Orientation`: `Forward` or `Reverse`; serialized as `snake_case`.
-- `ReferenceSegment`: a half-open segment on the original reference with an internal overlap predicate for sample reconciliation.
+- `ReferenceSegment`: one 0-based half-open segment on the original reference.
 - `AlignmentMetrics`: exact matches, mismatches, gap opens, callable columns,
   callable identity, and unresolved query bases.
 - `AlignmentColumn`: one aligned column with query/reference bases and optional
-  original indices.
-- `Alignment`: the selected internal alignment only — orientation, `i64` score,\n  reference segments, origin-wrap flag, metrics, and columns. `overlaps_reference`\n  detects shared mapped coordinates across one- or two-segment circular placements.\n  Gapped rows and operation runs are not retained in this final model.
+  original call/reference indices.
+- `Alignment`: the selected orientation, `i64` score, reference segments,
+  origin-wrap flag, metrics, and columns. Gapped rows and operation runs are not
+  retained in this final model.
 
 ## Invariants and errors
 
@@ -35,15 +37,18 @@ No scoring, traceback, or strand selection.
 
 ## Dependencies
 
-- `serde` for serialization.
+- `serde` for `Orientation` and `AlignmentMetrics` serialization.
 
 ## Biological semantics
 
 The alignment records how the retained read maps onto the reference, including
 which strand it matches and whether a circular alignment wraps the origin. This
-is the basis for variant extraction.
+mapping is authoritative for downstream variant extraction and read placement.
 
-## Tests\n\nUnit tests cover linear overlap, half-open boundary non-overlap, and overlap across circular-origin split segments; alignment behavior remains covered by integration tests.
+## Tests
+
+Alignment behavior is covered by the alignment implementation tests and
+end-to-end analysis tests.
 
 ## Status
 

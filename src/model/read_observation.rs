@@ -22,20 +22,3 @@ pub(crate) struct ReadObservation {
     pub(crate) alignment: Alignment,
     pub(crate) variants: VariantCallingResult,
 }
-
-impl ReadObservation {
-    /// Returns whether another read is scientifically comparable for sample
-    /// reconciliation under the same reference and scientific configuration.
-    #[allow(dead_code, reason = "used by the upcoming sample-reconciliation layer")]
-    pub(crate) fn is_compatible_with(&self, other: &Self) -> bool {
-        self.reference_sha256 == other.reference_sha256
-            && self.configuration_sha256 == other.configuration_sha256
-    }
-
-    /// Returns whether two compatible reads cover at least one shared reference
-    /// coordinate. Incompatible reads never overlap scientifically.
-    #[allow(dead_code, reason = "used by the upcoming sample-reconciliation layer")]
-    pub(crate) fn overlaps_reference(&self, other: &Self) -> bool {
-        self.is_compatible_with(other) && self.alignment.overlaps_reference(&other.alignment)
-    }
-}

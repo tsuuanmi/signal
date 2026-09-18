@@ -19,15 +19,6 @@ pub struct ReferenceSegment {
     pub(crate) end_0based_exclusive: usize,
 }
 
-impl ReferenceSegment {
-    /// Returns whether this segment overlaps another half-open segment.
-    #[allow(dead_code, reason = "used by the upcoming sample-reconciliation layer")]
-    pub(crate) fn overlaps(&self, other: &Self) -> bool {
-        self.start_0based < other.end_0based_exclusive
-            && other.start_0based < self.end_0based_exclusive
-    }
-}
-
 /// Alignment quality metrics.
 #[derive(Debug, Clone, Serialize)]
 pub struct AlignmentMetrics {
@@ -57,63 +48,4 @@ pub struct Alignment {
     pub(crate) wraps_origin: bool,
     pub(crate) metrics: AlignmentMetrics,
     pub(crate) columns: Vec<AlignmentColumn>,
-}
-
-impl Alignment {
-    /// Returns whether two selected placements cover at least one shared
-    /// reference coordinate.
-    #[allow(dead_code, reason = "used by the upcoming sample-reconciliation layer")]
-    pub(crate) fn overlaps_reference(&self, other: &Self) -> bool {
-        self.reference_segments.iter().any(|left| {
-            other
-                .reference_segments
-                .iter()
-                .any(|right| left.overlaps(right))
-        })
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{Alignment, AlignmentMetrics, Orientation, ReferenceSegment};
-
-    fn alignment(segments: &[(usize, usize)]) -> Alignment {
-        Alignment {
-            orientation: Orientation::Forward,
-            score: 0,
-            reference_segments: segments
-                .iter()
-                .map(|&(start_0based, end_0based_exclusive)| ReferenceSegment {
-                    start_0based,
-                    end_0based_exclusive,
-                })
-                .collect(),
-            wraps_origin: segments.len() > 1,
-            metrics: AlignmentMetrics {
-                exact_matches: 0,
-                mismatches: 0,
-                gap_opens: 0,
-                callable_columns: 0,
-                callable_identity: 0.0,
-                unresolved_query_bases: 0,
-            },
-            columns: Vec::new(),
-        }
-    }
-
-    #[test]
-    fn detects_linear_reference_overlap() {
-        assert!(alignment(&[(100, 200)]).overlaps_reference(&alignment(&[(150, 250)])));
-    }
-
-    #[test]
-    fn touching_half_open_segments_do_not_overlap() {
-        assert!(!alignment(&[(100, 200)]).overlaps_reference(&alignment(&[(200, 250)])));
-    }
-
-    #[test]
-    fn detects_overlap_across_circular_origin_segments() {
-        assert!(alignment(&[(16_500, 16_569), (0, 120)])
-            .overlaps_reference(&alignment(&[(80, 300)])));
-    }
 }
