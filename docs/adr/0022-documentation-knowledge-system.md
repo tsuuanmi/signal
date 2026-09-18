@@ -109,19 +109,21 @@ Implementation manuals should reference these invariants rather than restating t
 
 The traceability map is a navigation aid, not a duplicated specification.
 
-### 6. AGENTS.md is a router, not an encyclopedia
+### 6. AGENTS.md is a reusable workflow protocol, not a repository encyclopedia
 
-Root `AGENTS.md` should remain small and Signal-specific.
+Root `AGENTS.md` should define a generic development workflow that can transfer across repositories.
 
-It tells an agent:
+It should teach an agent how to:
 
-- which documents to read first;
-- the authority order;
-- the required change workflow;
-- repository-specific verification commands;
-- rules for keeping source, docs/src, requirements, contracts, tests, and changelog synchronized.
+- discover repository instructions and documentation roles;
+- resolve authority by role rather than by hard-coded filenames;
+- understand intent and implementation before editing;
+- plan the smallest coherent change;
+- choose verification based on failure modes;
+- reconcile source, contracts, tests, and documentation;
+- review the final diff and report residual risk.
 
-Detailed knowledge remains in the authoritative docs it links to.
+Repository-specific commands, scientific invariants, file paths, and product semantics remain in the repository's own docs, CI configuration, build metadata, and contracts. The agent discovers those sources rather than having them duplicated into AGENTS.md.
 
 ### 7. Documentation mirrors responsibility, not line-by-line code
 
