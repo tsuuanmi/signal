@@ -299,12 +299,16 @@ The read has already located itself at this boundary. Its orientation and covere
 
 ## Sample evidence aggregation
 
-`signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and orders output independently of CLI trace order. The input basename is retained only as reviewer-facing provenance. Each read projection includes a concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state). Covered alignment columns become per-locus `reference`, `alternate`, `unresolved`, or `deletion` observations using reference-oriented query bases. Reads that do not cover a locus contribute nothing there and never count as reference support. Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)` with each contributing read basename, SHA-256, derived orientation, configured eligibility, exclusion reasons, and concise original-call mappings retained. A read-level filter can remove a candidate from `analysis/v5` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v1.
+`signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and sorts reads by SHA-256 independently of CLI trace order. The top-level read registry retains reviewer-facing basename, stable SHA-256, and the concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state).
+
+Sparse locus aggregation runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with call index and relative quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
+
+Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support stores only the deterministic read index plus configured eligibility, exclusion reasons, and concise original-call mappings because read identity/orientation are already defined once at top level. A read-level filter can remove a candidate from `analysis/v5` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v2.
 
 ## Output
 
 `analyze` publishes `signal.analysis/v5` at `results/<trace-stem>.json`.
-`sample` publishes `signal.sample_evidence/v1` at
+`sample` publishes `signal.sample_evidence/v2` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
