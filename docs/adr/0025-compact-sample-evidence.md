@@ -28,13 +28,13 @@ difference exists.
 
 ## Decision
 
-Signal replaces signal.sample_evidence/v1 with signal.sample_evidence/v2. The
+Signal replaces `signal.sample_evidence/v1` with `signal.sample_evidence/v2`. The
 current implementation emits v2 only; no v1 compatibility result or alias is
 retained.
 
 ### Read registry
 
-reads[] is the single deterministic registry of contributing reads and is sorted
+`reads[]` is the single deterministic registry of contributing reads and is sorted
 by input SHA-256. Each entry owns reviewer-facing basename provenance, stable
 SHA-256 identity, derived orientation, alignment summary, and mapped reference
 segments.
@@ -44,7 +44,7 @@ registry. Read name, SHA-256, and orientation are not duplicated downstream.
 
 ### Sparse differential loci
 
-The dense loci[] table is replaced by locus_differences[].
+The dense `loci[]` table is replaced by `locus_differences[]`.
 
 A locus is retained only when at least one covering read is alternate, unresolved,
 or deletion. Once a locus is retained, every read covering that position is
@@ -58,7 +58,7 @@ Aggregation uses two passes:
 
 Mapped reference segments define coverage. For a given read:
 
-- a 1-based position inside its mapped segments but absent from locus_differences[]
+- a 1-based position inside its mapped segments but absent from `locus_differences[]`
   is a canonical reference match;
 - a position outside its mapped segments is uncovered;
 - a retained differential locus uses its explicit observations.
@@ -68,7 +68,7 @@ without materializing routine all-reference positions.
 
 ### Normalized variants
 
-variants[] remains the normalized biological-event layer. Per-read support keeps
+`variants[]` remains the normalized variant layer. Per-read support keeps
 configured eligibility, exclusion reasons, and original-call mappings, but the read
 is represented only by the registry index.
 
