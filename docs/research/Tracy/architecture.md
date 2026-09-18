@@ -515,3 +515,35 @@ mtDNA interpretation
 That shift is substantially more important than adding more file formats, more CLI commands, or a more sophisticated basecaller in isolation.
 
 ---
+
+
+## Reference placement scaling boundary
+
+Current Signal should continue direct bounded alignment for short references.
+
+If a future use case requires genome-scale search, introduce a separate
+candidate-placement stage:
+
+~~~text
+reference search/index
+      |
+      v
+CandidateRegion[]
+      |
+      v
+authoritative alignment
+~~~
+
+The candidate stage may optimize speed using exact seeds, minimizers, an FM
+index, or another method, but it does not own final scientific coordinates.
+
+The reference also has a distinct epistemic role from trace observations:
+
+~~~text
+reference -> coordinates / topology / normalization context
+trace     -> observed sample evidence
+~~~
+
+Sample consensus must not turn reference agreement into an extra observation
+unless a separately versioned reference-prior model explicitly defines that
+behavior.

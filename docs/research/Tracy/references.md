@@ -86,11 +86,29 @@ Useful for change-point-like breakpoint detection and candidate ±N shift
 evaluation. Signal should not reuse reference-threading that mutates observed
 basecalls, diploid semantics, or uncalibrated allele-fraction estimation.
 
-### Variant projection
+### Reference search and placement
 
-```text
+~~~text
+src/fmindex.h
+src/fasta.h
+src/sage.h
+~~~
+
+Useful for understanding seed-and-extend architecture, reference slicing,
+orientation search, and the sensitivity tradeoff between exact k-mer anchoring
+and direct profile alignment. Signal should keep candidate search separate from
+authoritative alignment and preserve circular topology.
+
+### Variant projection and optional annotation
+
+~~~text
 src/variants.h
-```
+src/web.h
+~~~
+
+`variants.h` is useful for coordinate provenance and interchange projection.
+`web.h` demonstrates downstream known-variant annotation but should not be part
+of Signal's deterministic core.
 
 Useful for preserving links among reference position, basecall position, raw
 signal position, and method identity. Genotype/GQ semantics are coupled to
@@ -100,8 +118,11 @@ Tracy's decomposition and heuristic qualities and are not directly portable.
 
 | Issue | Finding | Signal lesson |
 |---|---|---|
+| [#15](https://github.com/gear-genomics/tracy/issues/15) / [#34](https://github.com/gear-genomics/tracy/issues/34) | exact k-mer anchoring is less sensitive than direct profile alignment | separate candidate search from authoritative alignment |
+| [#41](https://github.com/gear-genomics/tracy/issues/41) | indexed/unindexed paths fail at circular origin | topology belongs in placement as well as alignment |
 | [#50](https://github.com/gear-genomics/tracy/issues/50) | assembly quality is support-fraction based rather than per-base calibrated quality | do not label consensus support as Phred without calibration |
 | [#58](https://github.com/gear-genomics/tracy/issues/58) | assembly is majority vote; base-vs-gap conflicts are not quality-symmetric | model gap/indel support explicitly |
+| [#79](https://github.com/gear-genomics/tracy/issues/79) | local FASTA can rescue placement but loses genome-coordinate context for annotation | local slices require parent-coordinate mapping |
 | [#85](https://github.com/gear-genomics/tracy/issues/85) | pairwise consensus needed explicit overlap/agreement controls; implemented 2026-08-18 | read admission belongs before consensus |
 | [#91](https://github.com/gear-genomics/tracy/issues/91) | Tracy requires original machine peak locations | make PLOC dependency/completeness explicit |
 | [#98](https://github.com/gear-genomics/tracy/issues/98) | Tracy aligns to linear references only | preserve Signal's explicit circular topology |
@@ -117,7 +138,8 @@ Tracy's decomposition and heuristic qualities and are not directly portable.
 | `src/consensus.h` | pairwise profile reconciliation and overlap admission | `source-audit.md`, `features/sample-analysis.md` |
 | `src/decompose.h`, `src/indigo.h` | persistent phase changes; avoid reference mutation/diploid semantics | `source-audit.md`, `features/mixed-signal-indels.md` |
 | `src/assemble.h`, `src/msa.h` | multi-read layout; avoid quality-blind majority consensus | `source-audit.md`, `features/multi-amplicon-consensus.md` |
-| `src/variants.h` | coordinate provenance and interchange projection | `source-audit.md`, `deferred.md` |
+| `src/fmindex.h`, `src/fasta.h`, `src/sage.h` | candidate search vs authoritative alignment; reference slicing | `source-audit.md`, `features/reference-placement.md`, `deferred.md` |
+| `src/variants.h`, `src/web.h` | coordinate provenance and downstream annotation | `source-audit.md`, `deferred.md` |
 
 ## Decision summary
 
@@ -139,6 +161,8 @@ YES  phase-shift change-point detection
 YES  candidate ±N shift testing
 YES  repeat/poly-C context
 YES  multi-amplicon reference-coordinate consensus
+YES  explicit candidate-placement/final-alignment boundary if scaling beyond short references
+YES  reference guidance separated from observed sample support
 ```
 
 Defer:
@@ -153,6 +177,8 @@ Avoid as direct ports:
 
 ```text
 FM-index genome search for current mtDNA scope
+reference-as-an-extra-read consensus semantics
+network annotation inside the deterministic core
 quality-blind majority consensus
 reference mutation of observed basecalls
 direct diploid decomposition semantics

@@ -227,6 +227,19 @@ alignment/
 The existing character-based path should not remain as an indefinite legacy
 branch once an evidence-aware path is validated and selected as authoritative.
 
+### Future placement boundary
+
+If Signal later supports references too large for bounded direct alignment, add
+candidate search *before* this stage rather than replacing it:
+
+~~~text
+candidate search -> one or more CandidateRegion values -> authoritative Gotoh
+~~~
+
+Search failure is not equivalent to alignment failure. Candidate search must
+preserve circular topology and ambiguity instead of silently selecting the
+first seed hit.
+
 ## Phase 4: forward/reverse reconciliation
 
 ### Goal
@@ -277,7 +290,9 @@ Important invariants:
 - uncovered reference positions remain explicitly uncovered;
 - contradictory high-quality evidence remains explicit rather than being
   silently majority-voted away;
-- circular mtDNA origin handling uses the existing topology rules.
+- circular mtDNA origin handling uses the existing topology rules;
+- the reference guides coordinate reconciliation but does not count as an
+  independent read/consensus vote.
 
 ## Phase 6: persistent mixed-signal detector
 
@@ -320,6 +335,10 @@ review/evidence artifact, rather than being inserted directly into
 Derived interoperability formats such as VCF can later project from the
 authoritative typed analysis result. They should not become a second scientific
 implementation.
+
+External known-variant or functional annotation should sit after authoritative
+coordinate projection. Network responses must never alter the deterministic
+core call.
 
 ## PR sequence
 

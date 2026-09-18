@@ -417,3 +417,136 @@ The source/issue audit changes the emphasis of the Tracy roadmap:
 
 The issue history is valuable because it exposes operational failure modes that
 are not obvious from the paper alone.
+
+
+## 16. Tracy separates large-reference anchoring from final profile alignment
+
+For a small FASTA, Tracy directly aligns the trace profile against the complete
+reference. For a large indexed genome, it first searches exact k-mers from the
+trace consensus and uses the resulting seed coordinates to choose a local
+reference slice.
+
+The indexed path is therefore approximately:
+
+~~~text
+primary/consensus string
+    -> exact k-mer hits
+    -> candidate start/orientation
+    -> local reference slice
+    -> profile-to-sequence alignment
+~~~
+
+Unique k-mers are tried first. If they fail, Tracy retries non-unique k-mers
+while excluding extremely repetitive hits. Orientation is accepted only when
+minimum support is reached and one orientation has more than twice the seed
+support of the other.
+
+Issues #15 and #34 document the important consequence: this candidate-search
+stage is faster but less sensitive than direct profile alignment. Ns, incorrect
+basecalls, repeats, and short usable sequence can prevent anchoring even when a
+real alignment exists.
+
+### Signal lesson
+
+Candidate search and authoritative alignment must remain separate contracts.
+Failure to find an exact seed is not scientific evidence that the trace has no
+valid alignment.
+
+Signal's current <=50 kb scope does not justify an index. If a future large-
+reference mode adds seeding/indexing, it should return candidate regions that
+are subsequently evaluated by the authoritative alignment method.
+
+## 17. Circular topology must exist in placement as well as alignment
+
+Tracy issue #41 shows a subtle failure mode: indexed search can correctly find a
+seed near the end of a circular genome and still fail because the extracted
+linear slice cannot continue through coordinate zero. The unindexed profile
+alignment also fails because its reference model is linear.
+
+### Signal lesson
+
+Signal's current circular-reference support is not only an alignment feature.
+Any future candidate-placement/search layer must understand the same topology.
+
+A circular query crossing the origin must not require users to manually rotate
+the reference to make the algorithm work.
+
+## 18. Reference-guided assembly and reference-supported consensus are different semantics
+
+Historical Tracy issue #27 explains that the reference was originally used only
+to guide assembly. A trace disagreement could therefore remain a tie. Tracy
+later added an option to include the reference in consensus computation.
+
+This is a useful distinction: a reference base is prior/context information, not
+an independently observed sample molecule.
+
+### Signal lesson
+
+Signal should use the reference for coordinates, topology, normalization, and
+hypothesis context, but should not silently count it as another read.
+
+If a future method intentionally uses a reference prior to influence consensus,
+the prior contribution must be explicit and separately identifiable from trace
+support.
+
+## 19. Reference ambiguity is normalized before Tracy alignment
+
+Current Tracy accepts IUPAC-degenerate FASTA bases by converting them to `N`
+before indexing/alignment. A 2026 change also tightened parsing so gaps and
+non-IUPAC characters are rejected rather than silently converted.
+
+### Signal lesson
+
+Signal's current one-record A/C/G/T/N FASTA contract is appropriately explicit.
+If richer IUPAC references are ever accepted, their scoring semantics should be
+defined in the alignment contract rather than hidden as parser normalization.
+
+## 20. Tracy trimming quality is relative and end-only
+
+Tracy derives an estimated quality by converting local ambiguity/spacing
+penalties onto a bounded 0..60 scale. Trimming then walks outward from a best
+section and removes only left/right tails. Public issue #12 confirms that Tracy
+does not perform internal excision of poor segments.
+
+This is conceptually similar to Signal's current uncalibrated relative quality
+and end trimming.
+
+### Signal lesson
+
+The useful lesson is structural, not numeric:
+
+- trimming should remain distinct from arbitrary internal masking;
+- relative quality must stay explicitly uncalibrated;
+- FASTQ export should not imply Phred semantics.
+
+Signal already follows these principles and should protect them when sample-
+level consensus is introduced.
+
+## 21. Annotation belongs downstream of authoritative variant coordinates
+
+Tracy can query Ensembl REST variation endpoints and attach known identifiers to
+variants. Public issue #79 exposes a coordinate problem when users switch from a
+whole-genome reference to a local gene FASTA for more sensitive placement:
+variant positions then become local-slice coordinates and are no longer directly
+usable for genome annotation.
+
+### Signal lesson
+
+External annotation should remain downstream of authoritative coordinate
+mapping. A local reference slice must carry an explicit mapping to its parent
+coordinate system before genome-level annotation is permitted.
+
+Network annotation should not be part of the deterministic core scientific
+pipeline.
+
+## 22. Research priorities after the placement/reference audit
+
+The additional audit reinforces four architecture boundaries:
+
+1. **event evidence != reference placement**
+2. **candidate placement != authoritative alignment**
+3. **reference guidance != observed sample support**
+4. **authoritative coordinates != external annotation**
+
+These boundaries matter more to Signal than copying Tracy's FM-index, Ensembl
+client, or FASTQ/BCF convenience outputs.

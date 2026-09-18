@@ -45,7 +45,19 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-ALI-005:** Equal orientation/alignment scores shall have an explicit semantic outcome; a hidden implementation-order bias shall not be mistaken for biological evidence.
 - **TR-SRS-ALI-006:** Circular-origin behavior already supported by Signal shall remain a regression-protected invariant when profile scoring is introduced.
 
-## 7. Variant evidence
+## 7. Reference placement and semantics
+
+- **TR-SRS-PLACE-001:** If future reference search/indexing is introduced, it shall return candidate regions rather than final scientific placements.
+- **TR-SRS-PLACE-002:** Final placement shall be established by the authoritative alignment method with explicit scoring, orientation, topology, coordinate, and tie semantics.
+- **TR-SRS-PLACE-003:** Failure of an exact/seed search shall not be interpreted as evidence that no biological alignment exists.
+- **TR-SRS-PLACE-004:** Candidate placement shall preserve circular topology; origin-crossing queries shall not require manual reference rotation.
+- **TR-SRS-PLACE-005:** Ambiguous/repetitive placements shall remain explicit unless the authoritative aligner resolves them under a documented rule.
+- **TR-SRS-REF-001:** A reference may guide coordinates, normalization, topology, and interpretation but shall not count as an independent sample observation by default.
+- **TR-SRS-REF-002:** Any future reference prior that influences consensus shall be explicitly named/versioned and distinguish prior contribution from observed read support.
+- **TR-SRS-REF-003:** Local reference slices used for sensitive alignment shall carry an explicit mapping to the parent coordinate system before genome-level annotation or projection.
+- **TR-SRS-REF-004:** External/network annotation shall remain downstream of deterministic scientific results and shall not alter authoritative variant calls.
+
+## 8. Variant evidence
 
 - **TR-SRS-VAR-001:** Mixed supporting evidence shall be distinguishable from a clean canonical supporting call.
 - **TR-SRS-VAR-002:** Simple-variant reporting shall not silently reinterpret unresolved mixed evidence as a clean substitution.
@@ -54,7 +66,7 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-VAR-005:** Genotype, zygosity, heteroplasmy fraction, or calibrated genotype-quality semantics shall not be inferred from Tracy-compatible heuristics alone.
 - **TR-SRS-VAR-006:** Variant projections shall preserve authoritative mappings among reference position, original call index, and trace/PLOC sample position.
 
-## 8. Sample-level analysis
+## 9. Sample-level analysis
 
 - **TR-SRS-SAMPLE-001:** Sample-level analysis shall be layered above completed single-trace observations.
 - **TR-SRS-SAMPLE-002:** Every consensus observation shall retain provenance to contributing traces/calls.
@@ -66,8 +78,9 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-SAMPLE-008:** Gap/insertion/deletion support shall be modeled explicitly; a gap shall not receive a fabricated nucleotide-like quality solely to fit one scoring interface.
 - **TR-SRS-SAMPLE-009:** Fractional coverage requirements shall define deterministic rounding and local denominators; integer truncation shall not silently weaken admission rules.
 - **TR-SRS-SAMPLE-010:** Consensus quality shall not be labeled Phred/calibrated error probability until validated as such.
+- **TR-SRS-SAMPLE-011:** Reference agreement shall not increase observed sample support unless an explicitly versioned reference-prior method is selected.
 
-## 9. Mixed signal and indels
+## 10. Mixed signal and indels
 
 - **TR-SRS-MIX-001:** Persistent mixed-signal detection may report a breakpoint/phase-shift hypothesis without assigning genotype.
 - **TR-SRS-MIX-002:** Tracy's diploid/two-allele interpretation shall not be mapped directly onto mtDNA.
@@ -76,14 +89,15 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-MIX-005:** Change-point and candidate-shift algorithms shall operate on immutable evidence and return new hypothesis objects rather than rewriting observed calls.
 - **TR-SRS-MIX-006:** Reference consistency may rank hypotheses but shall not erase competing chromatogram evidence.
 
-## 10. Output contracts
+## 11. Output contracts
 
 - **TR-SRS-OUT-001:** Research evidence shall not expand compact production result schemas by default.
 - **TR-SRS-OUT-002:** Bulk trace/profile/review evidence, if promoted, shall use a separate opt-in independently versioned contract.
 - **TR-SRS-OUT-003:** VCF/BCF or other interchange formats shall be projections from authoritative typed results.
 - **TR-SRS-OUT-004:** A future review/evidence artifact should preserve enough coordinate provenance to link a reported event back to its contributing trace call and raw-signal location without recomputing scientific mappings.
+- **TR-SRS-OUT-005:** External annotation identifiers shall be projections over authoritative coordinates and shall not become evidence used to create or suppress a variant.
 
-## 11. Determinism and validation
+## 12. Determinism and validation
 
 - **TR-SRS-ENG-001:** Every promoted algorithm shall define deterministic ordering, tie-breaking, floating-point/quantization rules, and strand behavior.
 - **TR-SRS-ENG-002:** Memory and runtime shall be explicitly bounded before production promotion.
@@ -92,3 +106,4 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-VAL-003:** Each promoted phase shall compare against the current Signal baseline and document regressions as well as improvements.
 - **TR-SRS-VAL-004:** The validation corpus shall include adversarial artifact cases, suspicious/incomplete PLOC cases, unequal-quality read conflicts, base-versus-gap conflicts, origin-crossing circular alignments, and clean controls.
 - **TR-SRS-VAL-005:** A Tracy disagreement shall be classified as Signal regression, intentional correction, unresolved evidence difference, or Tracy limitation before changing production behavior.
+- **TR-SRS-VAL-006:** Future placement/search validation shall separately measure candidate-recall sensitivity and final-alignment correctness, including Ns, incorrect primary calls, repeats, short retained sequence, and origin-crossing circular cases.

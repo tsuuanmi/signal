@@ -8,7 +8,7 @@ Tracy is a design and benchmark reference, not biological ground truth. The sour
 
 Isolate one invariant at a time:
 
-```text
+~~~text
 peak localization
 PLOC/window bounds
 co-localization
@@ -20,13 +20,15 @@ profile reverse complement
 gap placement tie behavior
 change-point candidate search
 coordinate provenance
-```
+candidate-placement ordering
+reference-prior vs observed-support accounting
+~~~
 
 ### Level 2: synthetic chromatogram shapes
 
 Generate controlled signal arrays containing:
 
-```text
+~~~text
 clean single peaks
 double peaks
 offset neighboring peaks
@@ -40,7 +42,7 @@ phase shift after insertion
 phase shift after deletion
 homopolymer/poly-C ambiguity
 premature/suspicious PLOC termination
-```
+~~~
 
 The expected result should state whether each case is a valid call, ambiguous
 evidence, artifact observation, unsupported input, or review candidate.
@@ -49,7 +51,7 @@ evidence, artifact observation, unsupported input, or review candidate.
 
 Before forward/reverse consensus is promoted, include controlled two-read cases:
 
-```text
+~~~text
 high-quality canonical agreement
 primary disagreement with overlapping secondary evidence
 one high-quality call vs one weak/ambiguous call
@@ -58,7 +60,7 @@ gap vs nucleotide conflict
 orientation tie or near-tie
 short overlap below admission threshold
 adequate overlap with poor agreement
-```
+~~~
 
 This specifically addresses failure modes exposed by Tracy issues #50, #58, and #85.
 
@@ -66,7 +68,7 @@ This specifically addresses failure modes exposed by Tracy issues #50, #58, and 
 
 Critical cases:
 
-```text
+~~~text
 clean mtDNA reads
 forward/reverse pairs
 origin-crossing circular alignments
@@ -77,7 +79,7 @@ known mixed traces
 amplicon overlaps
 high-amplitude artifacts if approved examples are available
 incomplete/suspicious instrument peak-location metadata if available
-```
+~~~
 
 Each file should have source, opaque sample identity, assay context, truth status,
 expected region/direction, reference, instrument/run metadata where permitted,
@@ -87,13 +89,13 @@ and a documented reason it belongs in the corpus.
 
 For claims beyond basic primary-sequence differences, use independent truth where possible:
 
-```text
+~~~text
 NGS
 clonal sequencing
 synthetic mixtures
 validated reference materials
 replicate assays
-```
+~~~
 
 A second interpretation of the same Sanger trace is not independent truth.
 
@@ -103,7 +105,7 @@ Every new stage should compare against current Signal.
 
 Metrics include:
 
-```text
+~~~text
 successful decode/call rate
 alignment success rate
 orientation accuracy
@@ -115,7 +117,7 @@ indel concordance
 origin-crossing correctness
 manual-review burden
 runtime and memory
-```
+~~~
 
 The new system should not silently degrade clean-read performance.
 
@@ -123,7 +125,7 @@ The new system should not silently degrade clean-read performance.
 
 Tracy remains useful as a comparator for:
 
-```text
+~~~text
 basecalls
 ambiguity calls
 trim bounds
@@ -133,7 +135,7 @@ pairwise consensus
 assembly layout
 mixed-indel breakpoint candidates
 variant coordinate provenance
-```
+~~~
 
 The goal is not compatibility. For every material disagreement, classify it as:
 
@@ -159,3 +161,30 @@ interpretation.
 
 Calibration evaluation should report reliability/calibration curves and
 task-appropriate error metrics, not only correlation with Tracy.
+
+
+## Placement/search validation if scope expands
+
+If a future large-reference search stage is introduced, evaluate it separately
+from the final aligner.
+
+Candidate-search metrics:
+
+- true locus included in candidate set;
+- candidate count and ambiguity rate;
+- forward/reverse candidate recall;
+- failure rate by N fraction and basecall error rate;
+- repeat-density sensitivity;
+- retained-sequence-length sensitivity;
+- circular-origin candidate recall.
+
+Final-alignment metrics remain separate:
+
+- correct selected locus;
+- correct orientation;
+- coordinate correctness;
+- origin-wrap correctness;
+- explicit ambiguous-placement rate.
+
+A missing seed hit must be reported as a search-stage miss, not as proof that the
+trace lacks a biological match.

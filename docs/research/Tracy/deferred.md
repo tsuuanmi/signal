@@ -2,31 +2,29 @@
 
 ## 56. Features From Tracy That Should Not Be Prioritized
 
-### 56.1 FM Index
+### 56.1 FM Index / large-reference seed search
 
-Tracy supports large-reference genome indexing.
+Tracy's FM-index is useful mainly because direct profile dynamic programming
+does not scale to large genomes. Its architecture is worth remembering:
 
-Signal's primary mtDNA reference is approximately:
+~~~text
+exact k-mer candidate search
+    ->
+local reference slice
+    ->
+profile-to-sequence refinement
+~~~
 
-```text
-16.6 kb
-```
+The public issue history also documents the cost: exact anchoring is less
+sensitive with Ns, incorrect primary calls, repeats, and short usable sequence.
 
-A genome-scale index is unnecessary.
+Signal's current mtDNA/short-reference scope does not need this complexity.
+Prefer the existing bounded circular affine-gap alignment, and consider banding
+before genome indexing if performance becomes a problem.
 
-Prefer:
-
-```text
-localized circular affine-gap alignment
-```
-
-and later:
-
-```text
-banded alignment
-```
-
-if performance requires it.
+If Signal later expands to genome-scale references, candidate search can be
+added as a separate acceleration stage under ADR-0012. It must not become the
+authoritative scientific alignment.
 
 ---
 

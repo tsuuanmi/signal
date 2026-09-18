@@ -151,6 +151,22 @@ haplogroup consistency QC
 
 These remain downstream of generic signal and alignment evidence.
 
+## Optional scaling phase — large-reference candidate placement
+
+This phase is not on the current mtDNA path.
+
+Only if reference scope grows beyond bounded direct alignment:
+
+~~~text
+query evidence
+  -> candidate search/index
+  -> candidate regions
+  -> authoritative evidence-aware alignment
+~~~
+
+Validation must report candidate-search recall separately from final alignment
+correctness. Circular topology and ambiguous placements remain explicit.
+
 ## Phase I — calibration
 
 Only after sufficient truth data:
@@ -182,7 +198,7 @@ assay-specific LoD/LoQ
 | P2 | review/evidence artifact | Medium-High | Medium |
 | P3 | VCF/BCF projection | Medium | Low-Medium |
 | Defer | quantitative heteroplasmy | Potentially high | Very high |
-| Skip now | FM-index genome alignment | Very low | High |
+| Skip now | FM-index / large-reference candidate search | Very low for current scope | High |
 | Skip now | direct de novo assembly port | Very low | High |
 
 ## Highest-value Tracy lessons after the source audit

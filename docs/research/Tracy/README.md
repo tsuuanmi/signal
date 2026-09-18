@@ -18,6 +18,7 @@ It intentionally mirrors the organization of the root Signal documentation: requ
 - [`features/locus-evidence.md`](features/locus-evidence.md): peak geometry, co-localization, and locus refinement.
 - [`features/evidence-profiles.md`](features/evidence-profiles.md): preserving per-locus A/C/G/T evidence.
 - [`features/profile-alignment.md`](features/profile-alignment.md): profile-to-reference and profile-to-profile alignment.
+- [`features/reference-placement.md`](features/reference-placement.md): candidate reference search, topology, and placement/alignment boundaries.
 - [`features/sample-analysis.md`](features/sample-analysis.md): ReadObservation, read admission, and sample-level consensus.
 - [`features/mixed-signal-indels.md`](features/mixed-signal-indels.md): persistent mixed signal, indel shifts, and homopolymer context.
 - [`features/multi-amplicon-consensus.md`](features/multi-amplicon-consensus.md): tiled mtDNA reads, sample-level variants, and calibration boundaries.
@@ -47,7 +48,9 @@ The source audit sharpens the original direction:
 5. reuse Signal's deterministic Gotoh core but define profile scoring numerics/ties explicitly;
 6. keep pairwise and multi-trace consensus evidence-aware and gap-aware;
 7. never mutate observed basecall evidence using a reference-derived hypothesis;
-8. preserve Signal's existing strengths in circular topology, normalization, typed provenance, and conservative biological semantics.
+8. separate candidate reference placement from authoritative alignment if large-reference search is ever added;
+9. keep reference guidance distinct from observed sample support;
+10. preserve Signal's existing strengths in circular topology, normalization, typed provenance, and conservative biological semantics.
 
 ## Core principle
 
