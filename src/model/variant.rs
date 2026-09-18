@@ -56,7 +56,8 @@ pub struct Variant {
 }
 
 /// Stable reason a primary-difference candidate was not reportable.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub enum VariantExclusionReason {
     /// At least one changed base was not canonical A/C/G/T.
     NonCanonicalAllele,
@@ -92,10 +93,25 @@ pub struct ExcludedVariant {
     pub(crate) reasons: Vec<VariantExclusionReason>,
 }
 
+/// One normalized canonical event observed before configured eligibility filtering.
+#[derive(Debug, Clone)]
+pub struct ObservedVariant {
+    pub(crate) variant: Variant,
+    pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
+}
+
+impl ObservedVariant {
+    /// Whether this normalized observation is reportable under the active config.
+    pub(crate) fn eligible(&self) -> bool {
+        self.exclusion_reasons.is_empty()
+    }
+}
+
 /// Variant stage output.
 #[derive(Debug, Clone)]
 pub struct VariantCallingResult {
     pub(crate) reported: Vec<Variant>,
+    pub(crate) observed: Vec<ObservedVariant>,
     pub(crate) excluded: Vec<ExcludedVariant>,
 }
 
