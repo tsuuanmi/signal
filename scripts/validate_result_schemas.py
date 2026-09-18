@@ -171,6 +171,14 @@ def parse_args(argv: list[str] | None) -> argparse.Namespace:
         metavar="RESULT",
         help="basecall result to validate; may be repeated",
     )
+    parser.add_argument(
+        "--sample-evidence",
+        action="append",
+        type=Path,
+        default=[],
+        metavar="RESULT",
+        help="sample-evidence result to validate; may be repeated",
+    )
     return parser.parse_args(argv)
 
 
@@ -179,10 +187,13 @@ def main(argv: list[str] | None = None) -> int:
     errors: list[str] = []
     analysis_validator = validator(ANALYSIS_SCHEMA, errors)
     basecall_validator = validator(BASECALL_SCHEMA, errors)
+    sample_validator = validator(SAMPLE_SCHEMA, errors)
     analysis_paths = args.analysis or [ANALYSIS_EXAMPLE]
     basecall_paths = args.basecalls or [BASECALL_EXAMPLE]
+    sample_paths = args.sample_evidence or [SAMPLE_EXAMPLE]
     validate_documents(analysis_validator, analysis_paths, errors)
     validate_documents(basecall_validator, basecall_paths, errors)
+    validate_documents(sample_validator, sample_paths, errors)
 
     analysis_example = load_json(ANALYSIS_EXAMPLE)
     valid_shapes = analysis_call_shapes(analysis_example)
@@ -195,8 +206,10 @@ def main(argv: list[str] | None = None) -> int:
             )
     rejected_analysis = rejected_analysis_shapes(analysis_example)
     rejected_basecalls = rejected_basecall_shapes(load_json(BASECALL_EXAMPLE))
+    rejected_samples = rejected_sample_shapes(load_json(SAMPLE_EXAMPLE))
     assert_rejected(analysis_validator, rejected_analysis, errors)
     assert_rejected(basecall_validator, rejected_basecalls, errors)
+    assert_rejected(sample_validator, rejected_samples, errors)
 
     for error in errors:
         print(f"FAIL: {error}", file=sys.stderr)
@@ -204,9 +217,11 @@ def main(argv: list[str] | None = None) -> int:
         print(f"{len(errors)} check(s) failed", file=sys.stderr)
         return 1
     print(
-        f"OK: validated {len(analysis_paths)} analysis and {len(basecall_paths)} basecall "
-        f"document(s), {len(valid_shapes)} analysis call shapes; rejected "
-        f"{len(rejected_analysis) + len(rejected_basecalls)} invalid shape(s)"
+        f"OK: validated {len(analysis_paths)} analysis, {len(basecall_paths)} basecall, "
+        f"and {len(sample_paths)} sample-evidence document(s), {len(valid_shapes)} "
+        f"analysis call shapes; rejected "
+        f"{len(rejected_analysis) + len(rejected_basecalls) + len(rejected_samples)} "
+        "invalid shape(s)"
     )
     return 0
 
