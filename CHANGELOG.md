@@ -6,6 +6,8 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace `signal.sample_evidence/v1` with compact `signal.sample_evidence/v2`: factor read name/SHA/orientation/coverage into one SHA-sorted read registry, replace dense `loci[]` with sparse `locus_differences[]`, and reference reads by deterministic 0-based index without a v1 compatibility output.
+
 - Replace `signal.analysis/v4` with compact `signal.analysis/v5`: retain input/reference/configuration identities, call count and trim, merged noisy regions, alignment summary, normalized variants with concise call mappings, and warning counts; remove filenames, full sequences, rolling windows, gapped rows, method constants, full peaks, vendor data, and redundant fields without a compatibility output.
 - Replace `signal.analysis/v3` with `signal.analysis/v4`, adding bounded rolling signal-quality windows, merged candidate-noisy regions, and a signal-processing method identity without a v3 compatibility path.
 - Replace strict configuration schema version 3 with version 4, requiring the minimum two-window noisy-interval setting.
@@ -14,6 +16,8 @@ All notable changes to this project are documented here.
 - Replace strict configuration schema version 1 with version 2, requiring variant peak, relative-quality, and inclusive-region settings.
 
 ### Added
+
+- Multi-read `signal sample` evidence now preserves filtered normalized-variant observations, reviewer-facing read provenance, mapped call pointers, and focused reference-support quality at differential loci while omitting routine all-reference loci.
 
 - Reference-free `signal basecall <trace.ab1>` with one atomic no-overwrite `signal.basecalls/v1` JSON result containing full primary/ambiguity/retained sequences, trim bounds, merged noisy regions, provenance, and warning counts through the same validated read-processing stages as reference analysis.
 - Deterministic `signal.windowed_snr/v1` analysis with local median/first-difference-MAD estimates, finite SNR features, and merged call/sample candidate-noisy regions requiring at least two candidate windows by default.
