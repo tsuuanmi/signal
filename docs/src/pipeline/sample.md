@@ -9,7 +9,8 @@ Runs one multi-read sample-evidence operation.
 - Load one validated sample identifier, one shared reference/configuration, and one or more traces.
 - Process every trace independently through `pipeline::observation`.
 - Aggregate completed observations through `sample::aggregate`.
-- Build and atomically publish one `results/<sample-id>.sample.json` document.
+- Log read, sparse differential-locus, and normalized-variant counts.
+- Build and atomically publish one `signal.sample_evidence/v2` document at `results/<sample-id>.sample.json`.
 - Write sample-level operational records to `$SIGNAL_LOG_DIR/<sample-id>.sample.log`.
 
 ## Non-responsibilities
