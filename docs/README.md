@@ -19,7 +19,8 @@
 - [`roadmap.md`](roadmap.md): completed MVP and post-MVP candidates.
 - [`UPDATE.md`](UPDATE.md): detailed mtDNA processing improvement plan.
 - [`TODO.md`](TODO.md): ROI-prioritized mtDNA work queue.
-- [`tracy_review.md`](tracy_review.md): Tracy-informed technical design notes.
+- [`research/Tracy/README.md`](research/Tracy/README.md): curated Tracy research, ROI ranking, and implementation direction.
+- [`tracy_review.md`](tracy_review.md): long-form Tracy source review.
 - [`delivery-record.md`](delivery-record.md): delivery record and acceptance criteria.
 
 ## Contracts and decisions
