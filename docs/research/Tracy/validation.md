@@ -1,183 +1,161 @@
 # Tracy Research Validation Strategy
 
-Tracy is a design and benchmark reference, not biological ground truth.
+Tracy is a design and benchmark reference, not biological ground truth. The source audit also shows that some Tracy behaviors are deliberate engineering compromises rather than properties Signal should reproduce.
 
-## 67. Validation Strategy
+## Validation ladder
 
-None of the Tracy-inspired improvements should be considered complete using only synthetic unit tests.
+### Level 1: deterministic unit tests
 
-Validation should progress through several levels.
-
----
-
-## 68. Level 1: Synthetic Unit Tests
-
-Useful for:
+Isolate one invariant at a time:
 
 ```text
 peak localization
-
+PLOC/window bounds
 co-localization
-
 profile normalization
-
-orientation
-
-profile scoring
-
-tie behavior
-
-phase-shift candidate search
+zero/flat evidence
+fixed-point/quantized profile scoring
+orientation tie behavior
+profile reverse complement
+gap placement tie behavior
+change-point candidate search
+coordinate provenance
 ```
 
-Examples should isolate one property at a time.
+### Level 2: synthetic chromatogram shapes
 
----
-
-## 69. Level 2: Synthetic Chromatogram Shapes
-
-Generate signal arrays containing:
+Generate controlled signal arrays containing:
 
 ```text
 clean single peaks
-
 double peaks
-
 offset neighboring peaks
-
 compressed spacing
-
 baseline drift
-
-saturation
-
+saturation/clipping
+broad high-amplitude dye-blob-like artifact
 low amplitude
-
+one extreme outlier over otherwise usable sequence
 phase shift after insertion
-
 phase shift after deletion
+homopolymer/poly-C ambiguity
+premature/suspicious PLOC termination
 ```
 
-This is useful before real biological data is available.
+The expected result should state whether each case is a valid call, ambiguous
+evidence, artifact observation, unsupported input, or review candidate.
 
----
+### Level 3: pairwise conflict corpus
 
-## 70. Level 3: Provenanced Real AB1 Corpus
+Before forward/reverse consensus is promoted, include controlled two-read cases:
+
+```text
+high-quality canonical agreement
+primary disagreement with overlapping secondary evidence
+one high-quality call vs one weak/ambiguous call
+canonical base vs low-quality insertion
+gap vs nucleotide conflict
+orientation tie or near-tie
+short overlap below admission threshold
+adequate overlap with poor agreement
+```
+
+This specifically addresses failure modes exposed by Tracy issues #50, #58, and #85.
+
+### Level 4: provenanced real AB1 corpus
 
 Critical cases:
 
 ```text
-clean homoplasmic-like mtDNA reads
-
+clean mtDNA reads
 forward/reverse pairs
-
+origin-crossing circular alignments
 poly-C regions
-
 known indels
-
 poor-quality reads
-
 known mixed traces
-
 amplicon overlaps
+high-amplitude artifacts if approved examples are available
+incomplete/suspicious instrument peak-location metadata if available
 ```
 
-Each file should have:
+Each file should have source, opaque sample identity, assay context, truth status,
+expected region/direction, reference, instrument/run metadata where permitted,
+and a documented reason it belongs in the corpus.
 
-```text
-source
+### Level 5: independent truth
 
-sample identity
-
-assay context
-
-truth status
-
-expected region
-
-direction
-
-reference
-```
-
----
-
-## 71. Level 4: Independent Truth
-
-For claims beyond basic primary-sequence differences, use independent truth where possible.
-
-Examples:
+For claims beyond basic primary-sequence differences, use independent truth where possible:
 
 ```text
 NGS
-
 clonal sequencing
-
 synthetic mixtures
-
 validated reference materials
+replicate assays
 ```
 
-A second call from the same Sanger trace is not independent truth.
+A second interpretation of the same Sanger trace is not independent truth.
 
----
-
-## 72. Benchmark Against Current Signal
+## Benchmark against current Signal
 
 Every new stage should compare against current Signal.
 
-Metrics:
+Metrics include:
 
 ```text
+successful decode/call rate
 alignment success rate
-
 orientation accuracy
-
 call retention
-
 false ambiguity rate
-
+artifact false-pass / false-reject rate
 variant concordance
-
 indel concordance
-
+origin-crossing correctness
 manual-review burden
+runtime and memory
 ```
 
 The new system should not silently degrade clean-read performance.
 
----
+## Benchmark against Tracy
 
-## 73. Benchmark Against Tracy
-
-Tracy can also serve as a reference comparator.
-
-Useful comparison categories:
+Tracy remains useful as a comparator for:
 
 ```text
 basecalls
-
 ambiguity calls
-
 trim bounds
-
-orientation
-
+profile orientation
 alignment
-
-consensus
-
-mixed-indel candidates
+pairwise consensus
+assembly layout
+mixed-indel breakpoint candidates
+variant coordinate provenance
 ```
 
-The goal is not byte-for-byte compatibility.
+The goal is not compatibility. For every material disagreement, classify it as:
 
-The goal is:
+1. Signal regression;
+2. intentional Signal correction or stronger invariant;
+3. unresolved evidence/model difference;
+4. known Tracy limitation.
 
-```text
-understand differences
-```
+Known comparison cases already include:
 
-and ensure deviations are intentional.
+- high-amplitude artifact handling (Tracy issue #116);
+- incomplete machine peak-location series (issue #91);
+- circular-origin alignment (issue #98);
+- consensus quality/base-gap semantics (issues #50/#58);
+- overlap admission (issue #85, fixed in Tracy in August 2026).
 
----
+## Calibration gate
+
+No relative quality, evidence weight, support ratio, consensus score, or
+trace-mixture coefficient should be reported as Phred, probability, genotype
+quality, or heteroplasmy fraction until empirical calibration supports that
+interpretation.
+
+Calibration evaluation should report reliability/calibration curves and
+task-appropriate error metrics, not only correlation with Tracy.

@@ -1,24 +1,37 @@
 # Tracy Source Reference Map
 
-## 88. Tracy Source Areas Worth Keeping as References
+## Audit baseline
 
-When implementing future work, the following Tracy files are particularly useful as conceptual references.
+The current source audit is pinned to Tracy commit:
+
+```text
+0672fb096b98c4fd36da47d634c8b89cd86cb217
+2026-09-10
+```
+
+The primary publication is:
+
+> Rausch T, Fritz MH, Untergasser A, Benes V. Tracy: basecalling, alignment,
+> assembly and deconvolution of sanger chromatogram trace files. BMC Genomics
+> 21, 230 (2020).
+
+Paper: https://pmc.ncbi.nlm.nih.gov/articles/PMC7071639/
+
+Detailed findings from the pinned source revision and public issue history live
+in [`source-audit.md`](source-audit.md).
+
+## Source areas worth keeping as references
 
 ### Basecalling and signal interpretation
 
 ```text
 src/abif.h
+src/trim.h
 ```
 
-Useful for:
-
-```text
-peak selection
-primary/secondary handling
-quality heuristics
-```
-
----
+Useful for peak windows, primary/secondary handling, quality heuristics, and
+trimming. Do not copy the basecall-gated profile semantics or treat the heuristic
+quality as calibrated.
 
 ### Trace profiles
 
@@ -26,15 +39,9 @@ quality heuristics
 src/profile.h
 ```
 
-Useful for:
-
-```text
-representing nucleotide signal as a profile
-profile reverse complement
-trace/reference profile construction
-```
-
----
+Useful for profile reverse complement and the general idea that trace evidence
+can survive past a primary string. Signal should construct profiles from its own
+channel evidence rather than from thresholded call membership.
 
 ### Profile-aware alignment
 
@@ -43,98 +50,91 @@ src/align.h
 src/gotoh.h
 ```
 
-Useful for:
+Useful for expected match/mismatch profile scoring and integration with affine
+DP. Signal should retain its own Gotoh implementation, explicit tie ordering,
+circular topology, and deterministic numeric policy.
 
-```text
-profile-to-sequence scoring
-profile-to-profile scoring
-affine-gap DP integration
-```
-
-Signal should keep its own Gotoh implementation and borrow only the profile-scoring concept.
-
----
-
-### Forward/reverse consensus
+### Pairwise consensus
 
 ```text
 src/consensus.h
 ```
 
-Useful for:
+Useful for profile/profile orientation and overlap admission. Avoid importing
+uncalibrated likelihood/quality terminology or assuming gap evidence is
+equivalent to nucleotide evidence.
+
+### Progressive multi-trace alignment
 
 ```text
-orientation selection
-
-profile-to-profile alignment
-
-combining evidence
-
-pairwise consensus
+src/msa.h
+src/assemble.h
 ```
 
-Avoid directly importing Tracy's quality/genotype terminology.
-
----
+Useful for orientation search, progressive profile alignment, guide-tree ideas,
+and reference-guided read admission. Final Tracy assembly consensus is a
+quality-blind character majority vote, so that part should not be copied.
 
 ### Mixed-indel decomposition
 
 ```text
 src/decompose.h
+src/indigo.h
 ```
 
-Useful for:
+Useful for change-point-like breakpoint detection and candidate ±N shift
+evaluation. Signal should not reuse reference-threading that mutates observed
+basecalls, diploid semantics, or uncalibrated allele-fraction estimation.
+
+### Variant projection
 
 ```text
-change-point-like breakpoint detection
-
-persistent phase-shift detection
-
-candidate insertion/deletion shift evaluation
-
-robust candidate comparison
+src/variants.h
 ```
 
-Do not inherit diploid heterozygous assumptions.
+Useful for preserving links among reference position, basecall position, raw
+signal position, and method identity. Genotype/GQ semantics are coupled to
+Tracy's decomposition and heuristic qualities and are not directly portable.
 
----
+## Public issues that expose useful failure modes
 
-### Multi-trace assembly
+| Issue | Finding | Signal lesson |
+|---|---|---|
+| [#50](https://github.com/gear-genomics/tracy/issues/50) | assembly quality is support-fraction based rather than per-base calibrated quality | do not label consensus support as Phred without calibration |
+| [#58](https://github.com/gear-genomics/tracy/issues/58) | assembly is majority vote; base-vs-gap conflicts are not quality-symmetric | model gap/indel support explicitly |
+| [#85](https://github.com/gear-genomics/tracy/issues/85) | pairwise consensus needed explicit overlap/agreement controls; implemented 2026-08-18 | read admission belongs before consensus |
+| [#91](https://github.com/gear-genomics/tracy/issues/91) | Tracy requires original machine peak locations | make PLOC dependency/completeness explicit |
+| [#98](https://github.com/gear-genomics/tracy/issues/98) | Tracy aligns to linear references only | preserve Signal's explicit circular topology |
+| [#116](https://github.com/gear-genomics/tracy/issues/116) | high-amplitude dye-blob artifacts are unsupported | validate local artifact resilience before profile promotion |
 
-```text
-src/assemble.h
-```
+## Source-to-Signal map
 
-Useful for:
+| Tracy source area | Research lesson | Signal research document |
+|---|---|---|
+| `src/abif.h`, `src/trim.h` | event anchors, peak selection, relative quality, trimming | `overview.md`, `source-audit.md`, `features/locus-evidence.md` |
+| `src/profile.h` | preserve nucleotide evidence but avoid basecall-gated profiles | `source-audit.md`, `features/evidence-profiles.md` |
+| `src/gotoh.h`, `src/align.h` | profile scoring with explicit numeric/tie semantics | `source-audit.md`, `features/profile-alignment.md` |
+| `src/consensus.h` | pairwise profile reconciliation and overlap admission | `source-audit.md`, `features/sample-analysis.md` |
+| `src/decompose.h`, `src/indigo.h` | persistent phase changes; avoid reference mutation/diploid semantics | `source-audit.md`, `features/mixed-signal-indels.md` |
+| `src/assemble.h`, `src/msa.h` | multi-read layout; avoid quality-blind majority consensus | `source-audit.md`, `features/multi-amplicon-consensus.md` |
+| `src/variants.h` | coordinate provenance and interchange projection | `source-audit.md`, `deferred.md` |
 
-```text
-read admission
-
-orientation handling
-
-multi-read workflow
-
-consensus construction
-```
-
-Signal should prefer reference-coordinate mtDNA consensus over directly porting Tracy's progressive assembly.
-
----
-
-## 89. Decision Summary
+## Decision summary
 
 Recommended:
 
 ```text
+YES  explicit PLOC evidence state
+YES  artifact observations / local robust evidence
 YES  LocusEvidence
 YES  peak co-localization
 YES  locus refinement
-YES  evidence profiles
+YES  basecall-independent evidence profiles
 YES  profile/reference alignment
 YES  profile/profile comparison
-YES  F/R evidence consensus
-YES  sample-level read model
-YES  read admission
+YES  explicit overlap/read admission
+YES  evidence- and gap-aware F/R consensus
+YES  immutable sample-level observations
 YES  phase-shift change-point detection
 YES  candidate ±N shift testing
 YES  repeat/poly-C context
@@ -145,55 +145,16 @@ Defer:
 
 ```text
 heteroplasmy quantification
-
 calibrated Phred-like confidence
-
 haplogroup-based interpretation
 ```
 
-Low priority:
+Avoid as direct ports:
 
 ```text
-SCF
-
-FASTQ
-
-VCF/BCF
-```
-
-Avoid for mtDNA-specific core:
-
-```text
-FM-index genome search
-
-direct Tracy de novo assembly port
-
+FM-index genome search for current mtDNA scope
+quality-blind majority consensus
+reference mutation of observed basecalls
 direct diploid decomposition semantics
-
-raw signal ratio = heteroplasmy percentage
+raw signal reconstruction coefficient = heteroplasmy percentage
 ```
-
----
-
-## 90. Closing Principle
-
-The strongest lesson from Tracy can be summarized in one sentence:
-
-> **A Sanger chromatogram contains richer nucleotide evidence than the final primary base string, and Signal should preserve that evidence for as long as possible.**
-
-For mtDNA, the corresponding sample-level principle is:
-
-> **Independent forward, reverse, replicate, and overlapping-amplicon observations should be combined as evidence, not merely as called strings.**
-
-Those two principles should guide the next major architectural evolution of Signal.
-
-## Source-to-Signal map
-
-| Tracy source area | Research lesson | Signal research document |
-|---|---|---|
-| `src/abif.h`, `src/trim.h` | basecall evidence, relative quality, trimming | `overview.md`, `features/locus-evidence.md` |
-| `src/profile.h` | keep nucleotide evidence as profiles | `features/evidence-profiles.md` |
-| `src/gotoh.h`, `src/align.h` | profile-aware substitution scoring | `features/profile-alignment.md` |
-| `src/consensus.h` | profile-to-profile reconciliation | `features/sample-analysis.md` |
-| `src/decompose.h` | persistent phase/mixed-signal changes | `features/mixed-signal-indels.md` |
-| `src/assemble.h`, `src/msa.h` | multi-read overlap and consensus | `features/multi-amplicon-consensus.md` |

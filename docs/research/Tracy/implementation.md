@@ -21,6 +21,9 @@ trace
 The intended evolution is incremental. Each step should remain independently
 useful and should not require the later steps to justify it.
 
+The source audit adds one important ordering constraint: richer profile
+interpretation must not outrun validation of the event/evidence foundation.
+
 ## Phase 1: distinguish simple variants from mixed supporting signal
 
 ### Goal
@@ -75,6 +78,36 @@ focused tests
 If the serialized warning contract changes, it requires an explicit schema
 version decision rather than an incidental field addition.
 
+## Phase 1A: harden event/evidence diagnostics
+
+### Goal
+
+Before changing alignment semantics, make the current PLOC dependency and the
+known artifact boundary explicit and testable.
+
+Research/validation work should cover:
+
+- suspicious or prematurely terminated PLOC series;
+- implausible local call spacing;
+- saturation/clipping;
+- broad high-amplitude dye-blob-like events;
+- large local outliers over otherwise usable sequence;
+- baseline shift and neighboring-event interference.
+
+This phase should prefer observation/diagnostic additions over automatic
+waveform correction. A future PLOC-independent event detector would be a new
+method version, not a silent fallback.
+
+### Why before profiles
+
+Tracy's profile construction demonstrates that richer downstream
+representations cannot recover evidence that was already mischaracterized
+upstream. Public Tracy issues also show complete basecalling failure on some
+high-amplitude artifacts and hard dependence on instrument peak positions.
+
+Signal's existing rolling local SNR is useful, but remains observation-only; it
+must not be cited as evidence that the caller is already artifact-resilient.
+
 ## Phase 2: introduce an internal nucleotide evidence profile
 
 ### Goal
@@ -109,8 +142,13 @@ enum instead. The important invariants are:
 
 ### Evidence source
 
-Do not port Tracy's `createProfile` formula verbatim. Evaluate profiles built
-from Signal's own evidence:
+Do not port Tracy's `createProfile` formula verbatim. Tracy first decides
+which channels belong to the primary/secondary call and only then constructs a
+profile from those admitted channels, softening missing called-signal mass
+toward a uniform vector. Signal should avoid making the ambiguity threshold the
+definition of downstream evidence.
+
+Evaluate profiles built directly from Signal's own evidence:
 
 1. selected peak heights;
 2. co-located channel values at the primary peak;
@@ -128,6 +166,9 @@ Two reasonable boundaries should be evaluated before implementation:
 - a `model` evidence type constructed by a focused algorithm module; or
 - an alignment-private profile when the evidence has no meaning outside
   alignment.
+
+Whichever boundary is chosen, observed/basecall evidence remains immutable under
+later reference-aware interpretation.
 
 Prefer the first only if forward/reverse consensus or future mixed-signal
 analysis will reuse exactly the same semantics.
@@ -151,8 +192,11 @@ score(profile, G)
   + (P(A) + P(C) + P(T)) * mismatch_score
 ```
 
-This is only a conceptual starting point. Before implementation, define behavior
-for:
+This is only a conceptual starting point. Tracy computes a floating expected
+match/mismatch score and then casts it to an integer before DP recursion; Signal
+should instead make numeric quantization part of the method contract.
+
+Before implementation, define behavior for:
 
 - unresolved/flat profiles;
 - `N` in the reference;
@@ -160,7 +204,9 @@ for:
 - reverse-complement transformation;
 - gap scoring;
 - circular references;
-- minimum identity/callable metrics.
+- minimum identity/callable metrics;
+- fixed numeric/quantization rules;
+- exact orientation and traceback tie semantics.
 
 ### Architecture rule
 
@@ -204,11 +250,15 @@ Do not make `basecalling`, `alignment`, or `variant_calling` accept
 A sample-level layer can own:
 
 - trace identity and orientation;
-- reference-coordinate overlap;
+- reference-coordinate overlap and admission criteria;
 - per-locus evidence reconciliation;
+- nucleotide versus gap/indel event support;
 - disagreement classification;
 - consensus confidence;
 - provenance of every contributing trace.
+
+Unlike Tracy `assemble`, this layer should not reduce admitted reads to
+quality-blind majority voting before the final decision.
 
 ## Phase 5: reference-guided multi-trace consensus
 
@@ -222,6 +272,8 @@ Important invariants:
 
 - every consensus locus links back to contributing trace calls;
 - poor or ambiguous reads do not gain equal weight automatically;
+- local coverage denominator and any fractional threshold are explicit;
+- gap/indel support is modeled explicitly rather than assigned fake base quality;
 - uncovered reference positions remain explicitly uncovered;
 - contradictory high-quality evidence remains explicit rather than being
   silently majority-voted away;
@@ -254,6 +306,8 @@ classification = unresolved_mixed_signal
 ```
 
 This should first be observation-only and validated on controlled examples.
+Reference consistency may rank hypotheses but must not rewrite the underlying
+primary/secondary or signal evidence.
 
 ## Output strategy
 
@@ -276,25 +330,32 @@ Recommended independent PRs:
    - explicit exclusion semantics;
    - synthetic unit/integration coverage.
 
-2. **Nucleotide evidence profile**
+2. **PLOC/artifact evidence diagnostics**
+   - explicit PLOC completeness/suspicion semantics;
+   - synthetic dye-blob/saturation/outlier cases;
+   - observation-first artifact flags;
+   - no automatic waveform repair.
+
+3. **Nucleotide evidence profile**
    - typed internal representation;
-   - deterministic construction;
+   - direct channel-evidence construction independent of ambiguity threshold;
+   - deterministic normalization;
    - no behavior change yet if possible.
 
-3. **Evidence-aware alignment**
+4. **Evidence-aware alignment**
    - generalized scorer;
    - validation against current clean-call behavior;
    - targeted ambiguous/noisy synthetic cases.
 
-4. **Two-trace reconciliation model**
+5. **Two-trace reconciliation model**
    - forward/reverse evidence in reference coordinates;
    - no full sample assembly yet.
 
-5. **Reference-guided sample consensus**
+6. **Reference-guided sample consensus**
    - multiple overlapping traces;
    - explicit provenance and disagreement.
 
-6. **Mixed-signal breakpoint research**
+7. **Mixed-signal breakpoint research**
    - observation-only detector;
    - controlled validation before any biological interpretation.
 
@@ -312,7 +373,10 @@ At minimum:
 - forward/reverse symmetry where expected;
 - coordinate and call-index preservation;
 - no regression on clean single-peak traces;
+- explicit behavior for incomplete/suspicious PLOC evidence;
+- explicit behavior for high-amplitude artifacts and saturation;
 - explicit behavior for mixed and unresolved calls;
+- explicit nucleotide-versus-gap conflict behavior;
 - bounded memory/runtime;
 - schema stability unless intentionally versioned;
 - controlled synthetic examples before claims on real biological mixtures.

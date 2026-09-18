@@ -1,27 +1,34 @@
 # Tracy Research Roadmap
 
-This roadmap is a sequencing of research and validation work, not a commitment to ship every phase.
+This roadmap is a sequencing of research and validation work, not a commitment to ship every phase. The 2026-09 source/issue audit adds an evidence-foundation gate before profile work.
 
-## 74. Suggested Development Order
+## Phase 0 — protect the evidence foundation
 
-### Phase A — Peak evidence foundation
-
-Implement:
+Before changing alignment semantics:
 
 ```text
-baseline
+mixed-supporting-call gate for simple variants
+PLOC completeness/suspicion diagnostics
+artifact test corpus
+saturation/high-amplitude-outlier observations
+baseline-shift and neighbor-interference cases
+```
 
-corrected height
+This phase is intentionally conservative. It should improve trust in existing
+single-trace output without requiring profile alignment.
 
+## Phase A — richer locus evidence
+
+Research and validate:
+
+```text
+baseline/corrected height
 prominence
-
 local noise
-
 per-channel SNR
-
-spacing-aware co-localization beyond the v3 gate
-
-locus refinement
+spacing-aware co-localization beyond the v3 sample gate
+bounded locus refinement
+explicit artifact flags
 ```
 
 Output:
@@ -30,11 +37,9 @@ Output:
 LocusEvidence
 ```
 
-Do this first.
+Observed values and derived interpretations remain separate.
 
----
-
-## 75. Phase B — Evidence profile
+## Phase B — basecall-independent evidence profile
 
 Implement:
 
@@ -44,233 +49,151 @@ LocusEvidence
 EvidenceProfile
 ```
 
-Initially keep:
+The profile must derive from channel evidence directly. It must not be defined
+by which channels already passed the current ambiguity threshold.
+
+Initially keep primary calling unchanged to isolate profile behavior.
+
+## Phase C — profile/reference alignment
+
+Add an experimental evidence-aware substitution scorer around the existing
+Gotoh state machine.
+
+Define before implementation:
 
 ```text
-primary calling unchanged
+fixed numeric/quantization policy
+unresolved evidence score
+orientation tie semantics
+gap semantics
+circular topology behavior
+identity/callable metrics
 ```
 
-to isolate profile behavior from basecalling behavior.
+Benchmark against current primary-sequence Gotoh and protect origin-crossing
+circular cases.
 
----
+## Phase D — ReadObservation
 
-## 76. Phase C — Profile/reference alignment
+Map each accepted trace into immutable reference-coordinate observations.
 
-Add optional:
+This layer preserves:
 
 ```text
-profile-aware substitution scoring
+trace identity
+orientation
+source call/PLOC mapping
+nucleotide evidence
+local quality/artifact state
+alignment/gap observations
 ```
 
-while retaining:
+Reference-aware interpretation cannot rewrite the source evidence.
+
+## Phase E — two-read forward/reverse reconciliation
+
+Start with one forward and one reverse trace.
+
+Before consensus:
 
 ```text
-primary-sequence Gotoh
+minimum overlap
+minimum agreement/read admission
+orientation confidence
+artifact/quality admission
 ```
 
-as comparison mode.
+At each locus preserve both nucleotide evidence and explicit gap/indel event
+support. High-quality conflicts remain visible.
 
-Benchmark both.
+## Phase F — reference-guided multi-read consensus
 
----
-
-## 77. Phase D — ReadObservation
-
-Map each accepted read into:
-
-```text
-reference-coordinate observations
-```
-
-This becomes the stable sample-analysis input.
-
----
-
-## 78. Phase E — Two-read consensus
-
-Start with the simplest high-value case:
-
-```text
-one forward AB1
-+
-one reverse AB1
-```
-
-Implement:
-
-```text
-profile/profile consistency
-
-bidirectional support
-
-discordance
-
-consensus
-```
-
-before general N-read assembly.
-
----
-
-## 79. Phase F — Multi-read sample consensus
+Generalize to replicates and overlapping amplicons.
 
 Add:
 
 ```text
-manifest
-
+manifest/sample identity
 read admission
-
-multiple amplicons
-
+local coverage denominator
+independent-strand support
 coverage map
-
-sample consensus
-
-sample variants
+evidence-weighted consensus
+sample-level candidate variants
 ```
 
----
+Do not use Tracy-style quality-blind majority voting as the final decision rule.
 
-## 80. Phase G — Length-mixture detection
+## Phase G — persistent mixed-signal / length-mixture detection
 
-Implement:
+Implement observation-only:
 
 ```text
 signal-cleanliness metric
-
 change-point search
-
-candidate ±N phase shifts
-
-evidence ranking
+candidate +/-N phase shifts
+reference-consistency ranking
+alignment-stability evidence
 ```
 
-Initially report only:
+Return a new hypothesis object. Never mutate primary/secondary evidence to fit a
+reference-threading hypothesis.
+
+## Phase H — mtDNA-specific interpretation
+
+Add downstream context:
 
 ```text
-length_mixture_candidate
-```
-
----
-
-## 81. Phase H — mtDNA-specific interpretation
-
-Add:
-
-```text
-poly-C context
-
-repeat context
-
+poly-C/repeat context
 mtDNA nomenclature projection
-
 haplogroup consistency QC
 ```
 
-These should remain downstream of generic signal and alignment stages.
+These remain downstream of generic signal and alignment evidence.
 
----
+## Phase I — calibration
 
-## 82. Phase I — Calibration
-
-Only after sufficient data:
+Only after sufficient truth data:
 
 ```text
 calibrated call confidence
-
 validated mixed-base detection
-
+validated sample consensus confidence
 validated heteroplasmy estimation
+assay-specific LoD/LoQ
 ```
 
----
+## Updated priority view
 
-## 83. ROI Ranking
+| Priority | Improvement | Expected ROI | Effort |
+|---|---|---:|---:|
+| P0 | mixed-supporting-call simple-variant gate | Very high | Low |
+| P0 | PLOC completeness + artifact validation | Very high | Low-Medium |
+| P0 | richer `LocusEvidence` / peak geometry | Very high | Medium |
+| P0 | basecall-independent evidence profile | Very high | Medium |
+| P0 | evidence-aware Gotoh scorer | Very high | Medium |
+| P1 | explicit read admission / overlap policy | High | Low-Medium |
+| P1 | F/R evidence- and gap-aware consensus | Very high | Medium-High |
+| P1 | reference-guided multi-read consensus | Very high | Medium-High |
+| P1 | change-point length-mixture detection | High | Medium |
+| P1 | candidate +/-N phase-shift evaluation | High | Medium |
+| P1 | poly-C/repeat context | High | Medium |
+| P2 | multi-amplicon whole-mtDNA consensus | High | High |
+| P2 | review/evidence artifact | Medium-High | Medium |
+| P3 | VCF/BCF projection | Medium | Low-Medium |
+| Defer | quantitative heteroplasmy | Potentially high | Very high |
+| Skip now | FM-index genome alignment | Very low | High |
+| Skip now | direct de novo assembly port | Very low | High |
 
-Recommended priority:
+## Highest-value Tracy lessons after the source audit
 
-| Priority       | Improvement                             |     Expected ROI |      Effort |
-| -------------- | --------------------------------------- | ---------------: | ----------: |
-| P0             | Peak geometry beyond the v3 sample gate |        Very high |      Medium |
-| P0             | Rich `LocusEvidence`                    |        Very high |      Medium |
-| P0             | Evidence profiles                       |        Very high |      Medium |
-| P0             | Profile-to-reference alignment          |        Very high |      Medium |
-| P0             | Forward/reverse profile consensus       |        Very high | Medium–High |
-| P1             | Read admission / sample QC              |             High |  Low–Medium |
-| P1             | Sample-level consensus                  |        Very high | Medium–High |
-| P1             | Change-point length-mixture detection   |        Very high |      Medium |
-| P1             | Candidate ±N phase-shift evaluation     |        Very high |      Medium |
-| P1             | Poly-C/repeat context                   |             High |      Medium |
-| P2             | Multi-amplicon whole-mtGenome consensus |             High |        High |
-| P2             | Alignment-stability evidence            |      Medium–High |      Medium |
-| P2             | mtDNA nomenclature layer                |           Medium |      Medium |
-| P3             | VCF export                              |       Low–Medium |         Low |
-| P3             | FASTQ export                            |              Low |         Low |
-| P3             | SCF support                             |              Low |      Medium |
-| Skip for mtDNA | FM-index genome alignment               |         Very low |        High |
-| Defer          | Quantitative heteroplasmy               | Potentially high |   Very high |
+If Signal adopts only a few concepts, they should be:
 
----
+1. keep nucleotide evidence through alignment and consensus;
+2. validate the evidence foundation before adding sophisticated downstream interpretation;
+3. use persistent post-indel phase shifts as hypotheses, not automatic diploid calls;
+4. preserve coordinate provenance so every result remains traceable to the chromatogram.
 
-## 84. Two Highest-Value Tracy Lessons
-
-If Signal only adopts two major concepts from Tracy, they should be:
-
-### 84.1 Keep nucleotide evidence through alignment
-
-Instead of:
-
-```text
-chromatogram
-    ->
-primary sequence
-    ->
-alignment
-```
-
-move toward:
-
-```text
-chromatogram
-    ->
-LocusEvidence
-    ->
-EvidenceProfile
-    ->
-alignment
-```
-
-This preserves information Signal already extracts but currently discards from alignment semantics.
-
----
-
-### 84.2 Model persistent post-indel phase shifts
-
-Instead of treating every indel as:
-
-```text
-one gap in one alignment
-```
-
-also ask:
-
-```text
-Does an insertion/deletion shift explain a persistent change in the downstream chromatogram?
-```
-
-This is particularly valuable for:
-
-```text
-poly-C regions
-
-homopolymers
-
-length-mixture candidates
-
-mixed mtDNA traces
-```
-
-Tracy provides useful algorithmic inspiration for both breakpoint detection and candidate shift testing.
-
----
+The source audit also identifies what not to inherit: basecall-gated profiles,
+quality-blind multi-trace voting, uncalibrated likelihood terminology, reference
+mutation of observed calls, and linear-reference assumptions.

@@ -14,6 +14,7 @@ It intentionally mirrors the organization of the root Signal documentation: requ
 ## Method research
 
 - [`overview.md`](overview.md): Tracy context and current Signal overlap.
+- [`source-audit.md`](source-audit.md): source- and issue-level audit of Tracy's actual algorithms, edge cases, and operational limitations.
 - [`features/locus-evidence.md`](features/locus-evidence.md): peak geometry, co-localization, and locus refinement.
 - [`features/evidence-profiles.md`](features/evidence-profiles.md): preserving per-locus A/C/G/T evidence.
 - [`features/profile-alignment.md`](features/profile-alignment.md): profile-to-reference and profile-to-profile alignment.
@@ -25,15 +26,28 @@ It intentionally mirrors the organization of the root Signal documentation: requ
 ## Planning and evidence
 
 - [`roi.md`](roi.md): compact ROI ranking.
-- [`validation.md`](validation.md): validation ladder and benchmark strategy.
+- [`validation.md`](validation.md): validation ladder and adversarial benchmark strategy.
 - [`roadmap.md`](roadmap.md): staged research order.
-- [`references.md`](references.md): Tracy source areas and Signal mappings.
+- [`references.md`](references.md): Tracy source areas, paper, issues, and Signal mappings.
 
 ## Research question
 
 > Which Tracy ideas improve biological correctness or preserve useful chromatogram evidence without weakening Signal's deterministic, typed, auditable design?
 
 The goal is not feature parity and not a Rust port of Tracy. The main lesson is to retain useful A/C/G/T evidence beyond the primary call and introduce new interpretation only behind explicit biological and engineering contracts.
+
+## Current research conclusions
+
+The source audit sharpens the original direction:
+
+1. preserve mixed evidence instead of overcalling simple variants;
+2. make the PLOC dependency explicit and detect suspicious/incomplete event anchors;
+3. validate artifact resilience before relying on richer downstream profiles;
+4. construct profiles from channel evidence rather than thresholded basecall membership;
+5. reuse Signal's deterministic Gotoh core but define profile scoring numerics/ties explicitly;
+6. keep pairwise and multi-trace consensus evidence-aware and gap-aware;
+7. never mutate observed basecall evidence using a reference-derived hypothesis;
+8. preserve Signal's existing strengths in circular topology, normalization, typed provenance, and conservative biological semantics.
 
 ## Core principle
 
