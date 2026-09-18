@@ -7,8 +7,7 @@ original trace calls.
 
 ## Responsibilities
 
-- Represent reportable variants, the variant stage output, and each
-  variant-associated call's role and original-call identity.
+- Represent normalized observed candidates, configured-eligible reported variants, the variant stage output, and each variant-associated call's role and original-call identity.
 - Carry optional biological reference positions for each mapped call.
 - Represent every excluded candidate with a stable reason list and a concise,
   allele-free identity for pipeline logging.
@@ -29,10 +28,9 @@ No extraction, normalization, or inference.
   not stored.
 - `VariantExclusionReason`: stable structural, region, peak, and relative-quality
   rejection reasons with operational labels.
-- `ExcludedVariant`: contig, optional normalized one-based position, kind, and all
-  rejection reasons; alleles are intentionally absent.
-- `VariantCallingResult`: configured-eligible variants plus one diagnostic per
-  excluded candidate; `excluded_count()` derives the warning count.
+- `ObservedVariant`: one normalized canonical event plus the configured exclusion reasons that determine whether it is eligible.
+- `ExcludedVariant`: concise allele-free diagnostic for a candidate that is not reportable.
+- `VariantCallingResult`: configured-eligible `reported` variants, normalized `observed` candidates with eligibility retained, plus concise exclusion diagnostics; `excluded_count()` derives the warning count.
 
 ## Invariants and errors
 
@@ -41,8 +39,8 @@ No extraction, normalization, or inference.
   alt)` tuple.
 - `reference_position_0based` is `None` only for inserted query calls; deletion
   evidence is flanking calls only.
-- Each excluded candidate appears exactly once. Its reason list is deduplicated by
-  rule, and its position is absent when normalization never produced one.
+- Every normalized canonical candidate remains in `observed` even when configured region/signal thresholds exclude it from `reported`. Structural candidates that cannot form a valid normalized event remain diagnostics only.
+- Each excluded candidate appears exactly once in diagnostics. Its reason list is deduplicated by rule, and its position is absent when normalization never produced one.
 
 ## Dependencies
 
