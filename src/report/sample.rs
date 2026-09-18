@@ -2,12 +2,11 @@
 
 use crate::error::{Error, Result};
 use crate::model::reference::Reference;
-use crate::model::result::{IntervalResult, ReferenceResult};
+use crate::model::result::{AlignmentResult, IntervalResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
     SampleEvidenceResult, SampleLocusObservationResult, SampleLocusResult, SampleProvenanceResult,
-    SampleReadAlignmentResult, SampleReadResult, SampleVariantCallResult, SampleVariantResult,
-    SampleVariantSupportResult,
+    SampleReadResult, SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
@@ -36,11 +35,10 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         .map(|read| SampleReadResult {
             name: read.input_name,
             sha256: read.input_sha256,
-            alignment: SampleReadAlignmentResult {
+            alignment: AlignmentResult {
                 orientation: read.alignment.orientation,
                 callable_bases: read.alignment.callable_bases,
                 identity: read.alignment.identity,
-                mismatches: read.alignment.mismatches,
                 gap_opens: read.alignment.gap_opens,
                 unresolved_bases: read.alignment.unresolved_bases,
                 reference_segments: read
