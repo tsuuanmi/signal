@@ -39,14 +39,25 @@ evidence, never implicit reference support.
 
 ## Events
 
-`events[]` aggregates only normalized reportable read-level variants by
-`(position, reference, alternate, kind)`. Each support record contains the input
-SHA-256 and the selected orientation of one contributing read.
+`events[]` aggregates normalized canonical read-level observations by
+`(position, reference, alternate, kind)` before configured eligibility removes
+them from the single-read report. Each support record contains the input SHA-256,
+derived orientation, an `eligible` flag, and the exact configured
+`exclusion_reasons`.
 
-Locus evidence and event evidence intentionally answer different questions. A
-canonical mismatch may remain visible as an aligned `alternate` locus observation
-even when read-level variant eligibility filters it out; such a mismatch does not
-enter `events[]`.
+An eligible support has an empty exclusion list. An ineligible support retains one
+or more reasons such as `outside_configured_region`,
+`peak_below_minimum`, or
+`relative_quality_not_above_threshold`. Thus a normalized event observed by two
+reads remains a two-read observation even if only one read satisfies reporting
+thresholds.
+
+Locus evidence and event evidence intentionally answer different questions.
+`loci[]` preserves aligned reference-position observations, including canonical
+mismatches that cannot become a normalized/reportable event. `events[]` preserves
+normalized canonical event identity plus per-read eligibility. Non-canonical or
+over-limit differences that cannot form a valid normalized event remain exclusion
+diagnostics rather than fabricated event records.
 
 ## Non-goals
 
