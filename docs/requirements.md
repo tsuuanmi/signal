@@ -63,6 +63,17 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 - **SRS-ALN-004:** Circular references MUST align against a doubled sequence, consume at most one reference length, canonicalize modulo coordinates, and expose two segments when crossing origin.
 - **SRS-ALN-005:** Both orientations MUST be evaluated internally. JSON MUST report only the selected orientation, callable-base count, callable identity, unresolved-base count, gap-open count, reference segments, and origin-wrap flag. Score, gapped rows, operation runs, traceback columns, and redundant match/mismatch counts MUST be omitted; original-call mapping is exposed through each variant's direct `calls` array.
 - **SRS-ALN-006:** A remaining orientation tie, modulo-distinct placement tie, insufficient callable columns, low identity, over-limit matrix, or invalid traceback MUST fail explicitly.
+- **SRS-ALN-007:** The selected alignment MUST determine the read's covered reference region from traceback. The default short-reference analysis MUST NOT require or consume an HV/amplicon/expected-region classifier to constrain placement.
+- **SRS-ALN-008:** Filename, amplicon/HV label, primer label, declared forward/reverse direction, or other assay metadata MUST NOT change scientific placement for identical AB1, reference, configuration, and method inputs. Such metadata MAY be introduced only as provenance or post-mapping QC unless a separately versioned method explicitly defines otherwise.
+- **SRS-ALN-009:** The complete one-read scientific products after variant extraction MUST be representable as one `ReadObservation` boundary containing input identity, calls, signal observations, quality control, selected alignment, and read-level variants.
+
+## 7.1 Future sample reconciliation contract
+
+- **SRS-SAMPLE-001:** Multi-read sample analysis MUST process every trace independently into a read observation before cross-read reconciliation.
+- **SRS-SAMPLE-002:** Cross-read overlap and support MUST be discovered from mapped reference coordinates/events rather than inferred from canonical F/R pair names.
+- **SRS-SAMPLE-003:** A usable read MUST NOT be rejected solely because a nominal F/R partner is missing.
+- **SRS-SAMPLE-004:** Future sample evidence MUST preserve factorized support topology, including contributing read identity and derived orientation; amplicon, primer, or replicate grouping is optional metadata and MUST NOT be treated as an exclusive scientific merge key.
+- **SRS-SAMPLE-005:** Future sample variants and discordance states MUST derive from aggregated read evidence. A consensus sequence MAY be emitted as a deterministic downstream projection but MUST NOT be the source from which sample variants are inferred.
 
 ## 8. Primary-sequence differences
 

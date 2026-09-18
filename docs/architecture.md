@@ -22,7 +22,11 @@ CLI -> pipeline -> input (strict config + ABIF)
                     v
                  analyze only: reference -> alignment -> variant_calling
                                                    |
+                                                   v
+                                            ReadObservation
+                                                   |
                                                    +-> analysis report v5
+                                                   +-> future SampleEvidence
 
 Both reports -> one serializer -> atomic no-overwrite publication
 Both commands -> append-only per-trace operational log

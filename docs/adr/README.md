@@ -19,9 +19,9 @@
 | [0015](0015-reference-free-basecalling.md) | Reference-free basecall JSON | Accepted |
 | [0016](0016-defer-ml-feature-boundary.md) | Defer ML feature boundary to separate training contract | Accepted |
 | [0017](0017-primary-sample-peak-colocalization.md) | Gate secondary calls at the primary peak sample | Accepted |
-
 | [0018](0018-production-readiness-release-contract.md) | Production readiness is an explicit release contract | Accepted |
 | [0019](0019-scientific-evidence-hierarchy.md) | Separate signal evidence, read interpretation, and biological claims | Accepted |
 | [0020](0020-rust-as-correctness-architecture.md) | Use Rust as correctness architecture, not only as an implementation language | Accepted |
 | [0021](0021-scientific-core-confidence-floor.md) | Define a scientific core confidence floor | Accepted |
 | [0022](0022-documentation-knowledge-system.md) | Govern documentation as an executable knowledge system | Accepted |
+| [0023](0023-evidence-derived-read-placement-and-sample-boundary.md) | Derive read placement from evidence and reconcile samples from read observations | Accepted |

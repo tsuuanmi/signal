@@ -1,44 +1,39 @@
 //! Compact typed assembly and deterministic JSON serialization.
 
-use crate::config::Config;
 use crate::error::Result;
-use crate::model::alignment::Alignment;
 use crate::model::basecalls::BaseCalls;
-use crate::model::quality::QualityControlResult;
+use crate::model::read_observation::ReadObservation;
 use crate::model::reference::Reference;
 use crate::model::result::{
     AlignmentResult, AnalysisResult, InputResult, IntervalResult, ProvenanceResult, ReadResult,
     ReferenceResult, WarningSummaryResult,
 };
-use crate::model::signal::SignalAnalysis;
-use crate::model::trace::Chromatogram;
-use crate::model::variant::VariantCallingResult;
 use crate::report::{signal, variant};
 
 /// Inputs consumed to build the immutable analysis document.
 pub(crate) struct CompletedAnalysis {
-    pub(crate) config: Config,
-    pub(crate) trace: Chromatogram,
     pub(crate) reference: Reference,
-    pub(crate) calls: BaseCalls,
-    pub(crate) signal: SignalAnalysis,
-    pub(crate) quality: QualityControlResult,
-    pub(crate) alignment: Alignment,
-    pub(crate) variants: VariantCallingResult,
+    pub(crate) read: ReadObservation,
 }
 
 /// Builds the compact v5 document without filesystem side effects.
 pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisResult> {
-    let CompletedAnalysis {
-        config,
-        trace,
-        reference,
+    let CompletedAnalysis { reference, read } = completed;
+    let ReadObservation {
+        input_sha256,
+        reference_sha256,
+        configuration_sha256,
         calls,
         signal,
         quality,
         alignment,
         variants,
-    } = completed;
+    } = read;
+    if reference_sha256 != reference.sequence_sha256 {
+        return Err(crate::error::Error::Report(
+            "read observation reference identity does not match report reference".into(),
+        ));
+    }
     let warnings = warning_summary(&calls, variants.excluded_count());
     let variant_results = variant::project(variants.reported, &calls, &quality)?;
     let signal_quality = signal::project(signal);
@@ -55,14 +50,14 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
         schema_version: "signal.analysis/v5",
         provenance: ProvenanceResult {
             input: InputResult {
-                sha256: trace.source_sha256,
+                sha256: input_sha256,
             },
             reference: ReferenceResult {
                 name: reference.name,
                 topology: reference.topology,
                 sha256: reference.sequence_sha256,
             },
-            configuration_sha256: config.source_sha256,
+            configuration_sha256,
         },
         read: ReadResult {
             call_count: calls.len(),

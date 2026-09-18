@@ -6,6 +6,7 @@ use crate::alignment;
 use crate::cli::AnalyzeArgs;
 use crate::error::Result;
 use crate::logger::Logger;
+use crate::model::read_observation::ReadObservation;
 use crate::model::variant::VariantKind;
 use crate::pipeline::read::ProcessedRead;
 use crate::pipeline::{input, read};
@@ -188,6 +189,16 @@ fn run_logged(
 
     let excluded_variant_candidates = variants.excluded_count();
     let reference_origin_wrap = alignment.wraps_origin;
+    let read = ReadObservation {
+        input_sha256: inputs.trace.source_sha256.clone(),
+        reference_sha256: inputs.reference.sequence_sha256.clone(),
+        configuration_sha256: inputs.config.source_sha256.clone(),
+        calls,
+        signal,
+        quality,
+        alignment,
+        variants,
+    };
     let warning_total = read_warnings.unresolved_primary_calls
         + read_warnings.multi_channel_unresolved_calls
         + read_warnings.vendor_disagreements
@@ -198,14 +209,8 @@ fn run_logged(
     let stage_started = Instant::now();
     let output = inputs.output.clone();
     let result = report::build_analysis(CompletedAnalysis {
-        config: inputs.config,
-        trace: inputs.trace,
         reference: inputs.reference,
-        calls,
-        signal,
-        quality,
-        alignment,
-        variants,
+        read,
     })?;
     if warning_total > 0 {
         logger.warn(
