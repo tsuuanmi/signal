@@ -4,7 +4,7 @@ Signal is a focused Rust tool for deterministic Sanger ABIF/AB1 processing. It c
 
 ## Status
 
-The JSON-only MVP pipeline is implemented. Its output is an auditable research analysis record, not a diagnostic report. The project is now hardening toward an evidence-backed production release profile: source-quality gates alone are not sufficient; an exact release also needs dependency, adversarial-input, artifact-provenance, performance, and approved real-trace evidence. See [`docs/adr/0018-production-readiness-release-contract.md`](docs/adr/0018-production-readiness-release-contract.md) and [`docs/data.md`](docs/data.md).
+The JSON-only MVP pipeline is implemented. Its output is an auditable scientific analysis record, not a diagnostic report. The project is now hardening toward an evidence-backed production release profile: source-quality gates alone are not sufficient; an exact release also needs dependency, adversarial-input, artifact-provenance, performance, and approved real-trace evidence. See [`docs/adr/0018-production-readiness-release-contract.md`](docs/adr/0018-production-readiness-release-contract.md) and [`docs/data.md`](docs/data.md).
 
 ## Run
 
@@ -50,4 +50,4 @@ cargo test --all-targets
 cargo doc --no-deps
 ```
 
-Start with [`docs/README.md`](docs/README.md), [`docs/pipeline.md`](docs/pipeline.md), [`docs/basecall-output.md`](docs/basecall-output.md), and [`docs/json-output.md`](docs/json-output.md). Every `src/**/*.rs` has an exact manual counterpart under `docs/src/`.
+Start with [`docs/README.md`](docs/README.md). It defines documentation authority, navigation, contracts, validation, research boundaries, and traceability. Every mirrored `src/**/*.rs` file has a same-relative-path manual under [`docs/src/`](docs/src/).
