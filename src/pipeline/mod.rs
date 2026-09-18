@@ -1,13 +1,15 @@
-//! End-to-end orchestration for one-file Signal operations.
+//! End-to-end orchestration for Signal operations.
 
 mod analyze;
 mod basecall;
 mod input;
+mod observation;
 mod read;
+mod sample;
 
 use std::time::Instant;
 
-use crate::cli::{AnalyzeArgs, BasecallArgs};
+use crate::cli::{AnalyzeArgs, BasecallArgs, SampleArgs};
 use crate::error::{Error, Result};
 use crate::logger::Logger;
 
@@ -19,6 +21,11 @@ pub(crate) fn analyze(args: &AnalyzeArgs) -> Result<()> {
 /// Runs one reference-free AB1 basecall operation.
 pub(crate) fn basecall(args: &BasecallArgs) -> Result<()> {
     basecall::run(args)
+}
+
+/// Runs one multi-read sample evidence operation.
+pub(crate) fn sample(args: &SampleArgs) -> Result<()> {
+    sample::run(args)
 }
 
 /// Records a terminal operation failure without discarding either error.
