@@ -1,0 +1,84 @@
+{
+  "schema_version": "signal.sample_evidence/v1",
+  "sample_id": "AB0442",
+  "provenance": {
+    "reference": {
+      "name": "rCRS",
+      "topology": "circular",
+      "sha256": "f156ff3f65bbcc80c7ebb9936dceb96b1477b4f8f535c4e1dbe7baea225cbc66"
+    },
+    "configuration_sha256": "6f526a5b62a1dc836c57a6241462cca9294fe87cdc4aa12b36b060aa420154f9"
+  },
+  "reads": [
+    {
+      "sha256": "f366bd9d33dc17f558da2be66b2af86bed25eea1ab3fcd495d19bcd40e583b89",
+      "orientation": "forward",
+      "reference_segments": [{ "start": 58, "end": 333 }],
+      "wraps_origin": false
+    },
+    {
+      "sha256": "3a3fabe30ef9a208b05c27605ab06bffc42d47a7e0299c361ac01ee980d4df38",
+      "orientation": "reverse",
+      "reference_segments": [{ "start": 288, "end": 578 }],
+      "wraps_origin": false
+    }
+  ],
+  "loci": [
+    {
+      "position": 310,
+      "reference": "T",
+      "observations": [
+        {
+          "read_sha256": "3a3fabe30ef9a208b05c27605ab06bffc42d47a7e0299c361ac01ee980d4df38",
+          "orientation": "reverse",
+          "state": "alternate",
+          "base": "C",
+          "index": 310,
+          "relative_quality": 56
+        },
+        {
+          "read_sha256": "f366bd9d33dc17f558da2be66b2af86bed25eea1ab3fcd495d19bcd40e583b89",
+          "orientation": "forward",
+          "state": "alternate",
+          "base": "C",
+          "index": 298,
+          "relative_quality": 52
+        }
+      ]
+    }
+  ],
+  "events": [
+    {
+      "position": 309,
+      "reference": "C",
+      "alternate": "CCCT",
+      "kind": "INS",
+      "support": [
+        {
+          "read_sha256": "3a3fabe30ef9a208b05c27605ab06bffc42d47a7e0299c361ac01ee980d4df38",
+          "orientation": "reverse"
+        },
+        {
+          "read_sha256": "f366bd9d33dc17f558da2be66b2af86bed25eea1ab3fcd495d19bcd40e583b89",
+          "orientation": "forward"
+        }
+      ]
+    },
+    {
+      "position": 310,
+      "reference": "T",
+      "alternate": "C",
+      "kind": "SNV",
+      "support": [
+        {
+          "read_sha256": "3a3fabe30ef9a208b05c27605ab06bffc42d47a7e0299c361ac01ee980d4df38",
+          "orientation": "reverse"
+        },
+        {
+          "read_sha256": "f366bd9d33dc17f558da2be66b2af86bed25eea1ab3fcd495d19bcd40e583b89",
+          "orientation": "forward"
+        }
+      ]
+    }
+  ]
+}
