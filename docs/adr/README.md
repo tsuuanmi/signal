@@ -23,3 +23,4 @@
 | [0018](0018-production-readiness-release-contract.md) | Production readiness is an explicit release contract | Proposed |
 | [0019](0019-scientific-evidence-hierarchy.md) | Separate signal evidence, read interpretation, and biological claims | Proposed |
 | [0020](0020-rust-as-correctness-architecture.md) | Use Rust as correctness architecture, not only as an implementation language | Proposed |
+| [0021](0021-freeze-scientific-core-mvp.md) | Freeze active MVP around a scientifically correct read-level core | Proposed |
