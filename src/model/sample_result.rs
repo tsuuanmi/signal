@@ -5,7 +5,7 @@ use serde::Serialize;
 use crate::model::alignment::Orientation;
 use crate::model::result::{IntervalResult, ReferenceResult};
 use crate::model::sample_evidence::LocusState;
-use crate::model::variant::{VariantExclusionReason, VariantKind};
+use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
 /// Successful sample-evidence document.
 #[derive(Debug, Serialize)]
@@ -25,12 +25,24 @@ pub(crate) struct SampleProvenanceResult {
     pub(crate) configuration_sha256: String,
 }
 
-/// Concise placement of one independently processed sample read.
+/// One independently processed sample read with reviewer-facing provenance.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleReadResult {
     pub(crate) name: String,
     pub(crate) sha256: String,
+    pub(crate) alignment: SampleReadAlignmentResult,
+}
+
+/// Concise evidence supporting the selected alignment and placement.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleReadAlignmentResult {
     pub(crate) orientation: Orientation,
+    pub(crate) score: i64,
+    pub(crate) callable_bases: usize,
+    pub(crate) identity: f64,
+    pub(crate) mismatches: usize,
+    pub(crate) gap_opens: usize,
+    pub(crate) unresolved_bases: usize,
     pub(crate) reference_segments: Vec<IntervalResult>,
     pub(crate) wraps_origin: bool,
 }
@@ -76,4 +88,15 @@ pub(crate) struct SampleVariantSupportResult {
     pub(crate) orientation: Orientation,
     pub(crate) eligible: bool,
     pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
+    pub(crate) calls: Vec<SampleVariantCallResult>,
+}
+
+/// Concise mapping from a sample variant back to one original trace call.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleVariantCallResult {
+    pub(crate) role: VariantCallRole,
+    pub(crate) index: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) position: Option<usize>,
+    pub(crate) ploc: usize,
 }
