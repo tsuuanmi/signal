@@ -1,6 +1,6 @@
 //! Deterministic aggregation of normalized variant observations across reads.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::error::{Error, Result};
 use crate::model::read_observation::ReadObservation;
@@ -19,6 +19,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<VariantEvidenc
     let mut variants: BTreeMap<VariantKey, Vec<VariantSupport>> = BTreeMap::new();
 
     for (read_index, read) in reads.iter().enumerate() {
+        let mut seen = BTreeSet::new();
         for observed in &read.variants.observed {
             let variant = &observed.variant;
             let key = VariantKey {
@@ -27,6 +28,12 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<VariantEvidenc
                 alternate: variant.alternate.clone(),
                 kind: variant.kind,
             };
+            if !seen.insert(key.clone()) {
+                return Err(Error::Sample(format!(
+                    "read {} contains duplicate normalized variant identity",
+                    read.input_sha256
+                )));
+            }
             variants.entry(key).or_default().push(VariantSupport {
                 read_index,
                 eligible: observed.eligible(),
