@@ -14,7 +14,7 @@ Runs one multi-read sample-evidence operation.
 
 ## Non-responsibilities
 
-No F/R pairing, metadata-derived placement, consensus calling, sample variant adjudication, or per-read v5 publication.
+No F/R pairing, metadata-derived placement, consensus calling, sample-level variant adjudication, or per-read v5 publication.
 
 ## Status
 
