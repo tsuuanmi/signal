@@ -55,3 +55,8 @@ No dedicated unit tests; behavior is exercised through the integration tests.
 ## Status
 
 Implemented.
+
+
+## Sample inputs
+
+`load_sample` validates a 1..=128 character ASCII sample ID, one or more regular non-empty AB1 paths, one shared reference, the authoritative configuration, and the derived `results/<sample-id>.sample.json` target before decoding traces. Sample IDs are naming/provenance only and never influence placement.
