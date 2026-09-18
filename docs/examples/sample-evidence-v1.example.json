@@ -66,11 +66,15 @@
       "support": [
         {
           "read_sha256": "3a3fabe30ef9a208b05c27605ab06bffc42d47a7e0299c361ac01ee980d4df38",
-          "orientation": "reverse"
+          "orientation": "reverse",
+          "eligible": true,
+          "exclusion_reasons": []
         },
         {
           "read_sha256": "f366bd9d33dc17f558da2be66b2af86bed25eea1ab3fcd495d19bcd40e583b89",
-          "orientation": "forward"
+          "orientation": "forward",
+          "eligible": true,
+          "exclusion_reasons": []
         }
       ]
     },
@@ -82,11 +86,15 @@
       "support": [
         {
           "read_sha256": "3a3fabe30ef9a208b05c27605ab06bffc42d47a7e0299c361ac01ee980d4df38",
-          "orientation": "reverse"
+          "orientation": "reverse",
+          "eligible": true,
+          "exclusion_reasons": []
         },
         {
           "read_sha256": "f366bd9d33dc17f558da2be66b2af86bed25eea1ab3fcd495d19bcd40e583b89",
-          "orientation": "forward"
+          "orientation": "forward",
+          "eligible": true,
+          "exclusion_reasons": []
         }
       ]
     }
