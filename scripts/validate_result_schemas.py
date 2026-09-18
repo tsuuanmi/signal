@@ -151,10 +151,10 @@ def rejected_sample_shapes(
     invalid_sample_id = copy.deepcopy(example)
     invalid_sample_id["sample_id"] = "../sample"
 
-    reference_difference = copy.deepcopy(example)
-    reference_difference["locus_differences"][0]["observations"][0]["state"] = (
-        "reference"
-    )
+    all_reference_locus = copy.deepcopy(example)
+    for observation in all_reference_locus["locus_differences"][0]["observations"]:
+        observation["state"] = "reference"
+        observation["base"] = all_reference_locus["locus_differences"][0]["reference"]
 
     verbose_deletion = copy.deepcopy(example)
     observation = verbose_deletion["locus_differences"][0]["observations"][0]
@@ -193,7 +193,7 @@ def rejected_sample_shapes(
     return [
         ("sample evidence with no reads", missing_reads),
         ("sample evidence with invalid sample id", invalid_sample_id),
-        ("reference observation in sparse differences", reference_difference),
+        ("sparse difference locus with only reference observations", all_reference_locus),
         ("deletion difference carrying called-base fields", verbose_deletion),
         ("sample evidence with negative read reference", negative_read),
         ("sample support with repeated read identity", repeated_identity),
