@@ -28,9 +28,7 @@ Sample evidence has two complementary layers:
    supplied reference strand. Covered loci are classified as `reference`,
    `alternate`, `unresolved`, or `deletion`, with original call index and
    relative quality retained when a query call exists.
-2. **Normalized events** aggregate only reportable read-level variants by
-   biological `(position, reference, alternate, kind)` identity and retain every
-   supporting read SHA-256 plus derived orientation.
+2. **Normalized events** aggregate every canonical normalized read-level observation by biological `(position, reference, alternate, kind)` identity and retain every contributing read SHA-256, derived orientation, configured eligibility, and exclusion reasons. Read-level filtering changes eligibility, not whether the normalized observation existed.
 
 A read absent from a locus contributes no observation and never counts as
 reference support. Inserted query columns have no reference locus and are handled
@@ -47,7 +45,7 @@ provenance only; it never affects placement or scientific reconciliation.
   and event merging.
 - Forward and reverse observations are directly comparable because
   `AlignmentColumn.query_base` is already oriented to the reference strand.
-- Reference-locus differences remain visible as aligned locus observations even when read-level variant eligibility excludes the corresponding SNV; excluded events do not become normalized event support.
+- A normalized event observed by a read remains sample evidence even when read-level region/signal thresholds make that read ineligible for single-read reporting. Eligibility and exact exclusion reasons stay attached to that read's event support.
 - The evidence contract is intentionally not a consensus or sample-variant
   interpretation contract.
 
