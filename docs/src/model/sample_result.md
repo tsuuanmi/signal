@@ -6,7 +6,7 @@ Defines the serializable `signal.sample_evidence/v1` result records.
 
 ## Responsibilities
 
-Represent sample identity, shared reference/configuration provenance, read placements, covered-locus observations, and normalized variant support with read names/SHA identities, eligibility/exclusion reasons, and concise call pointers, without raw trace data or consensus sequence.
+Represent sample identity, shared reference/configuration provenance, reads with shared compact selected-alignment summaries, covered-locus observations, and normalized variant support with read names/SHA identities, eligibility/exclusion reasons, and concise call pointers, without raw trace data or consensus sequence.
 
 ## Non-responsibilities
 
