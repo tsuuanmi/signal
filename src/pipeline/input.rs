@@ -164,8 +164,11 @@ pub(super) fn trace_stem(trace: &Path) -> Result<&str> {
 /// Validates the sample identifier used for deterministic result/log names.
 pub(super) fn validate_sample_id(sample_id: &str) -> Result<()> {
     let mut characters = sample_id.chars();
-    let valid_first = characters.next().is_some_and(|value| value.is_ascii_alphanumeric());
-    let valid_rest = characters.all(|value| value.is_ascii_alphanumeric() || matches!(value, '_' | '.' | '-'));
+    let valid_first = characters
+        .next()
+        .is_some_and(|value| value.is_ascii_alphanumeric());
+    let valid_rest =
+        characters.all(|value| value.is_ascii_alphanumeric() || matches!(value, '_' | '.' | '-'));
     if sample_id.len() > 128 || !valid_first || !valid_rest {
         return Err(Error::Sample(
             "sample id must be 1..=128 ASCII characters, start with an alphanumeric character, and contain only alphanumeric, '_', '.', or '-'".into(),
