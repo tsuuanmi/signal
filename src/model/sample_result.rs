@@ -5,7 +5,7 @@ use serde::Serialize;
 use crate::model::alignment::Orientation;
 use crate::model::result::{IntervalResult, ReferenceResult};
 use crate::model::sample_evidence::LocusState;
-use crate::model::variant::VariantKind;
+use crate::model::variant::{VariantExclusionReason, VariantKind};
 
 /// Successful sample-evidence document.
 #[derive(Debug, Serialize)]
@@ -56,7 +56,7 @@ pub(crate) struct SampleLocusObservationResult {
     pub(crate) relative_quality: Option<u8>,
 }
 
-/// One normalized reportable event and its supporting reads.
+/// One normalized observed event and its supporting reads.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleEventResult {
     pub(crate) position: usize,
@@ -71,4 +71,6 @@ pub(crate) struct SampleEventResult {
 pub(crate) struct SampleEventSupportResult {
     pub(crate) read_sha256: String,
     pub(crate) orientation: Orientation,
+    pub(crate) eligible: bool,
+    pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
 }
