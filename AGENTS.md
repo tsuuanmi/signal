@@ -1,293 +1,424 @@
 # AGENTS.md — Agent Development Guide
 
-This file defines the rules every coding agent must follow in this repository. The goals are: understand docs and source before changing code; make small, intentional changes; keep the workspace and commit history clean; avoid overwriting other agents' work; verify changes with the right checks; and keep docs and changelogs synchronized with code.
+This file defines the default workflow for coding agents working in this repository.
 
----
+The guide is intentionally repository-agnostic. Do not assume a particular documentation layout, language, package manager, test framework, or file naming convention. Discover the repository's own structure and authoritative instructions before changing anything.
 
-## 1. Instruction Priority
+## 1. Main workflow
 
-Follow instructions in this order: the user's latest explicit instruction, this `AGENTS.md`, project docs (`README.md`, `CONTRIBUTING.md`, etc.), then existing code patterns. If the user's instruction conflicts with this file, explain the conflict and ask for explicit confirmation before overriding a safety rule.
+Follow this workflow for every non-trivial task:
 
----
-
-## 2. Communication
-
-Be concise, direct, and technical. Use clear, simple terms when possible so responses are easy to understand. Avoid unnecessary jargon; when technical terms are required, keep the explanation short and practical. No emojis in commits, issues, PR comments, code, or technical summaries. No filler or excessive praise. Answer the user's direct question before making edits or running implementation commands. When responding to feedback or analysis, explicitly say whether you agree or disagree before explaining changes. State assumptions when proceeding under uncertainty.
-
-Ask before proceeding when ambiguity affects correctness, data loss, public APIs, schemas, user-visible behavior, dependency changes, destructive operations, or removal of intentional functionality. For low-risk ambiguity, state the assumption and proceed with the simplest reversible approach.
-
----
-
-## 3. Docs and Source First
-
-Before implementation, read both relevant documentation and affected source code. Docs explain intent; source code is the ground truth. Read relevant docs when the task touches architecture, public APIs, CLI behavior, configuration, pipeline stages, data flow, schemas, generated outputs, or user-visible behavior. Read affected source files in full before editing them, making broad changes, investigating behavior, auditing correctness, or modifying files you have not fully inspected. Do not rely only on search snippets for broad or sensitive changes. If docs and source disagree, follow the source code and update the docs when documented behavior changes.
-
-When a package's `src/` directory structure changes, update its `docs/` and `test/` directory structures in the same change so they remain consistent over time. Move or add related documentation and tests under matching relative paths; do not let these layouts drift.
-
-### LSP vs textual search
-
-Prefer the `lsp` tool over `grep`/`read` for **symbol** queries when a supported language server (TypeScript/JavaScript, Python, Rust) is available and warm: call sites (`references`), declarations (`definition`), types and docs (`hover`), file outlines (`documentSymbols`), and per-file type errors (`diagnostics`). LSP resolves imports, re-exports, and aliases that textual search cannot. If LSP tools are unavailable, use textual search plus the relevant typecheck/test command instead.
-
-Prefer `grep`/`read`/`bash` for **textual** queries: string literals, comments, `TODO`s, config values, regex patterns, cross-file content search, non-indexed or generated files, and dynamic/reflective (string-based) usages LSP cannot see.
-
-When auditing call sites before a refactor or rename, use `lsp` `references` for the exact call graph and run `lsp` `diagnostics` on touched files for quick type feedback before the full project typecheck.
-
----
-
-## 4. Standard Workflow
-
-**Context.** Before editing: read relevant docs and source files, check existing patterns/utilities/naming/error handling, identify all affected files (source, tests, docs, changelogs, generated files, configs, lockfiles), and determine which language-specific rules apply.
-
-**Plan.** Before implementation, briefly state what will change, what will stay the same, likely affected files, and verification to run. Ask for confirmation only when the change is risky, destructive, blocking-ambiguous, or broader than requested.
-
-**Implement.** Work in the current worktree while avoiding unrelated files. Create temporary backups in `/tmp` before editing files; review-only tasks do not require backups unless files will be modified. Make surgical changes only. Follow existing style, use existing utilities before adding new ones, avoid unrelated cleanup and speculative abstractions, and preserve intentional behavior unless the user asks to change it. Prefer small, uniquely-anchored `edit` replacements over large blocks; large multi-line edits (many tabs) or non-ASCII punctuation such as em-dashes fail more often, so split big rewrites into sequential smaller edits.
-
-**Verify.** Before finalizing: review diffs, run required language-specific checks, run only allowed tests, confirm no backup files were created inside the repo, update docs and changelogs when required, and confirm `git status` contains only intentional changes.
-
-**Final response** must include: what changed, files modified, verification commands run, tests run or skipped, docs/changelog status, and assumptions or risks. Keep it concise.
-
----
-
-## 5. Temporary Backups
-
-Always store edit backups in `/tmp/agent-backups/<task-id>/`, mirroring the original relative path to avoid collisions. Never create `.bak` files inside the repository. Never use WIP commits as checkpoints. Commit history must stay clean.
-
-```bash
-# Before editing
-task_id="<short-task-name>"
-file="path/to/file"
-backup_root="/tmp/agent-backups/$task_id"
-mkdir -p "$backup_root/$(dirname "$file")"
-cp "$file" "$backup_root/$file.bak"
-
-# After editing
-diff "$backup_root/$file.bak" "$file"
-
-# To restore
-cp "$backup_root/$file.bak" "$file"
+```text
+discover
+  ↓
+understand
+  ↓
+plan
+  ↓
+implement
+  ↓
+verify
+  ↓
+reconcile
+  ↓
+review
+  ↓
+report
 ```
 
-For risky multi-step edits, use step-specific subdirectories like `step-1/`, `step-2/` inside the backup root. Before checks and final response, confirm the repo contains no backup files.
+### Discover
 
----
+Before editing:
 
-## 6. Git Rules
+- inspect repository status and current branch/worktree state;
+- find repository-level instructions and contributor guidance;
+- identify the build/package system, CI configuration, test layout, and documentation entry points;
+- locate the files and modules that appear to own the requested behavior;
+- notice unrelated or in-progress changes and avoid touching them.
 
-Multiple agent sessions may be running in the same repository — do not touch work that is not yours. Safe commands: `git status`, `git diff`, `git diff -- <path>`, `git diff --stat`, `git add <explicit-path>`, `git restore -- <explicit-path>`. Only restore files you modified in this session.
+Do not infer the repository structure from conventions used in another project.
 
-Never run: `git reset --hard`, `git checkout .`, `git clean -fd`, `git stash`, `git add .`, `git add -A`, `git commit --no-verify`. When staging, use explicit paths only (`git add <path1> <path2>`). Never stage the entire repository. Never commit unless the user explicitly asks.
+### Understand
 
-When committing: run required checks first, run `git status`, stage explicit paths only, run `git diff --cached`, commit only files changed in this session, use a concise informative message (`<type>(<scope>): <message>`), and do not create WIP checkpoint commits. If conflicts occur, resolve only files you modified; if a conflict appears in a file you did not modify, stop and ask; never force push unless the user explicitly confirms the risk.
+Read enough context to understand both **intent** and **implementation** before changing code.
 
----
+For the area being changed, discover and read the repository's equivalents of:
 
-## 7. Change Scope
+- product or software requirements;
+- architecture and cross-cutting invariants;
+- accepted design/decision records;
+- domain or algorithm documentation;
+- public API, schema, configuration, CLI, or protocol contracts;
+- implementation/module documentation;
+- relevant source files;
+- relevant tests and fixtures;
+- validation, release, or operational requirements;
+- roadmap/research material when useful for context.
 
-Critical rules:
+Read affected source files in full for architectural, scientific, security-sensitive, or broad refactoring work. Search snippets alone are not sufficient for understanding a module.
 
-- Every changed line must trace back to the task.
-- Prefer the smallest correct production-ready change.
-- Do not refactor unrelated code, reformat unrelated files, rename unrelated symbols, remove unrelated dead code, upgrade unrelated dependencies, modify generated files directly, change lockfiles unless required, or add new configuration unless needed.
-- Do not add speculative features, fallback paths, single-use abstractions, unused configuration, unnecessary flexibility or error handling, backward-compatibility shims, legacy branches, compatibility aliases, or broad rewrites for small fixes.
-- Do not preserve obsolete behavior by default. Remove or replace legacy logic when the task touches it unless the user explicitly asks for compatibility.
-- Keep module/API boundaries clear, public surfaces minimal, and internal details contained within their layer.
-- Use concise, standard, domain-appropriate names for variables, functions, classes, files, and types. Avoid vague names, unnecessary suffixes/prefixes, unestablished abbreviations, and names that encode obsolete behavior.
-- Before adding logic or files, inspect existing helpers, utilities, models, constants, validators, serializers, logging patterns, error types, CLI patterns, test patterns, and nearby feature implementations to avoid duplication.
-- If unrelated issues are found, mention them instead of fixing them.
+### Plan
 
----
+Before implementation, identify:
 
-## 8. Language Rules
+- the intended behavior;
+- what must remain unchanged;
+- the smallest coherent change;
+- affected source, tests, contracts, docs, generated artifacts, configuration, and dependencies;
+- the invariants and public behavior at risk;
+- the verification required to demonstrate correctness.
 
-### Python
+Do not expand scope merely because nearby cleanup is possible.
 
-Follow existing project style. Prefer standard library first, existing utilities, typed functions, small functions, explicit realistic error handling, and clear data models. When already used by the project, prefer Loguru for logging, Pydantic for data models, `pathlib` for path handling, and `pytest` conventions for tests. Avoid untyped public functions, broad `except Exception`, global mutable state, duplicate validation logic, speculative abstractions, and unrelated formatting changes. Use the project package manager (e.g., `uv` if the project uses it).
+### Implement
 
-```bash
-# Dependencies
-uv add <package>
-uv sync
+Make the smallest production-quality change that satisfies the task.
 
-# Checks
-ruff check .
-ruff format .
-basedpyright
+Prefer:
 
-# Scoped checks (project may expect)
-ruff check src/ tests/
-ruff format src/ tests/
-basedpyright src/
+- one authoritative implementation;
+- clear ownership and dependency boundaries;
+- explicit states and failures;
+- existing project patterns and utilities;
+- deterministic behavior where the domain requires it;
+- removal of obsolete logic when the current specification no longer requires compatibility.
+
+Avoid:
+
+- speculative abstractions;
+- duplicate implementations;
+- fallback paths added only to preserve old behavior;
+- unrelated refactors;
+- silent semantic changes;
+- unnecessary dependencies;
+- broad formatting churn.
+
+### Verify
+
+Choose verification based on the failure modes introduced by the change.
+
+Discover the repository's required commands from CI, build configuration, contributor docs, or project scripts rather than inventing them.
+
+Possible verification layers include:
+
+- formatting;
+- compilation/build;
+- lint/static analysis;
+- type checking;
+- unit tests;
+- integration tests;
+- property/invariant tests;
+- schema/contract validation;
+- fuzz/adversarial tests;
+- performance/resource checks;
+- dependency/security audits;
+- domain-specific or real-data validation.
+
+Run the narrowest checks that provide sufficient confidence during iteration, then run all required gates before finalizing when the repository policy requires them.
+
+A green test suite proves only the properties encoded by those tests. It does not automatically prove domain correctness.
+
+### Reconcile
+
+After the implementation is correct, synchronize every affected representation of the behavior.
+
+Depending on the repository, this may include:
+
+- requirements;
+- architecture/invariants;
+- design decisions;
+- public contracts or schemas;
+- module/implementation documentation;
+- examples;
+- tests and fixtures;
+- generated artifacts;
+- changelog/release notes;
+- traceability or validation records.
+
+Do not update documentation mechanically. Update the authoritative layer that actually changed.
+
+### Review
+
+Before finalizing:
+
+- inspect the complete diff;
+- confirm every changed line belongs to the task;
+- verify no obsolete or parallel implementation remains unintentionally;
+- check imports, exports, references, types, tests, configuration, and docs for stale dependencies;
+- confirm no accidental lockfile, generated-file, or formatting churn;
+- ensure public behavior and documented intent agree;
+- ensure the change fits the repository's architecture rather than merely passing tests.
+
+### Report
+
+The final response should state:
+
+- what changed;
+- important files/modules affected;
+- verification performed and its result;
+- tests or checks intentionally not run and why;
+- documentation/changelog impact;
+- remaining risks, assumptions, or follow-up work.
+
+Keep the report concise and factual.
+
+## 2. How to read repository documentation
+
+Do not rely on fixed filenames. Infer each document's **role**.
+
+Typical roles include:
+
+### Normative requirements
+
+Describe what the current system is intended to do.
+
+Examples of forms this may take:
+
+- SRS;
+- product requirements;
+- specification;
+- protocol requirements;
+- acceptance criteria.
+
+Treat normative language such as MUST/SHOULD/MAY according to the repository's documented convention.
+
+### Public contracts
+
+Define interfaces that users, tools, or other systems depend on.
+
+Examples:
+
+- API definitions;
+- schemas;
+- CLI behavior;
+- configuration formats;
+- file formats;
+- database contracts;
+- protocol definitions;
+- serialization/versioning rules.
+
+Machine-readable contracts may be authoritative for exact syntax or shape while prose explains semantics.
+
+### Architecture and invariants
+
+Describe:
+
+- component boundaries;
+- dependency direction;
+- ownership;
+- data flow;
+- lifecycle;
+- trust boundaries;
+- coordinate/unit conventions;
+- states that must always remain true.
+
+Use these to decide **where** a change belongs, not just what code currently happens to do.
+
+### Decision records
+
+Explain why a non-obvious design choice exists, alternatives considered, tradeoffs, and consequences.
+
+The filename or format may be ADR, RFC, design note, proposal, decision log, or something else.
+
+Check status and supersession before relying on a decision.
+
+### Domain and method documentation
+
+Explains domain semantics, algorithms, assumptions, limitations, and interpretation.
+
+This is especially important in scientific, financial, security, distributed, data-processing, and protocol-heavy systems where technically valid code can still model the domain incorrectly.
+
+### Implementation documentation
+
+Explains module responsibility, inputs/outputs, dependencies, failure modes, internal invariants, and ownership.
+
+Implementation docs are descriptive. They should not silently override a normative requirement or public contract.
+
+### Validation and operations
+
+Describe how correctness, performance, security, release quality, migration, deployment, or real-world behavior is demonstrated.
+
+Do not confuse "the code builds" with "the system satisfies its domain or operational requirements."
+
+### Roadmap and research
+
+Describe possible future work, experiments, hypotheses, or proposed architecture.
+
+Treat exploratory material as non-normative unless the repository explicitly promotes it into the current specification.
+
+## 3. Resolve authority by role, not by filename
+
+When artifacts disagree, do not silently choose whichever one is convenient.
+
+Determine:
+
+1. which artifact is intended to be normative for that concern;
+2. whether a newer decision supersedes an older one;
+3. whether source code is ahead of docs or the implementation is incomplete;
+4. whether the mismatch is a bug, stale documentation, or an intentional transition.
+
+Useful distinction:
+
+```text
+requirements/contracts = intended behavior
+source                 = current executable behavior
+decision records       = rationale
+architecture           = responsibility and invariants
+implementation docs    = current ownership/details
+validation             = evidence
+roadmap/research       = possible future behavior
 ```
 
-### TypeScript
+A mismatch between intended behavior and executable behavior must be surfaced and resolved deliberately.
 
-Follow existing project style. Prefer top-level imports, explicit public-boundary types, existing utilities and types, small functions, simple control flow, and strict type safety. Avoid `any` unless absolutely necessary, unsafe casts, duplicate type definitions, inline imports (`await import("pkg")` / `type X = import("pkg").X`), dynamic type imports, broad formatting changes, and dependency downgrades to fix type errors. If the project runs TypeScript in strip-only mode, use only erasable TypeScript syntax. Avoid syntax requiring JavaScript emit: `enum`, `namespace`, `module`, parameter properties, `import =`, `export =`. Use explicit fields with constructor assignments. Check package types in `node_modules` or official type definitions — do not guess external API shapes. Treat dependency and lockfile changes as reviewed code.
+## 4. Invariants first
 
-```bash
-# Safe install commands
-npm install --ignore-scripts
-npm ci --ignore-scripts
-npm install --package-lock-only --ignore-scripts
+Before changing a mature system, identify the invariants affected by the task.
 
-# Checks
-npm run check
-npm run lint
-npm run typecheck
-npm run format:check
+Examples:
+
+- identity must be preserved across transformations;
+- coordinate/unit domains must not be mixed;
+- source evidence must remain immutable;
+- operations must be atomic;
+- public schemas are versioned;
+- invalid or unresolved states must remain explicit;
+- resource use must be bounded;
+- deterministic inputs must yield deterministic outputs;
+- security/trust boundaries must remain intact.
+
+When practical, move important invariants from comments and developer memory into types, constructors, APIs, validators, schemas, static analysis, or tests.
+
+Do not create type-level or abstraction complexity unless it prevents a concrete failure mode.
+
+## 5. Domain-sensitive changes
+
+For systems where domain correctness matters, review a change through three questions:
+
+### Evidence / inputs
+
+- What was actually measured, received, or observed?
+- What transformations are applied?
+- Which information is original and which is derived?
+- Are assumptions and units explicit?
+
+### Domain meaning
+
+- What claim does the result actually support?
+- Which states should remain unknown, unresolved, or ambiguous?
+- What alternative explanations remain possible?
+- Is the implementation accidentally making a stronger claim than the evidence supports?
+
+### Engineering
+
+- Which invariant or contract changes?
+- Which component owns the behavior?
+- How are failures represented?
+- What tests or validation demonstrate correctness?
+- Does the change require a contract/version/migration decision?
+
+A technically elegant implementation is not sufficient if it models the wrong domain concept.
+
+## 6. Research and proposal promotion
+
+Exploratory work should not silently become production behavior.
+
+A common promotion path is:
+
+```text
+research / proposal
+        ↓
+accepted decision
+        ↓
+normative requirement / public contract
+        ↓
+implementation
+        ↓
+tests
+        ↓
+validation
+        ↓
+release
 ```
 
-### Rust
+Repositories may use different names, but preserve the distinction between **exploration** and **current production truth**.
 
-Follow existing project style. Prefer standard library first, existing project modules, explicit error types, `Result` for fallible operations, small functions, clear ownership, and minimal cloning. Use project-adopted libraries when already present (`log`/`tracing` for logging, `serde` for serialization, `clap` for CLI, `thiserror` for errors). Avoid unnecessary `clone`, broad rewrites, `unwrap`/`expect` in production unless already accepted nearby, duplicate logic, unrelated formatting changes, and unnecessary features in `Cargo.toml`.
+Agreement with another implementation is comparison evidence, not automatically ground truth.
 
-```bash
-# Dependencies
-cargo add <crate>
-cargo update -p <crate>
+## 7. Tests and validation
 
-# Checks
-cargo fmt --check
-cargo clippy -- -D warnings
+Choose tests according to the risk being protected.
 
-# Workspace checks (if project expects)
-cargo fmt --all --check
-cargo clippy --workspace --all-targets -- -D warnings
-```
+Examples:
 
-### This repository (pi monorepo)
+- parser/input boundary -> malformed/adversarial cases;
+- state/coordinate transform -> invariant/property tests;
+- API/schema -> contract tests;
+- bug fix -> focused regression test;
+- concurrency -> race/interleaving tests where supported;
+- performance-sensitive logic -> benchmark/resource measurements;
+- security-sensitive boundary -> threat-specific tests/audits;
+- scientific/domain method -> independent or real-world validation where required.
 
-Workspace-package tests import packages (e.g. `@tsuuanmi/pi-workflows`) from the gitignored `dist/`, not `src/`. After any `src/` change, rebuild that package's `dist` (run `npm run build` in the package dir, e.g. `packages/workflows`) before running `vitest` or `tsgo`, or tests and typecheck run against stale code.
+Coverage is not a substitute for meaningful assertions.
 
-Actual verification commands (the generic `npm run lint`/`npm run typecheck` do not exist here):
+Mutation, fuzzing, property testing, static analysis, formal methods, or sanitizers are useful only when they address an identified failure class.
 
-- Typecheck: `tsgo --noEmit` (root)
-- Lint/format: `biome check --write --error-on-warnings .` (root)
-- Build a package: `npm run build` in the package dir
-- Targeted tests: `npx vitest --run <file>` in the package dir
-- Full gate (pre-publish or when asked): `npm run check` (biome + pinned-deps + ts-imports + shrinkwrap + tsgo + browser-smoke). Do not run it for routine changes; use biome + tsgo + build + targeted vitest instead.
+## 8. Source and documentation synchronization
 
----
+A behavior change may require updates across multiple layers.
 
-## 9. Tests
+Use the repository's own structure, but think in terms of impact:
 
-Do not run full repository test suites unless explicitly asked. Do not create new tests by default; create them only when they are truly important and needed to verify correctness. If asked to create or modify a test, run only the relevant test file or case and iterate until it passes. Do not run integration, network, credential-dependent, paid-provider, destructive, or long-running tests unless explicitly requested.
+| Change | Consider updating |
+|---|---|
+| domain/algorithm behavior | requirement + method/domain docs + tests + validation |
+| architectural boundary | architecture/invariants + decision record + implementation docs |
+| public API/schema/config/CLI | contract + examples + tests + migration/changelog |
+| internal ownership | module/implementation docs |
+| dependency/toolchain | lockfiles + build/release/security docs |
+| research only | research/proposal area only until promoted |
 
-Before attributing a failing test to your change, determine whether it is pre-existing: use `git log`/`git blame` and `git diff` to check whether a prior commit (not your changes) caused it. Report pre-existing failures separately. Never revert an intentional prior change just to make a test green; if a prior intentional change legitimately changed behavior, update the test to match the new intended behavior and note it.
+Do not duplicate the same specification across many documents. Link to the authoritative source instead.
 
-For changes affecting shared behavior (extension defaults, shared harness modules, tool registration, exported APIs), run the full test suite of the affected package, not just the targeted file; targeted-only verification can miss regressions in consumers.
+## 9. Dependencies and generated artifacts
 
-```bash
-# Python — targeted only
-pytest path/to/test_file.py -q
-pytest path/to/test_file.py::test_name -q
+Treat dependency and lockfile changes as code changes.
 
-# TypeScript — targeted only
-npm run test -- path/to/test.ts
-node ./node_modules/vitest/vitest.mjs --run path/to/test.ts
+Before adding a dependency:
 
-# Rust — targeted only
-cargo test test_name
-cargo test -p crate_name test_name
-cargo test --test integration_file test_name
-```
+- confirm the capability is not already available;
+- justify the new dependency and its maintenance/security cost;
+- follow the repository's package-management policy;
+- review the resulting lockfile diff.
 
----
+Do not edit generated artifacts directly when an authoritative generator or source definition exists. Modify the source, regenerate, and review the generated diff.
 
-## 10. Generated Files
+## 10. Worktree and version-control safety
 
-Do not modify generated files directly unless project rules explicitly allow it. If a generated file must change, find the generator, modify the generator or source data, regenerate, review the diff, and mention generated files in the final response. Generated files may include `*.generated.ts`, API clients, schemas, protobuf outputs, OpenAPI outputs, model metadata, or codegen snapshots. Build artifacts may need to be regenerated for verification, but do not commit them unless they are tracked and expected for the project. If unsure whether a file is generated, inspect headers, docs, and build scripts before editing.
+Assume other work may exist in the same repository.
 
----
+- inspect status before editing;
+- avoid destructive repository-wide reset/clean operations;
+- do not overwrite unrelated work;
+- stage or commit only intentional files;
+- do not hide unrelated failures;
+- do not create temporary backups inside the repository unless repository policy explicitly requires it;
+- never bypass required hooks or verification merely to make a change mergeable.
 
-## 11. Verification
+If a conflict involves unrelated work you do not understand, stop rather than overwriting it.
 
-Before running lint, format, type check, tests, builds, or package commands, confirm there are no in-repo backup files:
+## 11. Completion standard
 
-```bash
-git status
-find . -name "*.bak" -print
-```
+A task is complete when:
 
-Run commands from the appropriate repository, workspace, or package root. Repo-specific verification instructions override generic language examples. Prefer scoped formatting/checks when possible; if a repo-wide formatter is required, review the diff and revert unrelated formatting churn.
+- the requested behavior is implemented;
+- the implementation fits existing architectural boundaries;
+- affected invariants and public contracts are preserved or intentionally revised;
+- relevant tests and required checks pass;
+- documentation reflects the intended behavior;
+- obsolete paths introduced or superseded by the task are removed;
+- the final diff contains no unrelated changes;
+- remaining uncertainty is stated explicitly.
 
-If `.bak` files are found, stop — do not remove them without confirmation. Run language-specific checks based on change type: docs lint for docs-only changes; Python lint/format/typecheck for Python source; TypeScript check command for TypeScript source; Rust format/clippy for Rust source; safe package-manager commands and lockfile review for dependency changes; generator + diff review for generated file changes. For quick per-file type feedback before the full project typecheck, run `lsp` `diagnostics` on touched files (TypeScript/JavaScript, Python, Rust).
-
-Before finalizing, run `git diff` and `git status` and confirm every changed line is intentional, no unrelated files changed, no backup or temp files are inside the repo, no accidental lockfile changes exist, and no unrelated formatting churn exists.
-
----
-
-## 12. Documentation
-
-Update docs when source changes affect public APIs, CLI behavior, configuration, data models, schema fields, column names, pipeline stages, generated outputs, error messages, setup steps, or user-visible behavior. Do not update docs for purely internal changes unless the docs would otherwise become misleading. When updating docs: read the relevant section first, keep changes concise, match existing style, verify docs match the actual code, and do not rewrite unrelated sections. If no docs update is needed, say why in the final response.
-
----
-
-## 13. Changelog
-
-Update changelogs for user-visible or behavior-relevant changes: features, bug fixes, behavior changes, public API changes, CLI changes, config changes, schema changes, data model changes, pipeline changes, dependency changes that affect users, breaking changes, or removed behavior. Do not update changelog for typo-only, formatting-only, comment-only changes, or internal refactors with no behavior change, unless the user asks.
-
-Use the project's existing changelog location and format (`CHANGELOG.md`, `packages/*/CHANGELOG.md`, `crates/*/CHANGELOG.md`). If the project uses an `[Unreleased]` section, add entries there. Use standard sections: Breaking Changes, Added, Changed, Fixed, Removed. Read the full target changelog section first, append to existing subsections, do not duplicate subsections, do not edit released version sections unless asked, keep entries concise (one bullet per change), and prefix with bold scope when the project uses scoped entries.
-
-Example: `- **api**: Validate missing request fields before processing.`
-
----
-
-## 14. Dependency Security
-
-Treat dependency and lockfile changes as code changes. Do not add dependencies unless necessary. Prefer existing dependencies. Review lockfile diffs. Do not run install scripts unless the user asks. Do not bypass security gates silently. Do not downgrade dependencies just to hide type or lint errors. Explain dependency changes in the final response.
-
-```bash
-# Python
-uv add <package>
-uv sync
-
-# TypeScript
-npm install --ignore-scripts
-npm ci --ignore-scripts
-npm install --package-lock-only --ignore-scripts
-
-# Rust
-cargo add <crate>
-cargo update -p <crate>
-```
-
-Follow project-specific package manager conventions when they differ.
-
----
-
-## 15. Final Checklist
-
-Before final response, verify: relevant docs were read, affected source files were read, existing patterns were checked, temporary backups are stored in `/tmp`, no WIP checkpoint commits were created, no in-repo `.bak` files exist, changes are surgical and task-related, no unrelated formatting churn or dependency/lockfile changes exist, generated files were not edited directly unless allowed, required checks were run, full tests were not run unless requested, targeted tests were run only when allowed or requested, docs and changelog were updated when needed, and `git diff`/`git status` were reviewed.
-
----
-
-## 16. Final Response Template
-
-```markdown
-Changed:
-- <plain-language summary of the result>
-- <important behavior or scope change, if any>
-
-Files:
-- <file>: <what changed and why>
-
-Verification:
-- <command>: passed / failed / not run — <short reason or key output>
-
-Tests:
-- <test command>: passed / failed / not run — <short reason>
-- Not run: <why tests were skipped, if applicable>
-
-Docs:
-- Updated <doc>: <what changed>
-- Not updated: <why docs were not needed>
-
-Changelog:
-- Updated <changelog>: <entry added>
-- Not updated: <why changelog was not needed>
-
-Notes:
-- Assumptions: <assumptions made, or none>
-- Risks: <remaining risks, follow-ups, or none>
-- Unrelated changes: <pre-existing workspace changes noticed, or none>
-```
+Passing tests alone is not the completion criterion.
