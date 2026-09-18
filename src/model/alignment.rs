@@ -21,6 +21,7 @@ pub struct ReferenceSegment {
 
 impl ReferenceSegment {
     /// Returns whether this segment overlaps another half-open segment.
+    #[allow(dead_code, reason = "used by the upcoming sample-reconciliation layer")]
     pub(crate) fn overlaps(&self, other: &Self) -> bool {
         self.start_0based < other.end_0based_exclusive
             && other.start_0based < self.end_0based_exclusive
@@ -61,6 +62,7 @@ pub struct Alignment {
 impl Alignment {
     /// Returns whether two selected placements cover at least one shared
     /// reference coordinate.
+    #[allow(dead_code, reason = "used by the upcoming sample-reconciliation layer")]
     pub(crate) fn overlaps_reference(&self, other: &Self) -> bool {
         self.reference_segments.iter().any(|left| {
             other
