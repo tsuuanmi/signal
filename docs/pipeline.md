@@ -287,6 +287,14 @@ diagnostic without reference/alternate alleles.
 Reported variants are sorted by `(contig, position, reference, alternate)` and
 deduplicated.
 
+## One-read observation boundary
+
+After variant calling, Signal materializes a `ReadObservation` that owns the input identity, base calls, signal observations, quality-control result, selected alignment, and read-level variant result for exactly one trace.
+
+The read has already located itself at this boundary. Its orientation and covered reference segments come from evidence-driven semi-global alignment and circular projection; filenames or nominal HV/F/R labels are not placement inputs. This makes the same one-read product suitable for the current analysis report and for future sample-level reconciliation.
+
+Future sample processing must consume independently produced read observations and discover overlap in normalized reference-coordinate/event space. It must not pre-collapse canonical F/R pairs or require an otherwise usable read to have its nominal partner.
+
 ## Output
 
 The completed `signal.analysis/v5` result contains compact provenance
