@@ -547,3 +547,46 @@ trace     -> observed sample evidence
 Sample consensus must not turn reference agreement into an extra observation
 unless a separately versioned reference-prior model explicitly defines that
 behavior.
+
+
+## Sample aggregation boundary
+
+Future sample analysis should preserve this invariant:
+
+~~~text
+AB1 #1 -> complete single-read pipeline -> ReadObservation #1
+AB1 #2 -> complete single-read pipeline -> ReadObservation #2
+...
+AB1 #N -> complete single-read pipeline -> ReadObservation #N
+                                           |
+                                           v
+                                      SampleEvidence
+~~~
+
+The sample layer never receives raw chromatograms as a shortcut around the
+single-read pipeline.
+
+Forward/reverse pairing and amplicon identity are metadata on observations, not
+tree edges that force pair-first merging.
+
+The central aggregation space is:
+
+~~~text
+reference base coordinates
++
+normalized insertion/deletion event identities
+~~~
+
+This permits arbitrary overlap patterns such as HV2F with HV3R.
+
+The authoritative sample model is evidence-first:
+
+~~~text
+ReadObservation[]
+ -> SampleEvidence
+ -> SampleInterpretation
+ -> {SampleVariant[], consensus projection, QC}
+~~~
+
+A flattened consensus sequence is therefore a view, not the scientific source
+of truth.

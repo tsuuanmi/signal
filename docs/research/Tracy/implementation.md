@@ -240,25 +240,29 @@ Search failure is not equivalent to alignment failure. Candidate search must
 preserve circular topology and ambiguity instead of silently selecting the
 first seed hit.
 
-## Phase 4: forward/reverse reconciliation
+## Phase 4: generic read reconciliation (F/R is the first validation case)
 
 ### Goal
 
-Combine independently processed traces from the same locus without breaking the
+Combine independently processed traces from the same sample without breaking the
 current one-trace CLI and pipeline invariants.
+
+The implementation should be N-read from the start. A two-read forward/reverse
+pair is the first validation fixture, not a special intermediate domain type.
 
 ### Layering
 
 ```text
-single-trace pipeline
-        |
-        +-> ReadObservation F --+
-                                +-> sample reconciliation
-        +-> ReadObservation R --+
+single-trace pipeline -> ReadObservation #1 --+
+single-trace pipeline -> ReadObservation #2 --+
+single-trace pipeline -> ReadObservation #N --+--> sample reconciliation
 ```
 
 Do not make `basecalling`, `alignment`, or `variant_calling` accept
 `Vec<Trace>` merely to support consensus.
+
+Canonical F/R pairing, amplicon, primer, and replicate metadata remain
+properties of each read. They must not force pair-first collapse.
 
 A sample-level layer can own:
 
@@ -366,13 +370,17 @@ Recommended independent PRs:
    - validation against current clean-call behavior;
    - targeted ambiguous/noisy synthetic cases.
 
-5. **Two-trace reconciliation model**
-   - forward/reverse evidence in reference coordinates;
-   - no full sample assembly yet.
+5. **Generic SampleEvidence / ReadObservation reconciliation**
+   - immutable independently processed reads;
+   - reference-coordinate and indel-event aggregation;
+   - factorized direction/amplicon/replicate support;
+   - validate first on an F/R pair and then on cross-amplicon overlap.
 
-6. **Reference-guided sample consensus**
-   - multiple overlapping traces;
-   - explicit provenance and disagreement.
+6. **Reference-guided sample interpretation**
+   - arbitrary overlapping trace sets such as HV1F/HV1R/HV2F/HV3R;
+   - explicit provenance and disagreement;
+   - sample variants from aggregated evidence;
+   - consensus sequence only as a projection.
 
 7. **Mixed-signal breakpoint research**
    - observation-only detector;

@@ -20,6 +20,7 @@ It intentionally mirrors the organization of the root Signal documentation: requ
 - [`features/profile-alignment.md`](features/profile-alignment.md): profile-to-reference and profile-to-profile alignment.
 - [`features/reference-placement.md`](features/reference-placement.md): candidate reference search, topology, and placement/alignment boundaries.
 - [`features/sample-analysis.md`](features/sample-analysis.md): ReadObservation, read admission, and sample-level consensus.
+- [`features/read-reconciliation.md`](features/read-reconciliation.md): independent per-trace processing and coordinate/event-based multi-read reconciliation.
 - [`features/mixed-signal-indels.md`](features/mixed-signal-indels.md): persistent mixed signal, indel shifts, and homopolymer context.
 - [`features/multi-amplicon-consensus.md`](features/multi-amplicon-consensus.md): tiled mtDNA reads, sample-level variants, and calibration boundaries.
 - [`deferred.md`](deferred.md): Tracy capabilities intentionally not prioritized.
@@ -50,7 +51,10 @@ The source audit sharpens the original direction:
 7. never mutate observed basecall evidence using a reference-derived hypothesis;
 8. separate candidate reference placement from authoritative alignment if large-reference search is ever added;
 9. keep reference guidance distinct from observed sample support;
-10. preserve Signal's existing strengths in circular topology, normalization, typed provenance, and conservative biological semantics.
+10. process every trace independently before any sample-level merge;
+11. reconcile all overlapping reads by coordinate/event rather than pre-merging F/R pairs;
+12. treat consensus sequence as a projection of sample evidence, not the source of sample variants;
+13. preserve Signal's existing strengths in circular topology, normalization, typed provenance, and conservative biological semantics.
 
 ## Core principle
 

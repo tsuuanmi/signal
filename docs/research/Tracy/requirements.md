@@ -79,6 +79,15 @@ This SRS defines requirements for Tracy-inspired research inside Signal. It mirr
 - **TR-SRS-SAMPLE-009:** Fractional coverage requirements shall define deterministic rounding and local denominators; integer truncation shall not silently weaken admission rules.
 - **TR-SRS-SAMPLE-010:** Consensus quality shall not be labeled Phred/calibrated error probability until validated as such.
 - **TR-SRS-SAMPLE-011:** Reference agreement shall not increase observed sample support unless an explicitly versioned reference-prior method is selected.
+- **TR-SRS-SAMPLE-012:** Every trace shall complete the authoritative single-read pipeline before entering sample reconciliation; the same trace evidence shall not depend on which other sample reads are present.
+- **TR-SRS-SAMPLE-013:** Sample reconciliation shall consume immutable `ReadObservation` values and shall not re-basecall, silently re-trim, or mutate read evidence to agree with other reads.
+- **TR-SRS-SAMPLE-014:** Reads shall be reconciled by normalized reference coordinate/event identity, not by requiring an exclusive forward/reverse pair.
+- **TR-SRS-SAMPLE-015:** Direction, amplicon, primer, and replicate relationships shall remain explicit support/provenance dimensions and shall not be collapsed before sample interpretation.
+- **TR-SRS-SAMPLE-016:** Missing a canonical F/R partner shall not by itself reject an otherwise admissible read.
+- **TR-SRS-SAMPLE-017:** Global read admission and per-locus contribution eligibility shall remain distinct decisions.
+- **TR-SRS-SAMPLE-018:** The authoritative sample model shall preserve nucleotide and indel-event evidence, support topology, conflicts, coverage, and read provenance before any consensus-sequence projection.
+- **TR-SRS-SAMPLE-019:** Sample variants shall derive from aggregated sample evidence rather than from a flattened consensus-sequence difference.
+- **TR-SRS-SAMPLE-020:** Support topology shall remain factorized across read count, direction, amplicon, and applicable replicate grouping rather than being reduced to one ordinal support class.
 
 ## 10. Mixed signal and indels
 

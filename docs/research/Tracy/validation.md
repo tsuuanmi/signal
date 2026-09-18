@@ -188,3 +188,32 @@ Final-alignment metrics remain separate:
 
 A missing seed hit must be reported as a search-stage miss, not as proof that the
 trace lacks a biological match.
+
+
+## Multi-read topology validation
+
+Sample-level validation should include explicit overlap topologies rather than
+only ideal F/R pairs.
+
+Required synthetic/real fixtures should include:
+
+~~~text
+HV1F + HV1R
+HV2F only
+HV2F + HV3R cross-amplicon overlap
+two same-direction traces from different amplicons
+two opposite-direction traces from different amplicons
+missing canonical partner
+one rejected read plus overlapping accepted reads
+one globally accepted read with a locally suppressed noisy tail
+three-way overlap with one high-quality discordant read
+conflicting indel placements across overlapping reads
+circular-origin overlap across different reads
+~~~
+
+For every locus/event verify both the scientific state and the support topology:
+contributing read IDs, directions, amplicons, coverage denominator, and excluded
+local observations.
+
+A two-read F/R fixture validates the generic model; it must not be a separate
+implementation path.

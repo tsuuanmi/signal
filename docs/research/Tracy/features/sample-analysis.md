@@ -292,32 +292,43 @@ These should remain separate concepts.
 
 ## 29. Consensus Support Level
 
-Suggested independent-evidence hierarchy:
+Support should not be reduced to one ordinal enum.
+
+A locus can have different evidence topology along several dimensions:
+
+```text
+read count
+forward/reverse coverage
+amplicon count
+primer groups
+technical replicate groups
+```
+
+For example:
+
+```text
+2 reads / 2 directions / 1 amplicon
+2 reads / 1 direction  / 2 amplicons
+2 reads / 2 directions / 2 amplicons
+```
+
+are different evidence patterns.
+
+Prefer a factorized structure such as:
 
 ```rust
-pub enum SupportLevel {
-    SingleRead,
-    SameDirectionReplicate,
-    Bidirectional,
-    IndependentAmplicon,
+pub struct SupportTopology {
+    pub read_count: usize,
+    pub forward_read_count: usize,
+    pub reverse_read_count: usize,
+    pub amplicon_count: usize,
+    pub technical_replicate_group_count: usize,
 }
 ```
 
-A position supported by:
-
-```text
-forward + reverse
-```
-
-should generally have stronger evidence than:
-
-```text
-two forward reads
-```
-
-because the latter may share direction-specific artifacts.
-
-Independent amplicons may be stronger still.
+Exact contributing read/amplicon IDs should remain available internally.
+Different amplicons reduce some shared artifacts but should not automatically be
+called biologically independent.
 
 ---
 
@@ -333,7 +344,7 @@ pub struct PositionConsensus {
 
     pub state: ConsensusState,
 
-    pub support_level: SupportLevel,
+    pub support_topology: SupportTopology,
 
     pub support: [f64; 4],
 
@@ -350,7 +361,12 @@ Compact output might summarize:
   "position": 73,
   "base": "A",
   "state": "confirmed",
-  "support_level": "bidirectional",
+  "support": {
+    "reads": 3,
+    "forward": 2,
+    "reverse": 1,
+    "amplicons": 2
+  },
   "observations": {
     "total": 3,
     "forward": 2,
@@ -362,3 +378,69 @@ Compact output might summarize:
 Full low-level evidence can remain internal or available in a separate research/debug format.
 
 ---
+
+
+---
+
+## 31. Pairing Is Metadata, Not the Aggregation Unit
+
+A sample manifest can record that HV1F and HV1R belong to the same amplicon, but
+sample reconciliation should not require:
+
+~~~text
+F + R -> pair consensus
+~~~
+
+before other reads can participate.
+
+The actual aggregation unit is a mapped reference coordinate or normalized
+event.
+
+Thus all of these may meet directly at one locus:
+
+~~~text
+HV1F
+HV1R
+HV2F
+HV3R
+~~~
+
+if their independently processed ReadObservation values cover that locus.
+
+The detailed rationale is in [read-reconciliation.md](read-reconciliation.md).
+
+---
+
+## 32. Same Input Trace, Same ReadObservation
+
+A strong invariant for the sample architecture is:
+
+~~~text
+analyze trace alone
+==
+read-level evidence for the same trace inside a sample
+~~~
+
+Other reads can change only the sample-level interpretation, never the original
+read observation.
+
+This prevents circular reasoning where a majority of reads "repairs" a weak or
+discordant chromatogram upstream.
+
+---
+
+## 33. Consensus Sequence Is Optional Projection
+
+The authoritative sample object should exist before a consensus string.
+
+Recommended:
+
+~~~text
+ReadObservation[]
+ -> SampleEvidence
+ -> SampleInterpretation
+ -> optional ConsensusSequence
+~~~
+
+SampleVariant should consume SampleEvidence/SampleInterpretation directly rather
+than diffing the projected sequence against the reference.

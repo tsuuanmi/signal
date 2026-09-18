@@ -16,3 +16,6 @@ These ADRs govern the Tracy research direction only. They do not change producti
 | [0010](0010-artifact-resilience-before-richer-interpretation.md) | Accepted for research | Validate artifact resilience before promoting richer profile-based interpretation. |
 | [0011](0011-reference-guides-coordinates-but-does-not-vote.md) | Accepted for research | Use reference for coordinates/context, not as an implicit sample observation. |
 | [0012](0012-candidate-placement-is-not-authoritative-alignment.md) | Accepted for research | Keep future indexed/seeded candidate search separate from final scientific alignment. |
+| [0013](0013-process-each-trace-before-sample-reconciliation.md) | Accepted for research | Complete the authoritative single-read pipeline before any sample merge. |
+| [0014](0014-reconcile-by-reference-coordinate-not-fr-pair.md) | Accepted for research | Reconcile arbitrary overlaps by coordinate/event rather than collapsing named F/R pairs. |
+| [0015](0015-consensus-sequence-is-a-projection.md) | Accepted for research | Keep sample evidence authoritative; consensus sequence is a downstream projection. |

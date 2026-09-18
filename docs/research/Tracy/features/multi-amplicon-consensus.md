@@ -172,40 +172,36 @@ but implementation should only claim whole-mitogenome support once the sample-le
 
 ## 48. Consensus Across Amplicons
 
-At a reference position:
+At a reference position, reads from any overlapping amplicons may contribute:
 
 ```text
-amplicon A forward
-amplicon A reverse
-amplicon B forward
-amplicon B reverse
+HV1F
+HV1R
+HV2F
+HV3R
 ```
 
-may all contribute.
+The important property is not a pre-built F/R pair. It is the topology of the
+actual observations covering that coordinate.
 
-The system should retain independent support counts:
+Retain factorized support:
 
 ```rust
 pub struct SupportSummary {
     pub total_reads: usize,
-
     pub forward_reads: usize,
-
     pub reverse_reads: usize,
-
-    pub independent_amplicons: usize,
+    pub amplicons: usize,
+    pub technical_replicate_groups: usize,
 }
 ```
 
-A difference seen in:
+Do not use `independent_amplicons` as a default biological claim. Different
+amplicons/primers can reduce shared artifacts, but independence depends on assay
+design.
 
-```text
-both directions
-and
-two independent amplicons
-```
-
-should be considered stronger than the same difference seen twice within one forward amplicon.
+A cross-amplicon overlap such as HV2F + HV3R is first-class evidence even if
+HV2R or HV3F is absent.
 
 ---
 
@@ -374,7 +370,7 @@ pub struct SampleVariant {
 
     pub observations: Vec<VariantObservation>,
 
-    pub support_level: SupportLevel,
+    pub support: SupportTopology,
 
     pub consensus_state: ConsensusState,
 
@@ -554,3 +550,47 @@ mixed signal evidence
 rather than quantitative heteroplasmy.
 
 ---
+
+
+---
+
+## 56. Do Not Build Amplicon Consensus First
+
+For tiled mtDNA, avoid:
+
+~~~text
+amplicon 1 reads -> amplicon 1 consensus
+amplicon 2 reads -> amplicon 2 consensus
+then merge consensuses
+~~~
+
+That hierarchy loses original read evidence before cross-amplicon overlaps are
+evaluated.
+
+Prefer:
+
+~~~text
+all traces
+ -> independent ReadObservation values
+ -> reference-coordinate/event aggregation
+ -> sample interpretation
+~~~
+
+Amplicon identity remains attached to each contribution, so the final sample
+model can distinguish same-amplicon F/R support from cross-amplicon overlap.
+
+---
+
+## 57. Consensus Sequence and Sample Variant Are Sibling Projections
+
+From the authoritative sample evidence:
+
+~~~text
+SampleEvidence
+   +--> SampleVariant[]
+   +--> ConsensusState[]
+   +--> Coverage/QC
+   +--> optional consensus FASTA-like sequence
+~~~
+
+The consensus string should not sit upstream of sample variant calling.

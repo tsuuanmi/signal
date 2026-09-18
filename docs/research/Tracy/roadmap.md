@@ -90,9 +90,12 @@ alignment/gap observations
 
 Reference-aware interpretation cannot rewrite the source evidence.
 
-## Phase E — two-read forward/reverse reconciliation
+## Phase E — generic sample-evidence reconciliation
 
-Start with one forward and one reverse trace.
+Implement the generic N-read aggregation model first. Validate it initially with
+the simplest two-read F/R case, but do not encode "pair" as the domain boundary.
+
+Start validation with one forward and one reverse trace.
 
 Before consensus:
 
@@ -105,6 +108,10 @@ artifact/quality admission
 
 At each locus preserve both nucleotide evidence and explicit gap/indel event
 support. High-quality conflicts remain visible.
+
+The same implementation must also accept partial/tiled sets such as HV1F,
+HV1R, HV2F, HV3R and allow any reads that overlap the same reference event to
+contribute.
 
 ## Phase F — reference-guided multi-read consensus
 
@@ -189,7 +196,7 @@ assay-specific LoD/LoQ
 | P0 | basecall-independent evidence profile | Very high | Medium |
 | P0 | evidence-aware Gotoh scorer | Very high | Medium |
 | P1 | explicit read admission / overlap policy | High | Low-Medium |
-| P1 | F/R evidence- and gap-aware consensus | Very high | Medium-High |
+| P1 | generic N-read evidence reconciliation, F/R as first validation case | Very high | Medium-High |
 | P1 | reference-guided multi-read consensus | Very high | Medium-High |
 | P1 | change-point length-mixture detection | High | Medium |
 | P1 | candidate +/-N phase-shift evaluation | High | Medium |
