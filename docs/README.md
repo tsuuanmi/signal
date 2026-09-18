@@ -59,6 +59,7 @@ If source and normative production documentation disagree, surface the mismatch.
 - [Coordinate contract](contracts/coordinates.md)
 - [Configuration](configuration.md)
 - [Reference-free basecall output](basecall-output.md)
+- [Sample evidence output](sample-output.md)
 - [Reference analysis output](json-output.md)
 - [Schemas](schemas/)
 - [Examples](examples/)

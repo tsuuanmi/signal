@@ -1,6 +1,6 @@
 # Signal Pipeline
 
-This document describes the shared read-processing stages and the implemented scientific pipeline of `signal analyze`. `signal basecall` stops after the shared quality-control stage and publishes the reference-free contract described in [`basecall-output.md`](basecall-output.md). It is the authoritative description of the current Rust behavior. Every stage,
+This document describes the shared read-processing stages used by `signal analyze`, `signal basecall`, and `signal sample`. `basecall` stops after quality control; `analyze` produces one read analysis; `sample` independently produces one `ReadObservation` per trace and then aggregates sample evidence. It is the authoritative description of the current Rust behavior. Every stage,
 substep, and formula below is derived from the source under `src/`; where this
 document and the source disagree, the source is ground truth and this document
 should be corrected.
@@ -16,10 +16,14 @@ progress and failures without entering the JSON contract.
 ```text
 AB1 + TOML ──► decode ──► basecalling ──► signal_processing ──► quality_control
                                                                      ├─► basecalls/v1
-FASTA reference ─────────────────────────────────────────────────────┴─► alignment ─► variant_calling ─► analysis/v5
+FASTA reference ─────────────────────────────────────────────────────┴─► alignment ─► variant_calling
+                                                                                              │
+                                                                                       ReadObservation
+                                                                                         ├─► analysis/v5
+                                                                                         └─► sample aggregation
 ```
 
-Both commands consume exactly one AB1 trace and one strict TOML configuration. `analyze` additionally consumes one single-record FASTA reference and runs alignment and variant calling. `basecall` performs no reference I/O and stops after the three shared scientific read stages. Each
+`analyze` and `basecall` consume exactly one AB1 trace. `sample` consumes one or more AB1 traces and processes each independently through the same reference-guided observation path. `analyze` and `sample` additionally consume one single-record FASTA reference; `basecall` performs no reference I/O. Each
 stage consumes the validated output of the previous stage and produces a new
 typed result; no stage mutates shared state.
 
@@ -29,7 +33,7 @@ typed result; no stage mutates shared state.
   channels, basecall positions (`PLOC.2`), and optional vendor evidence
   (`PBAS.2`, `PCON.2`). `P2BA.1` is ignored. Vendor base strings retain uppercase
   IUPAC symbols, and PCON accepts the ABIF one-byte byte or char representation.
-- **Reference (`analyze` only):** one plain FASTA record of A/C/G/T/N bases, up to 50,000 bases, interpreted as linear or circular per configuration. `basecall` does not accept or load a reference.
+- **Reference (`analyze` and `sample`):** one plain FASTA record of A/C/G/T/N bases, up to 50,000 bases, interpreted as linear or circular per configuration. `basecall` does not accept or load a reference.
 - **Configuration:** one strict TOML file selected by `SIGNAL_CONFIG` or
   `config/signal.toml`. Unknown keys, missing sections, and out-of-range values
   are errors.
@@ -291,11 +295,19 @@ deduplicated.
 
 After variant calling, Signal materializes a `ReadObservation` that owns the input identity, base calls, signal observations, quality-control result, selected alignment, and read-level variant result for exactly one trace.
 
-The read has already located itself at this boundary. Its orientation and covered reference segments come from evidence-driven semi-global alignment and circular projection; filenames or nominal HV/F/R labels are not placement inputs. This makes the same one-read product suitable for the current analysis report and for future sample-level reconciliation.
+The read has already located itself at this boundary. Its orientation and covered reference segments come from evidence-driven semi-global alignment and circular projection; filenames or nominal HV/F/R labels are not placement inputs. This same one-read product feeds both the current analysis report and implemented sample-level reconciliation.
 
-Future sample processing must consume independently produced read observations and discover overlap in normalized reference-coordinate/event space. It must not pre-collapse canonical F/R pairs or require an otherwise usable read to have its nominal partner.
+## Sample evidence aggregation
+
+`signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and orders output independently of CLI trace order. The input basename is retained only as reviewer-facing provenance. Each read projection includes a concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state). Covered alignment columns become per-locus `reference`, `alternate`, `unresolved`, or `deletion` observations using reference-oriented query bases. Reads that do not cover a locus contribute nothing there and never count as reference support. Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)` with each contributing read basename, SHA-256, derived orientation, configured eligibility, exclusion reasons, and concise original-call mappings retained. A read-level filter can remove a candidate from `analysis/v5` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v1.
 
 ## Output
+
+`analyze` publishes `signal.analysis/v5` at `results/<trace-stem>.json`.
+`sample` publishes `signal.sample_evidence/v1` at
+`results/<sample-id>.sample.json`; its detailed semantics are defined in
+[`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
+publisher and keep operational logs outside deterministic JSON.
 
 The completed `signal.analysis/v5` result contains compact provenance
 hashes/software, read count and trim bounds, merged candidate-noisy regions, the

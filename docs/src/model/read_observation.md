@@ -10,12 +10,10 @@ processed read after reference placement.
 - Group input, reference, and configuration identities with signal-derived
   calls, signal-quality observations, quality-control result, selected alignment,
   and read-level variants for one read.
-- Establish the explicit boundary between one-read processing and future
-  sample-level reconciliation.
+- Establish the explicit boundary between one-read processing and sample-level reconciliation.
 - Preserve evidence-derived orientation and mapped reference segments from the
   selected alignment.
-- Keep assay names, primer labels, filenames, declared direction, and canonical
-  F/R pairing outside the scientific placement model.
+- Retain the UTF-8 source basename as reviewer-facing provenance while keeping assay names, primer labels, filename semantics, declared direction, and canonical F/R pairing outside the scientific placement model.
 
 ## Non-responsibilities
 
@@ -25,16 +23,14 @@ policy.
 
 ## Key type
 
-- `ReadObservation`: immutable ownership bundle for one independently processed
-  read's scientific products and scientific input identities.
+- `ReadObservation`: immutable ownership bundle for one independently processed read's scientific products, stable input identity, and non-authoritative source basename provenance.
 
 ## Invariants
 
 - A read is processed independently before any sample-level reconciliation.
 - Covered reference region and orientation are consequences of alignment
   evidence.
-- Optional assay metadata may be used later for provenance or post-mapping QC,
-  but does not alter the observation's scientific placement.
+- The source basename may be displayed for reviewer traceability but does not alter scientific placement, overlap, or reconciliation. Optional assay metadata may be used later for provenance or post-mapping QC under the same rule.
 - Missing canonical F/R partners do not invalidate an otherwise usable read.
 
 ## Dependencies

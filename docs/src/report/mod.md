@@ -2,47 +2,49 @@
 
 ## Purpose
 
-Provides typed analysis-v5/basecalls-v1 assembly, shared serialization, and
-atomic no-overwrite publication.
+Defines typed result projection, shared deterministic serialization, and atomic
+no-overwrite publication.
 
 ## Responsibilities
 
-- Re-export `CompletedAnalysis`, `CompletedBasecall`, explicit builders, generic
-  `serialize`, and `publish` to pipeline orchestration.
-- Keep typed contract assembly, shared merged-signal projection, concise variant
-  evidence projection, and atomic publication in separate child modules.
+- Re-export the analysis, basecall, and sample completed-input wrappers plus their
+  focused builders.
+- Share deterministic JSON serialization across
+  `signal.analysis/v5`, `signal.basecalls/v1`, and
+  `signal.sample_evidence/v1`.
+- Keep analysis projection, basecall projection, sample projection, signal
+  projection, variant projection, and publication in separate focused modules.
 
 ## Non-responsibilities
 
 No basecalling, signal feature calculation, quality scoring, alignment, variant
-inference/filtering, or operational logging.
+calling, sample aggregation, or operational logging.
 
 ## Key types and functions
 
-- `build_analysis(completed)` and `build_basecall(completed)`: assemble typed
-  command-specific result contracts.
-- `serialize(result) -> Result<Vec<u8>>`: produces deterministic JSON bytes.
-- `publish(path, bytes) -> Result<()>`: atomically publishes a new result without
-  overwriting an existing target.
-- Child modules: `json` (analysis assembly/shared serialization), `basecall`
-  (reference-free assembly), `signal` (merged regions), `variant` (mapped
-  supporting evidence), and `atomic` (publication transaction).
+- `build_analysis(completed)`: projects one `ReadObservation` to analysis v5.
+- `build_basecall(completed)`: projects reference-free read stages to basecalls
+  v1.
+- `build_sample(completed)`: projects `SampleEvidence` to sample-evidence v1.
+- `serialize(result) -> Result<Vec<u8>>`: deterministic pretty JSON plus one
+  trailing newline.
+- `publish(path, bytes) -> Result<()>`: atomic no-overwrite publication.
+- Child modules: `json`, `basecall`, `sample`, `signal`, `variant`, and
+  `atomic`.
 
 ## Invariants and errors
 
-JSON identifies its analysis-v5 or basecalls-v1 contract; serialization is
-deterministic; publication is atomic and no-overwrite. Assembly, serialization, and filesystem failures
-propagate as typed errors.
+Each builder emits exactly its named versioned contract. Reporting performs
+projection/consistency validation only; scientific decisions remain upstream.
 
 ## Dependencies
 
-- Completed model and stage outputs used by `json` and `variant`.
-- `error` for typed failures.
+Completed model/stage outputs, `error`, and serialization/filesystem support.
 
 ## Tests
 
-Integration tests exercise deterministic analysis/basecall serialization and
-no-overwrite publication; atomic publication also has focused unit coverage.
+Integration tests and schema validation cover contract projection; atomic
+publication has focused unit coverage.
 
 ## Status
 

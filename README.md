@@ -100,6 +100,13 @@ cargo run --release -- analyze sample.ab1 \
   --reference references/rCRS.fasta
 ```
 
+Multi-read sample evidence:
+
+```bash
+cargo run --release -- sample AB0442 read1.ab1 read2.ab1 \
+  --reference references/rCRS.fasta
+```
+
 Signal reads `SIGNAL_CONFIG` or `config/signal.toml`.
 
 Successful core commands publish exactly one command-specific JSON result without overwriting an existing result:
@@ -107,16 +114,31 @@ Successful core commands publish exactly one command-specific JSON result withou
 ```text
 basecall -> results/<trace-stem>.basecalls.json
 analyze  -> results/<trace-stem>.json
+sample   -> results/<sample-id>.sample.json
 ```
 
 Operational logs are separate append-only sidecars under `logs/` by default.
+
+The external batch runner `scripts/analyze_samples.py` keeps per-trace results and
+the aggregate together:
+
+```text
+results/<sample-id>/
+├── <trace-stem>.json
+├── ...
+└── <sample-id>.json
+```
+
+The final `<sample-id>.json` is generated only when every selected trace for that
+sample succeeds.
 
 ## Output contracts
 
 Current public result contracts are:
 
 - `signal.basecalls/v1` — reference-free primary/ambiguity/retained read result;
-- `signal.analysis/v5` — compact reference-guided analysis result.
+- `signal.analysis/v5` — compact reference-guided analysis result;
+- `signal.sample_evidence/v1` — multi-read reference-coordinate and normalized-variant evidence.
 
 The schemas, examples, coordinate conventions, and human-readable semantics live under [docs/contracts](docs/contracts/README.md).
 

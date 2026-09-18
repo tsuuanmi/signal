@@ -8,7 +8,7 @@ Owns the validated domain types shared across scientific stages.
 
 - Declare the model submodules: `alignment`, `basecall_result`, `basecalls`,
   `coordinate`, `nucleotide`, `quality`, `read_observation`, `reference`,
-  `result`, `signal`, `trace`, and `variant`.
+  `result`, `sample_evidence`, `sample_result`, `signal`, `trace`, and `variant`.
 - Provide validated domain vocabulary with no I/O, CLI, configuration loading, or
   algorithm dependencies.
 
@@ -33,8 +33,9 @@ No filesystem access, argument parsing, logging, or algorithm execution.
   exclusion diagnostics without report-only labels.
 - `result`: compact `AnalysisResult` plus result records shared by both
   contracts.
-- `basecall_result`: reference-free `BasecallResult` matching basecalls schema
-  v1.
+- `basecall_result`: reference-free `BasecallResult` matching basecalls schema v1.
+- `sample_evidence`: internal cross-read coordinate/variant evidence.
+- `sample_result`: public `signal.sample_evidence/v1` records.
 
 ## Invariants and errors
 

@@ -1,6 +1,6 @@
 #![forbid(unsafe_code)]
 
-//! Library boundary for one-AB1 Signal operations.
+//! Library boundary for Signal operations.
 //!
 //! The module graph is documented in `docs/source-layout.md`. `lib.rs` remains
 //! the minimal dispatcher: it exposes stable CLI and error boundaries, routes
@@ -19,6 +19,7 @@ mod pipeline;
 mod quality_control;
 mod reference;
 mod report;
+mod sample;
 mod signal_processing;
 mod trace;
 mod variant_calling;
@@ -31,5 +32,6 @@ pub fn run(cli: Cli) -> Result<()> {
     match cli.command {
         Command::Analyze(args) => pipeline::analyze(&args),
         Command::Basecall(args) => pipeline::basecall(&args),
+        Command::Sample(args) => pipeline::sample(&args),
     }
 }

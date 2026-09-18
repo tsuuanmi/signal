@@ -69,18 +69,26 @@ class AnalyzeSamplesTests(unittest.TestCase):
         (unselected / "keep.json").write_text("keep", encoding="utf-8")
         selected_log = self.log_dir / "run_S1_old.log"
         current_log = self.log_dir / f"{trace.stem}.log"
+        sample_log = self.log_dir / "S1.sample.log"
         unselected_log = self.log_dir / "run_S2_old.log"
         unrelated_log = self.log_dir / "service.log"
-        for log in [selected_log, current_log, unselected_log, unrelated_log]:
+        for log in [
+            selected_log,
+            current_log,
+            sample_log,
+            unselected_log,
+            unrelated_log,
+        ]:
             log.write_text("log", encoding="utf-8")
 
         workload = batch.discover_workload(self.trace_dir, ["S1"])
         cleaned = batch.clean_previous_results(self.output_dir, self.log_dir, workload)
 
-        self.assertEqual(cleaned, (1, 2))
+        self.assertEqual(cleaned, (1, 3))
         self.assertFalse(selected.exists())
         self.assertFalse(selected_log.exists())
         self.assertFalse(current_log.exists())
+        self.assertFalse(sample_log.exists())
         self.assertTrue((unselected / "keep.json").is_file())
         self.assertTrue(unselected_log.is_file())
         self.assertTrue(unrelated_log.is_file())
@@ -249,6 +257,94 @@ class AnalyzeSamplesTests(unittest.TestCase):
         self.assertIn("directory sync failed", detail)
         self.assertFalse(destination.exists())
 
+    def test_run_sample_publishes_sample_named_json(self) -> None:
+        traces = [
+            self.trace_dir / "run_S1_a.ab1",
+            self.trace_dir / "run_S1_b.ab1",
+        ]
+        for trace in traces:
+            trace.write_bytes(b"trace")
+        destination = self.output_dir / "S1" / "S1.json"
+
+        def execute(
+            command: list[str],
+            *,
+            cwd: Path,
+            env: dict[str, str],
+            check: bool,
+            capture_output: bool,
+            text: bool,
+        ) -> SimpleNamespace:
+            self.assertEqual(
+                command,
+                [
+                    str(self.binary),
+                    "sample",
+                    "S1",
+                    *(str(trace) for trace in traces),
+                    "--reference",
+                    str(self.reference),
+                ],
+            )
+            self.assertEqual(env["SIGNAL_CONFIG"], str(self.config))
+            self.assertEqual(env["SIGNAL_LOG_DIR"], str(self.log_dir))
+            self.assertFalse(check)
+            self.assertTrue(capture_output)
+            self.assertTrue(text)
+            generated = cwd / "results" / "S1.sample.json"
+            generated.parent.mkdir()
+            generated.write_text("sample", encoding="utf-8")
+            return SimpleNamespace(returncode=0, stderr="")
+
+        with patch.object(batch.subprocess, "run", side_effect=execute):
+            succeeded, detail = batch.run_sample(
+                self.binary,
+                "S1",
+                traces,
+                self.reference,
+                self.config,
+                self.log_dir,
+                destination,
+            )
+
+        self.assertTrue(succeeded, detail)
+        self.assertEqual(destination.read_text(encoding="utf-8"), "sample")
+
+    def test_failed_trace_skips_sample_json(self) -> None:
+        self.manifest.write_text("S1\n", encoding="utf-8")
+        traces = [
+            self.trace_dir / "run_S1_a.ab1",
+            self.trace_dir / "run_S1_b.ab1",
+        ]
+        for trace in traces:
+            trace.write_bytes(b"trace")
+
+        def run_trace(
+            _binary: Path,
+            trace: Path,
+            _reference: Path,
+            _config: Path,
+            _log_dir: Path,
+            destination: Path,
+        ) -> tuple[bool, str]:
+            if trace.name.endswith("_b.ab1"):
+                return False, "trace failed"
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            destination.write_text("new", encoding="utf-8")
+            return True, ""
+
+        with (
+            patch.object(batch, "run_analysis", side_effect=run_trace),
+            patch.object(batch, "run_sample") as run_sample,
+            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stderr(io.StringIO()),
+        ):
+            status = batch.main(self.arguments())
+
+        self.assertEqual(status, 1)
+        run_sample.assert_not_called()
+        self.assertFalse((self.output_dir / "S1" / "S1.json").exists())
+
     def test_existing_results_are_cleaned_and_every_trace_reruns(self) -> None:
         self.manifest.write_text("S1\n", encoding="utf-8")
         traces = [
@@ -275,14 +371,35 @@ class AnalyzeSamplesTests(unittest.TestCase):
             destination.write_text("new", encoding="utf-8")
             return True, ""
 
+        sample_invocations: list[tuple[str, list[Path], Path]] = []
+
+        def successful_sample(
+            _binary: Path,
+            sample: str,
+            sample_traces: list[Path],
+            _reference: Path,
+            _config: Path,
+            _log_dir: Path,
+            destination: Path,
+        ) -> tuple[bool, str]:
+            sample_invocations.append((sample, sample_traces, destination))
+            destination.write_text("sample", encoding="utf-8")
+            return True, ""
+
         with (
             patch.object(batch, "run_analysis", side_effect=successful_run),
+            patch.object(batch, "run_sample", side_effect=successful_sample),
             contextlib.redirect_stdout(io.StringIO()),
         ):
             status = batch.main(self.arguments())
 
         self.assertEqual(status, 0)
-        self.assertEqual(invoked, [trace.resolve() for trace in traces])
+        resolved_traces = [trace.resolve() for trace in traces]
+        self.assertEqual(invoked, resolved_traces)
+        self.assertEqual(
+            sample_invocations,
+            [("S1", resolved_traces, self.output_dir / "S1" / "S1.json")],
+        )
         for trace in traces:
             self.assertEqual(
                 (self.output_dir / "S1" / f"{trace.stem}.json").read_text(
@@ -290,6 +407,10 @@ class AnalyzeSamplesTests(unittest.TestCase):
                 ),
                 "new",
             )
+        self.assertEqual(
+            (self.output_dir / "S1" / "S1.json").read_text(encoding="utf-8"),
+            "sample",
+        )
 
 
 if __name__ == "__main__":

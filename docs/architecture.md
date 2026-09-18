@@ -2,7 +2,7 @@
 
 ## Principles
 
-- One AB1, one strict config, one command-specific JSON result, and one run-correlated append history in the per-trace operational log per invocation; reference analysis additionally requires one FASTA.
+- One strict config and one command-specific JSON result per invocation. Single-read commands accept one AB1; sample evidence accepts one or more AB1 traces. Reference-guided commands additionally require one FASTA.
 - Untrusted binary input is checked before every slice, conversion, and allocation.
 - Models enforce cardinality and coordinate invariants; scientific functions have no filesystem side effects.
 - The CLI and operating-system boundary remain thin.
@@ -12,25 +12,25 @@
 ## Flow
 
 ```text
-CLI -> pipeline -> input (strict config + ABIF)
-                    |
-                    v
-                 shared read path
-                 basecalling -> signal_processing -> quality_control
-                    |                                  |
-                    |                                  +-> basecall report v1
-                    v
-                 analyze only: reference -> alignment -> variant_calling
+AB1 -> decode -> basecalling -> signal_processing -> quality_control
                                                    |
-                                                   v
-                                            ReadObservation
+                                                   +-> basecall report v1
                                                    |
-                                                   +-> analysis report v5
-                                                   +-> future SampleEvidence
-
-Both reports -> one serializer -> atomic no-overwrite publication
-Both commands -> append-only per-trace operational log
+FASTA -----------------------------------------> alignment -> variant_calling
+                                                              |
+                                                              v
+                                                       ReadObservation
+                                                         /          \
+                                                        v            v
+                                               analysis report v5   SampleEvidence
+                                                                        |
+                                                                        v
+                                                         sample_evidence/v1
 ```
+
+`pipeline::observation` is the one authoritative reference-guided read path.
+`analyze` consumes one observation; `sample` independently creates one
+observation per trace and only then calls `sample::aggregate`.
 
 The shared `checksum` module provides the stable SHA-256 identities used by
 `config`, `trace`, and `reference` loading.
@@ -52,8 +52,9 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
 | `alignment` | bounded Gotoh, traceback, orientation, circular projection | variant extraction |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
-| `report` | analysis-v5/basecalls-v1 assembly, shared signal projection/serialization, concise mapped-call projection, atomic publish | scientific decisions and compatibility output |
-| `pipeline` | command-specific sequencing plus one shared reference-independent read path | algorithm internals |
+| `sample` | deterministic cross-read coordinate/variant aggregation | input loading, F/R pairing, consensus and interpretation |
+| `report` | analysis-v5/basecalls-v1/sample-evidence-v1 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
+| `pipeline` | command sequencing plus shared reference-independent `read` and reference-guided `observation` paths | algorithm internals |
 
 Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. `signal_processing` reads `Chromatogram` and `BaseCalls` but no algorithm module depends back on it.
 
@@ -63,13 +64,13 @@ Trace samples, rolling signal-window call indexes, and original call indexes are
 
 ## Output projection and transaction
 
-Compact `signal.analysis/v5` projects completed internal models to provenance, read/trim, merged noisy regions, alignment, normalized variants, and warning summaries while omitting full sequences and bulk evidence. `signal.basecalls/v1` projects the shared reference-independent stages to provenance, full primary/ambiguity/retained sequences, trim, merged noisy regions, and warnings without reference, alignment, or variants. Configuration remains schema version 4, and no compatibility result is assembled.
+Compact `signal.analysis/v5` projects one completed read observation. `signal.basecalls/v1` projects the shared reference-independent stages. `signal.sample_evidence/v1` projects independently placed reads into deterministic read placements, covered-locus observations, and normalized variant support. It contains no consensus or sample-level variant verdict. Configuration remains schema version 4, and no compatibility result is assembled.
 
 The completed typed result is serialized before filesystem publication. The core CLI writes a sibling temporary file, flushes and synchronizes it, creates the final path without overwrite, removes the temporary link, and synchronizes the directory. A failed core invocation leaves no command result and never replaces an existing file. Operational logs are deliberately separate, timestamped, run-correlated, escaped to one physical line, and append-only. Pipeline orchestration records aggregate metrics and elapsed time at every stage boundary, each removed variant's kind/position/reasons without alleles, the final warning categories, and stage-aware terminal failures. Mandatory pre-publication records are synchronized before the result transaction begins; no required record is written after a successful publication.
 
 ## External batch orchestration
 
-`scripts/analyze_samples.py` is outside the core CLI boundary. It validates the manifest, selected traces, identities, destinations, and cleanup targets; rejects ambiguous matches, trace-stem collisions, and symlinks; then builds or validates the binary before deleting anything. Cleanup removes only selected sample directories and matching selected logs, preserving unselected artifacts. Each selected trace still runs through the one-file no-overwrite CLI in isolation. Because cleanup is intentionally destructive and execution is sequential, a later analysis failure may leave partial new outputs from earlier successful traces; it does not restore the removed prior batch.
+`scripts/analyze_samples.py` is outside the core CLI boundary. It validates the manifest, selected traces, identities, destinations, and cleanup targets; rejects ambiguous matches, trace-stem collisions, and symlinks; then builds or validates the binary before deleting anything. Cleanup removes only selected sample directories plus matching per-trace and sample logs, preserving unselected artifacts. Each selected trace first runs through the one-file no-overwrite CLI in isolation. When every trace for a sample succeeds, the script invokes `signal sample` with that complete trace set and atomically publishes the aggregate as `results/<sample>/<sample>.json` beside the per-trace JSON files. If any trace fails, the aggregate is skipped so no incomplete sample result is presented as complete. Because cleanup is intentionally destructive and execution is sequential, a later failure may leave partial new outputs from earlier successful traces; it does not restore the removed prior batch.
 
 ## Resource bounds
 

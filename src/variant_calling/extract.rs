@@ -145,6 +145,7 @@ pub(crate) fn call(
     }
     Ok(VariantCallingResult {
         reported: merged,
+        observed: Vec::new(),
         excluded,
     })
 }

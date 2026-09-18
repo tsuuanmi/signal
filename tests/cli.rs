@@ -86,3 +86,31 @@ fn missing_trace_fails_explicitly() -> Result<(), Box<dyn std::error::Error>> {
     assert!(log.contains("failed to read AB1 file"));
     Ok(())
 }
+
+#[test]
+fn sample_requires_at_least_one_trace() {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_signal"));
+    command
+        .args(["sample", "sample-1", "--reference", "reference.fa"])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains("Usage:"));
+}
+
+#[test]
+fn sample_rejects_unsafe_sample_id_before_io() {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_signal"));
+    command
+        .args([
+            "sample",
+            "../sample",
+            "missing.ab1",
+            "--reference",
+            "missing.fa",
+        ])
+        .assert()
+        .failure()
+        .stderr(predicate::str::contains(
+            "sample id must be 1..=128 ASCII characters",
+        ));
+}

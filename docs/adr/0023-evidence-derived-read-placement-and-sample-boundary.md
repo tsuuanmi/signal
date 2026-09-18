@@ -18,7 +18,7 @@ Signal adopts the following production architecture:
 1. Every trace is processed independently through signal-derived calling, signal analysis, quality control, evidence-driven reference alignment, and read-level variant extraction.
 2. The resulting one-read scientific product is represented by `ReadObservation`.
 3. Read orientation and covered reference segments are derived from alignment evidence, not filename, HV label, primer name, declared F/R direction, or an expected-region constraint.
-4. Future sample reconciliation will consume `ReadObservation[]` in normalized reference-coordinate/event space.
+4. Future sample reconciliation will consume `ReadObservation[]` in normalized reference-coordinate/variant space.
 5. Canonical F/R pairing, amplicon, primer, and replicate identity are optional provenance/support dimensions, not exclusive merge keys.
 6. A consensus sequence, when introduced, is a downstream projection. Sample variants and discordance must not be defined by diffing a flattened consensus string.
 
@@ -46,3 +46,9 @@ This ADR does not introduce multi-read CLI input, a sample JSON schema, evidence
 ## Validation
 
 The implementation must preserve existing single-read output while making the read observation boundary explicit. Future sample work must include filename/metadata invariance, reverse-orientation inference, circular-origin placement, ambiguous-placement failure, cross-amplicon overlap, missing-partner, and discordant-overlap fixtures.
+
+## Follow-up
+
+ADR-0024 implements the first sample consumer of this boundary: the multi-read
+CLI, `SampleEvidence`, and `signal.sample_evidence/v1`. The non-goals above
+describe the scope of ADR-0023 itself, not the repository state after ADR-0024.
