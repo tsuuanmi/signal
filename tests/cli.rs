@@ -87,7 +87,6 @@ fn missing_trace_fails_explicitly() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-
 #[test]
 fn sample_requires_at_least_one_trace() {
     let mut command = Command::new(env!("CARGO_BIN_EXE_signal"));
