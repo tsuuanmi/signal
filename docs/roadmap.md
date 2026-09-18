@@ -19,7 +19,7 @@ basic read quality / end trimming
  ↓
 forward-or-reverse alignment to one short reference
  ↓
-simple primary-sequence SNV detection
+primary-sequence variant calling
  ↓
 versioned JSON result
 ```
@@ -74,9 +74,11 @@ For one short reference, Signal must:
 
 Alignment correctness is more important than adding search/indexing features.
 
-### 5. Call simple SNVs correctly
+### 5. Validate simple SNVs first, then preserve known-good variant support
 
-The first variant target is straightforward primary-sequence A/C/G/T substitutions.
+The first validation anchor is straightforward primary-sequence A/C/G/T substitution because it is the easiest variant class to reason about end-to-end.
+
+This does **not** mean removing or disabling existing indel support. Current small insertion/deletion handling remains part of the working baseline when its normalization, call mapping, tests, and evidence remain sound.
 
 MVP validation should answer:
 
@@ -101,7 +103,7 @@ The schema should make explicit:
 
 Schema stability and interpretability are more important than exposing every internal feature.
 
-## Implemented but not required for core MVP acceptance
+## Current supported baseline beyond the confidence floor
 
 The repository already contains or explores functionality beyond this baseline, including:
 
@@ -111,16 +113,24 @@ The repository already contains or explores functionality beyond this baseline, 
 - batch orchestration;
 - richer per-call evidence.
 
-These may remain implemented and tested, but their existence does not expand the definition of the active MVP.
+These capabilities are not treated as disposable experiments merely because they are beyond the simplest validation path. Where their current behavior is coherent and tested, future work builds on them.
 
-A capability becomes part of the release-critical scientific contract only after its own biological validation is strong enough.
+The distinction is:
+
+```text
+core confidence floor = what we validate first
+current supported baseline = what the product already does intentionally and keeps
+future scope = capabilities not yet implemented or not yet justified
+```
+
+A current capability may remain in the product contract while its real-trace evidence continues to strengthen.
 
 ## Deferred until after MVP confidence
 
 The following are intentionally deferred:
 
-1. insertion/deletion calling as a release-critical capability;
-2. homopolymer and mtDNA poly-C special handling;
+1. new or more complex indel models beyond the current supported behavior;
+2. homopolymer and mtDNA poly-C special handling beyond current generic behavior;
 3. sample-level multi-read consensus;
 4. bidirectional sample evidence aggregation;
 5. quantitative heteroplasmy;
@@ -153,4 +163,4 @@ The first milestone is not "Signal supports everything Tracy supports".
 
 The first milestone is:
 
-> Signal can take an ordinary Sanger AB1, produce a trustworthy primary read, align it correctly, report straightforward SNVs correctly, and explain the result through a stable schema.
+> Signal can take an ordinary Sanger AB1, produce a trustworthy primary read, align it correctly, report straightforward variants correctly, preserve currently validated harder behavior such as small indels where supported, and explain the result through a stable schema.
