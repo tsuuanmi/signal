@@ -52,7 +52,7 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
 | `alignment` | bounded Gotoh, traceback, orientation, circular projection | variant extraction |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
-| `sample` | deterministic cross-read coordinate/event aggregation | input loading, F/R pairing, consensus and interpretation |
+| `sample` | deterministic cross-read coordinate/variant aggregation | input loading, F/R pairing, consensus and interpretation |
 | `report` | analysis-v5/basecalls-v1/sample-evidence-v1 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
 | `pipeline` | command sequencing plus shared reference-independent `read` and reference-guided `observation` paths | algorithm internals |
 
@@ -64,7 +64,7 @@ Trace samples, rolling signal-window call indexes, and original call indexes are
 
 ## Output projection and transaction
 
-Compact `signal.analysis/v5` projects one completed read observation. `signal.basecalls/v1` projects the shared reference-independent stages. `signal.sample_evidence/v1` projects independently placed reads into deterministic read placements, covered-locus observations, and normalized event support. It contains no consensus or sample-variant verdict. Configuration remains schema version 4, and no compatibility result is assembled.
+Compact `signal.analysis/v5` projects one completed read observation. `signal.basecalls/v1` projects the shared reference-independent stages. `signal.sample_evidence/v1` projects independently placed reads into deterministic read placements, covered-locus observations, and normalized variant support. It contains no consensus or sample-level variant verdict. Configuration remains schema version 4, and no compatibility result is assembled.
 
 The completed typed result is serialized before filesystem publication. The core CLI writes a sibling temporary file, flushes and synchronizes it, creates the final path without overwrite, removes the temporary link, and synchronizes the directory. A failed core invocation leaves no command result and never replaces an existing file. Operational logs are deliberately separate, timestamped, run-correlated, escaped to one physical line, and append-only. Pipeline orchestration records aggregate metrics and elapsed time at every stage boundary, each removed variant's kind/position/reasons without alleles, the final warning categories, and stage-aware terminal failures. Mandatory pre-publication records are synchronized before the result transaction begins; no required record is written after a successful publication.
 
