@@ -7,8 +7,7 @@ shared by typed result contracts.
 
 ## Responsibilities
 
-- Consume `CompletedAnalysis`, containing config, trace, reference, base calls,
-  signal analysis, quality control, selected alignment, and variant calling.
+- Consume `CompletedAnalysis`, containing config, reference, and one complete\n  `ReadObservation` produced by the scientific pipeline.
 - Delegate merged noisy-region projection to `report::signal`; individual signal
   windows and maximum secondary SNR remain internal.
 - Project the selected alignment into orientation, callable bases/identity,
@@ -26,7 +25,7 @@ feature computation, or scientific decision logic.
 
 ## Key types and functions
 
-- `CompletedAnalysis`: all completed internal stage outputs consumed by assembly.
+- `CompletedAnalysis`: report context plus one complete one-read observation.
 - `build_analysis(completed) -> Result<AnalysisResult>`: assembles v5 without
   filesystem side effects.
 - `serialize<T: Serialize>(result) -> Result<Vec<u8>>`: deterministic pretty JSON
