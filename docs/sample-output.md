@@ -47,7 +47,7 @@ thresholds.
 
 Locus evidence and variant evidence intentionally answer different questions.
 `loci[]` preserves aligned reference-position observations, including canonical
-mismatches that cannot become a normalized/reportable event. `variants[]` preserves
+mismatches that cannot become a normalized/reportable variant. `variants[]` preserves
 normalized canonical variant identity plus per-read eligibility. Non-canonical or
 over-limit differences that cannot form a valid normalized variant remain exclusion
 diagnostics rather than fabricated variant records.
