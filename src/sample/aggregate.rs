@@ -260,16 +260,48 @@ mod tests {
         assert_eq!(evidence.locus_differences[0].position_1based, 12);
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
-            crate::model::sample_evidence::LocusDifferenceState::Alternate
+            crate::model::sample_evidence::LocusState::Alternate
         );
         assert_eq!(
             evidence.locus_differences[1].observations[0].state,
-            crate::model::sample_evidence::LocusDifferenceState::Unresolved
+            crate::model::sample_evidence::LocusState::Unresolved
         );
         assert_eq!(
             evidence.locus_differences[2].observations[0].state,
-            crate::model::sample_evidence::LocusDifferenceState::Deletion
+            crate::model::sample_evidence::LocusState::Deletion
         );
+        Ok(())
+    }
+
+    #[test]
+    fn differential_locus_retains_reference_support_from_overlapping_reads() -> Result<()> {
+        let alternate = observation(
+            "a",
+            "reference",
+            "config",
+            Orientation::Forward,
+            vec![column('G', 'A', Some(0), 72)],
+            vec![snv(73, "A", "G")],
+        );
+        let reference = observation(
+            "b",
+            "reference",
+            "config",
+            Orientation::Reverse,
+            vec![column('A', 'A', Some(0), 72)],
+            Vec::new(),
+        );
+
+        let evidence = aggregate(&[reference, alternate])?;
+
+        assert_eq!(evidence.locus_differences.len(), 1);
+        let observations = &evidence.locus_differences[0].observations;
+        assert_eq!(observations.len(), 2);
+        assert_eq!(observations[0].read_index, 0);
+        assert_eq!(observations[0].state, crate::model::sample_evidence::LocusState::Alternate);
+        assert_eq!(observations[1].read_index, 1);
+        assert_eq!(observations[1].state, crate::model::sample_evidence::LocusState::Reference);
+        assert_eq!(observations[1].relative_quality, Some(50));
         Ok(())
     }
 
