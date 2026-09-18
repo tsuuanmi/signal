@@ -18,6 +18,7 @@ pub(crate) enum LocusState {
 /// One read placement retained in sample evidence.
 #[derive(Debug, Clone)]
 pub(crate) struct SampleReadEvidence {
+    pub(crate) input_name: String,
     pub(crate) input_sha256: String,
     pub(crate) orientation: Orientation,
     pub(crate) reference_segments: Vec<ReferenceSegment>,
@@ -27,6 +28,7 @@ pub(crate) struct SampleReadEvidence {
 /// One aligned observation at a reference locus.
 #[derive(Debug, Clone)]
 pub(crate) struct LocusObservation {
+    pub(crate) input_name: String,
     pub(crate) input_sha256: String,
     pub(crate) orientation: Orientation,
     pub(crate) state: LocusState,
@@ -43,23 +45,24 @@ pub(crate) struct LocusEvidence {
     pub(crate) observations: Vec<LocusObservation>,
 }
 
-/// One read observing a normalized event, with configured eligibility retained.
+/// One read observing a normalized variant, with configured eligibility retained.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct EventSupport {
+pub(crate) struct VariantSupport {
+    pub(crate) input_name: String,
     pub(crate) input_sha256: String,
     pub(crate) orientation: Orientation,
     pub(crate) eligible: bool,
     pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
 }
 
-/// One normalized observed variant event with factorized read support.
+/// One normalized observed variant with factorized read support.
 #[derive(Debug, Clone)]
-pub(crate) struct EventEvidence {
+pub(crate) struct VariantEvidence {
     pub(crate) position_1based: usize,
     pub(crate) reference: String,
     pub(crate) alternate: String,
     pub(crate) kind: VariantKind,
-    pub(crate) support: Vec<EventSupport>,
+    pub(crate) support: Vec<VariantSupport>,
 }
 
 /// Complete reference-coordinate evidence for one sample.
@@ -69,5 +72,5 @@ pub(crate) struct SampleEvidence {
     pub(crate) configuration_sha256: String,
     pub(crate) reads: Vec<SampleReadEvidence>,
     pub(crate) loci: Vec<LocusEvidence>,
-    pub(crate) events: Vec<EventEvidence>,
+    pub(crate) variants: Vec<VariantEvidence>,
 }
