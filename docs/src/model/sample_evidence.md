@@ -6,14 +6,14 @@ Defines internal sample-level scientific evidence after independent read analysi
 
 ## Responsibilities
 
-- Retain every contributing read by SHA-256, derived orientation, mapped reference segments, and circular-origin status.
+- Retain every contributing read by reviewer-facing basename plus stable SHA-256 and a concise evidence-derived alignment summary.
 - Represent covered reference loci as per-read aligned observations with explicit `reference`, `alternate`, `unresolved`, or `deletion` state.
-- Retain normalized canonical variant observations separately from locus observations, with factorized read/orientation support plus configured eligibility and exclusion reasons.
+- Retain normalized canonical variant observations separately from locus observations, with factorized read name/SHA/orientation support, configured eligibility/exclusion reasons, and concise original-call mappings.
 - Bind the sample evidence to one reference and one scientific configuration identity.
 
 ## Non-responsibilities
 
-No filename/HV/primer placement, F/R pairing, consensus construction, genotype or heteroplasmy inference, event adjudication, JSON projection, or filesystem I/O.
+No filename/HV/primer-driven placement, F/R pairing, consensus construction, genotype or heteroplasmy inference, variant adjudication, JSON projection, or filesystem I/O.
 
 ## Invariants
 
