@@ -82,6 +82,8 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                 .map(|support| SampleEventSupportResult {
                     read_sha256: support.input_sha256,
                     orientation: support.orientation,
+                    eligible: support.eligible,
+                    exclusion_reasons: support.exclusion_reasons,
                 })
                 .collect(),
         })
