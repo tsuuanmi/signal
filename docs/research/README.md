@@ -17,7 +17,7 @@ docs/research/<topic>/
 └── ... focused notes
 ```
 
-The Tracy research PR follows this model under `docs/research/Tracy/`.
+The Tracy research work follows this model under `docs/research/Tracy/`.
 
 ## Promotion
 
