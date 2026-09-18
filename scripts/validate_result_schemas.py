@@ -1,4 +1,4 @@
-"""Validate Signal's analysis and reference-free basecall result contracts."""
+"""Validate Signal analysis, basecall, and sample-evidence result contracts."""
 
 from __future__ import annotations
 
@@ -140,7 +140,6 @@ def rejected_basecall_shapes(
         ("basecall provenance with reference", reference),
         ("basecall provenance with software version", software_version),
     ]
-
 
 
 def rejected_sample_shapes(
