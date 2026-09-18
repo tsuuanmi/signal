@@ -1,239 +1,424 @@
-# AGENTS.md — Signal Agent Guide
+# AGENTS.md — Agent Development Guide
 
-This file is the execution policy for coding agents working on Signal.
+This file defines the default workflow for coding agents working in this repository.
 
-It is intentionally short. System knowledge belongs in `docs/`; this file tells agents which sources are authoritative, what to read, how to change the repository safely, and what evidence is required before a change is complete.
+The guide is intentionally repository-agnostic. Do not assume a particular documentation layout, language, package manager, test framework, or file naming convention. Discover the repository's own structure and authoritative instructions before changing anything.
 
-## 1. Read before changing
+## 1. Main workflow
 
-For any behavior change, read in this order:
+Follow this workflow for every non-trivial task:
 
-1. [docs/README.md](docs/README.md) — documentation map and authority model;
-2. [docs/requirements.md](docs/requirements.md) — relevant normative SRS requirements;
-3. [docs/architecture/invariants.md](docs/architecture/invariants.md) — cross-cutting invariants;
-4. relevant [ADRs](docs/adr/README.md);
-5. relevant current [method](docs/methods/README.md) and [contract](docs/contracts/README.md) documentation;
-6. matching `docs/src/` manual and affected source files in full;
-7. relevant tests, schemas, and [traceability](docs/traceability.md).
+```text
+discover
+  ↓
+understand
+  ↓
+plan
+  ↓
+implement
+  ↓
+verify
+  ↓
+reconcile
+  ↓
+review
+  ↓
+report
+```
 
-Do not implement directly from `docs/research/`. Research is non-normative until promoted through root ADR/SRS/contract documentation.
+### Discover
 
-## 2. Authority
+Before editing:
 
-Use [documentation governance](docs/governance/documentation.md).
+- inspect repository status and current branch/worktree state;
+- find repository-level instructions and contributor guidance;
+- identify the build/package system, CI configuration, test layout, and documentation entry points;
+- locate the files and modules that appear to own the requested behavior;
+- notice unrelated or in-progress changes and avoid touching them.
 
-Roles are different:
+Do not infer the repository structure from conventions used in another project.
 
-- **SRS** — intended normative behavior;
-- **schemas/contracts** — exact public/machine-visible contract for the named version;
-- **ADRs** — why a decision exists;
-- **architecture/invariants** — where responsibility belongs and what must remain true;
-- **methods** — detailed current scientific/algorithmic semantics;
-- **source** — what the current revision actually executes;
-- **docs/src** — implementation ownership/manual;
-- **validation** — evidence required to trust the behavior;
-- **roadmap/research** — future or exploratory work, never current production authority.
+### Understand
 
-If source and normative documentation disagree, surface the mismatch. Do not silently choose one side or rewrite documentation merely to excuse current code.
+Read enough context to understand both **intent** and **implementation** before changing code.
 
-## 3. Change rule
+For the area being changed, discover and read the repository's equivalents of:
 
-Prefer the smallest coherent production-ready change.
+- product or software requirements;
+- architecture and cross-cutting invariants;
+- accepted design/decision records;
+- domain or algorithm documentation;
+- public API, schema, configuration, CLI, or protocol contracts;
+- implementation/module documentation;
+- relevant source files;
+- relevant tests and fixtures;
+- validation, release, or operational requirements;
+- roadmap/research material when useful for context.
 
-Every changed line should be traceable to the task.
+Read affected source files in full for architectural, scientific, security-sensitive, or broad refactoring work. Search snippets alone are not sufficient for understanding a module.
 
-Do not:
+### Plan
 
-- add speculative features, wrappers, fallback paths, compatibility aliases, or abstractions;
-- preserve obsolete behavior unless the current specification requires it;
-- mix unrelated cleanup or broad refactors into the task;
-- weaken scientific semantics to make a test pass;
-- turn an observation into a stronger biological claim;
-- change schema, CLI, configuration, coordinate semantics, or public behavior without updating the corresponding contract;
-- treat the core confidence floor as a reason to delete known-good existing capabilities.
+Before implementation, identify:
 
-When touching legacy or misplaced code, leave one clear authoritative implementation rather than parallel old/new paths unless compatibility is explicitly required.
+- the intended behavior;
+- what must remain unchanged;
+- the smallest coherent change;
+- affected source, tests, contracts, docs, generated artifacts, configuration, and dependencies;
+- the invariants and public behavior at risk;
+- the verification required to demonstrate correctness.
 
-## 4. Three-lens review for scientific changes
+Do not expand scope merely because nearby cleanup is possible.
 
-Before implementing or approving a scientific behavior change, answer all three:
+### Implement
 
-### Signal processing
+Make the smallest production-quality change that satisfies the task.
 
-- What measurement or derived signal is being used?
-- Is the transformation deterministic and justified?
-- Is original evidence preserved?
-- Are locality, baseline, noise, peak geometry, and coordinate assumptions explicit?
+Prefer:
 
-### Biology
+- one authoritative implementation;
+- clear ownership and dependency boundaries;
+- explicit states and failures;
+- existing project patterns and utilities;
+- deterministic behavior where the domain requires it;
+- removal of obsolete logic when the current specification no longer requires compatibility.
 
-- What statement does the evidence support?
+Avoid:
+
+- speculative abstractions;
+- duplicate implementations;
+- fallback paths added only to preserve old behavior;
+- unrelated refactors;
+- silent semantic changes;
+- unnecessary dependencies;
+- broad formatting churn.
+
+### Verify
+
+Choose verification based on the failure modes introduced by the change.
+
+Discover the repository's required commands from CI, build configuration, contributor docs, or project scripts rather than inventing them.
+
+Possible verification layers include:
+
+- formatting;
+- compilation/build;
+- lint/static analysis;
+- type checking;
+- unit tests;
+- integration tests;
+- property/invariant tests;
+- schema/contract validation;
+- fuzz/adversarial tests;
+- performance/resource checks;
+- dependency/security audits;
+- domain-specific or real-data validation.
+
+Run the narrowest checks that provide sufficient confidence during iteration, then run all required gates before finalizing when the repository policy requires them.
+
+A green test suite proves only the properties encoded by those tests. It does not automatically prove domain correctness.
+
+### Reconcile
+
+After the implementation is correct, synchronize every affected representation of the behavior.
+
+Depending on the repository, this may include:
+
+- requirements;
+- architecture/invariants;
+- design decisions;
+- public contracts or schemas;
+- module/implementation documentation;
+- examples;
+- tests and fixtures;
+- generated artifacts;
+- changelog/release notes;
+- traceability or validation records.
+
+Do not update documentation mechanically. Update the authoritative layer that actually changed.
+
+### Review
+
+Before finalizing:
+
+- inspect the complete diff;
+- confirm every changed line belongs to the task;
+- verify no obsolete or parallel implementation remains unintentionally;
+- check imports, exports, references, types, tests, configuration, and docs for stale dependencies;
+- confirm no accidental lockfile, generated-file, or formatting churn;
+- ensure public behavior and documented intent agree;
+- ensure the change fits the repository's architecture rather than merely passing tests.
+
+### Report
+
+The final response should state:
+
+- what changed;
+- important files/modules affected;
+- verification performed and its result;
+- tests or checks intentionally not run and why;
+- documentation/changelog impact;
+- remaining risks, assumptions, or follow-up work.
+
+Keep the report concise and factual.
+
+## 2. How to read repository documentation
+
+Do not rely on fixed filenames. Infer each document's **role**.
+
+Typical roles include:
+
+### Normative requirements
+
+Describe what the current system is intended to do.
+
+Examples of forms this may take:
+
+- SRS;
+- product requirements;
+- specification;
+- protocol requirements;
+- acceptance criteria.
+
+Treat normative language such as MUST/SHOULD/MAY according to the repository's documented convention.
+
+### Public contracts
+
+Define interfaces that users, tools, or other systems depend on.
+
+Examples:
+
+- API definitions;
+- schemas;
+- CLI behavior;
+- configuration formats;
+- file formats;
+- database contracts;
+- protocol definitions;
+- serialization/versioning rules.
+
+Machine-readable contracts may be authoritative for exact syntax or shape while prose explains semantics.
+
+### Architecture and invariants
+
+Describe:
+
+- component boundaries;
+- dependency direction;
+- ownership;
+- data flow;
+- lifecycle;
+- trust boundaries;
+- coordinate/unit conventions;
+- states that must always remain true.
+
+Use these to decide **where** a change belongs, not just what code currently happens to do.
+
+### Decision records
+
+Explain why a non-obvious design choice exists, alternatives considered, tradeoffs, and consequences.
+
+The filename or format may be ADR, RFC, design note, proposal, decision log, or something else.
+
+Check status and supersession before relying on a decision.
+
+### Domain and method documentation
+
+Explains domain semantics, algorithms, assumptions, limitations, and interpretation.
+
+This is especially important in scientific, financial, security, distributed, data-processing, and protocol-heavy systems where technically valid code can still model the domain incorrectly.
+
+### Implementation documentation
+
+Explains module responsibility, inputs/outputs, dependencies, failure modes, internal invariants, and ownership.
+
+Implementation docs are descriptive. They should not silently override a normative requirement or public contract.
+
+### Validation and operations
+
+Describe how correctness, performance, security, release quality, migration, deployment, or real-world behavior is demonstrated.
+
+Do not confuse "the code builds" with "the system satisfies its domain or operational requirements."
+
+### Roadmap and research
+
+Describe possible future work, experiments, hypotheses, or proposed architecture.
+
+Treat exploratory material as non-normative unless the repository explicitly promotes it into the current specification.
+
+## 3. Resolve authority by role, not by filename
+
+When artifacts disagree, do not silently choose whichever one is convenient.
+
+Determine:
+
+1. which artifact is intended to be normative for that concern;
+2. whether a newer decision supersedes an older one;
+3. whether source code is ahead of docs or the implementation is incomplete;
+4. whether the mismatch is a bug, stale documentation, or an intentional transition.
+
+Useful distinction:
+
+```text
+requirements/contracts = intended behavior
+source                 = current executable behavior
+decision records       = rationale
+architecture           = responsibility and invariants
+implementation docs    = current ownership/details
+validation             = evidence
+roadmap/research       = possible future behavior
+```
+
+A mismatch between intended behavior and executable behavior must be surfaced and resolved deliberately.
+
+## 4. Invariants first
+
+Before changing a mature system, identify the invariants affected by the task.
+
+Examples:
+
+- identity must be preserved across transformations;
+- coordinate/unit domains must not be mixed;
+- source evidence must remain immutable;
+- operations must be atomic;
+- public schemas are versioned;
+- invalid or unresolved states must remain explicit;
+- resource use must be bounded;
+- deterministic inputs must yield deterministic outputs;
+- security/trust boundaries must remain intact.
+
+When practical, move important invariants from comments and developer memory into types, constructors, APIs, validators, schemas, static analysis, or tests.
+
+Do not create type-level or abstraction complexity unless it prevents a concrete failure mode.
+
+## 5. Domain-sensitive changes
+
+For systems where domain correctness matters, review a change through three questions:
+
+### Evidence / inputs
+
+- What was actually measured, received, or observed?
+- What transformations are applied?
+- Which information is original and which is derived?
+- Are assumptions and units explicit?
+
+### Domain meaning
+
+- What claim does the result actually support?
+- Which states should remain unknown, unresolved, or ambiguous?
 - What alternative explanations remain possible?
-- What state should remain unresolved?
-- Is the output read-level or sample-level?
-- Does the change accidentally imply genotype, heteroplasmy, contamination, pathogenicity, or clinical significance?
+- Is the implementation accidentally making a stronger claim than the evidence supports?
 
 ### Engineering
 
-- Which invariant changes?
-- Which type/module owns it?
-- What failure mode is prevented?
-- Which test or validation evidence demonstrates correctness?
-- Does a public contract or algorithm version need to change?
+- Which invariant or contract changes?
+- Which component owns the behavior?
+- How are failures represented?
+- What tests or validation demonstrate correctness?
+- Does the change require a contract/version/migration decision?
 
-A change is not ready when one lens is missing.
+A technically elegant implementation is not sufficient if it models the wrong domain concept.
 
-## 5. Core invariants
+## 6. Research and proposal promotion
 
-Always preserve [docs/architecture/invariants.md](docs/architecture/invariants.md).
+Exploratory work should not silently become production behavior.
 
-Especially:
-
-- decoded analyzed A/C/G/T channels are immutable source evidence;
-- derived processing never overwrites source evidence;
-- vendor PBAS/PCON are evidence, not authoritative Signal calls;
-- call index, trace-sample/PLOC position, and biological reference position are different domains;
-- reverse processing preserves original call identity;
-- unresolved evidence is not a reference call or absence of variation;
-- mixed signal is not automatically heteroplasmy/genotype/contamination;
-- one trace provides read-level evidence;
-- failed core analysis publishes no result;
-- versioned public schemas are not mutated incompatibly in place.
-
-## 6. Rust design policy
-
-Signal uses Rust as correctness architecture.
-
-Production code:
-
-- forbids `unsafe`;
-- does not use `unwrap`/`expect` for recoverable external conditions;
-- uses typed errors and explicit unsupported states;
-- checks input-controlled sizes, offsets, arithmetic, and allocations;
-- prefers validated constructors/private fields when they prevent invalid states;
-- uses newtypes/enums when they prevent real coordinate, topology, strand, or state confusion;
-- keeps scientific transformations deterministic and separate from filesystem/logging side effects;
-- avoids type-level cleverness that does not eliminate a concrete failure mode.
-
-The goal is not maximal abstraction. The goal is to move important invariants from human memory into forms the compiler and tooling can verify.
-
-## 7. Source and documentation synchronization
-
-When behavior changes, update the affected layers in the same change.
-
-Typical impact:
-
-| Change | Required documentation/evidence |
-|---|---|
-| scientific algorithm | SRS + method + `docs/src` + tests + validation impact |
-| architectural boundary | architecture/invariants + ADR when decision-worthy + `docs/src` |
-| CLI/config/schema | SRS + contract/schema/example + tests + changelog |
-| coordinate semantics | invariants + coordinate contract + affected schema/method/tests |
-| internal ownership only | matching `docs/src` manual |
-| research only | `docs/research/<topic>/` only until promotion |
-
-Every mirrored `src/**/*.rs` file must keep its same-relative-path manual under `docs/src/` according to repository policy.
-
-Do not translate source line by line into docs. A source manual should describe responsibility, inputs, outputs, invariants, dependencies, failure modes, algorithm boundary, and traceability.
-
-## 8. Research promotion
-
-Research may contain proposed SRS, ADRs, architectures, algorithms, or roadmaps.
-
-Promotion into production follows:
+A common promotion path is:
 
 ```text
-research evidence
-  ↓
-root ADR when a decision is needed
-  ↓
-root SRS / method / public contract
-  ↓
-implementation + docs/src
-  ↓
+research / proposal
+        ↓
+accepted decision
+        ↓
+normative requirement / public contract
+        ↓
+implementation
+        ↓
 tests
-  ↓
-scientific validation
+        ↓
+validation
+        ↓
+release
 ```
 
-Agreement with another tool is useful comparison evidence, not independent biological ground truth.
+Repositories may use different names, but preserve the distinction between **exploration** and **current production truth**.
 
-## 9. Tests and validation
+Agreement with another implementation is comparison evidence, not automatically ground truth.
 
-Tests and scientific validation are different.
+## 7. Tests and validation
 
-A green unit/integration suite proves only the properties encoded by those tests. It does not establish biological correctness.
+Choose tests according to the risk being protected.
 
-Choose evidence by failure mode:
+Examples:
 
-- parser/input boundary -> malformed/adversarial fixtures and fuzzing where adopted;
-- coordinate/state transform -> unit + property/invariant tests;
-- schema/serialization -> schema/example validation;
-- scientific method -> synthetic boundary cases + approved real-AB1 evidence;
-- performance/resource bound -> documented benchmark/memory measurement;
-- dependency/release risk -> audit and release evidence.
+- parser/input boundary -> malformed/adversarial cases;
+- state/coordinate transform -> invariant/property tests;
+- API/schema -> contract tests;
+- bug fix -> focused regression test;
+- concurrency -> race/interleaving tests where supported;
+- performance-sensitive logic -> benchmark/resource measurements;
+- security-sensitive boundary -> threat-specific tests/audits;
+- scientific/domain method -> independent or real-world validation where required.
 
-Never add a testing tool merely for completeness. Each gate must protect a named failure mode.
+Coverage is not a substitute for meaningful assertions.
 
-## 10. Required verification
+Mutation, fuzzing, property testing, static analysis, formal methods, or sanitizers are useful only when they address an identified failure class.
 
-Use the locked repository environment:
+## 8. Source and documentation synchronization
 
-```bash
-uv sync --locked
-```
+A behavior change may require updates across multiple layers.
 
-Required code gates:
+Use the repository's own structure, but think in terms of impact:
 
-```bash
-uv run ruff format --check scripts/
-uv run ruff check scripts/
-uv run basedpyright scripts/
-uv run python scripts/validate_result_schemas.py
+| Change | Consider updating |
+|---|---|
+| domain/algorithm behavior | requirement + method/domain docs + tests + validation |
+| architectural boundary | architecture/invariants + decision record + implementation docs |
+| public API/schema/config/CLI | contract + examples + tests + migration/changelog |
+| internal ownership | module/implementation docs |
+| dependency/toolchain | lockfiles + build/release/security docs |
+| research only | research/proposal area only until promoted |
 
-cargo fmt --all --check
-cargo check --all-targets
-cargo clippy --all-targets -- -D warnings
-cargo test --all-targets
-cargo doc --no-deps
-```
+Do not duplicate the same specification across many documents. Link to the authoritative source instead.
 
-Run additional targeted or extended checks when the affected failure mode requires them. See [docs/operations/ci.md](docs/operations/ci.md).
+## 9. Dependencies and generated artifacts
 
-For docs-only changes, source compilation/tests may be unnecessary unless the docs change executable contracts, generated/schema validation, or CI-controlled repository invariants.
+Treat dependency and lockfile changes as code changes.
 
-## 11. Git and repository safety
+Before adding a dependency:
 
-Keep the current worktree safe and scoped:
+- confirm the capability is not already available;
+- justify the new dependency and its maintenance/security cost;
+- follow the repository's package-management policy;
+- review the resulting lockfile diff.
 
-- inspect status/diff before editing or destructive operations;
-- never use repository-wide destructive reset/clean commands for routine work;
-- never stage unrelated files;
-- never create backup files inside the repository;
-- do not modify generated files directly when an authoritative generator/source exists;
-- treat dependency and lockfile changes as code changes;
-- do not overwrite another agent's unrelated work;
-- do not create compatibility shims merely to avoid updating affected callers.
+Do not edit generated artifacts directly when an authoritative generator or source definition exists. Modify the source, regenerate, and review the generated diff.
 
-## 12. Completion checklist
+## 10. Worktree and version-control safety
 
-Before finalizing, confirm:
+Assume other work may exist in the same repository.
 
-- relevant SRS/ADRs/invariants/methods/contracts were read;
-- the implementation matches the intended biological and engineering semantics;
-- affected `docs/src` manuals are current;
-- relevant tests protect the invariant, not just line coverage;
-- public schemas/examples validate when affected;
-- research has not been mistaken for production authority;
-- user-visible behavior is reflected in the changelog;
-- no unrelated changes or stale compatibility paths remain;
-- final diff is architecturally coherent.
+- inspect status before editing;
+- avoid destructive repository-wide reset/clean operations;
+- do not overwrite unrelated work;
+- stage or commit only intentional files;
+- do not hide unrelated failures;
+- do not create temporary backups inside the repository unless repository policy explicitly requires it;
+- never bypass required hooks or verification merely to make a change mergeable.
 
-Report:
+If a conflict involves unrelated work you do not understand, stop rather than overwriting it.
 
-- what changed;
-- files/modules affected;
-- verification performed;
-- tests skipped or failed and why;
-- documentation/changelog impact;
-- remaining scientific or engineering risks.
+## 11. Completion standard
+
+A task is complete when:
+
+- the requested behavior is implemented;
+- the implementation fits existing architectural boundaries;
+- affected invariants and public contracts are preserved or intentionally revised;
+- relevant tests and required checks pass;
+- documentation reflects the intended behavior;
+- obsolete paths introduced or superseded by the task are removed;
+- the final diff contains no unrelated changes;
+- remaining uncertainty is stated explicitly.
+
+Passing tests alone is not the completion criterion.
