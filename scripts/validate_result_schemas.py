@@ -16,8 +16,8 @@ ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v5.schema.json"
 ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v5.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v1.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v1.example.json"
-SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v1.schema.json"
-SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v1.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v2.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v2.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -147,33 +147,57 @@ def rejected_sample_shapes(
 ) -> list[tuple[str, dict[str, Any]]]:
     missing_reads = copy.deepcopy(example)
     missing_reads["reads"] = []
+
     invalid_sample_id = copy.deepcopy(example)
     invalid_sample_id["sample_id"] = "../sample"
+
+    reference_difference = copy.deepcopy(example)
+    reference_difference["locus_differences"][0]["observations"][0]["state"] = (
+        "reference"
+    )
+
     verbose_deletion = copy.deepcopy(example)
-    observation = copy.deepcopy(verbose_deletion["loci"][0]["observations"][0])
+    observation = verbose_deletion["locus_differences"][0]["observations"][0]
     observation["state"] = "deletion"
-    observation["base"] = "C"
-    verbose_deletion["loci"][0]["observations"] = [observation]
+
+    negative_read = copy.deepcopy(example)
+    negative_read["variants"][0]["support"][0]["read"] = -1
+
+    repeated_identity = copy.deepcopy(example)
+    repeated_identity["variants"][0]["support"][0]["read_name"] = "legacy.ab1"
+
+    legacy_loci = copy.deepcopy(example)
+    legacy_loci["loci"] = []
+    legacy_loci.pop("locus_differences")
+
     unknown_field = copy.deepcopy(example)
     unknown_field["consensus"] = "ACGT"
+
     empty_support = copy.deepcopy(example)
     empty_support["variants"][0]["support"] = []
+
     eligible_with_reason = copy.deepcopy(example)
     eligible_with_reason["variants"][0]["support"][0]["exclusion_reasons"] = [
         "peak_below_minimum"
     ]
+
     ineligible_without_reason = copy.deepcopy(example)
     ineligible_without_reason["variants"][0]["support"][0]["eligible"] = False
-    missing_read_name = copy.deepcopy(example)
-    missing_read_name["variants"][0]["support"][0].pop("read_name")
+
     missing_call_pointer = copy.deepcopy(example)
     missing_call_pointer["variants"][0]["support"][0]["calls"][0].pop("ploc")
+
     empty_variant_calls = copy.deepcopy(example)
     empty_variant_calls["variants"][0]["support"][0]["calls"] = []
+
     return [
         ("sample evidence with no reads", missing_reads),
         ("sample evidence with invalid sample id", invalid_sample_id),
-        ("deletion observation carrying a base", verbose_deletion),
+        ("reference observation in sparse differences", reference_difference),
+        ("deletion difference carrying called-base fields", verbose_deletion),
+        ("sample evidence with negative read reference", negative_read),
+        ("sample support with repeated read identity", repeated_identity),
+        ("sample evidence using removed loci field", legacy_loci),
         ("sample evidence with consensus field", unknown_field),
         ("sample variant with no supporting reads", empty_support),
         ("eligible sample variant support with exclusion reason", eligible_with_reason),
@@ -181,7 +205,6 @@ def rejected_sample_shapes(
             "ineligible sample variant support without exclusion reason",
             ineligible_without_reason,
         ),
-        ("sample variant support without read name", missing_read_name),
         ("sample variant call without ploc", missing_call_pointer),
         ("sample variant support without mapped calls", empty_variant_calls),
     ]
