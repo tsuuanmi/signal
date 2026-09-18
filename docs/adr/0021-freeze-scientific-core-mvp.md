@@ -24,7 +24,7 @@ The active MVP will be defined by one narrow read-level vertical slice and revie
 
 No one lens is allowed to dominate the others. A mathematically elegant signal rule is insufficient if its biological meaning is unclear; a biologically plausible rule is insufficient if it cannot be implemented and validated deterministically; a strong Rust abstraction is insufficient if it models the wrong scientific concept.
 
-The active MVP is:
+The **core confidence floor** is:
 
 ```text
 AB1
@@ -37,7 +37,7 @@ basic read quality / end trimming
  ↓
 forward-or-reverse alignment to one short reference
  ↓
-simple primary-sequence SNV detection
+primary-sequence variant calling, with simple SNVs as the first validation anchor
  ↓
 clear versioned JSON result
 ```
@@ -80,9 +80,22 @@ The MVP is successful only when this path is scientifically understandable, dete
    - validate the schema automatically;
    - avoid unstable or redundant fields that are not needed to interpret the result.
 
-### Not required for MVP acceptance
+### Existing supported baseline versus future scope
 
-The following are explicitly **not required** to declare the basic MVP scientifically usable:
+The core confidence floor is a prioritization tool, not a feature ceiling.
+
+If a capability already exists in the current implementation and is:
+- scientifically understandable;
+- covered by focused tests;
+- consistent with the evidence hierarchy;
+- deterministic and schema-stable;
+- not contradicted by real-trace validation;
+
+then it remains part of the working baseline and future development should build on it rather than regress or remove it merely to simplify the MVP.
+
+This applies to currently implemented capabilities such as small indel handling, circular-reference behavior, rolling SNR annotations, batch orchestration, and richer call evidence where their current contracts remain sound.
+
+The following are **not prerequisites for proving the core confidence floor**, but may remain supported when already implemented and validated:
 
 - insertion/deletion calling;
 - repeat-aware or poly-C special handling;
@@ -96,9 +109,9 @@ The following are explicitly **not required** to declare the basic MVP scientifi
 - advanced denoising or baseline correction;
 - SCF, VCF/BCF, multi-contig, or genome-scale indexing.
 
-Existing implementations of deferred features do not need to be removed solely because they are outside the MVP. However, they must not block validation of the basic vertical slice, and they must not be presented as release-critical capabilities until separately validated.
+A currently supported capability is not demoted simply because it is more advanced than the core confidence floor. Conversely, code existence alone is not proof of scientific correctness. Each capability keeps its status according to its own evidence and tests.
 
-Normative SRS requirements for the active MVP must match this scope. Existing code may exceed the MVP, but the roadmap and SRS must not require deferred capabilities merely because they already exist.
+Normative SRS may therefore describe capabilities beyond the confidence floor when they are already intentional parts of the current product contract. The floor defines what must be understood first, not everything the product is allowed to do.
 
 ### Scientific acceptance order
 
@@ -109,11 +122,11 @@ The project should validate stages in biological dependency order:
 2. called bases are correct enough to inspect and compare
 3. trimming does not discard or retain obvious wrong regions
 4. alignment places the read correctly and preserves coordinate identity
-5. simple SNVs agree with independently established truth
+5. simple SNVs agree with independently established truth, followed by currently supported harder variant classes such as small indels
 6. output schema faithfully represents those results
 ```
 
-Only after this baseline is trustworthy should the project expand to harder event classes or interpretation layers.
+Only after this baseline is trustworthy should the project add **new** harder event classes or interpretation layers. Existing harder capabilities may be retained and validated in parallel.
 
 ### Research notes versus commitments
 
