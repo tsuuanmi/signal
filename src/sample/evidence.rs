@@ -61,7 +61,6 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
                 orientation: read.alignment.orientation,
                 callable_bases: read.alignment.metrics.callable_columns,
                 identity: read.alignment.metrics.callable_identity,
-                mismatches: read.alignment.metrics.mismatches,
                 gap_opens: read.alignment.metrics.gap_opens,
                 unresolved_bases: read.alignment.metrics.unresolved_query_bases,
                 reference_segments: read.alignment.reference_segments.clone(),
