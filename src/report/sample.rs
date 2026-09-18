@@ -38,7 +38,6 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
             sha256: read.input_sha256,
             alignment: SampleReadAlignmentResult {
                 orientation: read.alignment.orientation,
-                score: read.alignment.score,
                 callable_bases: read.alignment.callable_bases,
                 identity: read.alignment.identity,
                 mismatches: read.alignment.mismatches,
