@@ -107,11 +107,12 @@ fn run_logged(
         line!(),
         format_args!(
             concat!(
-                "event=sample_aggregation_completed elapsed_ms={} reads={} overlaps={} ",
-                "eligible_overlaps={} locus_differences={} variants={}"
+                "event=sample_aggregation_completed elapsed_ms={} reads={} coverage_segments={} ",
+                "overlaps={} eligible_overlaps={} locus_differences={} variants={}"
             ),
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
+            evidence.coverage.len(),
             evidence.overlaps.len(),
             evidence
                 .overlaps
@@ -132,6 +133,7 @@ fn run_logged(
         evidence,
     })?;
     let reads = result.reads.len();
+    let coverage_segments = result.coverage.len();
     let overlaps = result.overlaps.len();
     let locus_differences = result.locus_differences.len();
     let variants = result.variants.len();
@@ -145,13 +147,14 @@ fn run_logged(
         format_args!(
             concat!(
                 "event=sample_result_ready_for_publication elapsed_ms={} total_elapsed_ms={} ",
-                "schema={} reads={} overlaps={} locus_differences={} variants={} ",
+                "schema={} reads={} coverage_segments={} overlaps={} locus_differences={} variants={} ",
                 "read_warnings={} output_path={:?} bytes={}"
             ),
             stage_started.elapsed().as_millis(),
             started.elapsed().as_millis(),
             schema_version,
             reads,
+            coverage_segments,
             overlaps,
             locus_differences,
             variants,

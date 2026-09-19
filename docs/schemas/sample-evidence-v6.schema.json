@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:signal:schema:sample-evidence:v5",
-  "title": "Signal sample evidence v5",
+  "$id": "urn:signal:schema:sample-evidence:v6",
+  "title": "Signal sample evidence v6",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -9,13 +9,14 @@
     "sample_id",
     "provenance",
     "reads",
+    "coverage",
     "overlaps",
     "locus_differences",
     "variants"
   ],
   "properties": {
     "schema_version": {
-      "const": "signal.sample_evidence/v5"
+      "const": "signal.sample_evidence/v6"
     },
     "sample_id": {
       "type": "string",
@@ -51,6 +52,14 @@
       "uniqueItems": true,
       "items": {
         "$ref": "#/$defs/overlap"
+      }
+    },
+    "coverage": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/coverage"
       }
     }
   },
@@ -668,6 +677,55 @@
               ]
             }
           }
+        }
+      ]
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reference",
+        "read_depth",
+        "forward_depth",
+        "reverse_depth"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/interval"
+        },
+        "read_depth": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "forward_depth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reverse_depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "forward_depth": {
+              "minimum": 1
+            }
+          },
+          "required": [
+            "forward_depth"
+          ]
+        },
+        {
+          "properties": {
+            "reverse_depth": {
+              "minimum": 1
+            }
+          },
+          "required": [
+            "reverse_depth"
+          ]
         }
       ]
     }

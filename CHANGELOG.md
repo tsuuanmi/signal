@@ -6,6 +6,7 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace `signal.sample_evidence/v5` with `signal.sample_evidence/v6`, adding required run-length reference coverage topology with total/forward/reverse read depth and no v5 compatibility output.
 - Replace `signal.analysis/v6`, `signal.basecalls/v1`, and `signal.sample_evidence/v4` with v7/v2/v5 contracts that preserve concise PLOC/vendor cardinality, PLOC-spacing, exact clipping, and event-signal-scale integrity evidence without compatibility aliases.
 - Replace strict configuration schema version 4 with version 5, requiring Tracy-derived sample-reconciliation overlap/admission thresholds.
 - Replace `signal.sample_evidence/v3` with `signal.sample_evidence/v4`, adding deterministic pairwise overlap/admission evidence for independently placed reads without retaining v3 compatibility output.
@@ -22,6 +23,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Pre-consensus sample coverage topology derived from selected post-trim reference segments, exposing compact local read depth and forward/reverse orientation depth without majority voting or read rejection.
 - Tracy-derived trace-integrity evidence: valid PLOC-defined processing now preserves optional PBAS/PCON length mismatches as warnings instead of rejecting the file, records PLOC spacing and exact signed-16-bit clipping, and exposes an unthresholded maximum-to-median corrected event-signal ratio for artifact-resilience validation.
 - Tracy-derived pre-consensus sample overlap admission: every independently placed read pair with shared reference coverage records canonical-base overlap/agreement, deterministic eligibility, and exact exclusion reasons without pair-first merging or gap-quality synthesis.
 - Required Rust source-policy CI gate rejects deprecated compatibility APIs, legacy/backward-compatibility feature/declaration scaffolding, and diagnostic suppressions that could hide dead/unused/deprecated production code.

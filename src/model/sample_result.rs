@@ -1,4 +1,4 @@
-//! Serializable `signal.sample_evidence/v5` contract.
+//! Serializable `signal.sample_evidence/v6` contract.
 
 use serde::Serialize;
 
@@ -15,6 +15,7 @@ pub(crate) struct SampleEvidenceResult {
     pub(crate) sample_id: String,
     pub(crate) provenance: SampleProvenanceResult,
     pub(crate) reads: Vec<SampleReadResult>,
+    pub(crate) coverage: Vec<SampleCoverageResult>,
     pub(crate) overlaps: Vec<SampleOverlapResult>,
     pub(crate) locus_differences: Vec<SampleLocusDifferenceResult>,
     pub(crate) variants: Vec<SampleVariantResult>,
@@ -34,6 +35,15 @@ pub(crate) struct SampleReadResult {
     pub(crate) sha256: String,
     pub(crate) integrity: TraceIntegrityResult,
     pub(crate) alignment: AlignmentResult,
+}
+
+/// One maximal reference interval with constant read/orientation depth.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleCoverageResult {
+    pub(crate) reference: crate::model::result::IntervalResult,
+    pub(crate) read_depth: usize,
+    pub(crate) forward_depth: usize,
+    pub(crate) reverse_depth: usize,
 }
 
 /// Pairwise overlap evidence discovered from independently placed reads.

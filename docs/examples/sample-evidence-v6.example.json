@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.sample_evidence/v5",
+  "schema_version": "signal.sample_evidence/v6",
   "sample_id": "sample-001",
   "provenance": {
     "reference": {
@@ -65,6 +65,35 @@
         ],
         "wraps_origin": false
       }
+    }
+  ],
+  "coverage": [
+    {
+      "reference": {
+        "start": 100,
+        "end": 140
+      },
+      "read_depth": 1,
+      "forward_depth": 1,
+      "reverse_depth": 0
+    },
+    {
+      "reference": {
+        "start": 140,
+        "end": 220
+      },
+      "read_depth": 2,
+      "forward_depth": 1,
+      "reverse_depth": 1
+    },
+    {
+      "reference": {
+        "start": 220,
+        "end": 260
+      },
+      "read_depth": 1,
+      "forward_depth": 0,
+      "reverse_depth": 1
     }
   ],
   "overlaps": [

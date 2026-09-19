@@ -9,7 +9,7 @@ use crate::model::sample_evidence::{
     SampleEvidence, SampleReadAlignmentEvidence, SampleReadEvidence,
 };
 
-use super::{differences, overlap, variants};
+use super::{coverage, differences, overlap, variants};
 
 /// Aggregates independently processed reads without using filenames or pair labels as merge keys.
 pub(crate) fn aggregate(
@@ -44,7 +44,7 @@ pub(crate) fn aggregate(
     let mut ordered: Vec<&ReadObservation> = reads.iter().collect();
     ordered.sort_by(|left, right| left.input_sha256.cmp(&right.input_sha256));
 
-    let read_evidence = ordered
+    let read_evidence: Vec<SampleReadEvidence> = ordered
         .iter()
         .map(|read| SampleReadEvidence {
             input_name: read.input_name.clone(),
@@ -62,10 +62,13 @@ pub(crate) fn aggregate(
         })
         .collect();
 
+    let coverage = coverage::summarize(&read_evidence)?;
+
     Ok(SampleEvidence {
         reference_sha256,
         configuration_sha256,
         reads: read_evidence,
+        coverage,
         overlaps: overlap::assess(&ordered, config)?,
         locus_differences: differences::aggregate(&ordered)?,
         variants: variants::aggregate(&ordered)?,
@@ -267,6 +270,12 @@ mod tests {
 
         assert_eq!(evidence.reads[0].input_name, "a.ab1");
         assert_eq!(evidence.reads[1].input_name, "b.ab1");
+        assert_eq!(evidence.coverage.len(), 1);
+        assert_eq!(evidence.coverage[0].start_0based, 72);
+        assert_eq!(evidence.coverage[0].end_0based_exclusive, 73);
+        assert_eq!(evidence.coverage[0].read_depth, 2);
+        assert_eq!(evidence.coverage[0].forward_depth, 1);
+        assert_eq!(evidence.coverage[0].reverse_depth, 1);
         assert_eq!(evidence.overlaps.len(), 1);
         assert_eq!(evidence.overlaps[0].left_read_index, 0);
         assert_eq!(evidence.overlaps[0].right_read_index, 1);

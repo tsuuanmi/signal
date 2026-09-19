@@ -108,9 +108,9 @@ Add:
 ```text
 manifest/sample identity
 read admission
-local coverage denominator
-independent-strand support
-coverage map
+local coverage denominator          # promoted via ADR-0032
+forward/reverse support topology     # promoted via ADR-0032
+coverage map                         # promoted via ADR-0032
 evidence-weighted consensus
 sample-level candidate variants
 ```
@@ -183,7 +183,7 @@ assay-specific LoD/LoQ
 | Promoted | evidence-aware Gotoh scorer | Implemented via ADR-0029 / `signal.profile_gotoh/v1` | Medium |
 | Promoted | explicit read admission / overlap policy | Implemented via ADR-0030 / `signal.sample_evidence/v4` | Low-Medium |
 | Promoted | generic N-read evidence reconciliation, F/R as first validation case | Implemented via ADR-0023 through ADR-0025; strengthened by ADR-0030 | Medium-High |
-| P1 | reference-guided multi-read consensus | Very high | Medium-High |
+| Promoted/P1 | reference-guided multi-read consensus | Coverage denominator/orientation topology foundation implemented via ADR-0032; contributor/voting policy remains P1 | Medium-High |
 | P1 | change-point length-mixture detection | High | Medium |
 | P1 | candidate +/-N phase-shift evaluation | High | Medium |
 | P1 | poly-C/repeat context | High | Medium |

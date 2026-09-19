@@ -34,7 +34,7 @@ Current supported behavior includes:
 - linear and circular reference handling;
 - primary-sequence SNVs and supported small insertions/deletions;
 - reviewer-facing reference-oriented A/C/G/T peak and quality evidence for reported variants;
-- Tracy-derived pairwise overlap/admission evidence across independently placed sample reads;
+- run-length total/forward/reverse coverage topology plus Tracy-derived pairwise overlap/admission evidence across independently placed sample reads;
 - closed versioned JSON schemas;
 - atomic no-overwrite result publication;
 - typed failures and bounded resource use.
@@ -139,7 +139,7 @@ Current public result contracts are:
 
 - `signal.basecalls/v2` — reference-free primary/ambiguity/retained read result;
 - `signal.analysis/v7` — compact reference-guided analysis result with reviewer-facing four-channel peak evidence;
-- `signal.sample_evidence/v5` — compact multi-read coverage, Tracy-derived pairwise overlap/admission evidence, sparse locus differences, normalized-variant evidence, and explicit eligibility reasons.
+- `signal.sample_evidence/v6` — compact multi-read coverage, Tracy-derived pairwise overlap/admission evidence, sparse locus differences, normalized-variant evidence, and explicit eligibility reasons.
 
 The schemas, examples, coordinate conventions, and human-readable semantics live under [docs/contracts](docs/contracts/README.md).
 

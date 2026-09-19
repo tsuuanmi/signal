@@ -8,9 +8,9 @@ use crate::model::reference::Reference;
 use crate::model::result::{AlignmentResult, IntervalResult, PeakHeightsResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
-    SampleEvidenceResult, SampleLocusDifferenceObservationResult, SampleLocusDifferenceResult,
-    SampleOverlapResult, SampleProvenanceResult, SampleReadResult, SampleVariantCallResult,
-    SampleVariantResult, SampleVariantSupportResult,
+    SampleCoverageResult, SampleEvidenceResult, SampleLocusDifferenceObservationResult,
+    SampleLocusDifferenceResult, SampleOverlapResult, SampleProvenanceResult, SampleReadResult,
+    SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
@@ -20,7 +20,7 @@ pub(crate) struct CompletedSampleEvidence {
     pub(crate) evidence: SampleEvidence,
 }
 
-/// Builds `signal.sample_evidence/v5` without filesystem side effects.
+/// Builds `signal.sample_evidence/v6` without filesystem side effects.
 pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidenceResult> {
     let CompletedSampleEvidence {
         sample_id,
@@ -59,6 +59,20 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                     .collect(),
                 wraps_origin: read.alignment.wraps_origin,
             },
+        })
+        .collect();
+
+    let coverage = evidence
+        .coverage
+        .into_iter()
+        .map(|segment| SampleCoverageResult {
+            reference: IntervalResult {
+                start: segment.start_0based,
+                end: segment.end_0based_exclusive,
+            },
+            read_depth: segment.read_depth,
+            forward_depth: segment.forward_depth,
+            reverse_depth: segment.reverse_depth,
         })
         .collect();
 
@@ -140,7 +154,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         .collect::<Result<Vec<_>>>()?;
 
     Ok(SampleEvidenceResult {
-        schema_version: "signal.sample_evidence/v5",
+        schema_version: "signal.sample_evidence/v6",
         sample_id,
         provenance: SampleProvenanceResult {
             reference: ReferenceResult {
@@ -151,6 +165,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
             configuration_sha256: evidence.configuration_sha256,
         },
         reads,
+        coverage,
         overlaps,
         locus_differences,
         variants,

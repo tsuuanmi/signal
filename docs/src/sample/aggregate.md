@@ -12,6 +12,7 @@ Owns sample-level validation, deterministic read ordering, and assembly of compa
 - Sort reads by SHA-256 so internal registry indexes are deterministic and independent of CLI order.
 - Build the one top-level read registry with source basename, stable identity, trace-integrity evidence, and selected post-trim alignment summary.
 - Consume the validated `SampleReconciliationConfig`.
+- Derive run-length total/forward/reverse coverage topology from the read registry.
 - Delegate pairwise overlap admission, sparse differential-locus extraction, and normalized variant aggregation.
 
 ## Non-responsibilities
@@ -24,7 +25,7 @@ Internal indexes are deterministic implementation references only. Public review
 
 ## Tests
 
-Unit tests cover deterministic SHA ordering with overlap indexes bound to that registry, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention, duplicate locus/variant support rejection, incompatible identities, and renamed duplicate content.
+Unit tests cover deterministic SHA ordering with coverage/overlap evidence bound to that registry, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention, duplicate locus/variant support rejection, incompatible identities, and renamed duplicate content.
 
 ## Status
 

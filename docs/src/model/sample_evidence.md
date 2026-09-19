@@ -7,6 +7,7 @@ Defines compact internal sample-level evidence after independent read analysis.
 ## Responsibilities
 
 - Retain each contributing read once with source basename, stable SHA-256, trace-integrity evidence, and concise evidence-derived post-trim alignment summary.
+- Represent maximal reference intervals with constant total/forward/reverse read depth.
 - Represent pairwise reference-coordinate overlap/admission evidence without pair-first merging.
 - Represent only differential reference loci while preserving every covering read at those retained positions.
 - Keep called locus observations as state/base/quality without public implementation coordinates.
@@ -19,7 +20,7 @@ No filename-driven placement, F/R pairing, consensus, genotype/heteroplasmy infe
 
 ## Invariants
 
-Internal read indexes address the SHA-sorted registry only inside the domain layer. Pairwise overlap edges use those indexes only after deterministic SHA ordering; non-overlapping reads have no edge. Nucleotide agreement counts canonical base/base observations only, leaving unresolved/gap evidence outside the denominator. Missing coverage is not reference support. Routine all-reference positions are not materialized. At a differential locus, explicit observations include reference supporters as well as alternate, unresolved, or deleted reads.
+Coverage depth derives only from selected read segments and counts every independently placed read regardless of pairwise eligibility. Internal read indexes address the SHA-sorted registry only inside the domain layer. Pairwise overlap edges use those indexes only after deterministic SHA ordering; non-overlapping reads have no edge. Nucleotide agreement counts canonical base/base observations only, leaving unresolved/gap evidence outside the denominator. Missing coverage is not reference support. Routine all-reference positions are not materialized. At a differential locus, explicit observations include reference supporters as well as alternate, unresolved, or deleted reads.
 
 ## Status
 

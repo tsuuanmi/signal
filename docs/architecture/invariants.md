@@ -45,6 +45,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-SAMPLE-007:** Pairwise overlap is discovered only after independent read placement from shared reference coordinates. Non-overlapping reads have no edge; missing an overlapping or canonical F/R partner does not invalidate a read.
 - **INV-SAMPLE-008:** Pairwise nucleotide agreement uses only coordinates where both reads carry canonical A/C/G/T query bases. Unresolved symbols and deletions remain outside that denominator; gap/indel evidence is never converted into fabricated nucleotide agreement.
 - **INV-SAMPLE-009:** Overlap eligibility is downstream evidence for future consensus and cannot rewrite read placement, read-level observations, or variant eligibility.
+- **INV-SAMPLE-010:** Sample coverage topology derives only from selected mapped reference segments and counts all independently placed reads. It cannot inherit pairwise overlap eligibility as read rejection, and orientation depth is not equivalent to nucleotide agreement, consensus confidence, or biological strand independence.
 
 ## Pipeline
 
