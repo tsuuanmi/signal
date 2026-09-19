@@ -102,13 +102,27 @@ fn run_logged(
     *stage = "sample_aggregation";
     let stage_started = Instant::now();
     let evidence = sample_science::aggregate(&reads, &inputs.config.sample_reconciliation)?;
+    let profiled_locus_observations = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter(|observation| observation.profile.is_some())
+        .count();
+    let profiled_variant_calls = evidence
+        .variants
+        .iter()
+        .flat_map(|variant| &variant.support)
+        .flat_map(|support| &support.calls)
+        .filter(|call| call.profile.is_some())
+        .count();
     logger.info(
         module_path!(),
         line!(),
         format_args!(
             concat!(
                 "event=sample_aggregation_completed elapsed_ms={} reads={} coverage_segments={} ",
-                "overlaps={} eligible_overlaps={} locus_differences={} variants={}"
+                "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
+                "variants={} profiled_variant_calls={}"
             ),
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
@@ -120,7 +134,9 @@ fn run_logged(
                 .filter(|overlap| overlap.eligible)
                 .count(),
             evidence.locus_differences.len(),
-            evidence.variants.len()
+            profiled_locus_observations,
+            evidence.variants.len(),
+            profiled_variant_calls
         ),
     )?;
 
