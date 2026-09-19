@@ -67,14 +67,12 @@ class AnalyzeSamplesTests(unittest.TestCase):
         unselected.mkdir()
         (selected / "old.json").write_text("old", encoding="utf-8")
         (unselected / "keep.json").write_text("keep", encoding="utf-8")
-        selected_log = self.log_dir / "run_S1_old.log"
-        current_log = self.log_dir / f"{trace.stem}.log"
+        legacy_trace_log = self.log_dir / f"{trace.stem}.log"
         sample_log = self.log_dir / "S1.sample.log"
-        unselected_log = self.log_dir / "run_S2_old.log"
+        unselected_log = self.log_dir / "S2.sample.log"
         unrelated_log = self.log_dir / "service.log"
         for log in [
-            selected_log,
-            current_log,
+            legacy_trace_log,
             sample_log,
             unselected_log,
             unrelated_log,
@@ -84,10 +82,9 @@ class AnalyzeSamplesTests(unittest.TestCase):
         workload = batch.discover_workload(self.trace_dir, ["S1"])
         cleaned = batch.clean_previous_results(self.output_dir, self.log_dir, workload)
 
-        self.assertEqual(cleaned, (1, 3))
+        self.assertEqual(cleaned, (1, 1))
         self.assertFalse(selected.exists())
-        self.assertFalse(selected_log.exists())
-        self.assertFalse(current_log.exists())
+        self.assertTrue(legacy_trace_log.is_file())
         self.assertFalse(sample_log.exists())
         self.assertTrue((unselected / "keep.json").is_file())
         self.assertTrue(unselected_log.is_file())
@@ -118,7 +115,7 @@ class AnalyzeSamplesTests(unittest.TestCase):
         previous.write_text("old", encoding="utf-8")
         source = self.root / "outside.log"
         source.write_text("keep", encoding="utf-8")
-        (self.log_dir / f"{trace.stem}.log").symlink_to(source)
+        (self.log_dir / "S1.sample.log").symlink_to(source)
         workload = batch.discover_workload(self.trace_dir, ["S1"])
 
         with self.assertRaisesRegex(ValueError, "symlinked log"):
@@ -257,6 +254,54 @@ class AnalyzeSamplesTests(unittest.TestCase):
         self.assertIn("directory sync failed", detail)
         self.assertFalse(destination.exists())
 
+    def test_run_analysis_uses_temporary_log_directory(self) -> None:
+        trace = self.trace_dir / "run_S1_a.ab1"
+        trace.write_bytes(b"trace")
+        destination = self.output_dir / "S1" / f"{trace.stem}.json"
+
+        def execute(
+            command: list[str],
+            *,
+            cwd: Path,
+            env: dict[str, str],
+            check: bool,
+            capture_output: bool,
+            text: bool,
+        ) -> SimpleNamespace:
+            self.assertEqual(
+                command,
+                [
+                    str(self.binary),
+                    "analyze",
+                    str(trace),
+                    "--reference",
+                    str(self.reference),
+                ],
+            )
+            self.assertEqual(env["SIGNAL_CONFIG"], str(self.config))
+            self.assertEqual(Path(env["SIGNAL_LOG_DIR"]), cwd / "logs")
+            self.assertNotEqual(Path(env["SIGNAL_LOG_DIR"]), self.log_dir)
+            self.assertFalse(check)
+            self.assertTrue(capture_output)
+            self.assertTrue(text)
+            generated = cwd / "results" / f"{trace.stem}.json"
+            generated.parent.mkdir()
+            generated.write_text("trace", encoding="utf-8")
+            return SimpleNamespace(returncode=0, stderr="")
+
+        with patch.object(batch.subprocess, "run", side_effect=execute):
+            succeeded, detail = batch.run_analysis(
+                self.binary,
+                trace,
+                self.reference,
+                self.config,
+                destination,
+            )
+
+        self.assertTrue(succeeded, detail)
+        self.assertEqual(destination.read_text(encoding="utf-8"), "trace")
+        self.assertEqual(list(self.log_dir.iterdir()), [])
+
     def test_run_sample_publishes_sample_named_json(self) -> None:
         traces = [
             self.trace_dir / "run_S1_a.ab1",
@@ -324,7 +369,6 @@ class AnalyzeSamplesTests(unittest.TestCase):
             trace: Path,
             _reference: Path,
             _config: Path,
-            _log_dir: Path,
             destination: Path,
         ) -> tuple[bool, str]:
             if trace.name.endswith("_b.ab1"):
@@ -363,7 +407,6 @@ class AnalyzeSamplesTests(unittest.TestCase):
             trace: Path,
             _reference: Path,
             _config: Path,
-            _log_dir: Path,
             destination: Path,
         ) -> tuple[bool, str]:
             invoked.append(trace)
