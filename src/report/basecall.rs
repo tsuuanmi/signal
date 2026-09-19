@@ -65,9 +65,7 @@ pub(crate) fn build(completed: CompletedBasecall) -> Result<BasecallResult> {
         .iter()
         .filter(|call| call.vendor_agrees == Some(false))
         .count();
-    let ploc_vendor_length_mismatches = signal_analysis
-        .integrity
-        .vendor_length_mismatch_count();
+    let ploc_vendor_length_mismatches = signal_analysis.integrity.vendor_length_mismatch_count();
     let clipped_channel_samples = signal_analysis.integrity.clipped_channel_samples;
     let signal_quality = signal::project(signal_analysis);
 
