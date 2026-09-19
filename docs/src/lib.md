@@ -20,7 +20,7 @@ Accepts `cli::Cli`; returns `error::Result<()>`.
 
 ## Invariants and errors
 
-The library forbids unsafe Rust. It does not print or select process exit codes.
+The library forbids unsafe Rust and deprecated API use. It does not print or select process exit codes.
 Pipeline errors are preserved for the binary boundary.
 
 ## Dependencies
@@ -35,7 +35,7 @@ Apollo's command set.
 
 ## Requirements and decisions
 
-ADR-0001, ADR-0002, ADR-0006; `SRS-IN-010`, `SRS-NFR-001`, `SRS-NFR-006`.
+ADR-0001, ADR-0002, ADR-0006; `SRS-IN-010`, `SRS-NFR-001`, `SRS-NFR-005`, `SRS-NFR-006`.
 
 ## Tests
 
