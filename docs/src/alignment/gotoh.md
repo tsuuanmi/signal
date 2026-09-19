@@ -11,7 +11,8 @@ primary sequence plus one aligned evidence-profile record per query row.
 - Build match/insertion/deletion matrices using fixed-point profile substitution scores.
 - Preserve affine gap semantics as `open + k × extension` in the same 1024 score scale.
 - Enforce the compiled `MAX_ALIGNMENT_CELLS` cap.
-- Recover up to two distinct equally scoring placements.
+- Decode each maximum-score traceback and pass it through `alignment::canonical` before placement deduplication.
+- Recover up to two genuinely distinct equally scoring placements after repeat-equivalent gap placements have been canonicalized.
 - Preserve the one-reference-length bound and wrapped-start deduplication for circular references.
 
 ## Non-responsibilities
