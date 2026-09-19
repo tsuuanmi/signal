@@ -1,4 +1,4 @@
-#![forbid(unsafe_code)]
+#![forbid(unsafe_code, deprecated)]
 
 //! Operating-system boundary for the Signal binary.
 //!
