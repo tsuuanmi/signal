@@ -18,7 +18,7 @@ pub(crate) fn analyze(
     config: &SignalProcessingConfig,
 ) -> Result<SignalAnalysis> {
     let windows = features::calculate(trace, calls, config)?;
-    let loci = locus_evidence::calculate(trace, &windows, config)?;
+    let loci = locus_evidence::calculate(trace, config)?;
     let noisy_regions = regions::merge(&windows, config.minimum_noisy_windows);
     Ok(SignalAnalysis {
         loci,
