@@ -86,15 +86,15 @@ payloads but still follow the same policy; `logs/` is ignored.
 
 ## Sample evidence output privacy
 
-`signal.sample_evidence/v6` intentionally contains the sample identifier plus each
+`signal.sample_evidence/v7` intentionally contains the sample identifier plus each
 contributing AB1 basename for reviewer traceability, along with input SHA-256,
 trace-integrity and alignment summaries, run-length total/forward/reverse coverage topology, pairwise overlap/admission evidence, sparse differential loci,
-normalized variants, and concise call mappings. Filenames, hashes, and biological differences can be
+normalized variants with factorized read/eligibility/orientation support topology, and concise call mappings. Filenames, hashes, and biological differences can be
 identifying, so sample-evidence JSON follows the same approval, storage, retention,
 and redistribution policy as its AB1 sources.
 
 Repository examples MUST use synthetic sample/read names and synthetic input hashes.
-Do not commit a local sample result merely because v6 is compact. Real local outputs
+Do not commit a local sample result merely because v7 is compact. Real local outputs
 may inform exploratory development, but release/compatibility evidence requires the
 approval record described below.
 
