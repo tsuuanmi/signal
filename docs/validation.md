@@ -21,7 +21,7 @@
 - Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
 - forward/reverse mapping, circular origin, ambiguous placement/orientation;
 - SNV, insertion, deletion, N exclusion, mixed-supporting-signal SNV eligibility, length caps, linear/circular normalization, evidence;
-- deterministic sample read ordering, sparse differential-locus retention, indexed variant support, deterministic serialization, and atomic no-overwrite publication.
+- deterministic sample read ordering, sparse differential-locus retention, named-read variant support, mixed-SNV eligibility retention, deterministic serialization, and atomic no-overwrite publication.
 
 ### Integration tests
 
