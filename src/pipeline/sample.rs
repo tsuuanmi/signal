@@ -174,6 +174,48 @@ fn run_logged(
         .flat_map(|call| call.signal.snrs)
         .filter(|value| *value > 0.0)
         .count();
+    let locus_max_event_ploc_distance = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter_map(|observation| observation.signal.as_ref())
+        .map(|signal| signal.event_ploc_distance)
+        .max();
+    let locus_min_adjacent_ploc_spacing = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter_map(|observation| observation.signal.as_ref())
+        .filter_map(|signal| signal.minimum_adjacent_ploc_spacing)
+        .min();
+    let locus_max_adjacent_ploc_spacing = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter_map(|observation| observation.signal.as_ref())
+        .filter_map(|signal| signal.maximum_adjacent_ploc_spacing)
+        .max();
+    let variant_max_event_ploc_distance = evidence
+        .variants
+        .iter()
+        .flat_map(|variant| &variant.support)
+        .flat_map(|support| &support.calls)
+        .map(|call| call.signal.event_ploc_distance)
+        .max();
+    let variant_min_adjacent_ploc_spacing = evidence
+        .variants
+        .iter()
+        .flat_map(|variant| &variant.support)
+        .flat_map(|support| &support.calls)
+        .filter_map(|call| call.signal.minimum_adjacent_ploc_spacing)
+        .min();
+    let variant_max_adjacent_ploc_spacing = evidence
+        .variants
+        .iter()
+        .flat_map(|variant| &variant.support)
+        .flat_map(|support| &support.calls)
+        .filter_map(|call| call.signal.maximum_adjacent_ploc_spacing)
+        .max();
     let locus_forward_reads = evidence
         .locus_differences
         .iter()
@@ -213,10 +255,13 @@ fn run_logged(
                 "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
                 "profiled_locus_forward_reads={} profiled_locus_reverse_reads={} noisy_locus_observations={} ",
                 "locus_positive_corrected_channels={} locus_positive_snr_channels={} ",
-                "locus_forward_reads={} locus_reverse_reads={} locus_reference_reads={} ",
+                "locus_max_event_ploc_distance={:?} locus_min_adjacent_ploc_spacing={:?} ",
+                "locus_max_adjacent_ploc_spacing={:?} locus_forward_reads={} locus_reverse_reads={} ",
+                "locus_reference_reads={} ",
                 "locus_alternate_reads={} locus_unresolved_reads={} locus_deletion_reads={} variants={} ",
                 "profiled_variant_calls={} noisy_variant_calls={} variant_positive_corrected_channels={} ",
-                "variant_positive_snr_channels={}"
+                "variant_positive_snr_channels={} variant_max_event_ploc_distance={:?} ",
+                "variant_min_adjacent_ploc_spacing={:?} variant_max_adjacent_ploc_spacing={:?}"
             ),
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
@@ -234,6 +279,9 @@ fn run_logged(
             noisy_locus_observations,
             locus_positive_corrected_channels,
             locus_positive_snr_channels,
+            locus_max_event_ploc_distance,
+            locus_min_adjacent_ploc_spacing,
+            locus_max_adjacent_ploc_spacing,
             locus_forward_reads,
             locus_reverse_reads,
             locus_reference_reads,
@@ -244,7 +292,10 @@ fn run_logged(
             profiled_variant_calls,
             noisy_variant_calls,
             variant_positive_corrected_channels,
-            variant_positive_snr_channels
+            variant_positive_snr_channels,
+            variant_max_event_ploc_distance,
+            variant_min_adjacent_ploc_spacing,
+            variant_max_adjacent_ploc_spacing
         ),
     )?;
 
