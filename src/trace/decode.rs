@@ -116,17 +116,6 @@ fn decode(path: &Path, abif: AbifFile, source_sha256: String) -> Result<Chromato
 
     let primary = decode_optional_string(&abif, b"PBAS", 2)?;
     let qualities = decode_optional_bytes(&abif, b"PCON", 2)?;
-    validate_vendor_length(
-        "PBAS.2",
-        primary.as_ref().map(String::len),
-        base_locations.len(),
-    )?;
-    validate_vendor_length(
-        "PCON.2",
-        qualities.as_ref().map(Vec::len),
-        base_locations.len(),
-    )?;
-
     let source_name = path
         .file_name()
         .and_then(|name| name.to_str())
@@ -216,17 +205,6 @@ fn decode_optional_bytes(abif: &AbifFile, tag: &[u8; 4], number: u32) -> Result<
         )));
     }
     Ok(Some(abif.payload(entry)?.to_vec()))
-}
-
-fn validate_vendor_length(name: &str, length: Option<usize>, expected: usize) -> Result<()> {
-    if let Some(length) = length
-        && length != expected
-    {
-        return Err(Error::Abif(format!(
-            "{name} length {length} differs from PLOC.2 length {expected}"
-        )));
-    }
-    Ok(())
 }
 
 const fn channel_index(base: char) -> Option<usize> {
