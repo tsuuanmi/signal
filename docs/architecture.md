@@ -25,7 +25,7 @@ FASTA -----------------------------------------> alignment -> variant_calling
                                                analysis report v7   SampleEvidence
                                                                         |
                                                                         v
-                                                         sample_evidence/v5
+                                                         sample_evidence/v7
 ```
 
 `pipeline::observation` is the one authoritative reference-guided read path.
@@ -52,8 +52,8 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
 | `alignment` | fixed-point evidence-profile Gotoh scoring, traceback, orientation, circular projection | variant extraction and evidence mutation |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
-| `sample` | deterministic read ordering, run-length reference coverage topology, pairwise reference-coordinate overlap admission, sparse differential-locus evidence, and normalized-variant aggregation | input loading, filename/HV pairing, consensus and interpretation |
-| `report` | analysis-v7/basecalls-v2/sample-evidence-v6 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
+| `sample` | deterministic read ordering, run-length reference coverage topology, pairwise reference-coordinate overlap admission, sparse differential-locus evidence, reference-oriented preservation of basecall-independent call profiles, and normalized-variant aggregation | input loading, filename/HV pairing, consensus and interpretation |
+| `report` | analysis-v7/basecalls-v2/sample-evidence-v7 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
 | `pipeline` | command sequencing plus shared reference-independent `read` and reference-guided `observation` paths | algorithm internals |
 
 Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. Shared `locus` geometry is reference-free and classification-free. `signal_processing` derives locus profiles from `Chromatogram` channel evidence directly; alignment consumes those immutable profiles for placement without mutating them or the upstream base calls. Existing rolling noisy-window analysis still consumes basecall window records. No algorithm module depends back on signal processing.
