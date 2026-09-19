@@ -36,7 +36,7 @@ pub(crate) fn build(
 
     *stage = "alignment";
     let stage_started = Instant::now();
-    let alignment = alignment::align_best(&quality, reference, &config.alignment)?;
+    let alignment = alignment::align_best(&quality, &signal, reference, &config.alignment)?;
     let reference_segments = alignment
         .reference_segments
         .iter()
