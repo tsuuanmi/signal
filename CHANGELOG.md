@@ -19,6 +19,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Required Rust source-policy CI gate rejects deprecated compatibility APIs, legacy/backward-compatibility feature/declaration scaffolding, and diagnostic suppressions that could hide dead/unused/deprecated production code.
 - Fixed-point profile-aware semi-global Gotoh placement (`signal.profile_gotoh/v1`) using post-trim basecall-independent A/C/G/T evidence profiles, explicit 1024-unit quantization, reverse profile complementation, and score-only orientation ties without changing public JSON schemas.
 - Internal basecall-independent `LocusEvidence` and normalized `EvidenceProfile` derived directly from analyzed A/C/G/T channel signal at deterministic refined PLOC events; zero-signal loci have no synthetic fallback profile and public JSON contracts are unchanged.
 - Multi-read `signal sample` evidence now preserves filtered normalized-variant observations, reviewer-facing read provenance, reference-oriented four-channel peak/quality evidence, and focused reference-support quality at differential loci while omitting routine all-reference loci.
