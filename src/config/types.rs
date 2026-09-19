@@ -67,7 +67,7 @@ pub struct AlignmentConfig {
 /// Cross-read overlap admission settings used before sample consensus.
 #[derive(Debug, Clone)]
 pub struct SampleReconciliationConfig {
-    pub(crate) minimum_overlap_bases: usize,
+    pub(crate) minimum_comparable_bases: usize,
     pub(crate) minimum_overlap_agreement: f64,
 }
 
@@ -138,7 +138,7 @@ struct RawAlignmentConfig {
 #[derive(Debug, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct RawSampleReconciliationConfig {
-    minimum_overlap_bases: usize,
+    minimum_comparable_bases: usize,
     minimum_overlap_agreement: f64,
 }
 
@@ -224,9 +224,9 @@ impl RawConfig {
             "alignment.minimum_identity",
             self.alignment.minimum_identity,
         )?;
-        if self.sample_reconciliation.minimum_overlap_bases == 0 {
+        if self.sample_reconciliation.minimum_comparable_bases == 0 {
             return Err(Error::Config(
-                "sample_reconciliation.minimum_overlap_bases must be positive".into(),
+                "sample_reconciliation.minimum_comparable_bases must be positive".into(),
             ));
         }
         require_fraction(
@@ -297,7 +297,7 @@ impl RawConfig {
                 minimum_identity: self.alignment.minimum_identity,
             },
             sample_reconciliation: SampleReconciliationConfig {
-                minimum_overlap_bases: self.sample_reconciliation.minimum_overlap_bases,
+                minimum_comparable_bases: self.sample_reconciliation.minimum_comparable_bases,
                 minimum_overlap_agreement: self.sample_reconciliation.minimum_overlap_agreement,
             },
             variant_calling: VariantCallingConfig {
@@ -336,7 +336,7 @@ fn require_finite_range(name: &str, value: f64, minimum: f64, maximum: f64) -> R
 mod tests {
     use super::*;
 
-    const VALID: &str = "schema_version=5\n[reference]\ntopology='circular'\n[basecalling]\nsecondary_peak_ratio=0.33\n[signal_processing]\nwindow_size_bases=10\nminimum_primary_snr=3.0\nminimum_noisy_windows=2\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.1\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.8\n[sample_reconciliation]\nminimum_overlap_bases=25\nminimum_overlap_agreement=0.5\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[16024,16365],[73,340],[438,576]]\n";
+    const VALID: &str = "schema_version=5\n[reference]\ntopology='circular'\n[basecalling]\nsecondary_peak_ratio=0.33\n[signal_processing]\nwindow_size_bases=10\nminimum_primary_snr=3.0\nminimum_noisy_windows=2\n[quality_control]\ntrim_window_size=10\nbest_section_fraction=0.1\nmax_relative_quality_score=60\ntrim_stringency=7.0\nminimum_retained_bases=20\n[alignment]\nmatch_score=3\nmismatch_score=-5\nambiguous_score=0\ngap_open_score=-10\ngap_extension_score=-4\nminimum_callable_bases=20\nminimum_identity=0.8\n[sample_reconciliation]\nminimum_comparable_bases=25\nminimum_overlap_agreement=0.5\n[variant_calling]\nmax_indel_length=50\nminimum_peak_height=150\nrelative_quality_threshold=30\nregions=[[16024,16365],[73,340],[438,576]]\n";
 
     fn validate(text: &str) -> std::result::Result<Config, Box<dyn std::error::Error>> {
         let raw: RawConfig = toml::from_str(text)?;
@@ -351,7 +351,7 @@ mod tests {
         assert_eq!(config.signal_processing.window_size_bases, 10);
         assert_eq!(config.signal_processing.minimum_primary_snr, 3.0);
         assert_eq!(config.signal_processing.minimum_noisy_windows, 2);
-        assert_eq!(config.sample_reconciliation.minimum_overlap_bases, 25);
+        assert_eq!(config.sample_reconciliation.minimum_comparable_bases, 25);
         assert_eq!(config.sample_reconciliation.minimum_overlap_agreement, 0.5);
         assert_eq!(config.variant_calling.minimum_peak_height, 150);
         assert_eq!(config.variant_calling.relative_quality_threshold, 30);
@@ -372,7 +372,7 @@ mod tests {
             toml::from_str::<RawConfig>(&VALID.replace("minimum_peak_height=150\n", "")).is_err()
         );
         assert!(
-            toml::from_str::<RawConfig>(&VALID.replace("minimum_overlap_bases=25\n", "")).is_err()
+            toml::from_str::<RawConfig>(&VALID.replace("minimum_comparable_bases=25\n", "")).is_err()
         );
     }
 
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn rejects_invalid_sample_reconciliation_settings() {
         for invalid in [
-            VALID.replace("minimum_overlap_bases=25", "minimum_overlap_bases=0"),
+            VALID.replace("minimum_comparable_bases=25", "minimum_comparable_bases=0"),
             VALID.replace(
                 "minimum_overlap_agreement=0.5",
                 "minimum_overlap_agreement=0.0",
