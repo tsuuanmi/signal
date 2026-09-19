@@ -226,7 +226,11 @@ mod tests {
         );
 
         let error = parse(bytes).expect_err("undersized allocation must fail");
-        assert!(error.to_string().contains("smaller than element size product 4"));
+        assert!(
+            error
+                .to_string()
+                .contains("smaller than element size product 4")
+        );
     }
 
     fn write_header(bytes: &mut [u8], root_data_size: usize) {
