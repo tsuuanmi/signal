@@ -49,6 +49,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-SAMPLE-011:** Normalized-variant support topology is a lossless summary of the existing per-read variant observations across eligibility and selected-orientation dimensions. It cannot add supporting reads, erase ineligible observations, count reference/unresolved/competing-event coverage as support for that variant, or become a confidence/independence verdict.
 - **INV-SAMPLE-012:** Basecall-independent nucleotide profiles retained at sample scope must originate from the matching read `LocusEvidence` call index and be projected only by the selected read orientation. Missing profiles remain missing and deletion observations carry no nucleotide profile; sample reconciliation cannot reconstruct profile evidence from called bases or the reference.
 - **INV-SAMPLE-013:** Differential-locus support topology is derived only from the explicit observations retained at that reference coordinate. Total reads must equal both the forward/reverse partition and the reference/alternate/unresolved/deletion partition; missing coverage cannot enter either partition and the summary cannot become a vote or confidence verdict.
+- **INV-SAMPLE-014:** Local sample noise context is a projection of upstream merged candidate-noisy call regions only. A covered call is not automatically weak, erroneous, ineligible, or down-weighted, and deletion evidence cannot receive fabricated call-specific noise state.
 
 ## Pipeline
 
