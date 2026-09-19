@@ -71,7 +71,7 @@ def analysis_call_shapes(example: dict[str, Any]) -> tuple[dict[str, Any], ...]:
 def rejected_analysis_shapes(
     example: dict[str, Any],
 ) -> list[tuple[str, dict[str, Any]]]:
-    snv, insertion, deletion = analysis_call_shapes(example)
+    snv, _, deletion = analysis_call_shapes(example)
     supporting = copy.deepcopy(snv["variants"][0]["calls"][0])
     flanking = copy.deepcopy(deletion["variants"][0]["calls"][0])
 
