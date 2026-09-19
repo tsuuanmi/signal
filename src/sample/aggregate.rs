@@ -114,7 +114,7 @@ mod tests {
         let reference_segments = columns
             .iter()
             .filter_map(|column| column.reference_index_0based)
-            .fold(None, |bounds, index| {
+            .fold(None::<(usize, usize)>, |bounds, index| {
                 Some(match bounds {
                     Some((start, end)) => (start.min(index), end.max(index + 1)),
                     None => (index, index + 1),
