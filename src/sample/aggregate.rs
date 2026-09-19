@@ -333,6 +333,19 @@ mod tests {
                 .reference_reads,
             0
         );
+        assert_eq!(evidence.locus_differences[0].support_topology.profile_reads, 2);
+        assert_eq!(
+            evidence.locus_differences[0]
+                .support_topology
+                .profile_forward_reads,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[0]
+                .support_topology
+                .profile_reverse_reads,
+            1
+        );
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         let forward_signal = evidence.locus_differences[0].observations[0]
@@ -453,6 +466,9 @@ mod tests {
                 .deletion_reads,
             1
         );
+        assert_eq!(evidence.locus_differences[0].support_topology.profile_reads, 1);
+        assert_eq!(evidence.locus_differences[1].support_topology.profile_reads, 0);
+        assert_eq!(evidence.locus_differences[2].support_topology.profile_reads, 0);
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
@@ -509,6 +525,9 @@ mod tests {
         assert_eq!(topology.alternate_reads, 1);
         assert_eq!(topology.unresolved_reads, 0);
         assert_eq!(topology.deletion_reads, 0);
+        assert_eq!(topology.profile_reads, 2);
+        assert_eq!(topology.profile_forward_reads, 1);
+        assert_eq!(topology.profile_reverse_reads, 1);
         let observations = &evidence.locus_differences[0].observations;
         assert_eq!(observations.len(), 2);
         assert_eq!(observations[0].read_index, 0);
