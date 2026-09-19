@@ -217,7 +217,7 @@ def validate_sample_support_topology_document(
                 "profile_forward_reads": 0,
                 "profile_reverse_reads": 0,
             }
-            seen: set[str] = set()
+            seen_reads: set[str] = set()
             valid = True
             for observation in observations:
                 if not isinstance(observation, dict):
@@ -231,13 +231,13 @@ def validate_sample_support_topology_document(
                     )
                     valid = False
                     continue
-                if read_name in seen:
+                if read_name in seen_reads:
                     errors.append(
                         f"{label}: locus {index} repeats read {read_name!r} in observations"
                     )
                     valid = False
                     continue
-                seen.add(read_name)
+                seen_reads.add(read_name)
                 orientation = orientations[read_name]
                 expected[f"{orientation}_reads"] += 1
                 if state in {"reference", "alternate", "unresolved", "deletion"}:
@@ -249,15 +249,17 @@ def validate_sample_support_topology_document(
                 if isinstance(profile, dict):
                     expected["profile_reads"] += 1
                     expected[f"profile_{orientation}_reads"] += 1
-                    weights = [profile.get(base) for base in ("A", "C", "G", "T")]
-                    if all(isinstance(value, (int, float)) for value in weights):
-                        total = sum(float(value) for value in weights)
-                        if abs(total - 1.0) > 1e-9:
-                            errors.append(
-                                f"{label}: locus {index} observation profile does not sum to one"
-                            )
-                    else:
-                        valid = False
+                    weights: list[float] = []
+                    for base in ("A", "C", "G", "T"):
+                        value = profile.get(base)
+                        if not isinstance(value, (int, float)):
+                            valid = False
+                            break
+                        weights.append(float(value))
+                    if len(weights) == 4 and abs(sum(weights) - 1.0) > 1e-9:
+                        errors.append(
+                            f"{label}: locus {index} observation profile does not sum to one"
+                        )
 
             if valid and any(
                 topology.get(key) != value for key, value in expected.items()
@@ -286,7 +288,7 @@ def validate_sample_support_topology_document(
             "eligible_forward_reads": 0,
             "eligible_reverse_reads": 0,
         }
-        seen: set[str] = set()
+        seen_support_reads: set[str] = set()
         valid = True
         for item in support:
             if not isinstance(item, dict):
@@ -299,13 +301,13 @@ def validate_sample_support_topology_document(
                 )
                 valid = False
                 continue
-            if read_name in seen:
+            if read_name in seen_support_reads:
                 errors.append(
                     f"{label}: variant {index} repeats read {read_name!r} in support"
                 )
                 valid = False
                 continue
-            seen.add(read_name)
+            seen_support_reads.add(read_name)
             orientation = orientations[read_name]
             expected[f"{orientation}_reads"] += 1
             if item.get("eligible") is True:
