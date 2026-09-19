@@ -275,6 +275,54 @@ mod tests {
     }
 
     #[test]
+    fn canonicalizes_homopolymer_deletion_to_rightmost_reference_base() -> Result<()> {
+        let query = "CAAAG";
+        let alignments = align(query, &profiles(query), "CAAAAG", &config(), None)?;
+        assert_eq!(alignments.len(), 1);
+        let deletion = alignments[0]
+            .columns
+            .iter()
+            .find(|column| column.query_base == '-')
+            .ok_or_else(|| Error::Alignment("expected canonical deletion".into()))?;
+        assert_eq!(deletion.reference_index, Some(4));
+        assert_eq!(deletion.reference_base, 'A');
+        Ok(())
+    }
+
+    #[test]
+    fn canonicalizes_homopolymer_insertion_to_rightmost_boundary() -> Result<()> {
+        let query = "CAAAAAG";
+        let alignments = align(query, &profiles(query), "CAAAAG", &config(), None)?;
+        assert_eq!(alignments.len(), 1);
+        let insertion_index = alignments[0]
+            .columns
+            .iter()
+            .position(|column| column.reference_base == '-')
+            .ok_or_else(|| Error::Alignment("expected canonical insertion".into()))?;
+        assert_eq!(
+            alignments[0].columns[insertion_index - 1].reference_index,
+            Some(4)
+        );
+        assert_eq!(
+            alignments[0].columns[insertion_index + 1].reference_index,
+            Some(5)
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn preserves_distinct_repeat_placement_ambiguity_without_an_indel() -> Result<()> {
+        let query = "AAA";
+        let alignments = align(query, &profiles(query), "AAAAA", &config(), None)?;
+        assert_eq!(alignments.len(), 2);
+        assert_ne!(
+            alignments[0].start_reference,
+            alignments[1].start_reference
+        );
+        Ok(())
+    }
+
+    #[test]
     fn preserves_scores_beyond_i32_range() -> Result<()> {
         let mut scoring = config();
         scoring.match_score = i32::MAX;
