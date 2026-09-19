@@ -45,7 +45,7 @@ The following are not required as **new work** before development begins:
 - new indel models beyond current supported behavior;
 - repeat/poly-C special handling;
 - quantitative heteroplasmy or genotype inference;
-- sample consensus or multi-read aggregation;
+- sample consensus or further multi-read interpretation beyond the implemented evidence aggregation;
 - haplogroup inference/correction;
 - ML;
 - advanced denoising, calibration, or independent locus discovery.
