@@ -83,6 +83,7 @@ mod tests {
     use crate::model::basecalls::{
         BaseCall, BaseCalls, ChannelPeak, PeakSource, PrimaryPeakEvidence,
     };
+    use crate::model::locus_evidence::{EvidenceProfile, LocusEvidence};
     use crate::model::nucleotide::Nucleotide;
     use crate::model::quality::{CallQuality, QualityControlResult};
     use crate::model::signal::SignalAnalysis;
@@ -97,6 +98,28 @@ mod tests {
         SampleReconciliationConfig {
             minimum_comparable_bases: 1,
             minimum_overlap_agreement: 0.5,
+        }
+    }
+
+    fn locus(index_0based: usize) -> LocusEvidence {
+        LocusEvidence {
+            call_index_0based: index_0based,
+            ploc_0based: index_0based * 10,
+            window_start_0based: index_0based * 10,
+            window_end_0based_exclusive: index_0based * 10 + 1,
+            context_call_start_0based: index_0based,
+            context_call_end_0based_exclusive: index_0based + 1,
+            context_sample_start_0based: index_0based * 10,
+            context_sample_end_0based_exclusive: index_0based * 10 + 1,
+            event_position_0based: index_0based * 10,
+            channel_heights: [10, 20, 30, 40],
+            channel_baselines: [0.0; 4],
+            channel_noise_sigmas: [1.0; 4],
+            corrected_amplitudes: [1.0, 2.0, 3.0, 4.0],
+            snrs: [1.0, 2.0, 3.0, 4.0],
+            profile: Some(EvidenceProfile {
+                weights: [0.1, 0.2, 0.3, 0.4],
+            }),
         }
     }
 
@@ -185,7 +208,7 @@ mod tests {
                     clipped_channel_samples: 0,
                     maximum_to_median_event_signal_ratio: None,
                 },
-                loci: Vec::new(),
+                loci: (0..call_count).map(locus).collect(),
                 windows: Vec::new(),
                 noisy_regions: Vec::new(),
             },
@@ -284,7 +307,19 @@ mod tests {
         assert_eq!(evidence.locus_differences.len(), 1);
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
+        assert_eq!(
+            evidence.locus_differences[0].observations[0]
+                .profile
+                .map(|profile| profile.weights),
+            Some([0.1, 0.2, 0.3, 0.4])
+        );
         assert_eq!(evidence.locus_differences[0].observations[1].read_index, 1);
+        assert_eq!(
+            evidence.locus_differences[0].observations[1]
+                .profile
+                .map(|profile| profile.weights),
+            Some([0.4, 0.3, 0.2, 0.1])
+        );
         assert_eq!(evidence.variants.len(), 1);
         assert_eq!(evidence.variants[0].support_topology.reads, 2);
         assert_eq!(evidence.variants[0].support_topology.eligible_reads, 2);
@@ -299,13 +334,25 @@ mod tests {
             1
         );
         assert_eq!(evidence.variants[0].support[0].read_index, 0);
+        assert_eq!(
+            evidence.variants[0].support[0].calls[0]
+                .profile
+                .map(|profile| profile.weights),
+            Some([0.1, 0.2, 0.3, 0.4])
+        );
         assert_eq!(evidence.variants[0].support[1].read_index, 1);
+        assert_eq!(
+            evidence.variants[0].support[1].calls[0]
+                .profile
+                .map(|profile| profile.weights),
+            Some([0.4, 0.3, 0.2, 0.1])
+        );
         Ok(())
     }
 
     #[test]
     fn omits_reference_matches_but_preserves_non_reference_states() -> Result<()> {
-        let read = observation(
+        let mut read = observation(
             "a",
             "reference",
             "config",
@@ -319,6 +366,7 @@ mod tests {
             ],
             Vec::new(),
         );
+        read.signal.loci[2].profile = None;
 
         let evidence = aggregate(&[read], &sample_config())?;
 
@@ -332,9 +380,19 @@ mod tests {
             evidence.locus_differences[1].observations[0].state,
             crate::model::sample_evidence::LocusState::Unresolved
         );
+        assert!(
+            evidence.locus_differences[1].observations[0]
+                .profile
+                .is_none()
+        );
         assert_eq!(
             evidence.locus_differences[2].observations[0].state,
             crate::model::sample_evidence::LocusState::Deletion
+        );
+        assert!(
+            evidence.locus_differences[2].observations[0]
+                .profile
+                .is_none()
         );
         Ok(())
     }
