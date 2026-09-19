@@ -204,8 +204,7 @@ fn select_event_position(
             distance < best_distance
                 || (distance == best_distance
                     && (current.total_cmp(&best_total).is_gt()
-                        || (current.total_cmp(&best_total).is_eq()
-                            && position < best_position)))
+                        || (current.total_cmp(&best_total).is_eq() && position < best_position)))
         });
         if replace {
             best = Some((position, current));
