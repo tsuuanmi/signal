@@ -115,6 +115,36 @@ fn run_logged(
         .flat_map(|support| &support.calls)
         .filter(|call| call.profile.is_some())
         .count();
+    let locus_forward_reads = evidence
+        .locus_differences
+        .iter()
+        .map(|difference| difference.support_topology.forward_reads)
+        .sum::<usize>();
+    let locus_reverse_reads = evidence
+        .locus_differences
+        .iter()
+        .map(|difference| difference.support_topology.reverse_reads)
+        .sum::<usize>();
+    let locus_reference_reads = evidence
+        .locus_differences
+        .iter()
+        .map(|difference| difference.support_topology.reference_reads)
+        .sum::<usize>();
+    let locus_alternate_reads = evidence
+        .locus_differences
+        .iter()
+        .map(|difference| difference.support_topology.alternate_reads)
+        .sum::<usize>();
+    let locus_unresolved_reads = evidence
+        .locus_differences
+        .iter()
+        .map(|difference| difference.support_topology.unresolved_reads)
+        .sum::<usize>();
+    let locus_deletion_reads = evidence
+        .locus_differences
+        .iter()
+        .map(|difference| difference.support_topology.deletion_reads)
+        .sum::<usize>();
     logger.info(
         module_path!(),
         line!(),
@@ -122,6 +152,8 @@ fn run_logged(
             concat!(
                 "event=sample_aggregation_completed elapsed_ms={} reads={} coverage_segments={} ",
                 "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
+                "locus_forward_reads={} locus_reverse_reads={} locus_reference_reads={} ",
+                "locus_alternate_reads={} locus_unresolved_reads={} locus_deletion_reads={} ",
                 "variants={} profiled_variant_calls={}"
             ),
             stage_started.elapsed().as_millis(),
@@ -135,6 +167,12 @@ fn run_logged(
                 .count(),
             evidence.locus_differences.len(),
             profiled_locus_observations,
+            locus_forward_reads,
+            locus_reverse_reads,
+            locus_reference_reads,
+            locus_alternate_reads,
+            locus_unresolved_reads,
+            locus_deletion_reads,
             evidence.variants.len(),
             profiled_variant_calls
         ),
