@@ -1,0 +1,162 @@
+{
+  "schema_version": "signal.sample_evidence/v3",
+  "sample_id": "sample-001",
+  "provenance": {
+    "reference": {
+      "name": "rCRS",
+      "topology": "circular",
+      "sha256": "f156ff3f65bbcc80c7ebb9936dceb96b1477b4f8f535c4e1dbe7baea225cbc66"
+    },
+    "configuration_sha256": "3333333333333333333333333333333333333333333333333333333333333333"
+  },
+  "reads": [
+    {
+      "name": "read-a",
+      "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "alignment": {
+        "orientation": "forward",
+        "callable_bases": 120,
+        "identity": 0.98,
+        "unresolved_bases": 0,
+        "gap_opens": 0,
+        "reference_segments": [
+          {
+            "start": 100,
+            "end": 220
+          }
+        ],
+        "wraps_origin": false
+      }
+    },
+    {
+      "name": "read-b",
+      "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "alignment": {
+        "orientation": "reverse",
+        "callable_bases": 120,
+        "identity": 0.975,
+        "unresolved_bases": 0,
+        "gap_opens": 0,
+        "reference_segments": [
+          {
+            "start": 140,
+            "end": 260
+          }
+        ],
+        "wraps_origin": false
+      }
+    }
+  ],
+  "locus_differences": [
+    {
+      "position": 150,
+      "reference": "C",
+      "observations": [
+        {
+          "read": "read-a",
+          "state": "alternate",
+          "base": "T",
+          "quality": 56
+        },
+        {
+          "read": "read-b",
+          "state": "reference",
+          "base": "C",
+          "quality": 52
+        }
+      ]
+    },
+    {
+      "position": 199,
+      "reference": "T",
+      "observations": [
+        {
+          "read": "read-a",
+          "state": "alternate",
+          "base": "C",
+          "quality": 56
+        },
+        {
+          "read": "read-b",
+          "state": "alternate",
+          "base": "C",
+          "quality": 48
+        }
+      ]
+    }
+  ],
+  "variants": [
+    {
+      "position": 150,
+      "reference": "C",
+      "alternate": "T",
+      "kind": "SNV",
+      "support": [
+        {
+          "read": "read-a",
+          "eligible": true,
+          "exclusion_reasons": [],
+          "calls": [
+            {
+              "role": "supporting",
+              "base": "T",
+              "peaks": {
+                "A": 18,
+                "C": 42,
+                "G": 25,
+                "T": 812
+              },
+              "quality": 56
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "position": 199,
+      "reference": "T",
+      "alternate": "C",
+      "kind": "SNV",
+      "support": [
+        {
+          "read": "read-a",
+          "eligible": true,
+          "exclusion_reasons": [],
+          "calls": [
+            {
+              "role": "supporting",
+              "base": "C",
+              "peaks": {
+                "A": 16,
+                "C": 790,
+                "G": 31,
+                "T": 22
+              },
+              "quality": 56
+            }
+          ]
+        },
+        {
+          "read": "read-b",
+          "eligible": false,
+          "exclusion_reasons": [
+            "mixed_supporting_signal"
+          ],
+          "calls": [
+            {
+              "role": "supporting",
+              "base": "C",
+              "peaks": {
+                "A": 14,
+                "C": 790,
+                "G": 29,
+                "T": 300
+              },
+              "quality": 48
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
