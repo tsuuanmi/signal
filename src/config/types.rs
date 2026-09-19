@@ -396,9 +396,18 @@ mod tests {
     fn rejects_invalid_sample_reconciliation_settings() {
         for invalid in [
             VALID.replace("minimum_overlap_bases=25", "minimum_overlap_bases=0"),
-            VALID.replace("minimum_overlap_agreement=0.5", "minimum_overlap_agreement=0.0"),
-            VALID.replace("minimum_overlap_agreement=0.5", "minimum_overlap_agreement=1.1"),
-            VALID.replace("minimum_overlap_agreement=0.5", "minimum_overlap_agreement=nan"),
+            VALID.replace(
+                "minimum_overlap_agreement=0.5",
+                "minimum_overlap_agreement=0.0",
+            ),
+            VALID.replace(
+                "minimum_overlap_agreement=0.5",
+                "minimum_overlap_agreement=1.1",
+            ),
+            VALID.replace(
+                "minimum_overlap_agreement=0.5",
+                "minimum_overlap_agreement=nan",
+            ),
         ] {
             assert!(
                 validate(&invalid).is_err(),
