@@ -372,7 +372,8 @@ mod tests {
             toml::from_str::<RawConfig>(&VALID.replace("minimum_peak_height=150\n", "")).is_err()
         );
         assert!(
-            toml::from_str::<RawConfig>(&VALID.replace("minimum_comparable_bases=25\n", "")).is_err()
+            toml::from_str::<RawConfig>(&VALID.replace("minimum_comparable_bases=25\n", ""))
+                .is_err()
         );
     }
 
