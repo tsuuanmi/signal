@@ -2,6 +2,7 @@
 
 mod aggregate;
 mod call_evidence;
+mod contribution;
 mod coverage;
 mod differences;
 mod overlap;

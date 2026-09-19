@@ -213,11 +213,9 @@ profile availability
  -> contribution weighting
 ```
 
-ADR-0038 promotes only the first step: at each retained differential locus,
-Signal counts how many observations actually have an `EvidenceProfile` and
-factors that denominator by selected forward/reverse orientation.
+ADR-0038 promotes the first step: at each retained differential locus, Signal counts how many observations actually have an `EvidenceProfile` and factors that denominator by selected forward/reverse orientation. ADR-0039 then promotes the first structural contribution policy: profile-bearing call observations are eligible, missing-profile calls are not nucleotide contributors, and deletions remain separate events. This eligibility deliberately does not use relative quality, SNR, or candidate-noisy membership.
 
-Only after a separately validated contributor policy exists should Signal form:
+Only after a separately validated weighting policy exists should Signal form:
 
 ```text
 support_A = Σ observation_weight × profile_A

@@ -142,6 +142,33 @@ fn run_logged(
         .flat_map(|support| &support.calls)
         .filter(|call| call.signal.in_noisy_region)
         .count();
+    let eligible_nucleotide_locus_observations = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter(|observation| {
+            observation.nucleotide_contribution
+                == crate::model::sample_evidence::NucleotideContribution::Eligible
+        })
+        .count();
+    let missing_profile_locus_observations = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter(|observation| {
+            observation.nucleotide_contribution
+                == crate::model::sample_evidence::NucleotideContribution::MissingProfile
+        })
+        .count();
+    let deletion_event_locus_observations = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter(|observation| {
+            observation.nucleotide_contribution
+                == crate::model::sample_evidence::NucleotideContribution::DeletionEvent
+        })
+        .count();
     let locus_positive_corrected_channels = evidence
         .locus_differences
         .iter()
@@ -212,7 +239,8 @@ fn run_logged(
                 "event=sample_aggregation_completed elapsed_ms={} reads={} coverage_segments={} ",
                 "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
                 "profiled_locus_forward_reads={} profiled_locus_reverse_reads={} noisy_locus_observations={} ",
-                "locus_positive_corrected_channels={} locus_positive_snr_channels={} ",
+                "eligible_nucleotide_locus_observations={} missing_profile_locus_observations={} ",
+                "deletion_event_locus_observations={} locus_positive_corrected_channels={} locus_positive_snr_channels={} ",
                 "locus_forward_reads={} locus_reverse_reads={} locus_reference_reads={} ",
                 "locus_alternate_reads={} locus_unresolved_reads={} locus_deletion_reads={} variants={} ",
                 "profiled_variant_calls={} noisy_variant_calls={} variant_positive_corrected_channels={} ",
@@ -232,6 +260,9 @@ fn run_logged(
             profiled_locus_forward_reads,
             profiled_locus_reverse_reads,
             noisy_locus_observations,
+            eligible_nucleotide_locus_observations,
+            missing_profile_locus_observations,
+            deletion_event_locus_observations,
             locus_positive_corrected_channels,
             locus_positive_snr_channels,
             locus_forward_reads,

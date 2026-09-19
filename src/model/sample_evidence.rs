@@ -49,6 +49,14 @@ pub(crate) enum LocusState {
     Deletion,
 }
 
+/// Structural nucleotide-contribution eligibility for one retained locus observation.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum NucleotideContribution {
+    Eligible,
+    MissingProfile,
+    DeletionEvent,
+}
+
 /// Factorized topology of reads observing one retained differential locus.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct LocusSupportTopology {
@@ -102,6 +110,7 @@ pub(crate) struct LocusDifferenceObservation {
     pub(crate) base: Option<char>,
     pub(crate) quality: Option<u8>,
     pub(crate) signal: Option<CallSignalEvidence>,
+    pub(crate) nucleotide_contribution: NucleotideContribution,
 }
 
 /// All covering-read observations retained at one differential reference locus.
