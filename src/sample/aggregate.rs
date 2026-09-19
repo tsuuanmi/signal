@@ -362,6 +362,11 @@ mod tests {
         assert_eq!(forward_signal.corrected_amplitudes, [1.0, 2.0, 3.0, 4.0]);
         assert_eq!(forward_signal.snrs, [1.0, 2.0, 3.0, 4.0]);
         assert!(forward_signal.in_noisy_region);
+        assert_eq!(
+            evidence.locus_differences[0].observations[0].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::Eligible
+        );
+        assert!(forward_signal.in_noisy_region);
         assert_eq!(evidence.locus_differences[0].observations[1].read_index, 1);
         let reverse_signal = evidence.locus_differences[0].observations[1]
             .signal
@@ -496,6 +501,10 @@ mod tests {
                 .is_some_and(|signal| signal.profile.is_none())
         );
         assert_eq!(
+            evidence.locus_differences[1].observations[0].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::MissingProfile
+        );
+        assert_eq!(
             evidence.locus_differences[2].observations[0].state,
             crate::model::sample_evidence::LocusState::Deletion
         );
@@ -503,6 +512,36 @@ mod tests {
             evidence.locus_differences[2].observations[0]
                 .signal
                 .is_none()
+        );
+        assert_eq!(
+            evidence.locus_differences[2].observations[0].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::DeletionEvent
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn unresolved_call_with_profile_remains_nucleotide_eligible() -> Result<()> {
+        let read = observation(
+            "a",
+            "reference",
+            "config",
+            Orientation::Forward,
+            vec![column('N', 'T', Some(0), 12)],
+            Vec::new(),
+        );
+
+        let evidence = aggregate(&[read], &sample_config())?;
+
+        assert_eq!(evidence.locus_differences.len(), 1);
+        assert_eq!(
+            evidence.locus_differences[0].observations[0].state,
+            crate::model::sample_evidence::LocusState::Unresolved
+        );
+        assert_eq!(evidence.locus_differences[0].support_topology.profile_reads, 1);
+        assert_eq!(
+            evidence.locus_differences[0].observations[0].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::Eligible
         );
         Ok(())
     }
