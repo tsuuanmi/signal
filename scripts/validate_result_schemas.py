@@ -189,6 +189,9 @@ def validate_sample_support_topology_document(
         alignment = read.get("alignment")
         orientation = alignment.get("orientation") if isinstance(alignment, dict) else None
         if isinstance(name, str) and orientation in {"forward", "reverse"}:
+            if name in orientations:
+                errors.append(f"{label}: duplicate read name {name!r}")
+                continue
             orientations[name] = orientation
 
     for index, variant in enumerate(variants):
@@ -465,6 +468,41 @@ def main(argv: list[str] | None = None) -> int:
     )
     if not semantic_rejection_errors:
         errors.append("expected inconsistent sample support topology to be rejected")
+
+    duplicate_support = copy.deepcopy(sample_example)
+    duplicate_support["variants"][0]["support"].append(
+        copy.deepcopy(duplicate_support["variants"][0]["support"][0])
+    )
+    duplicate_support_errors: list[str] = []
+    validate_sample_support_topology_document(
+        duplicate_support,
+        "synthetic duplicate variant support",
+        duplicate_support_errors,
+    )
+    if not duplicate_support_errors:
+        errors.append("expected duplicate sample variant support read to be rejected")
+
+    unknown_support = copy.deepcopy(sample_example)
+    unknown_support["variants"][0]["support"][0]["read"] = "unknown-read"
+    unknown_support_errors: list[str] = []
+    validate_sample_support_topology_document(
+        unknown_support,
+        "synthetic unknown support read",
+        unknown_support_errors,
+    )
+    if not unknown_support_errors:
+        errors.append("expected unknown sample variant support read to be rejected")
+
+    duplicate_read_name = copy.deepcopy(sample_example)
+    duplicate_read_name["reads"][1]["name"] = duplicate_read_name["reads"][0]["name"]
+    duplicate_read_errors: list[str] = []
+    validate_sample_support_topology_document(
+        duplicate_read_name,
+        "synthetic duplicate read name",
+        duplicate_read_errors,
+    )
+    if not duplicate_read_errors:
+        errors.append("expected duplicate sample read name to be rejected")
 
     assert_rejected(analysis_validator, rejected_analysis, errors)
     assert_rejected(basecall_validator, rejected_basecalls, errors)
