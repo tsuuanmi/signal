@@ -32,3 +32,4 @@
 | [0028](0028-basecall-independent-locus-evidence.md) | Derive locus evidence and profiles independently of basecall verdicts | Accepted |
 | [0029](0029-profile-aware-gotoh.md) | Align reference placement from basecall-independent evidence profiles | Accepted |
 | [0030](0030-tracy-derived-sample-overlap-admission.md) | Add Tracy-derived pairwise overlap admission before sample consensus | Accepted |
+| [0031](0031-trace-integrity-evidence.md) | Preserve PLOC and signal-integrity evidence without artifact reclassification | Accepted |
