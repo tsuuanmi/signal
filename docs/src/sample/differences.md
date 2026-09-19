@@ -14,7 +14,8 @@ Builds sparse reference-coordinate evidence only where at least one read differs
 - Keep deletions free of fabricated base/quality/profile/noisy-call evidence.
 - Keep insertion columns out of reference-coordinate locus evidence.
 - Reject duplicate contribution from one read to the same reference coordinate.
-- Derive one internal support topology per retained locus: total reads, forward/reverse reads, and reference/alternate/unresolved/deletion reads, with both partitions required to sum to total reads.
+- Classify each retained observation as nucleotide `Eligible`, `MissingProfile`, or `DeletionEvent` without consulting relative quality or noisy-region context.
+- Derive one internal support topology per retained locus: total reads, forward/reverse reads, reference/alternate/unresolved/deletion reads, plus nucleotide-eligible and eligible forward/reverse reads, with all partitions required to remain consistent.
 
 ## Sparse semantics
 
