@@ -6,19 +6,16 @@ Aggregates normalized read-level variant observations into deterministic sample 
 
 ## Responsibilities
 
-- Group normalized observed variants by biological `(position, reference, alternate, kind)` identity.
-- Preserve the deterministic top-level read index for each contributing read.
-- Reject duplicate normalized biological identity from the same read instead of silently duplicating sample support.
-- Preserve configured eligibility and exact exclusion reasons without dropping filtered observations.
-- Map each normalized observation back to concise original-call role/index/reference-position/PLOC evidence.
+- Group normalized observed variants by `(position, reference, alternate, kind)`.
+- Preserve internal deterministic read index, eligibility, and exclusion reasons.
+- Reject duplicate biological variant identity from one read.
+- Resolve each associated call to the original call/quality records.
+- Require primary-event evidence and project base plus co-located A/C/G/T channel heights to reference orientation.
+- Retain reviewer-facing call evidence as role/base/peaks/quality only.
 
 ## Non-responsibilities
 
-No read placement, locus classification, genotype/heteroplasmy inference, consensus, conflict adjudication, or filesystem/reporting logic.
-
-## Invariants
-
-Read metadata is not repeated here. The support `read` index resolves through the SHA-sorted sample read registry. Read-level filtering changes eligibility, not whether the normalized observation exists. One read contributes at most one support record to one normalized variant identity.
+No read placement, locus classification, JSON read-name projection, consensus, or genotype inference.
 
 ## Status
 
