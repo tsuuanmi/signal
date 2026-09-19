@@ -51,12 +51,15 @@ Do not classify a mixed profile as heteroplasmy from these diagnostics. The purp
 
 Do not fit profile-geometry thresholds until unexplained extreme event-placement cases have been characterized.
 
-## Next decision
+## Resolution and revalidation
 
-After inspecting representative outliers and ordinary controls, choose among:
+ADR-0046 replaces the global maximum rule with the positive total-signal local maximum nearest PLOC, retaining basecall-independent composition while preventing stronger neighboring events from stealing the locus profile. Synthetic regression fixtures encode the neighboring-event failure mode.
 
-- keep current total-signal event refinement if offsets are biologically coherent;
-- constrain/refine event placement using validated chromatogram-event geometry;
-- retain multiple event summaries if one scalar event position loses meaningful mixed-signal structure.
+The next validation step is to rerun the same local corpus through `signal.validation_locus/v2` and verify that:
 
-Any scientific change requires a separate ADR, synthetic fixtures, and revalidation of the corpus measurements.
+- previously extreme event/primary displacements collapse to the PLOC-local event;
+- ordinary near-zero/one-sample offsets remain stable;
+- reference-called profile mass and F/R geometry improve without erasing genuine mixed-channel profiles;
+- alignment/variant changes are reviewed rather than assumed beneficial.
+
+Threshold fitting remains paused until this event-association correction is empirically revalidated.
