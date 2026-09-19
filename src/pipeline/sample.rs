@@ -178,14 +178,8 @@ fn run_logged(
         .locus_differences
         .iter()
         .filter(|difference| {
-            difference
-                .nucleotide_support
-                .forward_mean_profile
-                .is_some()
-                && difference
-                    .nucleotide_support
-                    .reverse_mean_profile
-                    .is_some()
+            difference.nucleotide_support.forward_mean_profile.is_some()
+                && difference.nucleotide_support.reverse_mean_profile.is_some()
         })
         .count();
     let unweighted_nucleotide_profile_mass = evidence
