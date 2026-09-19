@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "src"
 
 DEPRECATED_ATTRIBUTE = re.compile(r"#\s*\[\s*deprecated(?:\s*[=(]|\s*\])")
-LINT_SUPPRESSION = re.compile(r"\b(?:allow|expect)\s*\(([^)]]*)\)")
+LINT_SUPPRESSION = re.compile(r"\b(?:allow|expect)\s*\(([^)]*)\)")
 DECLARATION = re.compile(
     r"^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?"
     r"(?:fn|struct|enum|trait|type|mod|const|static)\s+"
