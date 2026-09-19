@@ -7,7 +7,7 @@ Provides append-only operational logging for one command operation.
 ## Responsibilities
 
 - Resolve `SIGNAL_LOG_DIR`, defaulting to `logs/`.
-- Open `<trace-stem>.log` in append mode.
+- Open `<operation-stem>.log` in append mode. Single-read commands use the trace stem; sample commands use `<sample-id>.sample` so all nested trace-stage records share one sample log.
 - Assign a per-open run identifier so records in an append history can be grouped.
 - Format INFO, WARN, and ERROR records with a local millisecond timestamp, Rust
   module/line source location, and automatic `run_id` field.
