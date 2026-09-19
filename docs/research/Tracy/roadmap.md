@@ -41,26 +41,13 @@ Observed values and derived interpretations remain separate.
 
 ## Phase B — basecall-independent evidence profile
 
-**Promoted to production via ADR-0028.** `LocusEvidence -> EvidenceProfile` now derives directly from corrected A/C/G/T channel evidence and does not use qualifying-channel membership or ambiguity thresholds. Primary calling and current Gotoh behavior remain unchanged so profile behavior is isolated before Phase C.
+**Promoted to production via ADR-0028.** `LocusEvidence -> EvidenceProfile` derives directly from corrected A/C/G/T channel evidence and does not use qualifying-channel membership or ambiguity thresholds. Primary calling remains unchanged; ADR-0029 consumes the profile in Phase C alignment.
 
 ## Phase C — profile/reference alignment
 
-Add an experimental evidence-aware substitution scorer around the existing
-Gotoh state machine.
+**Promoted to production via ADR-0029.** Reference placement now uses the existing bounded Gotoh state machine with fixed-point profile substitution scoring. The contract fixes 1024-unit quantization, missing-profile/non-canonical-reference ambiguous scoring, score-only orientation ties, unchanged affine-gap/circular semantics, and explicit separation between profile placement score and existing primary-sequence callable/identity admission metrics.
 
-Define before implementation:
-
-```text
-fixed numeric/quantization policy
-unresolved evidence score
-orientation tie semantics
-gap semantics
-circular topology behavior
-identity/callable metrics
-```
-
-Benchmark against current primary-sequence Gotoh and protect origin-crossing
-circular cases.
+Remaining work is validation against approved real traces and artifact-heavy cases; changing callable/identity semantics is not part of this phase.
 
 ## Phase D — ReadObservation
 
@@ -188,7 +175,7 @@ assay-specific LoD/LoQ
 | P0 | PLOC completeness + artifact validation | Very high | Low-Medium |
 | Promoted | `LocusEvidence` foundation / event geometry | Implemented via ADR-0028 | Medium |
 | Promoted | basecall-independent evidence profile | Implemented via ADR-0028 | Medium |
-| P0 | evidence-aware Gotoh scorer | Very high | Medium |
+| Promoted | evidence-aware Gotoh scorer | Implemented via ADR-0029 / `signal.profile_gotoh/v1` | Medium |
 | P1 | explicit read admission / overlap policy | High | Low-Medium |
 | P1 | generic N-read evidence reconciliation, F/R as first validation case | Very high | Medium-High |
 | P1 | reference-guided multi-read consensus | Very high | Medium-High |
