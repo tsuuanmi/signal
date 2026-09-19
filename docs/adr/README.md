@@ -39,3 +39,4 @@
 | [0035](0035-locus-support-topology.md) | Factor differential-locus support topology before consensus | Accepted |
 | [0036](0036-sample-local-noise-context.md) | Preserve local noisy-region context in sample evidence | Accepted |
 | [0037](0037-sample-call-signal-evidence.md) | Unify reference-oriented call signal evidence at sample scope | Accepted |
+| [0038](0038-locus-profile-availability.md) | Expose differential-locus profile availability before consensus | Accepted |
