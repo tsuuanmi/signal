@@ -1,5 +1,11 @@
 # Independent Read Processing and Sample Reconciliation
 
+**Production promotion (2026-09-19):** immutable independently placed
+`ReadObservation` values and generic N-read reference-coordinate/variant
+aggregation are implemented via ADR-0023 through ADR-0025. ADR-0030 additionally
+promotes Tracy-derived minimum-overlap/minimum-agreement evidence as a pairwise
+reference-coordinate admission graph. Consensus remains a later method boundary.
+
 This document focuses on a central Tracy lesson for Signal's future sample-level
 architecture: multiple Sanger traces should be processed independently first and
 only reconciled after each read has become an explicit reference-coordinate

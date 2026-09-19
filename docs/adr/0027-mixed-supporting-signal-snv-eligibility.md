@@ -66,3 +66,10 @@ shape; only scientific eligibility behavior changes.
 This decision does not estimate mixture fraction, call heteroplasmy, add genotype
 semantics, change basecalling thresholds, alter alignment, or detect persistent
 post-indel phase shifts.
+
+## Follow-up
+
+ADR-0030 advances the current sample contract from `signal.sample_evidence/v3`
+to `signal.sample_evidence/v4` to expose Tracy-derived pairwise overlap/admission
+evidence. The `mixed_supporting_signal` eligibility semantics defined here remain
+unchanged.

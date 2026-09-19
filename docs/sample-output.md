@@ -2,10 +2,10 @@
 
 `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>`
 writes one deterministic `results/<sample-id>.sample.json` document identified as
-`signal.sample_evidence/v3`. The authoritative schema is
-[`schemas/sample-evidence-v3.schema.json`](schemas/sample-evidence-v3.schema.json)
+`signal.sample_evidence/v4`. The authoritative schema is
+[`schemas/sample-evidence-v4.schema.json`](schemas/sample-evidence-v4.schema.json)
 and the example is
-[`examples/sample-evidence-v3.example.json`](examples/sample-evidence-v3.example.json).
+[`examples/sample-evidence-v4.example.json`](examples/sample-evidence-v4.example.json).
 
 The sample identifier and read names are reviewer-facing provenance. They never
 constrain scientific placement, orientation, overlap discovery, or variant
@@ -40,9 +40,49 @@ position 0 to the mapped end. A normal non-crossing read has
 `wraps_origin: false`.
 
 Read names are unique within one emitted sample document because they are used as
-human-readable references from locus and variant evidence. SHA-256 remains the
+human-readable references from overlap, locus, and variant evidence. SHA-256 remains the
 scientific content identity. Filename semantics are never used as placement or
 merge keys.
+
+## Pairwise overlap admission
+
+`overlaps[]` is the **pre-consensus reconciliation layer** learned from Tracy's
+explicit minimum-overlap and minimum-match admission checks, adapted to Signal's
+N-read reference-coordinate model.
+
+Signal evaluates every unordered pair only after both reads have independently
+completed placement. A pair is present when the two selected alignments share at
+least one reference coordinate. Non-overlapping reads have no edge; this does not
+reject either read and no canonical F/R partner is required.
+
+Each overlap record contains:
+
+- `left` / `right`: reviewer-facing read names from the SHA-sorted registry;
+- `shared_positions`: reference coordinates covered by both reads;
+- `comparable_bases`: shared coordinates where both aligned query symbols are
+  canonical A/C/G/T;
+- `agreements` / `conflicts`: equal versus unequal canonical base/base
+  observations;
+- optional `agreement = agreements / comparable_bases`;
+- `eligible`: whether the edge meets the configured pre-consensus gates;
+- `exclusion_reasons`: exact failed rules.
+
+The configured defaults are Tracy-derived:
+
+~~~text
+minimum_comparable_bases = 25
+minimum_overlap_agreement = 0.50
+~~~
+
+Signal intentionally does **not** copy a base-vs-gap scalar match rule.
+Deletions and unresolved symbols remain part of shared coverage but do not enter
+the nucleotide agreement denominator. Insertions and deletions remain explicit in
+the existing locus/normalized-variant evidence so future consensus can treat gap
+support as a separate evidence problem.
+
+An eligible edge has no exclusion reasons. An ineligible edge records
+`comparable_bases_below_minimum`, `agreement_below_minimum`, or both. This decision
+does not erase a read, mutate placement, or change read-level variant eligibility.
 
 ## Sparse locus differences
 
@@ -134,14 +174,16 @@ normalized observation remains evidence, but it is not presented as a clean SNV.
 the configured gate still operates on the internal relative-quality method even
 though the public numeric field is simply `quality`.
 
-## Why both locus_differences and variants exist
+## Why overlaps, locus_differences, and variants are separate
 
-The two arrays intentionally preserve separate evidence layers:
+The three arrays intentionally preserve different evidence layers:
 
 ```text
-selected alignment
+selected per-read alignments
       ↓
-locus_differences[]     what each read observed at reference coordinates
+overlaps[]              which mapped read pairs are eligible for later reconciliation
+      ↓
+locus_differences[]     what each read observed at differential reference coordinates
       ↓
 normalization/filtering
       ↓
@@ -153,21 +195,23 @@ including reference-vs-alternate or unresolved evidence. `variants[]` is the
 reviewer-facing normalized biological call layer and is where per-read peak
 evidence belongs.
 
-Neither array is a consensus result.
+None of these arrays is a consensus result.
 
 ## Contract boundary
 
-v2 is intentionally sparse and difference-focused. It does not serialize
-per-base evidence for loci where every covering read agrees with the reference.
-The scientific pipeline still processes each read independently before sample
-aggregation.
+v4 remains compact and difference-focused. It does not serialize per-base
+evidence for loci where every covering read agrees with the reference. Pairwise
+overlap records summarize only admission-relevant counts rather than dense
+per-coordinate comparisons. The scientific pipeline still processes each read
+independently before sample aggregation.
 
-The current implementation emits v3 only. There is no v1/v2 alias or compatibility
-output.
+The current implementation emits v4 only. Earlier sample-evidence contracts are
+not emitted as aliases or compatibility output.
 
 ## Non-goals
 
-The v2 contract contains no consensus sequence, sample-level adjudicated variant
+The v4 contract contains no consensus sequence, sample-level adjudicated variant
 verdict, majority-vote result, genotype, heteroplasmy estimate, haplogroup
 interpretation, F/R pair object, primer/HV placement rule, or filename-derived
-placement.
+placement. `overlaps[]` is an evidence/admission graph, not a pair-first merge
+structure.

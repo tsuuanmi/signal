@@ -24,7 +24,7 @@ single documented default path.
 - `load() -> Result<Config>`: resolves `SIGNAL_CONFIG` (or the default path),
   parses strict TOML, and validates.
 - `Config`, `ReferenceConfig`, `BasecallingConfig`, `SignalProcessingConfig`,
-  `QualityControlConfig`, `AlignmentConfig`, `VariantCallingConfig`: typed validated records.
+  `QualityControlConfig`, `AlignmentConfig`, `SampleReconciliationConfig`, `VariantCallingConfig`: typed validated records.
 - Re-exported compiled caps: `MAX_AB1_BYTES`, `MAX_REFERENCE_BYTES`,
   `MAX_REFERENCE_LENGTH`, and `MAX_ALIGNMENT_CELLS`; defaults also owns internal
   config-source and indel caps.
@@ -48,7 +48,7 @@ structs.
 
 ## Requirements and decisions
 
-ADR-0002, ADR-0004, ADR-0007; `SRS-CFG-001` through `SRS-CFG-006`,
+ADR-0002, ADR-0004, ADR-0007; `SRS-CFG-001` through `SRS-CFG-007`,
 `SRS-ALN-003`, and `SRS-VAR-002`.
 
 ## Tests

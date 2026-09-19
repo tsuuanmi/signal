@@ -6,7 +6,7 @@ Defines the sample-level scientific evidence aggregation boundary.
 
 ## Responsibilities
 
-Expose deterministic aggregation of independently produced `ReadObservation[]` into compact `SampleEvidence` while keeping validation/order, locus-difference extraction, and variant aggregation in focused child modules.
+Expose deterministic aggregation of independently produced `ReadObservation[]` into compact `SampleEvidence` while keeping validation/order, overlap admission, locus-difference extraction, and variant aggregation in focused child modules.
 
 ## Non-responsibilities
 

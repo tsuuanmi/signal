@@ -29,7 +29,7 @@ invalid file.
 - A missing or unreadable file returns `Error::Read`.
 - Non-UTF-8 bytes return `Error::Config`.
 - Invalid TOML returns `Error::ConfigParse`.
-- Validation failures (unknown keys, unsupported schema version, missing signal
+- Validation failures (unknown keys, unsupported schema version, missing signal/reconciliation
   settings, out-of-range values) return `Error::Config`.
 - The effective config records its source path and SHA-256 for reproducibility.
 

@@ -95,4 +95,4 @@ placement, or canonical F/R pairing.
 
 ## Follow-up
 
-ADR-0027 advances the current sample contract to `signal.sample_evidence/v3` solely to add the closed-enum `mixed_supporting_signal` eligibility reason. The compact read registry and sparse-difference architecture defined here remain authoritative.
+ADR-0027 later advanced the sample contract to `signal.sample_evidence/v3` solely to add the closed-enum `mixed_supporting_signal` eligibility reason. ADR-0030 subsequently advances the current contract to `signal.sample_evidence/v4` by adding pairwise overlap/admission evidence. The compact read registry and sparse-difference architecture defined here remain authoritative.

@@ -5,6 +5,28 @@ use serde::Serialize;
 use crate::model::alignment::{Orientation, ReferenceSegment};
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
+/// Why a mapped read pair is not admitted as reliable overlap evidence.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub(crate) enum OverlapExclusionReason {
+    ComparableBasesBelowMinimum,
+    AgreementBelowMinimum,
+}
+
+/// Pairwise overlap evidence discovered after independent reference placement.
+#[derive(Debug, Clone)]
+pub(crate) struct ReadOverlapEvidence {
+    pub(crate) left_read_index: usize,
+    pub(crate) right_read_index: usize,
+    pub(crate) shared_positions: usize,
+    pub(crate) comparable_bases: usize,
+    pub(crate) agreements: usize,
+    pub(crate) conflicts: usize,
+    pub(crate) agreement: Option<f64>,
+    pub(crate) eligible: bool,
+    pub(crate) exclusion_reasons: Vec<OverlapExclusionReason>,
+}
+
 /// How one read observes a locus retained because at least one read differs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -86,6 +108,7 @@ pub(crate) struct SampleEvidence {
     pub(crate) reference_sha256: String,
     pub(crate) configuration_sha256: String,
     pub(crate) reads: Vec<SampleReadEvidence>,
+    pub(crate) overlaps: Vec<ReadOverlapEvidence>,
     pub(crate) locus_differences: Vec<LocusDifferenceEvidence>,
     pub(crate) variants: Vec<VariantEvidence>,
 }

@@ -289,14 +289,16 @@ The read has already located itself at this boundary. Its orientation and covere
 
 `signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and sorts reads by SHA-256 independently of CLI trace order. The top-level read registry retains reviewer-facing filename stem, stable SHA-256, and the concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state).
 
-Sparse locus aggregation runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
+Before locus aggregation, Signal builds a deterministic pairwise overlap graph from the SHA-sorted read registry. Every unordered pair is compared only at shared selected-alignment reference coordinates. `shared_positions` counts all shared coordinates, while the agreement denominator includes only positions where both query observations are canonical A/C/G/T. Equal canonical observations are agreements; unequal canonical observations are conflicts. Unresolved symbols and deletions do not enter that nucleotide denominator, so gap/indel evidence remains separate. A pair is eligible for later consensus reconciliation only when the comparable-base count reaches `sample_reconciliation.minimum_comparable_bases` and the agreement fraction reaches `sample_reconciliation.minimum_overlap_agreement`. Non-overlapping reads produce no pair edge and remain valid sample evidence.
 
-Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v3.
+Sparse locus aggregation then runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
+
+Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or sample-level conflict verdict is produced in v4; overlap eligibility is pre-consensus evidence only.
 
 ## Output
 
 `analyze` publishes `signal.analysis/v6` at `results/<trace-stem>.json`.
-`sample` publishes `signal.sample_evidence/v3` at
+`sample` publishes `signal.sample_evidence/v4` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
@@ -307,7 +309,7 @@ summary, normalized variants, and reviewer-facing reference-oriented call eviden
 (`base`, four co-located A/C/G/T `peaks`, and `quality`). It omits filenames,
 full sequences, individual rolling windows, gapped rows, operation runs, method
 constants, call indexes/PLOC coordinates, selected-peak positions/sources, vendor
-data, and redundant fields. The strict configuration remains schema version 4. No compatibility result is emitted. The document is
+data, and redundant fields. The strict configuration remains schema version 5. No compatibility result is emitted. The document is
 published atomically to `results/<trace-stem>.json` without overwriting. Operational records are appended
 separately to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`) and are not part
 of deterministic JSON. One run-correlated record summarizes input/decode,

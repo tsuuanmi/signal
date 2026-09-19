@@ -6,6 +6,8 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace strict configuration schema version 4 with version 5, requiring Tracy-derived sample-reconciliation overlap/admission thresholds.
+- Replace `signal.sample_evidence/v3` with `signal.sample_evidence/v4`, adding deterministic pairwise overlap/admission evidence for independently placed reads without retaining v3 compatibility output.
 - Replace `signal.sample_evidence/v2` with `signal.sample_evidence/v3` so observed SNV support can expose the new closed-enum exclusion reason `mixed_supporting_signal`; no v2 compatibility output is retained.
 - Replace `signal.analysis/v5` with `signal.analysis/v6`: variant-associated calls now expose only reference-oriented `base`, co-located A/C/G/T `peaks`, and uncalibrated `quality`; original call index, mapped call position, PLOC, trace-strand symbols, and maximum-peak-only summaries are removed without compatibility output.
 - Replace `signal.sample_evidence/v1` with compact `signal.sample_evidence/v2`: factor read name/SHA/orientation/coverage into one SHA-sorted read registry, replace dense `loci[]` with sparse `locus_differences[]`, and use unique reviewer-facing read names in public evidence without a v1 compatibility output.
@@ -19,6 +21,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Tracy-derived pre-consensus sample overlap admission: every independently placed read pair with shared reference coverage records canonical-base overlap/agreement, deterministic eligibility, and exact exclusion reasons without pair-first merging or gap-quality synthesis.
 - Required Rust source-policy CI gate rejects deprecated compatibility APIs, legacy/backward-compatibility feature/declaration scaffolding, and diagnostic suppressions that could hide dead/unused/deprecated production code.
 - Fixed-point profile-aware semi-global Gotoh placement (`signal.profile_gotoh/v1`) using post-trim basecall-independent A/C/G/T evidence profiles, explicit 1024-unit quantization, reverse profile complementation, and score-only orientation ties without changing public JSON schemas.
 - Internal basecall-independent `LocusEvidence` and normalized `EvidenceProfile` derived directly from analyzed A/C/G/T channel signal at deterministic refined PLOC events; zero-signal loci have no synthetic fallback profile and public JSON contracts are unchanged.
