@@ -278,10 +278,7 @@ mod tests {
         scoring.match_score = i32::MAX;
         let query = "AA";
         let alignments = align(query, &profiles(query), "AA", &scoring, None)?;
-        assert_eq!(
-            alignments[0].score,
-            2 * i64::from(i32::MAX) * SCORE_SCALE
-        );
+        assert_eq!(alignments[0].score, 2 * i64::from(i32::MAX) * SCORE_SCALE);
         Ok(())
     }
 }
