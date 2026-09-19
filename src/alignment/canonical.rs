@@ -102,7 +102,11 @@ fn shift_deletion(
     if first.reference_base != following.reference_base {
         return None;
     }
-    if crosses_circular_seam(first.reference_index?, following.reference_index?, modulo_length) {
+    if crosses_circular_seam(
+        first.reference_index?,
+        following.reference_index?,
+        modulo_length,
+    ) {
         return None;
     }
 
@@ -169,20 +173,16 @@ fn score(
         }
 
         previous_gap = None;
-        let query_index = column.query_index.ok_or_else(|| {
-            Error::Alignment("aligned canonical column lacks query index".into())
-        })?;
+        let query_index = column
+            .query_index
+            .ok_or_else(|| Error::Alignment("aligned canonical column lacks query index".into()))?;
         let profile = profiles.get(query_index).copied().ok_or_else(|| {
             Error::Alignment(format!(
                 "canonical alignment query index {query_index} is out of profile bounds"
             ))
         })?;
         total = total
-            .checked_add(substitution(
-                profile,
-                column.reference_base as u8,
-                config,
-            ))
+            .checked_add(substitution(profile, column.reference_base as u8, config))
             .ok_or_else(|| Error::Alignment("canonical alignment score overflow".into()))?;
     }
 
@@ -478,7 +478,10 @@ mod tests {
         assert_eq!(alignment.metrics.mismatches, before.mismatches);
         assert_eq!(alignment.metrics.gap_opens, before.gap_opens);
         assert_eq!(alignment.metrics.callable_columns, before.callable_columns);
-        assert_eq!(alignment.metrics.callable_identity, before.callable_identity);
+        assert_eq!(
+            alignment.metrics.callable_identity,
+            before.callable_identity
+        );
         assert_eq!(
             alignment.metrics.unresolved_query_bases,
             before.unresolved_query_bases
