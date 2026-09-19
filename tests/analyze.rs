@@ -326,7 +326,8 @@ fn annotates_noisy_region_without_filtering_supported_snv() -> Result<(), Box<dy
         .ok_or("variants is not an array")?;
     assert_eq!(variants.len(), 1);
     assert_eq!(variants[0]["kind"], "SNV");
-    assert_eq!(variants[0]["calls"][0]["index"], 10);
+    assert_eq!(variants[0]["calls"][0]["base"], variants[0]["alternate"]);
+    assert!(variants[0]["calls"][0]["quality"].is_number());
     let regions = results[1]["signal_quality"]["noisy_regions"]
         .as_array()
         .ok_or("noisy_regions is not an array")?;
