@@ -33,7 +33,7 @@ A successful core CLI invocation creates the command-specific basecall, analysis
 ## Acceptance
 
 - canonical ABIF records are bounds-checked and inconsistent arrays are rejected;
-- compact v5 JSON exposes software and input/reference/configuration hashes, call count/trim, merged noisy regions, alignment summary, normalized variants with concise mapped supporting evidence, and warning counts; effective parameters remain in strict configuration schema v4;
+- compact analysis v6 JSON exposes input/reference/configuration hashes, call count/trim, merged noisy regions, alignment summary, normalized variants with reviewer-facing reference-oriented peak/quality evidence, and warning counts; effective parameters remain in strict configuration schema v4;
 - internal coordinates and external 1-based variants are explicit;
 - circular rCRS origin-spanning reads are representable;
 - analysis v6 omits filenames, full sequences/windows/gapped rows, method constants, full peaks, and vendor data; basecalls v1 includes full sequences but omits reference/alignment/variant evidence; sample evidence v3 factors read identity/orientation/coverage once, emits only differential loci plus normalized variant support, and omits consensus/interpretation; no current contract emits compatibility output, genotype, heteroplasmy fraction, clinical meaning, VCF/BCF, or hidden regional correction;
