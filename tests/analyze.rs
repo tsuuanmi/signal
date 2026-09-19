@@ -54,7 +54,7 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     let second_bytes = fs::read(analysis_output_path(second.path(), &second_trace))?;
     assert_eq!(first_bytes, second_bytes);
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.analysis/v5");
+    assert_eq!(value["schema_version"], "signal.analysis/v6");
     assert_object_keys(
         &value,
         &[
@@ -265,25 +265,12 @@ fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>
     assert_eq!(variant["kind"], "SNV");
     assert_eq!(variant["position"], 15);
     let call = &variant["calls"][0];
-    assert_object_keys(
-        call,
-        &[
-            "role",
-            "index",
-            "position",
-            "ploc",
-            "primary",
-            "ambiguity",
-            "maximum_peak_height",
-            "relative_quality",
-        ],
-    );
+    assert_call_evidence(call)?;
     assert_eq!(call["role"], "supporting");
-    assert_eq!(call["index"], 10);
-    assert_eq!(call["position"], 15);
-    assert_eq!(call["ploc"], 42);
-    assert_eq!(call["maximum_peak_height"], 1000);
-    assert!(call["relative_quality"].is_number());
+    assert_eq!(call["base"], variant["alternate"]);
+    assert!(call["quality"].is_number());
+    assert!(!call.as_object().ok_or("call is not an object")?.contains_key("index"));
+    assert!(!call.as_object().ok_or("call is not an object")?.contains_key("ploc"));
     Ok(())
 }
 
@@ -446,11 +433,9 @@ fn maps_reverse_snv_to_original_call_and_ploc() -> Result<(), Box<dyn std::error
     assert_eq!(variant["reference"], "G");
     assert_eq!(variant["alternate"], "T");
     let call = &variant["calls"][0];
-    assert_eq!(call["index"], 17);
-    assert_eq!(call["position"], 15);
-    assert_eq!(call["ploc"], 70);
-    assert_eq!(call["primary"], "A");
-    assert_eq!(call["maximum_peak_height"], 1000);
+    assert_call_evidence(call)?;
+    assert_eq!(call["base"], "T");
+    assert_eq!(call["peaks"]["T"], 1000);
     Ok(())
 }
 
@@ -478,22 +463,11 @@ fn reports_insertion_support_and_flanks() -> Result<(), Box<dyn std::error::Erro
     let calls = variant["calls"].as_array().ok_or("calls is not an array")?;
     assert_eq!(calls.len(), 3);
     assert_eq!(calls[0]["role"], "supporting");
-    assert_eq!(calls[0]["index"], 12);
-    assert!(calls[0].get("position").is_none());
-    assert_eq!(calls[0]["ploc"], 50);
-    assert_eq!(calls[0]["maximum_peak_height"], 1000);
-    assert!(calls[0]["relative_quality"].is_number());
+    assert_eq!(calls[0]["base"], "T");
     assert_eq!(calls[1]["role"], "flanking");
-    assert_eq!(calls[1]["index"], 11);
-    assert_eq!(calls[1]["position"], 16);
-    assert_eq!(calls[1]["ploc"], 46);
     assert_eq!(calls[2]["role"], "flanking");
-    assert_eq!(calls[2]["index"], 13);
-    assert_eq!(calls[2]["position"], 17);
-    assert_eq!(calls[2]["ploc"], 54);
-    for flank in &calls[1..] {
-        assert!(flank.get("maximum_peak_height").is_none());
-        assert!(flank.get("relative_quality").is_none());
+    for call in calls {
+        assert_call_evidence(call)?;
     }
     Ok(())
 }
@@ -543,15 +517,9 @@ fn reports_deletion_with_flanks_only() -> Result<(), Box<dyn std::error::Error>>
     let calls = variant["calls"].as_array().ok_or("calls is not an array")?;
     assert_eq!(calls.len(), 2);
     assert!(calls.iter().all(|item| item["role"] == "flanking"));
-    assert_eq!(calls[0]["index"], 10);
-    assert_eq!(calls[0]["position"], 15);
-    assert_eq!(calls[0]["ploc"], 42);
-    assert_eq!(calls[1]["index"], 11);
-    assert_eq!(calls[1]["position"], 17);
-    assert_eq!(calls[1]["ploc"], 46);
-    assert!(calls.iter().all(|call| {
-        call.get("maximum_peak_height").is_none() && call.get("relative_quality").is_none()
-    }));
+    for call in calls {
+        assert_call_evidence(call)?;
+    }
     Ok(())
 }
 
@@ -603,9 +571,8 @@ fn maps_circular_origin_snv_to_original_call_and_ploc() -> Result<(), Box<dyn st
     assert_eq!(variant["reference"], "G");
     assert_eq!(variant["alternate"], "A");
     let call = &variant["calls"][0];
-    assert_eq!(call["index"], 12);
-    assert_eq!(call["position"], 3);
-    assert_eq!(call["ploc"], 50);
+    assert_call_evidence(call)?;
+    assert_eq!(call["base"], "A");
     Ok(())
 }
 
@@ -626,11 +593,9 @@ fn accepts_iupac_vendor_calls_and_char_pcon() -> Result<(), Box<dyn std::error::
     run(&trace, &reference, &config, directory.path())?.success();
     let value = read_result(directory.path(), &trace)?;
     let call = &value["variants"][0]["calls"][0];
-    assert_eq!(call["index"], 5);
-    assert_eq!(call["position"], 10);
-    assert_eq!(call["ploc"], 22);
-    assert!(call["relative_quality"].is_number());
-    assert!(call.get("quality").is_none());
+    assert_call_evidence(call)?;
+    assert!(call["quality"].is_number());
+    assert!(call.get("relative_quality").is_none());
     Ok(())
 }
 
@@ -707,6 +672,13 @@ fn reverse_complement(sequence: &str) -> String {
             _ => 'N',
         })
         .collect()
+}
+
+fn assert_call_evidence(call: &Value) -> Result<(), Box<dyn std::error::Error>> {
+    assert_object_keys(call, &["role", "base", "peaks", "quality"]);
+    assert_object_keys(&call["peaks"], &["A", "C", "G", "T"]);
+    assert!(call["quality"].is_number());
+    Ok(())
 }
 
 fn run(
