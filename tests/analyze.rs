@@ -285,7 +285,8 @@ fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>
 }
 
 #[test]
-fn excludes_mixed_supporting_snv_without_erasing_the_observation() -> Result<(), Box<dyn std::error::Error>> {
+fn excludes_mixed_supporting_snv_without_erasing_the_observation()
+-> Result<(), Box<dyn std::error::Error>> {
     let directory = tempdir()?;
     let trace = directory.path().join("trace.ab1");
     let reference = directory.path().join("reference.fa");
