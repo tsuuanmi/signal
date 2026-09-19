@@ -4,6 +4,9 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 
 - [backlog.md](backlog.md): research and ROI backlog previously kept in `docs/TODO.md`.
 - [improvement-plan.md](improvement-plan.md): detailed exploratory mtDNA improvement plan previously kept in `docs/UPDATE.md`.
+- [validation-corpus.md](validation-corpus.md): corpus strata, truth/provenance, replication, privacy, and anti-leakage design for empirical validation.
+- [threshold-research.md](threshold-research.md): LoB/LoD-style profile-geometry threshold research protocol and promotion gates.
+- [validation-measurements.md](validation-measurements.md): deterministic per-locus measurement export used by local threshold analysis.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.
 
