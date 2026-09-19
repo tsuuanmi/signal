@@ -7,8 +7,7 @@ Provides the observation-only signal-processing stage.
 ## Responsibilities
 
 - Accept the immutable decoded chromatogram, signal-derived calls, and strict signal-processing configuration.
-- Sequence rolling feature calculation, per-call local metrics, and candidate-noisy
-  region merging.
+- Sequence rolling feature calculation, basecall-independent locus-evidence extraction, and candidate-noisy region merging.
 - Return one typed `SignalAnalysis` without mutating calls or channels.
 
 ## Non-responsibilities
@@ -23,7 +22,7 @@ file I/O.
 
 ## Dependencies
 
-- `call_metrics`, `features`, `regions`, and `statistics` for algorithms.
+- `locus_evidence`, `features`, `regions`, and `statistics` for algorithms.
 - `config`, `error`, and `model` for boundary types.
 
 ## Status
