@@ -37,6 +37,33 @@ pub(super) fn round_metric(value: f64) -> f64 {
     (value * OUTPUT_PRECISION).round() / OUTPUT_PRECISION
 }
 
+pub(super) fn median_usize(values: &[usize]) -> Result<f64> {
+    if values.is_empty() {
+        return Err(Error::SignalProcessing(
+            "cannot calculate a median from empty integer values".into(),
+        ));
+    }
+    let mut sorted = values.to_vec();
+    sorted.sort_unstable();
+    let middle = sorted.len() / 2;
+    Ok(if sorted.len() % 2 == 0 {
+        (sorted[middle - 1] as f64 + sorted[middle] as f64) / 2.0
+    } else {
+        sorted[middle] as f64
+    })
+}
+
+pub(super) fn median_f64(values: &[f64]) -> Result<f64> {
+    if values.is_empty() || values.iter().any(|value| !value.is_finite()) {
+        return Err(Error::SignalProcessing(
+            "floating-point median requires finite non-empty values".into(),
+        ));
+    }
+    let mut sorted = values.to_vec();
+    sorted.sort_by(f64::total_cmp);
+    Ok(median_sorted_f64(&sorted))
+}
+
 fn median_i32(values: &[i32]) -> Result<f64> {
     if values.is_empty() {
         return Err(Error::SignalProcessing(
@@ -95,6 +122,16 @@ mod tests {
     fn median_handles_even_and_odd_sample_counts() -> Result<()> {
         assert_eq!(median_i32(&[4, 1, 3])?, 3.0);
         assert_eq!(median_i32(&[4, 1, 3, 2])?, 2.5);
+        Ok(())
+    }
+
+    #[test]
+    fn shared_medians_handle_integer_and_float_inputs() -> Result<()> {
+        assert_eq!(median_usize(&[2, 8, 4])?, 4.0);
+        assert_eq!(median_usize(&[2, 8, 4, 6])?, 5.0);
+        assert_eq!(median_f64(&[1.0, 9.0, 3.0])?, 3.0);
+        assert_eq!(median_f64(&[1.0, 9.0, 3.0, 5.0])?, 4.0);
+        assert!(median_f64(&[f64::NAN]).is_err());
         Ok(())
     }
 

@@ -41,7 +41,7 @@ fn writes_deterministic_reference_free_json() -> Result<(), Box<dyn std::error::
     ))?;
     assert_eq!(first_bytes, second_bytes);
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.basecalls/v1");
+    assert_eq!(value["schema_version"], "signal.basecalls/v2");
     assert_object_keys(
         &value,
         &[
@@ -63,6 +63,8 @@ fn writes_deterministic_reference_free_json() -> Result<(), Box<dyn std::error::
             "unresolved_primary_calls",
             "multi_channel_unresolved_calls",
             "vendor_disagreements",
+            "ploc_vendor_length_mismatches",
+            "clipped_channel_samples",
         ],
     );
     assert_eq!(value["read"]["call_count"], QUERY.len());
@@ -72,6 +74,22 @@ fn writes_deterministic_reference_free_json() -> Result<(), Box<dyn std::error::
     assert_eq!(value["read"]["trim"]["start"], 0);
     assert_eq!(value["read"]["trim"]["end"], QUERY.len());
     assert!(value["signal_quality"]["noisy_regions"].is_array());
+    assert_eq!(
+        value["signal_quality"]["integrity"]["ploc_count"],
+        QUERY.len()
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_primary_count"],
+        QUERY.len()
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_quality_count"],
+        QUERY.len()
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["clipped_channel_samples"],
+        0
+    );
     assert!(value.get("reference").is_none());
     assert!(value.get("alignment").is_none());
     assert!(value.get("variants").is_none());

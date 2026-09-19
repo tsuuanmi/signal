@@ -2,10 +2,10 @@
 
 `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>`
 writes one deterministic `results/<sample-id>.sample.json` document identified as
-`signal.sample_evidence/v4`. The authoritative schema is
-[`schemas/sample-evidence-v4.schema.json`](schemas/sample-evidence-v4.schema.json)
+`signal.sample_evidence/v5`. The authoritative schema is
+[`schemas/sample-evidence-v5.schema.json`](schemas/sample-evidence-v5.schema.json)
 and the example is
-[`examples/sample-evidence-v4.example.json`](examples/sample-evidence-v4.example.json).
+[`examples/sample-evidence-v5.example.json`](examples/sample-evidence-v5.example.json).
 
 The sample identifier and read names are reviewer-facing provenance. They never
 constrain scientific placement, orientation, overlap discovery, or variant
@@ -21,6 +21,10 @@ Each record contains:
 - `name`: the AB1 filename stem, for example
   `D11_20260404_LN_26_AB0442_HV1F_11`;
 - `sha256`: stable content identity;
+- `integrity`: the same concise PLOC/vendor cardinality, PLOC-spacing,
+  exact-clipping, and event-signal-scale observations retained by the one-read
+  pipeline; this evidence remains read-local and does not by itself admit/reject
+  a read;
 - `alignment`: the evidence-derived orientation, callable-base count and
   identity, unresolved-base count, gap-open count, mapped reference segments, and
   origin-wrap state.
@@ -199,18 +203,18 @@ None of these arrays is a consensus result.
 
 ## Contract boundary
 
-v4 remains compact and difference-focused. It does not serialize per-base
+v5 remains compact and difference-focused. It does not serialize per-base
 evidence for loci where every covering read agrees with the reference. Pairwise
 overlap records summarize only admission-relevant counts rather than dense
 per-coordinate comparisons. The scientific pipeline still processes each read
 independently before sample aggregation.
 
-The current implementation emits v4 only. Earlier sample-evidence contracts are
+The current implementation emits v5 only. Earlier sample-evidence contracts are
 not emitted as aliases or compatibility output.
 
 ## Non-goals
 
-The v4 contract contains no consensus sequence, sample-level adjudicated variant
+The v5 contract contains no consensus sequence, sample-level adjudicated variant
 verdict, majority-vote result, genotype, heteroplasmy estimate, haplogroup
 interpretation, F/R pair object, primer/HV placement rule, or filename-derived
 placement. `overlaps[]` is an evidence/admission graph, not a pair-first merge

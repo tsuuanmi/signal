@@ -112,6 +112,7 @@ The repository already contains or explores functionality beyond this baseline, 
 - insertion/deletion extraction and normalization;
 - batch orchestration;
 - independently placed multi-read sample evidence with Tracy-derived pairwise overlap/admission, sparse differential loci, and normalized variant support;
+- observation-only trace-integrity evidence for PLOC/vendor cardinality, PLOC spacing, exact clipping, and event-signal scale;
 - richer per-call evidence.
 
 These capabilities are not treated as disposable experiments merely because they are beyond the simplest validation path. Where their current behavior is coherent and tested, future work builds on them.

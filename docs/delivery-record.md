@@ -12,11 +12,11 @@ Deliver one auditable AB1-to-primary-difference vertical slice in Rust. The impl
 4. Bounded affine-gap semi-global alignment, deterministic traceback, strand selection, and circular reference projection.
 5. Primary SNV/small-indel extraction, linear/circular normalization, typed JSON assembly, and atomic no-overwrite output.
 6. Observation-only rolling signal analysis and merged candidate-noisy regions.
-7. Compact `signal.analysis/v6` projection retaining provenance, read/trim, merged noisy-region, alignment, normalized variants, and reference-oriented base/peak/quality evidence without implementation-coordinate noise.
-8. Reference-free `signal basecall` using the same validated decode/re-calling/signal/QC path and publishing one typed `signal.basecalls/v1` JSON result without reference, alignment, or variants.
+7. Compact `signal.analysis/v7` projection retaining provenance, read/trim, trace-integrity and merged noisy-region evidence, alignment, normalized variants, and reference-oriented base/peak/quality evidence without implementation-coordinate noise.
+8. Reference-free `signal basecall` using the same validated decode/re-calling/signal/QC path and publishing one typed `signal.basecalls/v2` JSON result with trace-integrity evidence but without reference, alignment, or variants.
 9. Clean external batch reruns with complete preflight/build before selected-only
    destructive cleanup.
-10. Multi-read `signal sample` analysis over independently placed reads, publishing compact `signal.sample_evidence/v4` with a deterministic read registry, Tracy-derived pairwise overlap/admission evidence, sparse differential loci, and normalized variant support.
+10. Multi-read `signal sample` analysis over independently placed reads, publishing compact `signal.sample_evidence/v5` with per-read trace integrity, a deterministic read registry, Tracy-derived pairwise overlap/admission evidence, sparse differential loci, and normalized variant support.
 11. Synthetic malformed/unit/end-to-end tests, deterministic output checks, and
    CI contract gates.
 

@@ -6,14 +6,14 @@
 
 - exact `src/**/*.rs` ↔ `docs/src/**/*.md` mirror;
 - strict TOML parse plus range/relational checks;
-- Draft 2020-12 analysis-v6, basecalls-v1, and sample-evidence-v4 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
+- Draft 2020-12 analysis-v7, basecalls-v2, and sample-evidence-v5 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
 - Markdown links, rustdoc, rCRS source checksum/length, `.env` policy;
 - no repository backups or accidental patient/sample fixtures.
 
 ### Unit tests
 
 - checked endian/slice/offset arithmetic and ABIF directory/tag layouts;
-- FWO permutation, channel cardinality, PLOC ordering/bounds, vendor lengths;
+- FWO permutation, channel cardinality, PLOC ordering/bounds, non-fatal vendor/PLOC cardinality mismatch evidence, PLOC spacing summaries, exact signed-16-bit clipping counts, and event-signal ratio summaries;
 - FASTA records/symbols/length;
 - midpoint windows, plateau peaks, PLOC fallback, ties, ambiguity ratios/IUPAC;
 - shared PLOC locus geometry; basecall-independent event refinement; zero-signal profile absence; threshold-independent A/C/G/T profile mass; signal baseline/first-difference MAD, noise floor, full rolling windows, thresholds, and merged regions;
@@ -25,7 +25,7 @@
 
 ### Integration tests
 
-Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v1 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v6 JSON, internal rolling-window behavior and merged noisy-region projection, profile-aware forward/reverse placement, reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular profile alignment segments, and public primary-sequence alignment metrics/call quality, strict config v5, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v4 overlap/schema rejection cases plus batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
+Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v2 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v7 JSON, internal rolling-window behavior and merged noisy-region projection, profile-aware forward/reverse placement, reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular profile alignment segments, and public primary-sequence alignment metrics/call quality, strict config v5, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v5 integrity/overlap/schema rejection cases plus batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
 
 ### Differential and real-trace validation
 

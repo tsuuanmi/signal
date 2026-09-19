@@ -4,7 +4,7 @@ This is the compact prioritization layer. Detailed rationale lives in the focuse
 
 This ranking is relative to Signal's current scope: deterministic Sanger AB1 processing for short references, with basecalling, alignment, and conservative variant reporting already implemented.
 
-**Promotion note (2026-09-19):** rank 1 is production behavior via ADR-0027 / `signal.primary_difference/v4`, rank 3 is formalized via ADR-0028 as basecall-independent `LocusEvidence -> EvidenceProfile`, rank 4 is promoted via ADR-0029 as fixed-point profile-aware Gotoh placement, and the rank-5 reconciliation foundation is promoted through ADR-0023 through ADR-0025 plus ADR-0030's explicit overlap/admission graph. The research rationale remains here; root SRS/ADR/source are authoritative for current behavior.
+**Promotion note (2026-09-19):** rank 1 is production behavior via ADR-0027 / `signal.primary_difference/v4`; rank 2's PLOC/vendor cardinality, PLOC-spacing, exact clipping, and event-signal-scale foundation is promoted via ADR-0031 while richer artifact classification remains research; rank 3 is formalized via ADR-0028 as basecall-independent `LocusEvidence -> EvidenceProfile`; rank 4 is promoted via ADR-0029 as fixed-point profile-aware Gotoh placement; and the rank-5 reconciliation foundation is promoted through ADR-0023 through ADR-0025 plus ADR-0030's explicit overlap/admission graph. The research rationale remains here; root SRS/ADR/source are authoritative for current behavior.
 
 ROI combines expected biological correctness/review value, reuse of existing Signal evidence, implementation and validation cost, architectural disruption, and risk of unsupported biological claims.
 
@@ -13,7 +13,7 @@ ROI combines expected biological correctness/review value, reuse of existing Sig
 | Rank | Tracy lesson / opportunity | ROI | Signal interpretation |
 |---|---|---|---|
 | 1 | Use secondary/mixed signal in simple-variant eligibility | Very high | Prevent a strongest-base difference from being presented as an ordinary clean SNV when the same locus has meaningful competing signal. |
-| 2 | PLOC completeness + artifact-resilience validation | Very high | Protect the evidence foundation before richer profile methods amplify upstream mistakes; motivated by real Tracy failures on incomplete peak locations and high-amplitude artifacts. |
+| 2 | PLOC completeness + artifact-resilience validation | Very high | Foundation promoted via ADR-0031: preserve vendor/PLOC cardinality mismatch, PLOC spacing, exact clipping, and event-signal imbalance as evidence; broad-peak/baseline/neighbor artifact classification remains research. |
 | 3 | Evidence profile independent of thresholded basecall membership | Very high | Promoted via ADR-0028: preserve measured A/C/G/T evidence rather than rebuilding a profile only from channels already admitted by the caller. |
 | 4 | Trace-profile-aware alignment | Very high | Promoted via ADR-0029: reuse the existing Gotoh engine with fixed-point evidence-aware substitution scoring and explicit numeric/tie semantics. |
 | 5 | Forward/reverse trace reconciliation | High | Promoted as generic N-read reference-coordinate evidence plus ADR-0030 overlap admission; F/R remains a validation case rather than a pair-only domain. |

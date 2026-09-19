@@ -297,13 +297,13 @@ Canonical normalized variant observations are separately grouped by `(position, 
 
 ## Output
 
-`analyze` publishes `signal.analysis/v6` at `results/<trace-stem>.json`.
-`sample` publishes `signal.sample_evidence/v4` at
+`analyze` publishes `signal.analysis/v7` at `results/<trace-stem>.json`.
+`sample` publishes `signal.sample_evidence/v5` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
 
-The completed `signal.analysis/v6` result contains compact provenance, read count
+The completed `signal.analysis/v7` result contains compact provenance, read count
 and trim bounds, merged candidate-noisy regions, the selected post-trim alignment
 summary, normalized variants, and reviewer-facing reference-oriented call evidence
 (`base`, four co-located A/C/G/T `peaks`, and `quality`). It omits filenames,
@@ -320,8 +320,8 @@ categories; ERROR records identify the active failed stage. Records omit complet
 sequences, alleles, region contents, per-call peaks, alignment strings, and JSON
 bodies. The JSON shape is defined in
 [`json-output.md`](json-output.md), validated by
-[`schemas/analysis-v6.schema.json`](schemas/analysis-v6.schema.json), and shown in
-[`examples/analysis-v6.example.json`](examples/analysis-v6.example.json).
+[`schemas/analysis-v7.schema.json`](schemas/analysis-v7.schema.json), and shown in
+[`examples/analysis-v7.example.json`](examples/analysis-v7.example.json).
 
 ## Biological limitations
 

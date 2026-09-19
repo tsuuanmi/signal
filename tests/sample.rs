@@ -50,7 +50,7 @@ fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::
     assert_eq!(first_bytes, second_bytes);
 
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v4");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v5");
     assert_eq!(value["sample_id"], SAMPLE_ID);
     assert_object_keys(
         &value,
@@ -72,6 +72,10 @@ fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::
     let reverse_read = read_by_name(reads, "read-reverse")?;
     assert_eq!(forward_read["alignment"]["orientation"], "forward");
     assert_eq!(reverse_read["alignment"]["orientation"], "reverse");
+    assert_eq!(forward_read["integrity"]["ploc_count"], QUERY.len());
+    assert_eq!(reverse_read["integrity"]["ploc_count"], QUERY.len());
+    assert_eq!(forward_read["integrity"]["clipped_channel_samples"], 0);
+    assert_eq!(reverse_read["integrity"]["clipped_channel_samples"], 0);
 
     let overlaps = value["overlaps"]
         .as_array()
@@ -182,7 +186,7 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
         .success();
 
     let value: Value = serde_json::from_slice(&fs::read(sample_output_path(directory.path()))?)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v4");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v5");
     assert_eq!(value["overlaps"], serde_json::json!([]));
     let variants = value["variants"]
         .as_array()

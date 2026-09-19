@@ -10,7 +10,7 @@ Owns sample-level validation, deterministic read ordering, and assembly of compa
 - Require identical reference/configuration identities.
 - Reject duplicate trace content by SHA-256 even when filenames differ.
 - Sort reads by SHA-256 so internal registry indexes are deterministic and independent of CLI order.
-- Build the one top-level read registry with source basename, stable identity, and selected post-trim alignment summary.
+- Build the one top-level read registry with source basename, stable identity, trace-integrity evidence, and selected post-trim alignment summary.
 - Consume the validated `SampleReconciliationConfig`.
 - Delegate pairwise overlap admission, sparse differential-locus extraction, and normalized variant aggregation.
 

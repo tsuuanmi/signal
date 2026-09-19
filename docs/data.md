@@ -86,9 +86,9 @@ payloads but still follow the same policy; `logs/` is ignored.
 
 ## Sample evidence output privacy
 
-`signal.sample_evidence/v4` intentionally contains the sample identifier plus each
+`signal.sample_evidence/v5` intentionally contains the sample identifier plus each
 contributing AB1 basename for reviewer traceability, along with input SHA-256,
-alignment/coverage summaries, pairwise overlap/admission evidence, sparse differential loci,
+trace-integrity and alignment/coverage summaries, pairwise overlap/admission evidence, sparse differential loci,
 normalized variants, and concise call mappings. Filenames, hashes, and biological differences can be
 identifying, so sample-evidence JSON follows the same approval, storage, retention,
 and redistribution policy as its AB1 sources.

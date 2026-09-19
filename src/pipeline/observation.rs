@@ -141,6 +141,8 @@ pub(crate) fn build(
     let warning_total = read_warnings.unresolved_primary_calls
         + read_warnings.multi_channel_unresolved_calls
         + read_warnings.vendor_disagreements
+        + read_warnings.ploc_vendor_length_mismatches
+        + read_warnings.clipped_channel_samples
         + excluded_variant_candidates
         + usize::from(reference_origin_wrap);
     if warning_total > 0 {
@@ -151,12 +153,15 @@ pub(crate) fn build(
                 concat!(
                     "event=warning_summary total={} unresolved_primary_calls={} ",
                     "multi_channel_unresolved_calls={} vendor_disagreements={} ",
+                    "ploc_vendor_length_mismatches={} clipped_channel_samples={} ",
                     "excluded_variant_candidates={} reference_origin_wrap={}"
                 ),
                 warning_total,
                 read_warnings.unresolved_primary_calls,
                 read_warnings.multi_channel_unresolved_calls,
                 read_warnings.vendor_disagreements,
+                read_warnings.ploc_vendor_length_mismatches,
+                read_warnings.clipped_channel_samples,
                 excluded_variant_candidates,
                 reference_origin_wrap
             ),

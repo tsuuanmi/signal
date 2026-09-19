@@ -28,7 +28,7 @@ Current supported behavior includes:
 - canonical analyzed A/C/G/T channels using ABIF channel-order metadata;
 - signal-derived re-calling at validated `PLOC.2` loci;
 - explicit primary and ambiguity states;
-- observational rolling signal-to-noise annotations;
+- observational trace-integrity and rolling signal-to-noise annotations;
 - deterministic read-quality scoring and end trimming;
 - forward/reverse profile-aware semi-global alignment to one short reference;
 - linear and circular reference handling;
@@ -137,9 +137,9 @@ sample succeeds.
 
 Current public result contracts are:
 
-- `signal.basecalls/v1` — reference-free primary/ambiguity/retained read result;
-- `signal.analysis/v6` — compact reference-guided analysis result with reviewer-facing four-channel peak evidence;
-- `signal.sample_evidence/v4` — compact multi-read coverage, Tracy-derived pairwise overlap/admission evidence, sparse locus differences, normalized-variant evidence, and explicit eligibility reasons.
+- `signal.basecalls/v2` — reference-free primary/ambiguity/retained read result;
+- `signal.analysis/v7` — compact reference-guided analysis result with reviewer-facing four-channel peak evidence;
+- `signal.sample_evidence/v5` — compact multi-read coverage, Tracy-derived pairwise overlap/admission evidence, sparse locus differences, normalized-variant evidence, and explicit eligibility reasons.
 
 The schemas, examples, coordinate conventions, and human-readable semantics live under [docs/contracts](docs/contracts/README.md).
 

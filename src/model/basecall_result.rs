@@ -1,4 +1,4 @@
-//! Serializable `signal.basecalls/v1` reference-free result contract.
+//! Serializable `signal.basecalls/v2` reference-free result contract.
 
 use serde::Serialize;
 
@@ -37,4 +37,6 @@ pub struct BasecallWarningSummaryResult {
     pub(crate) unresolved_primary_calls: usize,
     pub(crate) multi_channel_unresolved_calls: usize,
     pub(crate) vendor_disagreements: usize,
+    pub(crate) ploc_vendor_length_mismatches: usize,
+    pub(crate) clipped_channel_samples: usize,
 }

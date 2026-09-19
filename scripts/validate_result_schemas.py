@@ -12,12 +12,12 @@ from typing import Any
 from jsonschema import Draft202012Validator, SchemaError, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
-ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v6.schema.json"
-ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v6.example.json"
-BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v1.schema.json"
-BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v1.example.json"
-SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v4.schema.json"
-SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v4.example.json"
+ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v7.schema.json"
+ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v7.example.json"
+BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v2.schema.json"
+BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v2.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v5.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v5.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -97,6 +97,16 @@ def rejected_analysis_shapes(
     removed_section["sequence"] = {"primary": "ACGT"}
     removed_software_version = copy.deepcopy(example)
     removed_software_version["provenance"]["software_version"] = "0.1.0"
+    old_schema = copy.deepcopy(example)
+    old_schema["schema_version"] = "signal.analysis/v6"
+    missing_integrity = copy.deepcopy(example)
+    missing_integrity["signal_quality"].pop("integrity")
+    invalid_integrity_ratio = copy.deepcopy(example)
+    invalid_integrity_ratio["signal_quality"]["integrity"][
+        "maximum_to_median_event_signal_ratio"
+    ] = 0.5
+    excessive_vendor_mismatches = copy.deepcopy(example)
+    excessive_vendor_mismatches["warnings"]["ploc_vendor_length_mismatches"] = 3
 
     return [
         ("SNV with no calls", document("SNV", [])),
@@ -111,6 +121,13 @@ def rejected_analysis_shapes(
         ("signal quality with removed windows", unknown_field),
         ("document with removed sequence section", removed_section),
         ("analysis provenance with removed software version", removed_software_version),
+        ("analysis using old schema version", old_schema),
+        ("analysis without trace integrity", missing_integrity),
+        ("analysis with invalid event-signal ratio", invalid_integrity_ratio),
+        (
+            "analysis with more than two vendor length mismatches",
+            excessive_vendor_mismatches,
+        ),
     ]
 
 
@@ -129,6 +146,16 @@ def rejected_basecall_shapes(
     reference["provenance"]["reference"] = {"name": "unexpected"}
     software_version = copy.deepcopy(example)
     software_version["provenance"]["software_version"] = "0.1.0"
+    old_schema = copy.deepcopy(example)
+    old_schema["schema_version"] = "signal.basecalls/v1"
+    missing_integrity = copy.deepcopy(example)
+    missing_integrity["signal_quality"].pop("integrity")
+    invalid_single_ploc_spacing = copy.deepcopy(example)
+    integrity = invalid_single_ploc_spacing["signal_quality"]["integrity"]
+    integrity["ploc_count"] = 1
+    excessive_vendor_mismatches = copy.deepcopy(example)
+    excessive_vendor_mismatches["warnings"]["ploc_vendor_length_mismatches"] = 3
+
     return [
         ("basecall primary with unsupported symbol", invalid_primary),
         ("basecall empty retained sequence", empty_retained),
@@ -136,6 +163,13 @@ def rejected_basecall_shapes(
         ("basecall read with unknown field", unknown_field),
         ("basecall provenance with reference", reference),
         ("basecall provenance with software version", software_version),
+        ("basecall using old schema version", old_schema),
+        ("basecall without trace integrity", missing_integrity),
+        ("single-PLOC basecall carrying spacing summary", invalid_single_ploc_spacing),
+        (
+            "basecall with more than two vendor length mismatches",
+            excessive_vendor_mismatches,
+        ),
     ]
 
 
@@ -168,7 +202,10 @@ def rejected_sample_shapes(
     zero_comparable_with_agreement["overlaps"][0]["conflicts"] = 0
 
     old_sample_schema = copy.deepcopy(example)
-    old_sample_schema["schema_version"] = "signal.sample_evidence/v3"
+    old_sample_schema["schema_version"] = "signal.sample_evidence/v4"
+
+    missing_read_integrity = copy.deepcopy(example)
+    missing_read_integrity["reads"][0].pop("integrity")
 
     invalid_sample_id = copy.deepcopy(example)
     invalid_sample_id["sample_id"] = "../sample"
@@ -233,6 +270,7 @@ def rejected_sample_shapes(
         ("overlap with comparable bases but no agreement", missing_overlap_agreement),
         ("zero-comparable overlap with agreement", zero_comparable_with_agreement),
         ("sample evidence using old schema version", old_sample_schema),
+        ("sample read without trace integrity", missing_read_integrity),
         ("sample evidence with invalid sample id", invalid_sample_id),
         (
             "sparse difference locus with only reference observations",

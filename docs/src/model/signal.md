@@ -10,6 +10,7 @@ Defines the internal observation-only signal-quality result.
   secondary SNR, and the candidate-noisy decision. Maximum secondary SNR remains
   internal for the pipeline's operational aggregate and is omitted from compact
   v5.
+- Own one immutable `TraceIntegrity` summary containing PLOC/vendor cardinality, PLOC spacing, exact signed-16-bit clipping count, and optional event-signal scale ratio.
 - Own the ordered collection of basecall-independent `LocusEvidence` records alongside rolling windows and merged noisy regions.
 - Mark candidate-noisy windows without changing any scientific call.
 - Represent the deterministic union of overlapping or adjacent candidate-noisy windows.
@@ -17,7 +18,7 @@ Defines the internal observation-only signal-quality result.
 
 ## Non-responsibilities
 
-No feature calculation, threshold validation, smoothing, base calling, trimming, variant filtering, serialization, or file I/O.
+No feature calculation, artifact classification, threshold validation, smoothing, base calling, trimming, variant filtering, serialization, or file I/O.
 
 ## Key types
 
@@ -25,7 +26,8 @@ No feature calculation, threshold validation, smoothing, base calling, trimming,
   internal maximum secondary SNR, and candidate-noisy flag.
 - `LocusEvidence` is defined in `model/locus_evidence.rs` and retained here as the authoritative per-locus signal-evidence layer.
 - `NoisyRegion`: merged call/sample intervals and minimum primary SNR.
-- `SignalAnalysis`: ordered locus evidence, windows, and merged regions, with
+- `TraceIntegrity`: observation-only whole-trace structural/signal-scale evidence plus vendor-length mismatch count helper.
+- `SignalAnalysis`: trace integrity, ordered locus evidence, windows, and merged regions, with
   aggregate count helpers. Isolated candidate windows can remain in `windows`
   without appearing in `noisy_regions`.
 

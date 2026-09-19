@@ -10,6 +10,7 @@ Provides shared local baseline, noise, corrected-amplitude, SNR, and metric-roun
 - Estimate one channel noise sigma from first-difference MAD with the existing one-unit floor.
 - Convert one raw analyzed-channel value into a non-negative baseline-corrected amplitude.
 - Convert a corrected amplitude and local noise sigma into SNR.
+- Provide deterministic median helpers for integer/floating evidence summaries.
 - Round emitted or thresholded signal metrics to six decimal places.
 
 ## Non-responsibilities
@@ -34,7 +35,7 @@ snr = corrected_amplitude / noise_sigma
 
 ## Tests
 
-Tests cover odd/even medians, the quantization floor, first-difference MAD scaling, negative-value correction, finite SNR, and six-decimal rounding.
+Tests cover odd/even integer and floating medians, invalid non-finite float input, the quantization floor, first-difference MAD scaling, negative-value correction, finite SNR, and six-decimal rounding.
 
 ## Status
 

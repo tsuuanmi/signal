@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.sample_evidence/v4",
+  "schema_version": "signal.sample_evidence/v5",
   "sample_id": "sample-001",
   "provenance": {
     "reference": {
@@ -13,6 +13,16 @@
     {
       "name": "read-a",
       "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
+      "integrity": {
+        "ploc_count": 28,
+        "vendor_primary_count": 28,
+        "vendor_quality_count": 28,
+        "minimum_ploc_spacing": 4,
+        "median_ploc_spacing": 4,
+        "maximum_ploc_spacing": 4,
+        "clipped_channel_samples": 0,
+        "maximum_to_median_event_signal_ratio": 1
+      },
       "alignment": {
         "orientation": "forward",
         "callable_bases": 120,
@@ -31,6 +41,16 @@
     {
       "name": "read-b",
       "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+      "integrity": {
+        "ploc_count": 28,
+        "vendor_primary_count": 28,
+        "vendor_quality_count": 28,
+        "minimum_ploc_spacing": 4,
+        "median_ploc_spacing": 4,
+        "maximum_ploc_spacing": 4,
+        "clipped_channel_samples": 0,
+        "maximum_to_median_event_signal_ratio": 1
+      },
       "alignment": {
         "orientation": "reverse",
         "callable_bases": 120,

@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines the serializable `signal.basecalls/v1` reference-free result contract.
+Defines the serializable `signal.basecalls/v2` reference-free result contract.
 
 ## Responsibilities
 
@@ -10,9 +10,10 @@ Defines the serializable `signal.basecalls/v1` reference-free result contract.
   intentionally deferred.
 - Represent complete primary, ambiguity, and retained sequences with call count
   and trim bounds.
-- Reuse shared interval and merged signal-quality result types.
-- Expose unresolved-primary and multi-channel-unresolved counts, plus vendor
-  disagreement counts when optional vendor calls are available.
+- Reuse shared interval and signal-quality result types, including trace-integrity evidence.
+- Expose unresolved-primary and multi-channel-unresolved counts, vendor
+  disagreement counts, PLOC/vendor cardinality mismatch counts, and exact
+  clipped-channel-sample counts.
 
 ## Non-responsibilities
 

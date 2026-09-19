@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.analysis/v6",
+  "schema_version": "signal.analysis/v7",
   "provenance": {
     "input": {
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -19,6 +19,16 @@
     }
   },
   "signal_quality": {
+    "integrity": {
+      "ploc_count": 28,
+      "vendor_primary_count": 28,
+      "vendor_quality_count": 28,
+      "minimum_ploc_spacing": 4,
+      "median_ploc_spacing": 4,
+      "maximum_ploc_spacing": 4,
+      "clipped_channel_samples": 0,
+      "maximum_to_median_event_signal_ratio": 1
+    },
     "noisy_regions": [
       {
         "calls": {
@@ -71,6 +81,8 @@
   "warnings": {
     "unresolved_primary_calls": 0,
     "multi_channel_unresolved_calls": 0,
-    "excluded_variant_candidates": 1
+    "excluded_variant_candidates": 1,
+    "ploc_vendor_length_mismatches": 0,
+    "clipped_channel_samples": 0
   }
 }

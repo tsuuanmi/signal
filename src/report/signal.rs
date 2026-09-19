@@ -1,10 +1,13 @@
 //! Shared projection of merged observational signal-quality regions.
 
-use crate::model::result::{IntervalResult, NoisyRegionResult, SignalQualityResult};
-use crate::model::signal::SignalAnalysis;
+use crate::model::result::{
+    IntervalResult, NoisyRegionResult, SignalQualityResult, TraceIntegrityResult,
+};
+use crate::model::signal::{SignalAnalysis, TraceIntegrity};
 
 /// Projects merged noisy regions while omitting internal rolling windows.
 pub(super) fn project(signal: SignalAnalysis) -> SignalQualityResult {
+    let integrity = project_integrity(&signal.integrity);
     let noisy_regions = signal
         .noisy_regions
         .into_iter()
@@ -20,5 +23,22 @@ pub(super) fn project(signal: SignalAnalysis) -> SignalQualityResult {
             minimum_primary_snr: region.minimum_primary_snr,
         })
         .collect();
-    SignalQualityResult { noisy_regions }
+    SignalQualityResult {
+        integrity,
+        noisy_regions,
+    }
+}
+
+/// Projects immutable trace-integrity evidence for reuse by sample read summaries.
+pub(super) fn project_integrity(integrity: &TraceIntegrity) -> TraceIntegrityResult {
+    TraceIntegrityResult {
+        ploc_count: integrity.ploc_count,
+        vendor_primary_count: integrity.vendor_primary_count,
+        vendor_quality_count: integrity.vendor_quality_count,
+        minimum_ploc_spacing: integrity.minimum_ploc_spacing,
+        median_ploc_spacing: integrity.median_ploc_spacing,
+        maximum_ploc_spacing: integrity.maximum_ploc_spacing,
+        clipped_channel_samples: integrity.clipped_channel_samples,
+        maximum_to_median_event_signal_ratio: integrity.maximum_to_median_event_signal_ratio,
+    }
 }

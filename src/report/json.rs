@@ -16,7 +16,7 @@ pub(crate) struct CompletedAnalysis {
     pub(crate) read: ReadObservation,
 }
 
-/// Builds the compact v6 document without filesystem side effects.
+/// Builds the compact v7 document without filesystem side effects.
 pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     let CompletedAnalysis { reference, read } = completed;
     let ReadObservation {
@@ -35,7 +35,7 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
             "read observation reference identity does not match report reference".into(),
         ));
     }
-    let warnings = warning_summary(&calls, variants.excluded_count());
+    let warnings = warning_summary(&calls, &signal, variants.excluded_count());
     let variant_results =
         variant::project(variants.reported, &calls, &quality, alignment.orientation)?;
     let signal_quality = signal::project(signal);
@@ -49,7 +49,7 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
         .collect();
 
     Ok(AnalysisResult {
-        schema_version: "signal.analysis/v6",
+        schema_version: "signal.analysis/v7",
         provenance: ProvenanceResult {
             input: InputResult {
                 sha256: input_sha256,
@@ -90,7 +90,11 @@ pub(crate) fn serialize<T: serde::Serialize>(result: &T) -> Result<Vec<u8>> {
     Ok(bytes)
 }
 
-fn warning_summary(calls: &BaseCalls, excluded_variant_candidates: usize) -> WarningSummaryResult {
+fn warning_summary(
+    calls: &BaseCalls,
+    signal: &crate::model::signal::SignalAnalysis,
+    excluded_variant_candidates: usize,
+) -> WarningSummaryResult {
     let unresolved_primary_calls = calls
         .calls
         .iter()
@@ -104,6 +108,8 @@ fn warning_summary(calls: &BaseCalls, excluded_variant_candidates: usize) -> War
     WarningSummaryResult {
         unresolved_primary_calls,
         multi_channel_unresolved_calls,
+        ploc_vendor_length_mismatches: signal.integrity.vendor_length_mismatch_count(),
+        clipped_channel_samples: signal.integrity.clipped_channel_samples,
         excluded_variant_candidates,
     }
 }

@@ -7,8 +7,8 @@ stages.
 
 ## Responsibilities
 
-- Run signal-derived base calling, observational rolling signal analysis plus basecall-independent locus evidence extraction, and relative quality/end trimming in order.
-- Emit the existing aggregate stage metrics without sequences or peak arrays.
+- Run signal-derived base calling, observational rolling signal analysis plus basecall-independent locus and trace-integrity evidence extraction, and relative quality/end trimming in order.
+- Emit aggregate stage metrics including integrity warning counts and event-signal ratio without sequences or peak arrays.
 - Return `ProcessedRead` with calls, signal analysis, quality control, and
   command-level warning counts.
 

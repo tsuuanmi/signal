@@ -54,7 +54,7 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
     let second_bytes = fs::read(analysis_output_path(second.path(), &second_trace))?;
     assert_eq!(first_bytes, second_bytes);
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.analysis/v6");
+    assert_eq!(value["schema_version"], "signal.analysis/v7");
     assert_object_keys(
         &value,
         &[
@@ -89,12 +89,19 @@ fn writes_deterministic_compact_json() -> Result<(), Box<dyn std::error::Error>>
         &[
             "unresolved_primary_calls",
             "multi_channel_unresolved_calls",
+            "ploc_vendor_length_mismatches",
+            "clipped_channel_samples",
             "excluded_variant_candidates",
         ],
     );
     assert_eq!(value["read"]["call_count"], 28);
     assert_eq!(value["alignment"]["orientation"], "forward");
     assert!(value["signal_quality"]["noisy_regions"].is_array());
+    assert_eq!(value["signal_quality"]["integrity"]["ploc_count"], 28);
+    assert_eq!(
+        value["signal_quality"]["integrity"]["clipped_channel_samples"],
+        0
+    );
     assert!(value.get("meta").is_none());
     assert!(value.get("sequence").is_none());
     assert!(value.pointer("/signal_quality/windows").is_none());
@@ -216,7 +223,8 @@ fn rejects_out_of_range_ploc_without_output() -> Result<(), Box<dyn std::error::
 }
 
 #[test]
-fn rejects_vendor_length_mismatch_without_output() -> Result<(), Box<dyn std::error::Error>> {
+fn preserves_vendor_length_mismatch_as_integrity_evidence() -> Result<(), Box<dyn std::error::Error>>
+{
     let directory = tempdir()?;
     let trace = directory.path().join("trace.ab1");
     let reference = directory.path().join("reference.fa");
@@ -225,10 +233,79 @@ fn rejects_vendor_length_mismatch_without_output() -> Result<(), Box<dyn std::er
     write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
     write_config(&config, "linear")?;
 
-    run(&trace, &reference, &config, directory.path())?
-        .failure()
-        .stderr(predicate::str::contains("PBAS.2 length"));
-    assert!(!analysis_output_path(directory.path(), &trace).exists());
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["read"]["call_count"], QUERY.len());
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_primary_count"],
+        QUERY.len() - 1
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_quality_count"],
+        QUERY.len()
+    );
+    assert_eq!(value["warnings"]["ploc_vendor_length_mismatches"], 1);
+    Ok(())
+}
+
+#[test]
+fn reports_exact_signal_clipping_without_reclassifying_the_read()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut heights = vec![1000_i16; QUERY.len()];
+    heights[10] = i16::MAX;
+    write_abif_with_peak_heights(&trace, QUERY, heights)?;
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(
+        value["signal_quality"]["integrity"]["clipped_channel_samples"],
+        1
+    );
+    assert_eq!(value["warnings"]["clipped_channel_samples"], 1);
+    assert!(
+        value["signal_quality"]["integrity"]["maximum_to_median_event_signal_ratio"]
+            .as_f64()
+            .is_some_and(|ratio| ratio > 30.0)
+    );
+    assert_eq!(value["alignment"]["orientation"], "forward");
+    Ok(())
+}
+
+#[test]
+fn processes_only_valid_ploc_loci_when_vendor_series_are_longer()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut ploc: Vec<usize> = (0..QUERY.len()).map(|index| 2 + 4 * index).collect();
+    ploc.pop();
+    write_abif_with_ploc(&trace, QUERY, ploc)?;
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["read"]["call_count"], QUERY.len() - 1);
+    assert_eq!(
+        value["signal_quality"]["integrity"]["ploc_count"],
+        QUERY.len() - 1
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_primary_count"],
+        QUERY.len()
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_quality_count"],
+        QUERY.len()
+    );
+    assert_eq!(value["warnings"]["ploc_vendor_length_mismatches"], 2);
     Ok(())
 }
 

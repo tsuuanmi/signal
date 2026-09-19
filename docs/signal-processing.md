@@ -4,7 +4,7 @@
 
 Signal reads the analyzed ABIF `DATA.9`–`DATA.12` arrays in canonical A/C/G/T order. These are instrument-analyzed fluorescence channels, not raw detector channels. The current ABIF boundary does not retain a spectral matrix, mobility model, or raw-channel baseline metadata.
 
-The signal-processing stage is deliberately observational. It retains `signal.windowed_snr/v1` noisy-window behavior and derives internal basecall-independent `LocusEvidence` / `EvidenceProfile`. Compact public JSON still emits only merged candidate-noisy regions; signal processing itself does not smooth channels, re-call bases, trim internal sequence, mutate an alignment, or remove a variant. Reference alignment may consume the immutable evidence profile under ADR-0029.
+The signal-processing stage is deliberately observational. It retains `signal.windowed_snr/v1` noisy-window behavior, derives internal basecall-independent `LocusEvidence` / `EvidenceProfile`, and derives concise whole-trace integrity evidence. Public JSON emits trace-integrity observations plus merged candidate-noisy regions; signal processing itself does not smooth channels, re-call bases, trim internal sequence, mutate an alignment, classify dye blobs, or remove a variant. Reference alignment may consume the immutable evidence profile under ADR-0029.
 
 ## Coordinate domains
 
@@ -27,7 +27,43 @@ peak_snr = max(0, selected_peak_height - baseline) / noise_sigma
 
 The one-unit floor reflects signed-short quantization and prevents NaN or infinity. Within each call, baseline-corrected selected peaks are ranked deterministically by value and then A/C/G/T order. A window records its minimum primary SNR and maximum secondary SNR internally. Values are rounded to six decimal places before threshold comparison; only each merged region's minimum primary SNR is serialized.
 
-A window is `candidate_noisy` only when its minimum primary SNR is strictly below the configured threshold. Overlapping or adjacent candidate windows are unioned; clean gaps are never filled. Secondary SNR participates only in internal observation and does not make a window noisy because a strong secondary peak may be real mixed signal. Compact v6 omits individual windows and secondary-SNR values.
+A window is `candidate_noisy` only when its minimum primary SNR is strictly below the configured threshold. Overlapping or adjacent candidate windows are unioned; clean gaps are never filled. Secondary SNR participates only in internal observation and does not make a window noisy because a strong secondary peak may be real mixed signal. Compact analysis v7/basecalls v2 omit individual windows and secondary-SNR values.
+
+## Trace integrity evidence
+
+Signal retains the validated PLOC series as the current method's event-anchor
+authority, but optional vendor PBAS/PCON cardinality is treated separately.
+A vendor series may be shorter or longer without creating or deleting Signal
+calls. Public integrity evidence records the PLOC count and, when present, each
+vendor-series count.
+
+For adjacent PLOC values Signal records minimum, median, and maximum spacing in
+trace-sample units. One-locus inputs have no spacing summary.
+
+Analyzed DATA values are signed 16-bit samples. Values exactly equal to the
+signed-16-bit extrema are counted as `clipped_channel_samples`. This is an exact
+representation-boundary observation, not a general artifact classifier.
+
+For each PLOC locus, let:
+
+~~~text
+event_signal = sum(A/C/G/T corrected amplitudes at the refined event sample)
+~~~
+
+Among loci with positive event signal, Signal records:
+
+~~~text
+maximum_to_median_event_signal_ratio =
+    max(event_signal) / median(event_signal)
+~~~
+
+using the existing six-decimal metric rounding. This ratio is deliberately not
+thresholded into a dye-blob/high-amplitude-artifact label. It is evidence for
+validation and review until a classifier has its own specification and truth
+data.
+
+Trace-integrity observations never change calls, SNR windows, quality, trim,
+alignment, or variants.
 
 ## Locus evidence and evidence profile
 

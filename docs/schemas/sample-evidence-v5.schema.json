@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:signal:schema:sample-evidence:v4",
-  "title": "Signal sample evidence v4",
+  "$id": "urn:signal:schema:sample-evidence:v5",
+  "title": "Signal sample evidence v5",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "signal.sample_evidence/v4"
+      "const": "signal.sample_evidence/v5"
     },
     "sample_id": {
       "type": "string",
@@ -129,6 +129,7 @@
       "required": [
         "name",
         "sha256",
+        "integrity",
         "alignment"
       ],
       "properties": {
@@ -141,6 +142,9 @@
         },
         "alignment": {
           "$ref": "#/$defs/readAlignment"
+        },
+        "integrity": {
+          "$ref": "#/$defs/integrity"
         }
       }
     },
@@ -577,6 +581,90 @@
             "not": {
               "required": [
                 "agreement"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ploc_count",
+        "clipped_channel_samples"
+      ],
+      "properties": {
+        "ploc_count": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "vendor_primary_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "vendor_quality_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "minimum_ploc_spacing": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "median_ploc_spacing": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maximum_ploc_spacing": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "clipped_channel_samples": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximum_to_median_event_signal_ratio": {
+          "type": "number",
+          "minimum": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "ploc_count": {
+                "minimum": 2
+              }
+            },
+            "required": [
+              "ploc_count"
+            ]
+          },
+          "then": {
+            "required": [
+              "minimum_ploc_spacing",
+              "median_ploc_spacing",
+              "maximum_ploc_spacing"
+            ]
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "minimum_ploc_spacing"
+                  ]
+                },
+                {
+                  "required": [
+                    "median_ploc_spacing"
+                  ]
+                },
+                {
+                  "required": [
+                    "maximum_ploc_spacing"
+                  ]
+                }
               ]
             }
           }

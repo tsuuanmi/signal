@@ -1,8 +1,10 @@
-//! Serializable `signal.sample_evidence/v4` contract.
+//! Serializable `signal.sample_evidence/v5` contract.
 
 use serde::Serialize;
 
-use crate::model::result::{AlignmentResult, PeakHeightsResult, ReferenceResult};
+use crate::model::result::{
+    AlignmentResult, PeakHeightsResult, ReferenceResult, TraceIntegrityResult,
+};
 use crate::model::sample_evidence::{LocusState, OverlapExclusionReason};
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
@@ -30,6 +32,7 @@ pub(crate) struct SampleProvenanceResult {
 pub(crate) struct SampleReadResult {
     pub(crate) name: String,
     pub(crate) sha256: String,
+    pub(crate) integrity: TraceIntegrityResult,
     pub(crate) alignment: AlignmentResult,
 }
 

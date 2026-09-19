@@ -1,6 +1,7 @@
 //! Observation-only rolling signal-quality analysis.
 
 mod features;
+mod integrity;
 mod locus_evidence;
 mod regions;
 mod statistics;
@@ -20,7 +21,9 @@ pub(crate) fn analyze(
     let windows = features::calculate(trace, calls, config)?;
     let loci = locus_evidence::calculate(trace, config)?;
     let noisy_regions = regions::merge(&windows, config.minimum_noisy_windows);
+    let integrity = integrity::assess(trace, &loci)?;
     Ok(SignalAnalysis {
+        integrity,
         loci,
         windows,
         noisy_regions,
