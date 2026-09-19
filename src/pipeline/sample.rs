@@ -128,6 +128,7 @@ fn run_logged(
         evidence,
     })?;
     let reads = result.reads.len();
+    let overlaps = result.overlaps.len();
     let locus_differences = result.locus_differences.len();
     let variants = result.variants.len();
     let schema_version = result.schema_version;
@@ -140,12 +141,14 @@ fn run_logged(
         format_args!(
             concat!(
                 "event=sample_result_ready_for_publication elapsed_ms={} total_elapsed_ms={} ",
-                "schema={} reads={} locus_differences={} variants={} read_warnings={} output_path={:?} bytes={}"
+                "schema={} reads={} overlaps={} locus_differences={} variants={} ",
+                "read_warnings={} output_path={:?} bytes={}"
             ),
             stage_started.elapsed().as_millis(),
             started.elapsed().as_millis(),
             schema_version,
             reads,
+            overlaps,
             locus_differences,
             variants,
             warning_total,
