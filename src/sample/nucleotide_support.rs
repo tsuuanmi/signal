@@ -2,6 +2,7 @@
 
 use crate::error::{Error, Result};
 use crate::model::alignment::Orientation;
+use crate::model::locus_evidence::EvidenceProfile;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
     LocusDifferenceObservation, LocusNucleotideSupport, NucleotideContribution,
@@ -19,6 +20,9 @@ pub(super) fn aggregate(
         support: [0.0; 4],
         forward_support: [0.0; 4],
         reverse_support: [0.0; 4],
+        mean_profile: None,
+        forward_mean_profile: None,
+        reverse_mean_profile: None,
     };
 
     for observation in observations {
@@ -57,8 +61,14 @@ pub(super) fn aggregate(
     result.support = std::array::from_fn(|channel| {
         result.forward_support[channel] + result.reverse_support[channel]
     });
+    result.mean_profile = mean_profile(result.support, result.contributors);
+    result.forward_mean_profile = mean_profile(result.forward_support, result.forward_contributors);
+    result.reverse_mean_profile = mean_profile(result.reverse_support, result.reverse_contributors);
 
     if result.contributors != result.forward_contributors + result.reverse_contributors
+        || result.mean_profile.is_some() != (result.contributors > 0)
+        || result.forward_mean_profile.is_some() != (result.forward_contributors > 0)
+        || result.reverse_mean_profile.is_some() != (result.reverse_contributors > 0)
         || !result
             .support
             .iter()
@@ -72,6 +82,12 @@ pub(super) fn aggregate(
     }
 
     Ok(result)
+}
+
+fn mean_profile(support: [f64; 4], contributors: usize) -> Option<EvidenceProfile> {
+    (contributors > 0).then(|| EvidenceProfile {
+        weights: support.map(|value| value / contributors as f64),
+    })
 }
 
 fn add(target: &mut [f64; 4], contribution: [f64; 4]) {

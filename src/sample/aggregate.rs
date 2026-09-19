@@ -356,6 +356,24 @@ mod tests {
         assert_eq!(nucleotide_support.support, [0.5, 0.5, 0.5, 0.5]);
         assert_eq!(nucleotide_support.forward_support, [0.1, 0.2, 0.3, 0.4]);
         assert_eq!(nucleotide_support.reverse_support, [0.4, 0.3, 0.2, 0.1]);
+        assert_eq!(
+            nucleotide_support
+                .mean_profile
+                .map(|profile| profile.weights),
+            Some([0.25, 0.25, 0.25, 0.25])
+        );
+        assert_eq!(
+            nucleotide_support
+                .forward_mean_profile
+                .map(|profile| profile.weights),
+            Some([0.1, 0.2, 0.3, 0.4])
+        );
+        assert_eq!(
+            nucleotide_support
+                .reverse_mean_profile
+                .map(|profile| profile.weights),
+            Some([0.4, 0.3, 0.2, 0.1])
+        );
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         let forward_signal = evidence.locus_differences[0].observations[0]
@@ -519,6 +537,18 @@ mod tests {
             evidence.locus_differences[2].nucleotide_support.support,
             [0.0; 4]
         );
+        assert!(
+            evidence.locus_differences[1]
+                .nucleotide_support
+                .mean_profile
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[2]
+                .nucleotide_support
+                .mean_profile
+                .is_none()
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
@@ -588,6 +618,13 @@ mod tests {
         assert_eq!(
             evidence.locus_differences[0].nucleotide_support.support,
             [0.1, 0.2, 0.3, 0.4]
+        );
+        assert_eq!(
+            evidence.locus_differences[0]
+                .nucleotide_support
+                .mean_profile
+                .map(|profile| profile.weights),
+            Some([0.1, 0.2, 0.3, 0.4])
         );
         Ok(())
     }

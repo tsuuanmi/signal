@@ -215,7 +215,7 @@ profile availability
 
 ADR-0038 promotes the first step: at each retained differential locus, Signal counts how many observations actually have an `EvidenceProfile` and factors that denominator by selected forward/reverse orientation. ADR-0039 then promotes the first structural contribution policy: profile-bearing call observations are eligible, missing-profile calls are not nucleotide contributors, and deletions remain separate events. This eligibility deliberately does not use relative quality, SNR, or candidate-noisy membership.
 
-ADR-0040 now promotes a deliberately unweighted intermediate: every eligible profile contributes unit read mass and Signal retains total plus forward/reverse A/C/G/T sums without normalizing them into a consensus. This mirrors Tracy's useful profile-addition primitive while explicitly refusing to treat equal mass as calibrated reliability.
+ADR-0040 promotes a deliberately unweighted intermediate: every eligible profile contributes unit read mass and Signal retains total plus forward/reverse A/C/G/T sums without turning them into a consensus. ADR-0041 additionally derives arithmetic mean A/C/G/T evidence profiles for each non-empty partition. The mean is only normalized evidence shape; contributor count remains explicit, and no winning base, confidence, or agreement class is inferred. This mirrors Tracy's useful profile-addition/normalization primitive while explicitly refusing to treat equal mass as calibrated reliability.
 
 Only after a separately validated weighting policy exists should Signal generalize that accumulator to:
 

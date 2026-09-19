@@ -122,6 +122,9 @@ pub(crate) struct LocusNucleotideSupport {
     pub(crate) support: [f64; 4],
     pub(crate) forward_support: [f64; 4],
     pub(crate) reverse_support: [f64; 4],
+    pub(crate) mean_profile: Option<EvidenceProfile>,
+    pub(crate) forward_mean_profile: Option<EvidenceProfile>,
+    pub(crate) reverse_mean_profile: Option<EvidenceProfile>,
 }
 
 /// All covering-read observations retained at one differential reference locus.

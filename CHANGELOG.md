@@ -24,6 +24,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Internal differential loci now derive arithmetic mean A/C/G/T evidence profiles for non-empty total/forward/reverse unit-mass support partitions, preserving contributor counts and avoiding any winning-base, agreement, or confidence interpretation.
 - Internal differential loci now retain unweighted eligible-profile A/C/G/T support with total and forward/reverse partitions, using unit read mass only and production logging of contributor topology/profile mass without exposing nucleotide composition or selecting a consensus.
 - Internal differential-locus observations now carry structural nucleotide-contribution eligibility after profile availability: profile-bearing calls are eligible even when unresolved or in candidate-noisy context, missing-profile calls are excluded from nucleotide aggregation, and deletions remain separate events; production logging consumes all three states without adding consensus weights.
 - Internal differential-locus support topology now records the number of observations with an available basecall-independent `EvidenceProfile` plus forward/reverse profile availability, establishing a pre-consensus nucleotide-profile denominator without voting or weighting.
