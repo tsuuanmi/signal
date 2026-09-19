@@ -8,10 +8,7 @@ use crate::model::trace::Chromatogram;
 use super::statistics;
 
 /// Derives structural and signal-scale evidence without changing calls or alignment.
-pub(super) fn assess(
-    trace: &Chromatogram,
-    loci: &[LocusEvidence],
-) -> Result<TraceIntegrity> {
+pub(super) fn assess(trace: &Chromatogram, loci: &[LocusEvidence]) -> Result<TraceIntegrity> {
     if loci.len() != trace.call_count() {
         return Err(Error::SignalProcessing(format!(
             "trace integrity expected {} loci, found {}",
@@ -25,15 +22,14 @@ pub(super) fn assess(
         .windows(2)
         .map(|pair| pair[1] - pair[0])
         .collect::<Vec<_>>();
-    let (minimum_ploc_spacing, median_ploc_spacing, maximum_ploc_spacing) =
-        if spacings.is_empty() {
-            (None, None, None)
-        } else {
-            let minimum = spacings.iter().copied().min();
-            let maximum = spacings.iter().copied().max();
-            let median = Some(statistics::median_usize(&spacings)?);
-            (minimum, median, maximum)
-        };
+    let (minimum_ploc_spacing, median_ploc_spacing, maximum_ploc_spacing) = if spacings.is_empty() {
+        (None, None, None)
+    } else {
+        let minimum = spacings.iter().copied().min();
+        let maximum = spacings.iter().copied().max();
+        let median = Some(statistics::median_usize(&spacings)?);
+        (minimum, median, maximum)
+    };
 
     let clipped_channel_samples = trace
         .channels
@@ -135,15 +131,9 @@ mod tests {
             vendor: VendorEvidence::default(),
         };
 
-        let integrity = assess(
-            &trace,
-            &[locus(0, 10.0), locus(1, 10.0), locus(2, 1000.0)],
-        )?;
+        let integrity = assess(&trace, &[locus(0, 10.0), locus(1, 10.0), locus(2, 1000.0)])?;
         assert_eq!(integrity.clipped_channel_samples, 2);
-        assert_eq!(
-            integrity.maximum_to_median_event_signal_ratio,
-            Some(100.0)
-        );
+        assert_eq!(integrity.maximum_to_median_event_signal_ratio, Some(100.0));
         Ok(())
     }
 }
