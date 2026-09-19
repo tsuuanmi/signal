@@ -2,6 +2,7 @@
 
 mod aggregate;
 mod differences;
+mod overlap;
 mod variants;
 
 pub(crate) use aggregate::aggregate;
