@@ -12,7 +12,7 @@ Apollo C++ is evidence for intended behavior, not authority for known unsafe, in
 | ABIF `basecall` | `basecalling`; `signal basecall` | PLOC-window signal re-calling with corrected ties/ambiguity and one versioned JSON result; no Apollo FASTA/FASTQ/TSV compatibility surface |
 | no Apollo equivalent | `signal_processing` | observation-only rolling SNR and candidate-noisy regions |
 | quality helpers/`trim.h` | `quality_control` | safe penalty and end-trim behavior; score named relative |
-| `alignment/gotoh.h` | `alignment` | bounded deterministic semi-global affine DP |
+| `alignment/gotoh.h` | `alignment` | bounded deterministic fixed-point profile-aware semi-global affine DP |
 | primary subset of `variant.h` | `variant_calling` | SNV/small-indel extraction, normalization, and configured eligibility |
 | `logger.rs` | `logger` | Apollo-style timestamp/level/source records written to per-trace files |
 | `report/json.h` | `report` | versioned, nested, schema-governed JSON |
@@ -42,7 +42,7 @@ For an approved fixture, raw decoded bytes, channel remapping, PLOC positions, u
 - N uses an explicit alignment score and cannot produce a reportable SNV;
 - rCRS is treated as circular and origin-spanning coordinates are preserved;
 - indels are normalized deterministically, including circular repeats;
-- compact `signal.analysis/v6` JSON is the only scientific result; it retains provenance, read/trim, merged noisy-region, alignment, normalized-variant, and warning summaries while omitting filenames, sequences, rolling windows, gapped rows, method constants, call indexes/PLOC coordinates, selected-peak positions/sources, vendor data, and redundant fields; append-only operational logs remain separate and no VCF/BCF or legacy JSON compatibility layer exists;
+- compact `signal.analysis/v6` JSON is the sole reference-guided single-read analysis result; it retains provenance, read/trim, merged noisy-region, alignment, normalized-variant, and warning summaries while omitting filenames, sequences, rolling windows, gapped rows, method constants, call indexes/PLOC coordinates, selected-peak positions/sources, vendor data, and redundant fields; append-only operational logs remain separate and no VCF/BCF or legacy JSON compatibility layer exists;
 - no ConfirmFilter, PHFinder, genotype, allelic fraction, or two-allele decomposition.
 
 None of these divergences keeps a legacy path: Signal emits a single
