@@ -6,7 +6,7 @@
 
 - exact `src/**/*.rs` ↔ `docs/src/**/*.md` mirror;
 - strict TOML parse plus range/relational checks;
-- Draft 2020-12 analysis-v7, basecalls-v2, and sample-evidence-v5 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
+- Draft 2020-12 analysis-v7, basecalls-v2, and sample-evidence-v6 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
 - Markdown links, rustdoc, rCRS source checksum/length, `.env` policy;
 - no repository backups or accidental patient/sample fixtures.
 
@@ -21,11 +21,11 @@
 - fixed-point profile substitution quantization, one-hot compatibility with the prior score ordering, missing-profile ambiguous scoring, unresolved primary characters with usable profile evidence, reverse profile complementation, Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
 - forward/reverse mapping, circular origin, ambiguous placement/orientation;
 - SNV, insertion, deletion, N exclusion, mixed-supporting-signal SNV eligibility, length caps, linear/circular normalization, evidence;
-- deterministic sample read ordering; Tracy-derived pairwise overlap discovery/admission including non-overlap, minimum comparable-base count, agreement threshold, and unresolved/gap denominator behavior; sparse differential-locus retention; named-read variant support; mixed-SNV eligibility retention; deterministic serialization; and atomic no-overwrite publication.
+- deterministic sample read ordering; run-length total/forward/reverse coverage topology including tiled and origin-spanning segments; Tracy-derived pairwise overlap discovery/admission including non-overlap, minimum comparable-base count, agreement threshold, and unresolved/gap denominator behavior; sparse differential-locus retention; named-read variant support; mixed-SNV eligibility retention; deterministic serialization; and atomic no-overwrite publication.
 
 ### Integration tests
 
-Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v2 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v7 JSON, internal rolling-window behavior and merged noisy-region projection, profile-aware forward/reverse placement, reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular profile alignment segments, and public primary-sequence alignment metrics/call quality, strict config v5, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v5 integrity/overlap/schema rejection cases plus batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
+Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v2 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v7 JSON, internal rolling-window behavior and merged noisy-region projection, profile-aware forward/reverse placement, reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular profile alignment segments, and public primary-sequence alignment metrics/call quality, strict config v5, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v6 integrity/overlap/schema rejection cases plus batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
 
 ### Differential and real-trace validation
 
