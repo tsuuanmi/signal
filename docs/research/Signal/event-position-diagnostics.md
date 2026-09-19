@@ -62,4 +62,6 @@ The next validation step is to rerun the same local corpus through `signal.valid
 - reference-called profile mass and F/R geometry improve without erasing genuine mixed-channel profiles;
 - alignment/variant changes are reviewed rather than assumed beneficial.
 
-Threshold fitting remains paused until this event-association correction is empirically revalidated.
+The first post-ADR-0046 rerun showed the extreme event-placement tail collapse while ordinary near-zero offsets remained stable. A residual indel-adjacent case exposed a separate alignment question: repeat-equivalent gap placements can move primary calls between reference loci even when the underlying read sequence is unchanged. That issue is not evidence that basecalling should be forced toward PLOC; it is now governed by ADR-0047, which requires canonical 3'/right-most mtDNA gap placement among equivalent optimal alignments.
+
+Threshold fitting remains paused until event association and canonical alignment are both empirically revalidated.
