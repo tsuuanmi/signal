@@ -106,6 +106,7 @@ pub(crate) struct CallSignalEvidence {
 #[derive(Debug, Clone)]
 pub(crate) struct SampleLocusObservation {
     pub(crate) read_index: usize,
+    pub(crate) call_index_0based: Option<usize>,
     pub(crate) state: LocusState,
     pub(crate) base: Option<char>,
     pub(crate) quality: Option<u8>,
