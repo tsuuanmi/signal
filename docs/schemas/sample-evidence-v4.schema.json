@@ -15,7 +15,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "signal.sample_evidence/v3"
+      "const": "signal.sample_evidence/v4"
     },
     "sample_id": {
       "type": "string",
