@@ -24,6 +24,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Internal sample reconciliation now preserves basecall-independent A/C/G/T `EvidenceProfile` values for call-backed differential-locus and normalized-variant evidence, projected to reference orientation without public schema changes or missing-profile fallback.
 - Factorized sample-variant support topology summarizing observed/eligible and forward/reverse read counts while preserving every authoritative per-read support record and avoiding confidence or independence claims.
 - Pre-consensus sample coverage topology derived from selected post-trim reference segments, exposing compact local read depth and forward/reverse orientation depth without majority voting or read rejection.
 - Tracy-derived trace-integrity evidence: valid PLOC-defined processing now preserves optional PBAS/PCON length mismatches as warnings instead of rejecting the file, records PLOC spacing and exact signed-16-bit clipping, and exposes an unthresholded maximum-to-median corrected event-signal ratio for artifact-resilience validation.
