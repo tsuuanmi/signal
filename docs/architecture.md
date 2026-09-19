@@ -50,13 +50,13 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `basecalling` | basecall peak selection and primary/ambiguity calls inside shared PLOC locus geometry | trimming and reference knowledge |
 | `signal_processing` | rolling sample-domain SNR, basecall-independent `LocusEvidence`/`EvidenceProfile`, and merged candidate-noisy regions | channel mutation, calibrated quality, basecall classification, reference interpretation, and variant eligibility |
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
-| `alignment` | bounded Gotoh, traceback, orientation, circular projection | variant extraction |
+| `alignment` | fixed-point evidence-profile Gotoh scoring, traceback, orientation, circular projection | variant extraction and evidence mutation |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
 | `sample` | deterministic read ordering, sparse differential-locus evidence, and normalized-variant aggregation | input loading, F/R pairing, consensus and interpretation |
 | `report` | analysis-v6/basecalls-v1/sample-evidence-v3 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
 | `pipeline` | command sequencing plus shared reference-independent `read` and reference-guided `observation` paths | algorithm internals |
 
-Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. Shared `locus` geometry is reference-free and classification-free. `signal_processing` derives locus profiles from `Chromatogram` channel evidence directly; existing rolling noisy-window analysis still consumes basecall window records. No algorithm module depends back on signal processing.
+Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. Shared `locus` geometry is reference-free and classification-free. `signal_processing` derives locus profiles from `Chromatogram` channel evidence directly; alignment consumes those immutable profiles for placement without mutating them or the upstream base calls. Existing rolling noisy-window analysis still consumes basecall window records. No algorithm module depends back on signal processing.
 
 ## Coordinates and strand
 
