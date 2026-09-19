@@ -18,7 +18,7 @@ placed reads before any future sample consensus.
   canonical A/C/G/T.
 - Count canonical base/base agreements and conflicts and derive the optional
   agreement fraction.
-- Apply `SampleReconciliationConfig.minimum_overlap_bases` and
+- Apply `SampleReconciliationConfig.minimum_comparable_bases` and
   `minimum_overlap_agreement` in deterministic rule order.
 - Retain exact overlap exclusion reasons without mutating either read.
 
