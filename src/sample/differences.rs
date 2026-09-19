@@ -1,6 +1,6 @@
 //! Sparse extraction of loci where at least one read differs from the reference.
 
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, BTreeSet};
 
 use crate::error::{Error, Result};
 use crate::model::alignment::AlignmentColumn;
@@ -52,6 +52,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
     }
 
     for (read_index, read) in reads.iter().enumerate() {
+        let mut seen = BTreeSet::new();
         for column in &read.alignment.columns {
             let Some(reference_index_0based) = column.reference_index_0based else {
                 continue;
@@ -62,6 +63,12 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
             let Some(entry) = differences.get_mut(&position_1based) else {
                 continue;
             };
+            if !seen.insert(position_1based) {
+                return Err(Error::Sample(format!(
+                    "read {} contains duplicate reference coordinate {position_1based}",
+                    read.input_sha256
+                )));
+            }
             if entry.reference_base != column.reference_base {
                 return Err(Error::Sample(format!(
                     "reference base disagrees at position {position_1based}"
