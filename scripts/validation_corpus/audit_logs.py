@@ -6,7 +6,7 @@ import shlex
 from pathlib import Path
 from typing import Any
 
-from .audit_model import RawReadAudit
+from .audit_analysis import RawReadAudit
 from .research_model import ResearchCorpus
 
 REQUIRED_READ_EVENTS = (

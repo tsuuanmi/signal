@@ -11,16 +11,6 @@ from pathlib import Path
 from typing import Any
 
 from .audit_analysis import (
-    audit_mixed_observations,
-    case_audit_rows,
-    flag_counts,
-    load_locus_context,
-    locus_audit_rows,
-    read_audit_rows,
-    read_boundaries,
-)
-from .audit_logs import load_read_audits
-from .audit_model import (
     AUDIT_SCHEMA_VERSION,
     CASE_AUDIT_COLUMNS,
     CASE_FLAG_ORDER,
@@ -31,13 +21,17 @@ from .audit_model import (
     READ_AUDIT_COLUMNS,
     READ_FLAG_ORDER,
     UPPER_AUDIT_QUANTILE,
+    AuditBoundary,
+    audit_mixed_observations,
+    case_audit_rows,
+    flag_counts,
+    load_locus_context,
+    locus_audit_rows,
+    read_audit_rows,
+    read_boundaries,
 )
-from .filesystem import (
-    file_sha256,
-    sync_directory,
-    validate_new_directory,
-    write_json,
-)
+from .audit_logs import load_read_audits
+from .filesystem import file_sha256, sync_directory, validate_new_directory, write_json
 from .model import RESEARCH_SCHEMA_VERSION
 from .research_loader import load_research_corpus, strict_keys
 from .research_model import LOCUS_TABLE_COLUMNS, OBSERVATION_TABLE_COLUMNS
@@ -94,10 +88,10 @@ def validate_research_source(
         if index[field] != expected:
             raise ValueError(f"research {field} differs from corpus identity")
 
-    loci_file = index["loci_file"]
-    observations_file = index["observations_file"]
-    if loci_file != "loci.csv" or observations_file != "observations.csv":
-        raise ValueError("research data files must use canonical filenames")
+    if index["loci_file"] != "loci.csv":
+        raise ValueError("research loci file must be loci.csv")
+    if index["observations_file"] != "observations.csv":
+        raise ValueError("research observations file must be observations.csv")
     if index["loci_columns"] != list(LOCUS_TABLE_COLUMNS):
         raise ValueError("research loci_columns do not match the current contract")
     if index["observations_columns"] != list(OBSERVATION_TABLE_COLUMNS):
@@ -105,8 +99,8 @@ def validate_research_source(
             "research observations_columns do not match the current contract"
         )
 
-    loci_path = research_dir / loci_file
-    observations_path = research_dir / observations_file
+    loci_path = research_dir / "loci.csv"
+    observations_path = research_dir / "observations.csv"
     if not loci_path.is_file() or not observations_path.is_file():
         raise ValueError("research CSV files are missing")
     if index["loci_sha256"] != file_sha256(loci_path):
@@ -131,10 +125,9 @@ def write_csv(
 ) -> None:
     expected = set(columns)
     with path.open("x", encoding="utf-8", newline="") as target:
-        fieldnames: list[str] = list(columns)
         writer = csv.DictWriter(
             target,
-            fieldnames=fieldnames,
+            fieldnames=list(columns),
             extrasaction="raise",
             lineterminator="\n",
         )
@@ -153,7 +146,7 @@ def write_csv(
 
 
 def stratum_index(
-    boundaries: dict[tuple[str, str], Any],
+    boundaries: dict[tuple[str, str], AuditBoundary],
 ) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
     for (amplicon_id, direction), boundary in sorted(boundaries.items()):
@@ -181,8 +174,7 @@ def audit_index(
     corpus_dir: Path,
     research_dir: Path,
     research_index: dict[str, Any],
-    boundaries: dict[tuple[str, str], Any],
-    geometry_boundary: float | None,
+    boundaries: dict[tuple[str, str], AuditBoundary],
     read_path: Path,
     locus_path: Path,
     case_path: Path,
@@ -206,19 +198,15 @@ def audit_index(
             "lower_audit_quantile": LOWER_AUDIT_QUANTILE,
             "upper_audit_quantile": UPPER_AUDIT_QUANTILE,
             "edge_distance_calls": EDGE_DISTANCE_CALLS,
-            "geometry_case_p95_boundary": geometry_boundary,
             "rules": {
-                "alignment_challenge": ("callable_identity <= stratum empirical p05"),
+                "alignment_challenge": (
+                    "callable_identity <= stratum empirical p05"
+                ),
                 "high_noise": "noise_rate >= stratum empirical p95",
-                "aggressive_trim": ("retained_fraction <= stratum empirical p05"),
-                "short_coverage": ("callable_columns <= stratum empirical p05"),
-                "short_coverage_cluster": (
-                    "at least two short_coverage reads in one case"
+                "aggressive_trim": (
+                    "retained_fraction <= stratum empirical p05"
                 ),
-                "geometry_challenge": (
-                    "case p95 total_profile_heterogeneity >= empirical p95 "
-                    "across case p95 values"
-                ),
+                "short_coverage": "callable_columns <= stratum empirical p05",
                 "edge_discordance": (
                     "mixed reference/alternate locus with alternate evidence "
                     "within retained-read edge distance and no alternate support "
@@ -243,7 +231,9 @@ def audit_index(
         "locus_audit_rows": len(locus_rows),
         "locus_audit_columns": list(LOCUS_AUDIT_COLUMNS),
         "locus_flag_counts": {
-            "edge_discordance": sum(bool(row["edge_discordance"]) for row in locus_rows)
+            "edge_discordance": sum(
+                bool(row["edge_discordance"]) for row in locus_rows
+            )
         },
         "case_audit_file": "case-audit.csv",
         "case_audit_sha256": file_sha256(case_path),
@@ -272,7 +262,7 @@ def build_staged_audit(
     case_geometry, mixed = load_locus_context(loci_path)
     audit_mixed_observations(observations_path, mixed, reads_by_sha256)
     locus_rows = locus_audit_rows(mixed)
-    case_rows, geometry_boundary = case_audit_rows(case_geometry, read_rows, locus_rows)
+    case_rows = case_audit_rows(case_geometry, read_rows, locus_rows)
 
     read_path = stage / "read-audit.csv"
     locus_path = stage / "locus-audit.csv"
@@ -287,7 +277,6 @@ def build_staged_audit(
             research_dir,
             research_index,
             boundaries,
-            geometry_boundary,
             read_path,
             locus_path,
             case_path,

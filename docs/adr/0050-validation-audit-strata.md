@@ -65,14 +65,11 @@ Every locus with both reference and alternate read observations is retained in
 
 The rule does not classify the alternate observation as artifact or biological mixture.
 
-### Case strata
+### Case audit
 
-Case audit rows summarize read flags and locus context. A case receives
-`short_coverage_cluster` when at least two reads are short-coverage outliers.
-
-`geometry_challenge` is corpus-relative: the case p95
-`total_profile_heterogeneity` is at or above the empirical p95 across case-level p95
-values.
+Case audit rows only aggregate existing read flags, mixed-locus edge context, and
+descriptive profile-geometry summaries. They introduce no additional case-level threshold
+or scoring rule.
 
 Case flags form a review shortlist only. They do not exclude a case or read from later
 truth curation or validation studies.

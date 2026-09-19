@@ -109,13 +109,10 @@ One row per validation case with:
 - maximum read noise rate;
 - counts of each read-level audit flag;
 - mixed-locus edge-discordance count;
-- case-level review flags.
+- direct case-level aggregation of those existing flags.
 
-`short_coverage_cluster` requires at least two `short_coverage` reads in the case.
-
-`geometry_challenge` means that the case p95
-`total_profile_heterogeneity` is at or above the empirical p95 across case-level p95
-values. It is a corpus-relative review stratum only.
+No new case-level threshold or score is introduced. The p95 geometry values are
+descriptive review context only.
 
 ## Provenance
 
@@ -126,7 +123,6 @@ values. It is a corpus-relative review stratum only.
 - Signal/manifest/reference/configuration identities;
 - exact audit method constants;
 - empirical read-stratum boundaries and sample counts;
-- the corpus-relative geometry boundary;
 - row counts, column contracts, SHA-256, and flag counts for all three audit tables.
 
 The audit parser consumes only deterministic read-stage metrics from validation logs and

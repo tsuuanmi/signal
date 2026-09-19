@@ -10,6 +10,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 from scripts.validation_corpus.audit_analysis import (
+    AUDIT_SCHEMA_VERSION,
+    MINIMUM_STRATUM_READS,
+    RawReadAudit,
     audit_mixed_observations,
     load_locus_context,
     locus_audit_rows,
@@ -17,12 +20,6 @@ from scripts.validation_corpus.audit_analysis import (
     read_boundaries,
 )
 from scripts.validation_corpus.audit_logs import parse_case_log
-from scripts.validation_corpus.audit_model import (
-    AUDIT_SCHEMA_VERSION,
-    LOCUS_AUDIT_COLUMNS,
-    MINIMUM_STRATUM_READS,
-    RawReadAudit,
-)
 from scripts.validation_corpus.audit_runner import publish_audit
 from scripts.validation_corpus.filesystem import file_sha256
 from scripts.validation_corpus.model import (
@@ -49,6 +46,16 @@ class ValidationAuditTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
+
+    @staticmethod
+    def log_event(
+        event: str,
+        *,
+        level: str = "INFO",
+        **fields: object,
+    ) -> str:
+        suffix = " ".join(f"{key}={value}" for key, value in fields.items())
+        return f"2026 | {level} | x - event={event} {suffix}".rstrip()
 
     def raw_read(
         self,
@@ -100,8 +107,7 @@ class ValidationAuditTests(unittest.TestCase):
             *(self.raw_read(index) for index in range(2, MINIMUM_STRATUM_READS)),
         ]
 
-        boundaries = read_boundaries(records)
-        rows = read_audit_rows(records, boundaries)
+        rows = read_audit_rows(records, read_boundaries(records))
 
         self.assertEqual(rows[0]["stratum_n"], MINIMUM_STRATUM_READS)
         self.assertTrue(rows[0]["alignment_challenge"])
@@ -123,28 +129,44 @@ class ValidationAuditTests(unittest.TestCase):
     def test_log_parser_binds_complete_read_metrics(self) -> None:
         read_sha256 = "1" * 64
         log = self.root / "case-1.validation.log"
-        log.write_text(
-            "\n".join(
-                [
-                    f"2026 | INFO | x - event=sample_read_started "
-                    f'trace_name="trace.ab1" trace_sha256={read_sha256}',
-                    "2026 | INFO | x - event=basecalling_completed calls=500",
-                    "2026 | INFO | x - event=signal_processing_completed "
-                    "profiled_loci=499 noisy_calls=25",
-                    "2026 | INFO | x - event=quality_control_completed "
-                    "trim=10..460 retained=450 retained_fraction=0.9000",
-                    "2026 | INFO | x - event=alignment_completed "
-                    "orientation=Forward callable_columns=440 "
-                    "callable_identity=0.9875 mismatches=5 gap_opens=1",
-                    "2026 | WARN | x - event=warning_summary "
-                    "excluded_variant_candidates=3",
-                    f"2026 | INFO | x - event=sample_read_completed "
-                    f"trace_sha256={read_sha256} orientation=Forward",
-                ]
-            )
-            + "\n",
-            encoding="utf-8",
-        )
+        lines = [
+            self.log_event(
+                "sample_read_started",
+                trace_name="trace.ab1",
+                trace_sha256=read_sha256,
+            ),
+            self.log_event("basecalling_completed", calls=500),
+            self.log_event(
+                "signal_processing_completed",
+                profiled_loci=499,
+                noisy_calls=25,
+            ),
+            self.log_event(
+                "quality_control_completed",
+                trim="10..460",
+                retained=450,
+                retained_fraction="0.9000",
+            ),
+            self.log_event(
+                "alignment_completed",
+                orientation="Forward",
+                callable_columns=440,
+                callable_identity="0.9875",
+                mismatches=5,
+                gap_opens=1,
+            ),
+            self.log_event(
+                "warning_summary",
+                level="WARN",
+                excluded_variant_candidates=3,
+            ),
+            self.log_event(
+                "sample_read_completed",
+                trace_sha256=read_sha256,
+                orientation="Forward",
+            ),
+        ]
+        log.write_text("\n".join(lines) + "\n", encoding="utf-8")
         expected = {
             read_sha256: {
                 "sequencing_run_id": "run-1",
@@ -162,19 +184,19 @@ class ValidationAuditTests(unittest.TestCase):
         self.assertAlmostEqual(record.callable_identity, 0.9875)
         self.assertEqual(record.excluded_variant_candidates, 3)
 
+    @staticmethod
     def write_csv(
-        self,
         path: Path,
         columns: tuple[str, ...],
         rows: list[dict[str, object]],
     ) -> None:
         with path.open("w", encoding="utf-8", newline="") as target:
-            fieldnames: list[str] = list(columns)
-            writer = csv.DictWriter(target, fieldnames=fieldnames)
+            writer = csv.DictWriter(target, fieldnames=list(columns))
             writer.writeheader()
             writer.writerows(rows)
 
-    def locus_row(self) -> dict[str, object]:
+    @staticmethod
+    def locus_row() -> dict[str, object]:
         row: dict[str, object] = {column: "" for column in LOCUS_TABLE_COLUMNS}
         row.update(
             {
@@ -198,8 +220,8 @@ class ValidationAuditTests(unittest.TestCase):
         )
         return row
 
+    @staticmethod
     def observation_row(
-        self,
         read_sha256: str,
         state: str,
         call_index: int,
@@ -247,6 +269,56 @@ class ValidationAuditTests(unittest.TestCase):
         self.assertEqual(rows[0]["minimum_alternate_edge_distance_calls"], 5)
         self.assertTrue(rows[0]["edge_discordance"])
         self.assertFalse(rows[0]["cross_orientation_alternate"])
+
+    def fixture_log_lines(self, hashes: list[str]) -> list[str]:
+        lines: list[str] = []
+        for index, read_sha256 in enumerate(hashes):
+            extreme = index < 2
+            identity = 0.90 if extreme else 0.99
+            noise = 250 if extreme else 50
+            retained_fraction = 0.30 if extreme else 0.90
+            retained = 150 if extreme else 450
+            callable_columns = 50 if extreme else 400
+            lines.extend(
+                [
+                    self.log_event(
+                        "sample_read_started",
+                        trace_name=f"trace-{index}.ab1",
+                        trace_sha256=read_sha256,
+                    ),
+                    self.log_event("basecalling_completed", calls=500),
+                    self.log_event(
+                        "signal_processing_completed",
+                        profiled_loci=500,
+                        noisy_calls=noise,
+                    ),
+                    self.log_event(
+                        "quality_control_completed",
+                        trim="0..450",
+                        retained=retained,
+                        retained_fraction=f"{retained_fraction:.4f}",
+                    ),
+                    self.log_event(
+                        "alignment_completed",
+                        orientation="Forward",
+                        callable_columns=callable_columns,
+                        callable_identity=f"{identity:.4f}",
+                        mismatches=2,
+                        gap_opens=1,
+                    ),
+                    self.log_event(
+                        "warning_summary",
+                        level="WARN",
+                        excluded_variant_candidates=0,
+                    ),
+                    self.log_event(
+                        "sample_read_completed",
+                        trace_sha256=read_sha256,
+                        orientation="Forward",
+                    ),
+                ]
+            )
+        return lines
 
     def write_fixture(self) -> None:
         hashes = [f"{index + 1:064x}" for index in range(MINIMUM_STRATUM_READS)]
@@ -297,36 +369,8 @@ class ValidationAuditTests(unittest.TestCase):
             json.dumps(corpus_index, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
-
-        log_lines: list[str] = []
-        for index, read_sha256 in enumerate(hashes):
-            extreme = index < 2
-            identity = 0.90 if extreme else 0.99
-            noise = 250 if extreme else 50
-            retained_fraction = 0.30 if extreme else 0.90
-            retained = 150 if extreme else 450
-            callable_columns = 50 if extreme else 400
-            log_lines.extend(
-                [
-                    f"2026 | INFO | x - event=sample_read_started "
-                    f'trace_name="trace-{index}.ab1" trace_sha256={read_sha256}',
-                    "2026 | INFO | x - event=basecalling_completed calls=500",
-                    "2026 | INFO | x - event=signal_processing_completed "
-                    f"profiled_loci=500 noisy_calls={noise}",
-                    "2026 | INFO | x - event=quality_control_completed "
-                    f"trim=0..450 retained={retained} "
-                    f"retained_fraction={retained_fraction:.4f}",
-                    "2026 | INFO | x - event=alignment_completed "
-                    f"orientation=Forward callable_columns={callable_columns} "
-                    f"callable_identity={identity:.4f} mismatches=2 gap_opens=1",
-                    "2026 | WARN | x - event=warning_summary "
-                    "excluded_variant_candidates=0",
-                    f"2026 | INFO | x - event=sample_read_completed "
-                    f"trace_sha256={read_sha256} orientation=Forward",
-                ]
-            )
         (self.corpus / "logs" / "case-1.validation.log").write_text(
-            "\n".join(log_lines) + "\n",
+            "\n".join(self.fixture_log_lines(hashes)) + "\n",
             encoding="utf-8",
         )
 
@@ -388,7 +432,7 @@ class ValidationAuditTests(unittest.TestCase):
         self.assertEqual(index["locus_audit_rows"], 1)
         self.assertEqual(index["case_audit_rows"], 1)
         self.assertEqual(index["locus_flag_counts"]["edge_discordance"], 1)
-        self.assertEqual(index["case_flag_counts"]["short_coverage_cluster"], 1)
+        self.assertEqual(index["case_flag_counts"]["short_coverage"], 1)
         for name in ("read-audit.csv", "locus-audit.csv", "case-audit.csv"):
             self.assertTrue((output / name).is_file())
 

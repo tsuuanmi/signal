@@ -8,18 +8,207 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .audit_model import (
-    AuditBoundary,
-    CASE_FLAG_ORDER,
-    EDGE_DISTANCE_CALLS,
-    LOWER_AUDIT_QUANTILE,
-    MINIMUM_STRATUM_READS,
-    READ_FLAG_ORDER,
-    RawReadAudit,
-    UPPER_AUDIT_QUANTILE,
-)
+from .model import AUDIT_SCHEMA_VERSION
 from .research_model import LOCUS_TABLE_COLUMNS, OBSERVATION_TABLE_COLUMNS
 from .research_statistics import nearest_rank
+
+READ_AUDIT_COLUMNS = (
+    "validation_case_id",
+    "read_sha256",
+    "sequencing_run_id",
+    "amplicon_id",
+    "declared_direction",
+    "inferred_orientation",
+    "calls",
+    "profiled_loci",
+    "noisy_calls",
+    "noise_rate",
+    "trim_start_0based",
+    "trim_end_0based_exclusive",
+    "retained",
+    "retained_fraction",
+    "callable_columns",
+    "callable_identity",
+    "mismatches",
+    "gap_opens",
+    "excluded_variant_candidates",
+    "stratum_key",
+    "stratum_n",
+    "identity_p05",
+    "noise_p95",
+    "retained_fraction_p05",
+    "callable_columns_p05",
+    "alignment_challenge",
+    "high_noise",
+    "aggressive_trim",
+    "short_coverage",
+    "orientation_disagreement",
+    "unbenchmarked_stratum",
+    "audit_flags",
+)
+
+LOCUS_AUDIT_COLUMNS = (
+    "validation_case_id",
+    "position_1based",
+    "reference_base",
+    "reads",
+    "reference_reads",
+    "alternate_reads",
+    "contributors",
+    "forward_contributors",
+    "reverse_contributors",
+    "within_profile_impurity",
+    "between_profile_dispersion",
+    "total_profile_heterogeneity",
+    "directional_profile_distance",
+    "alternate_observations",
+    "alternate_forward_observations",
+    "alternate_reverse_observations",
+    "alternate_noisy_observations",
+    "alternate_near_read_edge_observations",
+    "minimum_alternate_edge_distance_calls",
+    "cross_orientation_alternate",
+    "edge_discordance",
+    "audit_flags",
+)
+
+CASE_AUDIT_COLUMNS = (
+    "validation_case_id",
+    "source_group_id",
+    "specimen_group_id",
+    "reads",
+    "loci",
+    "alternate_loci",
+    "mixed_loci",
+    "edge_discordance_loci",
+    "noisy_loci",
+    "bidirectional_loci",
+    "p95_within_profile_impurity",
+    "p95_between_profile_dispersion",
+    "p95_total_profile_heterogeneity",
+    "p95_directional_profile_distance",
+    "minimum_callable_identity",
+    "maximum_noise_rate",
+    "minimum_retained_fraction",
+    "minimum_callable_columns",
+    "alignment_challenge_reads",
+    "high_noise_reads",
+    "aggressive_trim_reads",
+    "short_coverage_reads",
+    "orientation_disagreement_reads",
+    "unbenchmarked_reads",
+    "alignment_challenge",
+    "high_noise",
+    "aggressive_trim",
+    "short_coverage",
+    "edge_discordance",
+    "orientation_disagreement",
+    "unbenchmarked_stratum",
+    "audit_flags",
+)
+
+READ_FLAG_ORDER = (
+    "alignment_challenge",
+    "high_noise",
+    "aggressive_trim",
+    "short_coverage",
+    "orientation_disagreement",
+    "unbenchmarked_stratum",
+)
+
+CASE_FLAG_ORDER = (
+    "alignment_challenge",
+    "high_noise",
+    "aggressive_trim",
+    "short_coverage",
+    "edge_discordance",
+    "orientation_disagreement",
+    "unbenchmarked_stratum",
+)
+
+MINIMUM_STRATUM_READS = 20
+LOWER_AUDIT_QUANTILE = 0.05
+UPPER_AUDIT_QUANTILE = 0.95
+EDGE_DISTANCE_CALLS = 10
+
+
+@dataclass(frozen=True)
+class RawReadAudit:
+    validation_case_id: str
+    read_sha256: str
+    sequencing_run_id: str | None
+    amplicon_id: str | None
+    declared_direction: str | None
+    inferred_orientation: str
+    calls: int
+    profiled_loci: int
+    noisy_calls: int
+    trim_start_0based: int
+    trim_end_0based_exclusive: int
+    retained: int
+    retained_fraction: float
+    callable_columns: int
+    callable_identity: float
+    mismatches: int
+    gap_opens: int
+    excluded_variant_candidates: int
+
+    @property
+    def noise_rate(self) -> float:
+        return self.noisy_calls / self.calls if self.calls else 0.0
+
+    @property
+    def stratum_key(self) -> tuple[str, str] | None:
+        if self.amplicon_id is None or self.declared_direction is None:
+            return None
+        return self.amplicon_id, self.declared_direction
+
+
+@dataclass(frozen=True)
+class AuditBoundary:
+    n: int
+    identity_p05: float
+    noise_p95: float
+    retained_fraction_p05: float
+    callable_columns_p05: float
+
+
+@dataclass
+class CaseGeometry:
+    source_group_id: str
+    specimen_group_id: str
+    loci: int = 0
+    alternate_loci: int = 0
+    mixed_loci: int = 0
+    noisy_loci: int = 0
+    bidirectional_loci: int = 0
+    within: list[float] = field(default_factory=list)
+    between: list[float] = field(default_factory=list)
+    total: list[float] = field(default_factory=list)
+    directional: list[float] = field(default_factory=list)
+
+
+@dataclass
+class MixedLocus:
+    validation_case_id: str
+    position_1based: int
+    reference_base: str
+    reads: int
+    reference_reads: int
+    alternate_reads: int
+    contributors: int
+    forward_contributors: int
+    reverse_contributors: int
+    within_profile_impurity: float | None
+    between_profile_dispersion: float | None
+    total_profile_heterogeneity: float | None
+    directional_profile_distance: float | None
+    alternate_observations: int = 0
+    alternate_forward_observations: int = 0
+    alternate_reverse_observations: int = 0
+    alternate_noisy_observations: int = 0
+    alternate_near_read_edge_observations: int = 0
+    minimum_alternate_edge_distance_calls: int | None = None
 
 
 def csv_int(value: str, label: str) -> int:
@@ -51,22 +240,29 @@ def validate_header(
     expected: tuple[str, ...],
     label: str,
 ) -> None:
-    fieldnames = reader.fieldnames
-    if fieldnames is None or tuple(fieldnames) != expected:
+    if reader.fieldnames is None or tuple(reader.fieldnames) != expected:
         raise ValueError(f"{label} has unexpected columns")
 
 
 def boundary_for(records: list[RawReadAudit]) -> AuditBoundary:
-    identities = [record.callable_identity for record in records]
-    noise_rates = [record.noise_rate for record in records]
-    retained_fractions = [record.retained_fraction for record in records]
-    callable_columns = [float(record.callable_columns) for record in records]
     return AuditBoundary(
         n=len(records),
-        identity_p05=nearest_rank(identities, LOWER_AUDIT_QUANTILE),
-        noise_p95=nearest_rank(noise_rates, UPPER_AUDIT_QUANTILE),
-        retained_fraction_p05=nearest_rank(retained_fractions, LOWER_AUDIT_QUANTILE),
-        callable_columns_p05=nearest_rank(callable_columns, LOWER_AUDIT_QUANTILE),
+        identity_p05=nearest_rank(
+            [record.callable_identity for record in records],
+            LOWER_AUDIT_QUANTILE,
+        ),
+        noise_p95=nearest_rank(
+            [record.noise_rate for record in records],
+            UPPER_AUDIT_QUANTILE,
+        ),
+        retained_fraction_p05=nearest_rank(
+            [record.retained_fraction for record in records],
+            LOWER_AUDIT_QUANTILE,
+        ),
+        callable_columns_p05=nearest_rank(
+            [float(record.callable_columns) for record in records],
+            LOWER_AUDIT_QUANTILE,
+        ),
     )
 
 
@@ -81,7 +277,7 @@ def read_boundaries(
 
 
 def flags_text(flags: dict[str, bool], order: tuple[str, ...]) -> str:
-    return ";".join(name for name in order if flags.get(name, False))
+    return ";".join(name for name in order if flags[name])
 
 
 def read_audit_rows(
@@ -145,44 +341,6 @@ def read_audit_rows(
     return rows
 
 
-@dataclass
-class CaseGeometry:
-    source_group_id: str
-    specimen_group_id: str
-    loci: int = 0
-    alternate_loci: int = 0
-    mixed_loci: int = 0
-    noisy_loci: int = 0
-    bidirectional_loci: int = 0
-    within: list[float] = field(default_factory=list)
-    between: list[float] = field(default_factory=list)
-    total: list[float] = field(default_factory=list)
-    directional: list[float] = field(default_factory=list)
-
-
-@dataclass
-class MixedLocus:
-    validation_case_id: str
-    position_1based: int
-    reference_base: str
-    reads: int
-    reference_reads: int
-    alternate_reads: int
-    contributors: int
-    forward_contributors: int
-    reverse_contributors: int
-    within_profile_impurity: float | None
-    between_profile_dispersion: float | None
-    total_profile_heterogeneity: float | None
-    directional_profile_distance: float | None
-    alternate_observations: int = 0
-    alternate_forward_observations: int = 0
-    alternate_reverse_observations: int = 0
-    alternate_noisy_observations: int = 0
-    alternate_near_read_edge_observations: int = 0
-    minimum_alternate_edge_distance_calls: int | None = None
-
-
 def append_metric(target: list[float], value: str, label: str) -> None:
     parsed = csv_float(value, label)
     if parsed is not None:
@@ -228,6 +386,7 @@ def load_locus_context(
             noisy_observations = csv_int(
                 row["noisy_observations"], f"{label}.noisy_observations"
             )
+
             geometry.loci += 1
             geometry.alternate_loci += int(alternate_reads > 0)
             geometry.mixed_loci += int(reference_reads > 0 and alternate_reads > 0)
@@ -374,7 +533,7 @@ def locus_audit_rows(
     mixed: dict[tuple[str, int], MixedLocus],
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
-    for _, locus in mixed.items():
+    for locus in mixed.values():
         cross_orientation = (
             locus.alternate_forward_observations > 0
             and locus.alternate_reverse_observations > 0
@@ -382,7 +541,6 @@ def locus_audit_rows(
         edge_discordance = (
             locus.alternate_near_read_edge_observations > 0 and not cross_orientation
         )
-        flags = {"edge_discordance": edge_discordance}
         rows.append(
             {
                 "validation_case_id": locus.validation_case_id,
@@ -428,7 +586,7 @@ def case_audit_rows(
     case_geometry: dict[str, CaseGeometry],
     read_rows: list[dict[str, Any]],
     locus_rows: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], float | None]:
+) -> list[dict[str, Any]]:
     reads_by_case: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for row in read_rows:
         reads_by_case[str(row["validation_case_id"])].append(row)
@@ -437,28 +595,23 @@ def case_audit_rows(
         if row["edge_discordance"]:
             edge_by_case[str(row["validation_case_id"])] += 1
 
-    case_total_p95 = [
-        value
-        for geometry in case_geometry.values()
-        if (value := p95(geometry.total)) is not None
-    ]
-    geometry_boundary = (
-        nearest_rank(case_total_p95, UPPER_AUDIT_QUANTILE) if case_total_p95 else None
-    )
-
     rows: list[dict[str, Any]] = []
     for case_id, geometry in case_geometry.items():
         reads = reads_by_case.get(case_id, [])
         if not reads:
             raise ValueError(f"case {case_id}: no read audit rows")
-        total_p95 = p95(geometry.total)
+
         counts = {
             "alignment_challenge_reads": sum(
                 bool(row["alignment_challenge"]) for row in reads
             ),
             "high_noise_reads": sum(bool(row["high_noise"]) for row in reads),
-            "aggressive_trim_reads": sum(bool(row["aggressive_trim"]) for row in reads),
-            "short_coverage_reads": sum(bool(row["short_coverage"]) for row in reads),
+            "aggressive_trim_reads": sum(
+                bool(row["aggressive_trim"]) for row in reads
+            ),
+            "short_coverage_reads": sum(
+                bool(row["short_coverage"]) for row in reads
+            ),
             "orientation_disagreement_reads": sum(
                 bool(row["orientation_disagreement"]) for row in reads
             ),
@@ -466,20 +619,13 @@ def case_audit_rows(
                 bool(row["unbenchmarked_stratum"]) for row in reads
             ),
         }
-        short_cluster = counts["short_coverage_reads"] >= 2
-        geometry_challenge = (
-            geometry_boundary is not None
-            and total_p95 is not None
-            and total_p95 >= geometry_boundary
-        )
         flags = {
             "alignment_challenge": counts["alignment_challenge_reads"] > 0,
             "high_noise": counts["high_noise_reads"] > 0,
             "aggressive_trim": counts["aggressive_trim_reads"] > 0,
-            "short_coverage_cluster": short_cluster,
-            "geometry_challenge": geometry_challenge,
+            "short_coverage": counts["short_coverage_reads"] > 0,
             "edge_discordance": edge_by_case[case_id] > 0,
-            "orientation_disagreement": (counts["orientation_disagreement_reads"] > 0),
+            "orientation_disagreement": counts["orientation_disagreement_reads"] > 0,
             "unbenchmarked_stratum": counts["unbenchmarked_reads"] > 0,
         }
         rows.append(
@@ -496,7 +642,7 @@ def case_audit_rows(
                 "bidirectional_loci": geometry.bidirectional_loci,
                 "p95_within_profile_impurity": p95(geometry.within),
                 "p95_between_profile_dispersion": p95(geometry.between),
-                "p95_total_profile_heterogeneity": total_p95,
+                "p95_total_profile_heterogeneity": p95(geometry.total),
                 "p95_directional_profile_distance": p95(geometry.directional),
                 "minimum_callable_identity": min(
                     float(row["callable_identity"]) for row in reads
@@ -509,12 +655,11 @@ def case_audit_rows(
                     int(row["callable_columns"]) for row in reads
                 ),
                 **counts,
-                "short_coverage_cluster": short_cluster,
-                "geometry_challenge": geometry_challenge,
+                **flags,
                 "audit_flags": flags_text(flags, CASE_FLAG_ORDER),
             }
         )
-    return rows, geometry_boundary
+    return rows
 
 
 def flag_counts(
@@ -524,3 +669,26 @@ def flag_counts(
     return {
         flag: sum(bool(row.get(flag, False)) for row in rows) for flag in flag_names
     }
+
+
+__all__ = [
+    "AUDIT_SCHEMA_VERSION",
+    "CASE_AUDIT_COLUMNS",
+    "CASE_FLAG_ORDER",
+    "EDGE_DISTANCE_CALLS",
+    "LOCUS_AUDIT_COLUMNS",
+    "LOWER_AUDIT_QUANTILE",
+    "MINIMUM_STRATUM_READS",
+    "READ_AUDIT_COLUMNS",
+    "READ_FLAG_ORDER",
+    "UPPER_AUDIT_QUANTILE",
+    "AuditBoundary",
+    "RawReadAudit",
+    "audit_mixed_observations",
+    "case_audit_rows",
+    "flag_counts",
+    "load_locus_context",
+    "locus_audit_rows",
+    "read_audit_rows",
+    "read_boundaries",
+]
