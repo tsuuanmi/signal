@@ -18,6 +18,8 @@ pub(crate) struct ReadWarnings {
     pub(crate) unresolved_primary_calls: usize,
     pub(crate) multi_channel_unresolved_calls: usize,
     pub(crate) vendor_disagreements: usize,
+    pub(crate) ploc_vendor_length_mismatches: usize,
+    pub(crate) clipped_channel_samples: usize,
 }
 
 /// Scientific read products shared by reference-free and reference-guided paths.
@@ -109,6 +111,8 @@ pub(crate) fn process(
         .iter()
         .filter(|locus| locus.profile.is_some())
         .count();
+    let ploc_vendor_length_mismatches = signal.integrity.vendor_length_mismatch_count();
+    let clipped_channel_samples = signal.integrity.clipped_channel_samples;
     logger.info(
         module_path!(),
         line!(),
@@ -117,7 +121,8 @@ pub(crate) fn process(
                 "event=signal_processing_completed elapsed_ms={} loci={} profiled_loci={} ",
                 "windows={} noisy_windows={} noisy_regions={} noisy_calls={} ",
                 "window_size_bases={} minimum_noisy_windows={} minimum_primary_snr={:.4} ",
-                "maximum_secondary_snr={:.4}"
+                "maximum_secondary_snr={:.4} ploc_vendor_length_mismatches={} ",
+                "clipped_channel_samples={} maximum_to_median_event_signal_ratio={:?}"
             ),
             stage_started.elapsed().as_millis(),
             signal.loci.len(),
@@ -129,7 +134,10 @@ pub(crate) fn process(
             config.signal_processing.window_size_bases,
             config.signal_processing.minimum_noisy_windows,
             config.signal_processing.minimum_primary_snr,
-            maximum_secondary_snr
+            maximum_secondary_snr,
+            ploc_vendor_length_mismatches,
+            clipped_channel_samples,
+            signal.integrity.maximum_to_median_event_signal_ratio
         ),
     )?;
 
@@ -207,6 +215,8 @@ pub(crate) fn process(
             unresolved_primary_calls: unresolved_primary,
             multi_channel_unresolved_calls: multi_channel_unresolved,
             vendor_disagreements,
+            ploc_vendor_length_mismatches,
+            clipped_channel_samples,
         },
     })
 }
