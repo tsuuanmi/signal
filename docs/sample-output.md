@@ -7,104 +7,158 @@ writes one deterministic `results/<sample-id>.sample.json` document identified a
 and the example is
 [`examples/sample-evidence-v2.example.json`](examples/sample-evidence-v2.example.json).
 
-The sample identifier is validated naming/provenance data only. It does not
-constrain read placement, orientation, overlap, or variant reconciliation.
+The sample identifier and read names are reviewer-facing provenance. They never
+constrain scientific placement, orientation, overlap discovery, or variant
+reconciliation.
 
-## Reads and coverage
+## Reads and post-trim coverage
 
 `reads[]` is the one registry of contributing reads. Records are sorted by
 SHA-256, so CLI argument order does not change the scientific document.
 
 Each record contains:
 
-- `name`: UTF-8 AB1 basename for reviewer-facing provenance;
+- `name`: the AB1 filename stem, for example
+  `D11_20260404_LN_26_AB0442_HV1F_11`;
 - `sha256`: stable content identity;
 - `alignment`: the evidence-derived orientation, callable-base count and
   identity, unresolved-base count, gap-open count, mapped reference segments, and
   origin-wrap state.
 
-Every `read` integer elsewhere in the document is the 0-based index into this
-array. Read name, SHA-256, and orientation are intentionally not repeated in locus
-or variant records.
-
-Filename semantics are never scientific placement input. Renaming a file changes
-display provenance only; duplicate detection, ordering, placement, overlap, and
-variant reconciliation remain content/alignment driven.
+The scientific pipeline trims each read before alignment. `reference_segments`
+therefore describe where the **retained post-trim sequence** aligned on the
+reference, not the untrimmed raw call span.
 
 `reference_segments` are 0-based half-open. For a segment
 `{"start": S, "end": E}`, the covered 1-based biological positions are
-`S + 1` through `E`, inclusive. A position outside every segment for a read is
-uncovered by that read.
+`S + 1` through `E`, inclusive.
+
+For a circular reference, a read can cross the reference origin. In that case
+`wraps_origin` is `true` and `reference_segments` contains two segments:
+one from the mapped start to the end of the reference and one from reference
+position 0 to the mapped end. A normal non-crossing read has
+`wraps_origin: false`.
+
+Read names are unique within one emitted sample document because they are used as
+human-readable references from locus and variant evidence. SHA-256 remains the
+scientific content identity. Filename semantics are never used as placement or
+merge keys.
 
 ## Sparse locus differences
 
-`locus_differences[]` contains only reference positions where at least one
-covering read is not a canonical reference match. Dense per-position reference
-records are deliberately omitted.
+`locus_differences[]` is the **alignment-observation layer**. It contains only
+reference positions where at least one covering read is not a canonical reference
+match. It answers:
+
+> What did each covering read actually observe at this reference coordinate?
 
 At a retained locus, `observations[]` contains every read that covers that locus,
-including any read that agrees with the reference. This keeps explicit
-reference-support quality at scientifically interesting positions without
-serializing thousands of routine reference matches.
+including reads that agree with the reference. A called observation contains:
 
-Observation states are:
+- `read`: human-readable read name;
+- `state`: `reference`, `alternate`, or `unresolved`;
+- `base`: reference-oriented observed base;
+- `quality`: the existing uncalibrated relative quality score, exposed under
+  the concise reviewer-facing field name.
 
-- `reference`: canonical aligned query base equals the reference base;
-- `alternate`: canonical aligned query base differs from the reference base;
-- `unresolved`: query or reference base is not canonically comparable;
-- `deletion`: the selected alignment contains a query gap at that reference base.
+A deletion observation contains only `read` and `state: "deletion"`; Signal
+does not fabricate a deleted-base signal or quality value.
 
-Called observations retain `base`, original 0-based call `index`, and
-uncalibrated `relative_quality`. Deletions do not fabricate call or quality
-evidence.
+Dense all-reference positions are omitted. The compact default is explicit:
 
-The compact default is therefore explicit:
-
-- inside a read's mapped reference segments, absence of that locus from
+- inside a read's mapped `reference_segments`, absence from
   `locus_differences[]` means that read is a canonical reference match there;
 - outside the read's mapped segments, the position is uncovered;
 - at a retained differential locus, the explicit observations are authoritative.
 
-This preserves the distinction between reference support and missing coverage
-without emitting routine reference loci one by one.
+This preserves reference support versus missing coverage without serializing
+routine reference loci one by one.
 
-Inserted query columns have no reference-coordinate locus. They are represented
-through normalized variant evidence rather than fabricated locus observations.
+Inserted query bases have no reference-coordinate locus and therefore do not
+create a synthetic `locus_differences` entry.
 
 ## Variants
 
-`variants[]` aggregates normalized canonical read-level observations by
-`(position, reference, alternate, kind)` before configured eligibility removes
-them from the single-read report.
+`variants[]` is the **normalized variant layer**. It answers a different
+question:
 
-Each support record contains:
+> Which normalized biological variant was observed, by which reads, and how
+> strong was the supporting trace evidence?
 
-- `read`: index into top-level `reads[]`;
-- `eligible`: whether the read-level candidate satisfies configured reporting
-  eligibility;
+A locus difference is not automatically the same thing as a normalized variant.
+For example:
+
+- an unresolved aligned base can exist in `locus_differences[]` without becoming
+  a canonical variant;
+- an insertion exists in `variants[]` even though inserted bases have no
+  reference-coordinate locus;
+- indel normalization can move the reported normalized allele representation away
+  from the exact alignment gap;
+- a normalized variant remains in sample evidence even if a read-level reporting
+  filter marks that read's support ineligible.
+
+Variants aggregate by `(position, reference, alternate, kind)`. Each support
+record contains:
+
+- `read`: the human-readable read name;
+- `eligible`: whether that read's variant observation passes configured
+  reporting eligibility;
 - `exclusion_reasons`: exact failed configured rules when ineligible;
-- `calls[]`: concise original-call pointers.
+- `calls[]`: reviewer-facing trace evidence.
 
-A call pointer contains its role, original 0-based call `index`, optional
-1-based aligned reference `position`, and 0-based ABIF `ploc`. This permits a
-reviewer to drill into the corresponding per-read analysis without duplicating
-chromatogram payloads.
+Each call intentionally omits original call index, aligned call position, and ABIF
+PLOC because those implementation coordinates do not help routine variant review.
+Instead it contains:
+
+- `role`: `supporting` or `flanking`;
+- `base`: the called base projected onto the reference strand;
+- `peaks`: raw analyzed A/C/G/T channel heights sampled together at the
+  uniquely strongest primary-event coordinate, also projected to reference
+  orientation;
+- `quality`: the uncalibrated relative quality score for that call.
+
+For reverse reads, both `base` and the A/C/G/T peak labels are
+reference-oriented. A reviewer can therefore compare the variant allele directly
+with the strongest channel without mentally reverse-complementing the trace.
+
+Supporting calls carry the observed alternate or inserted base evidence. Indels
+can also carry flanking calls because a deletion has no signal at the deleted
+reference base and an insertion is bounded by aligned reference bases.
 
 An eligible support has an empty exclusion list. An ineligible support retains one
 or more reasons such as `outside_configured_region`,
 `peak_below_minimum`, or
-`relative_quality_not_above_threshold`. A normalized variant observed by a read
-remains sample evidence even when that read is not eligible for single-read
-reporting.
+`relative_quality_not_above_threshold`. The latter name remains explicit because
+the configured gate still operates on the internal relative-quality method even
+though the public numeric field is simply `quality`.
+
+## Why both locus_differences and variants exist
+
+The two arrays intentionally preserve separate evidence layers:
+
+```text
+selected alignment
+      ↓
+locus_differences[]     what each read observed at reference coordinates
+      ↓
+normalization/filtering
+      ↓
+variants[]              normalized alleles + eligibility + trace evidence
+```
+
+`locus_differences[]` is useful for disagreement and coverage reasoning,
+including reference-vs-alternate or unresolved evidence. `variants[]` is the
+reviewer-facing normalized biological call layer and is where per-read peak
+evidence belongs.
+
+Neither array is a consensus result.
 
 ## Contract boundary
 
 v2 is intentionally sparse and difference-focused. It does not serialize
-per-base quality for loci where every covering read agrees with the reference.
+per-base evidence for loci where every covering read agrees with the reference.
 The scientific pipeline still processes each read independently before sample
-aggregation; future interpretation that needs additional focused evidence should
-derive it from those read observations rather than reintroducing a dense
-whole-coverage table.
+aggregation.
 
 The current implementation emits v2 only. There is no v1 alias or compatibility
 output.
@@ -113,4 +167,5 @@ output.
 
 The v2 contract contains no consensus sequence, sample-level adjudicated variant
 verdict, majority-vote result, genotype, heteroplasmy estimate, haplogroup
-interpretation, F/R pair object, primer/HV label, or filename-derived placement.
+interpretation, F/R pair object, primer/HV placement rule, or filename-derived
+placement.
