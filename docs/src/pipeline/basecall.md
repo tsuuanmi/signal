@@ -9,8 +9,9 @@ Orchestrates one reference-free AB1-to-basecalls JSON operation.
 - Open the per-trace append-only logger and record command-specific start,
   input, warning, publication, and failure events.
 - Load basecall inputs, delegate shared scientific stages to `pipeline::read`,
-  build and serialize the typed result, synchronize mandatory logs, and publish
-  atomically without overwrite.
+  include trace-integrity warning counts in the command summary, build and
+  serialize the typed result, synchronize mandatory logs, and publish atomically
+  without overwrite.
 
 ## Non-responsibilities
 
