@@ -5,8 +5,7 @@ use crate::model::alignment::Orientation;
 use crate::model::locus_evidence::EvidenceProfile;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
-    SampleLocusObservation, LocusNucleotideSupport, NucleotideContribution,
-    ProfileHeterogeneity,
+    LocusNucleotideSupport, NucleotideContribution, ProfileHeterogeneity, SampleLocusObservation,
 };
 
 use super::profile_geometry;
