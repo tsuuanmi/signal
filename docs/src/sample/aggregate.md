@@ -24,7 +24,7 @@ The 0-based index of a read in the sorted registry is the authoritative referenc
 
 ## Tests
 
-Unit tests cover deterministic ordering, indexed evidence, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention, duplicate normalized support rejection, incompatible scientific identities, and renamed duplicate content.
+Unit tests cover deterministic ordering, indexed evidence, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention, duplicate locus/normalized support rejection, incompatible scientific identities, and renamed duplicate content.
 
 ## Status
 
