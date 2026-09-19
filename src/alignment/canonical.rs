@@ -391,7 +391,15 @@ mod tests {
         let before = alignment.metrics.clone();
         right_align(&mut alignment, &profiles, &config(), None)?;
 
-        assert_eq!(alignment.metrics, before);
+        assert_eq!(alignment.metrics.exact_matches, before.exact_matches);
+        assert_eq!(alignment.metrics.mismatches, before.mismatches);
+        assert_eq!(alignment.metrics.gap_opens, before.gap_opens);
+        assert_eq!(alignment.metrics.callable_columns, before.callable_columns);
+        assert_eq!(alignment.metrics.callable_identity, before.callable_identity);
+        assert_eq!(
+            alignment.metrics.unresolved_query_bases,
+            before.unresolved_query_bases
+        );
         assert_eq!(alignment.metrics.gap_opens, 1);
         Ok(())
     }
