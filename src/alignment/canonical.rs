@@ -366,6 +366,64 @@ mod tests {
     }
 
     #[test]
+    fn right_shifts_tandem_repeat_insertion_by_whole_motif() -> Result<()> {
+        let profiles = one_hot("CATATATG");
+        let columns = vec![
+            column('C', 'C', Some(0), Some(0)),
+            column('A', '-', Some(1), None),
+            column('T', '-', Some(2), None),
+            column('A', 'A', Some(3), Some(1)),
+            column('T', 'T', Some(4), Some(2)),
+            column('A', 'A', Some(5), Some(3)),
+            column('T', 'T', Some(6), Some(4)),
+            column('G', 'G', Some(7), Some(5)),
+        ];
+        let expected = score(&columns, &profiles, &config())?;
+        let mut alignment = raw(columns, expected);
+        right_align(&mut alignment, &profiles, &config(), None)?;
+
+        let insertion = alignment
+            .columns
+            .iter()
+            .enumerate()
+            .filter(|(_, column)| column.reference_base == '-')
+            .map(|(index, column)| (index, column.query_base))
+            .collect::<Vec<_>>();
+        assert_eq!(insertion, vec![(5, 'A'), (6, 'T')]);
+        assert_eq!(alignment.columns[4].reference_index, Some(4));
+        assert_eq!(alignment.columns[7].reference_index, Some(5));
+        Ok(())
+    }
+
+    #[test]
+    fn canonicalizes_multiple_gap_runs_from_right_to_left() -> Result<()> {
+        let profiles = one_hot("CAAGTTG");
+        let columns = vec![
+            column('C', 'C', Some(0), Some(0)),
+            column('-', 'A', None, Some(1)),
+            column('A', 'A', Some(1), Some(2)),
+            column('A', 'A', Some(2), Some(3)),
+            column('G', 'G', Some(3), Some(4)),
+            column('-', 'T', None, Some(5)),
+            column('T', 'T', Some(4), Some(6)),
+            column('T', 'T', Some(5), Some(7)),
+            column('G', 'G', Some(6), Some(8)),
+        ];
+        let expected = score(&columns, &profiles, &config())?;
+        let mut alignment = raw(columns, expected);
+        right_align(&mut alignment, &profiles, &config(), None)?;
+
+        let deleted = alignment
+            .columns
+            .iter()
+            .filter(|column| column.query_base == '-')
+            .filter_map(|column| column.reference_index)
+            .collect::<Vec<_>>();
+        assert_eq!(deleted, vec![3, 7]);
+        Ok(())
+    }
+
+    #[test]
     fn does_not_shift_non_repeat_deletion() -> Result<()> {
         let profiles = one_hot("CAG");
         let columns = vec![
