@@ -29,3 +29,4 @@
 | [0025](0025-compact-sample-evidence.md) | Factor sample evidence into a read registry and sparse differences | Accepted |
 | [0026](0026-reviewer-facing-signal-evidence.md) | Prefer reviewer-facing signal evidence over implementation call coordinates | Accepted |
 | [0027](0027-mixed-supporting-signal-snv-eligibility.md) | Treat mixed supporting signal as observed evidence, not a clean SNV | Accepted |
+| [0028](0028-basecall-independent-locus-evidence.md) | Derive locus evidence and profiles independently of basecall verdicts | Accepted |
