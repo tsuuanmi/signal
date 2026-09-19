@@ -73,7 +73,7 @@ input behavior to `signal analyze`.
 
 ## Analysis output privacy
 
-Compact v5 omits the trace filename, full called sequences, individual rolling
+Compact analysis v6 omits the trace filename, full called sequences, individual rolling
 windows, gapped alignment rows, full per-channel peaks, and vendor data. It keeps
 input/reference/configuration hashes, reference identity, read/trim and merged
 noisy-region summaries, normalized alleles, concise call mappings, and supporting
