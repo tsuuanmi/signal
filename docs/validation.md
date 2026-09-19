@@ -35,6 +35,21 @@ An ignored local trace is not a golden. Before use, record approval, source cont
 
 `LocusEvidence` and `EvidenceProfile` are observation-only signal representations, not allele fractions or genotype probabilities. The rolling SNR feature and relative quality score are not error probabilities. Validation must not call it Phred or infer clinical sensitivity. A behavior-changing signal cleaner must additionally preserve synthetic 10–30% secondary peaks under baseline drift, impulse noise, compressed peaks, homopolymers, and read ends. Low-level heteroplasmy, genotype, pathogenicity, and diagnostic claims require separate methods and studies.
 
+## Profile-geometry threshold research
+
+Production profile geometry remains threshold-free. Empirical threshold research uses the dedicated `signal-validation` binary so clean reference-matching loci are measured as well as differential loci without changing `signal.sample_evidence/v7`.
+
+A local export runs the same trace/read/sample science path and publishes one deterministic JSON object per covered reference locus to `validation-results/<sample-id>.jsonl`:
+
+```bash
+SIGNAL_CONFIG=config/signal.toml \
+  cargo run --release --bin signal-validation -- \
+  validation-001 trace-a.ab1 trace-b.ab1 \
+  --reference references/rCRS.fasta
+```
+
+Real validation exports are identifying scientific derivatives and remain ignored local artifacts. Threshold development must follow `docs/research/Signal/validation-corpus.md` and `docs/research/Signal/threshold-research.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Point-mixture and length/indel studies remain separate.
+
 ## Performance
 
 Run a release build with a named 500–1,000 base approved or synthetic trace against rCRS. Record host/toolchain, checksums, elapsed time, and peak memory. Target: ≤30 seconds and ≤512 MiB. Resource-cap failures must occur before large allocation.
