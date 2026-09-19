@@ -48,6 +48,8 @@ pub(super) fn calculate(
         let (channel_baselines, channel_noise_sigmas) =
             local_statistics(trace, context_sample_start, context_sample_end)?;
         let event_position = select_event_position(trace, locus_window, ploc, channel_baselines)?;
+        let (minimum_adjacent_ploc_spacing, maximum_adjacent_ploc_spacing) =
+            adjacent_ploc_spacing(&trace.base_locations, locus_index);
         let channel_heights =
             std::array::from_fn(|channel| trace.channels[channel][event_position]);
         let corrected_amplitudes = std::array::from_fn(|channel| {
@@ -70,6 +72,9 @@ pub(super) fn calculate(
             context_sample_start_0based: context_sample_start,
             context_sample_end_0based_exclusive: context_sample_end,
             event_position_0based: event_position,
+            event_ploc_distance: event_position.abs_diff(ploc),
+            minimum_adjacent_ploc_spacing,
+            maximum_adjacent_ploc_spacing,
             channel_heights,
             channel_baselines,
             channel_noise_sigmas,
@@ -95,6 +100,16 @@ fn validate_evidence(evidence: &LocusEvidence, context_width: usize) -> Result<(
             == context_width
         && evidence.context_sample_start_0based <= evidence.window_start_0based
         && evidence.window_end_0based_exclusive <= evidence.context_sample_end_0based_exclusive;
+    let valid_geometry = evidence.event_ploc_distance
+        == evidence.event_position_0based.abs_diff(evidence.ploc_0based)
+        && match (
+            evidence.minimum_adjacent_ploc_spacing,
+            evidence.maximum_adjacent_ploc_spacing,
+        ) {
+            (Some(minimum), Some(maximum)) => minimum > 0 && minimum <= maximum,
+            (None, None) => true,
+            _ => false,
+        };
     let valid_metrics = evidence
         .channel_baselines
         .iter()
@@ -131,13 +146,29 @@ fn validate_evidence(evidence: &LocusEvidence, context_width: usize) -> Result<(
             .all(|(&weight, amplitude)| weight.total_cmp(&(amplitude / total)).is_eq()),
         _ => false,
     };
-    if valid_coordinates && valid_metrics && valid_profile {
+    if valid_coordinates && valid_geometry && valid_metrics && valid_profile {
         Ok(())
     } else {
         Err(Error::SignalProcessing(format!(
             "inconsistent locus evidence at call {}",
             evidence.call_index_0based
         )))
+    }
+}
+
+fn adjacent_ploc_spacing(locations: &[usize], index: usize) -> (Option<usize>, Option<usize>) {
+    let previous = index
+        .checked_sub(1)
+        .and_then(|previous| locations.get(previous))
+        .map(|&previous| locations[index] - previous);
+    let next = locations
+        .get(index + 1)
+        .map(|&next| next - locations[index]);
+
+    match (previous, next) {
+        (Some(left), Some(right)) => (Some(left.min(right)), Some(left.max(right))),
+        (Some(spacing), None) | (None, Some(spacing)) => (Some(spacing), Some(spacing)),
+        (None, None) => (None, None),
     }
 }
 
