@@ -24,25 +24,25 @@ pub(super) fn summarize(reads: &[SampleReadEvidence]) -> Result<Vec<SampleCovera
             match read.alignment.orientation {
                 Orientation::Forward => {
                     let start = events.entry(segment.start_0based).or_default();
-                    start.forward_starts = start.forward_starts.checked_add(1).ok_or_else(|| {
-                        Error::Sample("forward coverage start count overflow".into())
-                    })?;
+                    start.forward_starts =
+                        start.forward_starts.checked_add(1).ok_or_else(|| {
+                            Error::Sample("forward coverage start count overflow".into())
+                        })?;
                     let end = events.entry(segment.end_0based_exclusive).or_default();
-                    end.forward_ends = end
-                        .forward_ends
-                        .checked_add(1)
-                        .ok_or_else(|| Error::Sample("forward coverage end count overflow".into()))?;
+                    end.forward_ends = end.forward_ends.checked_add(1).ok_or_else(|| {
+                        Error::Sample("forward coverage end count overflow".into())
+                    })?;
                 }
                 Orientation::Reverse => {
                     let start = events.entry(segment.start_0based).or_default();
-                    start.reverse_starts = start.reverse_starts.checked_add(1).ok_or_else(|| {
-                        Error::Sample("reverse coverage start count overflow".into())
-                    })?;
+                    start.reverse_starts =
+                        start.reverse_starts.checked_add(1).ok_or_else(|| {
+                            Error::Sample("reverse coverage start count overflow".into())
+                        })?;
                     let end = events.entry(segment.end_0based_exclusive).or_default();
-                    end.reverse_ends = end
-                        .reverse_ends
-                        .checked_add(1)
-                        .ok_or_else(|| Error::Sample("reverse coverage end count overflow".into()))?;
+                    end.reverse_ends = end.reverse_ends.checked_add(1).ok_or_else(|| {
+                        Error::Sample("reverse coverage end count overflow".into())
+                    })?;
                 }
             }
         }
@@ -58,13 +58,7 @@ pub(super) fn summarize(reads: &[SampleReadEvidence]) -> Result<Vec<SampleCovera
             && start < position
             && (forward_depth > 0 || reverse_depth > 0)
         {
-            push_segment(
-                &mut coverage,
-                start,
-                position,
-                forward_depth,
-                reverse_depth,
-            )?;
+            push_segment(&mut coverage, start, position, forward_depth, reverse_depth)?;
         }
 
         forward_depth = forward_depth
@@ -161,11 +155,7 @@ mod tests {
 
     use super::*;
 
-    fn read(
-        id: &str,
-        orientation: Orientation,
-        segments: &[(usize, usize)],
-    ) -> SampleReadEvidence {
+    fn read(id: &str, orientation: Orientation, segments: &[(usize, usize)]) -> SampleReadEvidence {
         SampleReadEvidence {
             input_name: format!("{id}.ab1"),
             input_sha256: id.into(),
@@ -263,11 +253,7 @@ mod tests {
 
     #[test]
     fn keeps_origin_wrapping_segments_as_linearized_coverage() -> Result<()> {
-        let reads = vec![read(
-            "a",
-            Orientation::Reverse,
-            &[(90, 100), (0, 10)],
-        )];
+        let reads = vec![read("a", Orientation::Reverse, &[(90, 100), (0, 10)])];
 
         assert_eq!(
             summarize(&reads)?,
