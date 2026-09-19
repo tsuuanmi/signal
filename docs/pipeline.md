@@ -296,12 +296,12 @@ Signal then builds a deterministic pairwise overlap graph from the SHA-sorted re
 
 Sparse locus aggregation then runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
 
-Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v7` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or sample-level conflict verdict is produced in v6; coverage topology and overlap eligibility is pre-consensus evidence only.
+Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. For every normalized variant, Signal also derives factorized support topology from those same observations: total/eligible observing reads and forward/reverse plus eligible-forward/eligible-reverse counts. The summary never adds reference-supporting or unresolved coverage as variant support and is not a confidence or vote. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v7` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or sample-level conflict verdict is produced in v6; coverage topology and overlap eligibility is pre-consensus evidence only.
 
 ## Output
 
 `analyze` publishes `signal.analysis/v7` at `results/<trace-stem>.json`.
-`sample` publishes `signal.sample_evidence/v6` at
+`sample` publishes `signal.sample_evidence/v7` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
