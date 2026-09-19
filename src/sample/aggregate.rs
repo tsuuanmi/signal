@@ -44,7 +44,7 @@ pub(crate) fn aggregate(
     let mut ordered: Vec<&ReadObservation> = reads.iter().collect();
     ordered.sort_by(|left, right| left.input_sha256.cmp(&right.input_sha256));
 
-    let read_evidence = ordered
+    let read_evidence: Vec<SampleReadEvidence> = ordered
         .iter()
         .map(|read| SampleReadEvidence {
             input_name: read.input_name.clone(),
