@@ -4,7 +4,10 @@ use std::collections::{BTreeMap, BTreeSet};
 
 use crate::error::{Error, Result};
 use crate::model::read_observation::ReadObservation;
-use crate::model::sample_evidence::{VariantCallEvidence, VariantEvidence, VariantSupport};
+use crate::model::alignment::Orientation;
+use crate::model::sample_evidence::{
+    VariantCallEvidence, VariantEvidence, VariantSupport, VariantSupportTopology,
+};
 use crate::model::variant::{VariantCallMapping, VariantKind};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -45,14 +48,64 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<VariantEvidenc
 
     Ok(variants
         .into_iter()
-        .map(|(key, support)| VariantEvidence {
-            position_1based: key.position_1based,
-            reference: key.reference,
-            alternate: key.alternate,
-            kind: key.kind,
-            support,
+        .map(|(key, support)| {
+            let support_topology = support_topology(&support, reads)?;
+            Ok(VariantEvidence {
+                position_1based: key.position_1based,
+                reference: key.reference,
+                alternate: key.alternate,
+                kind: key.kind,
+                support_topology,
+                support,
+            })
         })
+        .collect::<Result<Vec<_>>>()?
         .collect())
+}
+
+fn support_topology(
+    support: &[VariantSupport],
+    reads: &[&ReadObservation],
+) -> Result<VariantSupportTopology> {
+    let mut topology = VariantSupportTopology {
+        reads: support.len(),
+        eligible_reads: 0,
+        forward_reads: 0,
+        reverse_reads: 0,
+        eligible_forward_reads: 0,
+        eligible_reverse_reads: 0,
+    };
+    for item in support {
+        let read = reads
+            .get(item.read_index)
+            .ok_or_else(|| Error::Sample(format!("variant support references missing read {}", item.read_index)))?;
+        match read.alignment.orientation {
+            Orientation::Forward => {
+                topology.forward_reads += 1;
+                if item.eligible {
+                    topology.eligible_forward_reads += 1;
+                }
+            }
+            Orientation::Reverse => {
+                topology.reverse_reads += 1;
+                if item.eligible {
+                    topology.eligible_reverse_reads += 1;
+                }
+            }
+        }
+        if item.eligible {
+            topology.eligible_reads += 1;
+        }
+    }
+    if topology.reads != topology.forward_reads + topology.reverse_reads
+        || topology.eligible_reads
+            != topology.eligible_forward_reads + topology.eligible_reverse_reads
+    {
+        return Err(Error::Sample(
+            "variant support topology counts are inconsistent".into(),
+        ));
+    }
+    Ok(topology)
 }
 
 fn variant_calls(
