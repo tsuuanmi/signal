@@ -12,6 +12,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-EVID-006:** Reference placement MAY consume `EvidenceProfile`, but reference context MUST NOT mutate or rewrite upstream locus evidence or base calls.
 - **INV-EVID-007:** PLOC validity and optional vendor-series cardinality are distinct evidence dimensions. Valid PLOC loci remain the authoritative current-method event anchors; PBAS/PCON length mismatch cannot add/remove Signal loci and must remain explicit non-fatal integrity evidence.
 - **INV-EVID-008:** Exact signed-16-bit clipping and whole-trace event-signal scale observations are evidence only. They cannot mutate channels, calls, trim bounds, alignment, or variants, and an amplitude ratio cannot become an artifact/dye-blob label without a separately specified method.
+- **INV-EVID-009:** Local PLOC geometry evidence records only deterministic refined-event displacement and immediately adjacent PLOC spacing. Geometry values cannot become compressed/expanded-spacing, neighbor-interference, or artifact labels without separately specified thresholds and validation.
 
 ## Coordinates and identity
 
