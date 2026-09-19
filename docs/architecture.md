@@ -47,8 +47,8 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `model` | validated vocabulary and JSON result records | filesystem and algorithms |
 | `trace` | canonical ABIF decode | base calling |
 | `reference` | one-record FASTA and identity | alignment |
-| `basecalling` | peak windows, peaks, primary/ambiguity calls | trimming and reference knowledge |
-| `signal_processing` | rolling sample-domain SNR features and merged candidate-noisy regions | channel mutation, calibrated quality, and variant eligibility |
+| `basecalling` | basecall peak selection and primary/ambiguity calls inside shared PLOC locus geometry | trimming and reference knowledge |
+| `signal_processing` | rolling sample-domain SNR, basecall-independent `LocusEvidence`/`EvidenceProfile`, and merged candidate-noisy regions | channel mutation, calibrated quality, basecall classification, reference interpretation, and variant eligibility |
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
 | `alignment` | bounded Gotoh, traceback, orientation, circular projection | variant extraction |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
@@ -56,7 +56,7 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `report` | analysis-v6/basecalls-v1/sample-evidence-v3 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
 | `pipeline` | command sequencing plus shared reference-independent `read` and reference-guided `observation` paths | algorithm internals |
 
-Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. `signal_processing` reads `Chromatogram` and `BaseCalls` but no algorithm module depends back on it.
+Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. Shared `locus` geometry is reference-free and classification-free. `signal_processing` derives locus profiles from `Chromatogram` channel evidence directly; existing rolling noisy-window analysis still consumes basecall window records. No algorithm module depends back on signal processing.
 
 ## Coordinates and strand
 
