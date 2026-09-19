@@ -17,7 +17,7 @@ No primary/IUPAC calling, threshold membership, quality scoring, reference place
 
 ## Invariants
 
-A/C/G/T arrays follow `Nucleotide::ALL`. Corrected amplitudes and SNR are non-negative. A profile exists only when corrected signal mass is positive and then sums to one apart from floating-point roundoff. Complementation maps `[A,C,G,T]` to `[T,G,C,A]` exactly.
+A/C/G/T arrays follow `Nucleotide::ALL`. Corrected amplitudes and SNR are non-negative. Event/PLOC distance equals the absolute stored-coordinate difference. Adjacent spacing is positive when present, minimum and maximum are jointly present/absent, and minimum is not greater than maximum. A profile exists only when corrected signal mass is positive and then sums to one apart from floating-point roundoff. Complementation maps `[A,C,G,T]` to `[T,G,C,A]` exactly.
 
 ## Status
 
