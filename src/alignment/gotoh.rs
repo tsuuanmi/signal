@@ -315,10 +315,7 @@ mod tests {
         let query = "AAA";
         let alignments = align(query, &profiles(query), "AAAAA", &config(), None)?;
         assert_eq!(alignments.len(), 2);
-        assert_ne!(
-            alignments[0].start_reference,
-            alignments[1].start_reference
-        );
+        assert_ne!(alignments[0].start_reference, alignments[1].start_reference);
         Ok(())
     }
 
