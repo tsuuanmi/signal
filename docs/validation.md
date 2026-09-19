@@ -6,7 +6,7 @@
 
 - exact `src/**/*.rs` ↔ `docs/src/**/*.md` mirror;
 - strict TOML parse plus range/relational checks;
-- Draft 2020-12 analysis-v6, basecalls-v1, and sample-evidence-v3 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
+- Draft 2020-12 analysis-v6, basecalls-v1, and sample-evidence-v4 schema validation owned by `scripts/validate_result_schemas.py` and CI, not Rust integration code;
 - Markdown links, rustdoc, rCRS source checksum/length, `.env` policy;
 - no repository backups or accidental patient/sample fixtures.
 
@@ -21,7 +21,7 @@
 - fixed-point profile substitution quantization, one-hot compatibility with the prior score ordering, missing-profile ambiguous scoring, unresolved primary characters with usable profile evidence, reverse profile complementation, Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
 - forward/reverse mapping, circular origin, ambiguous placement/orientation;
 - SNV, insertion, deletion, N exclusion, mixed-supporting-signal SNV eligibility, length caps, linear/circular normalization, evidence;
-- deterministic sample read ordering, sparse differential-locus retention, named-read variant support, mixed-SNV eligibility retention, deterministic serialization, and atomic no-overwrite publication.
+- deterministic sample read ordering; Tracy-derived pairwise overlap discovery/admission including non-overlap, minimum comparable-base count, agreement threshold, and unresolved/gap denominator behavior; sparse differential-locus retention; named-read variant support; mixed-SNV eligibility retention; deterministic serialization; and atomic no-overwrite publication.
 
 ### Integration tests
 
