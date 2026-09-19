@@ -35,3 +35,4 @@
 | [0031](0031-trace-integrity-evidence.md) | Preserve PLOC and signal-integrity evidence without artifact reclassification | Accepted |
 | [0032](0032-sample-coverage-topology.md) | Expose sample coverage topology before consensus | Accepted |
 | [0033](0033-variant-support-topology.md) | Factor normalized-variant support by eligibility and orientation | Accepted |
+| [0034](0034-sample-evidence-profiles.md) | Preserve reference-oriented evidence profiles in sample evidence | Accepted |
