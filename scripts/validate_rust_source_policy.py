@@ -12,11 +12,18 @@ ROOT = Path(__file__).resolve().parents[1]
 SOURCE_ROOT = ROOT / "src"
 
 DEPRECATED_ATTRIBUTE = re.compile(r"#\s*\[\s*deprecated(?:\s*[=(]|\s*\])")
-LINT_SUPPRESSION = re.compile(r"\b(?:allow|expect)\s*\(([^)]*)\)")
+LINT_SUPPRESSION = re.compile(r"\b(?:allow|expect)\s*\(([^)]]*)\)")
 DECLARATION = re.compile(
-    r"\b(?:fn|struct|enum|trait|type|mod|const|static)\s+([A-Za-z_][A-Za-z0-9_]*)"
+    r"^\s*(?:pub(?:\([^)]*\))?\s+)?(?:async\s+)?"
+    r"(?:fn|struct|enum|trait|type|mod|const|static)\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)",
+    re.MULTILINE,
 )
-USE_ALIAS = re.compile(r"\buse\b[^;\n]*\bas\s+([A-Za-z_][A-Za-z0-9_]*)")
+USE_ALIAS = re.compile(
+    r"^\s*(?:pub(?:\([^)]*\))?\s+)?use\s+[^;\n]*\bas\s+"
+    r"([A-Za-z_][A-Za-z0-9_]*)",
+    re.MULTILINE,
+)
 FEATURE_GATE = re.compile(
     r"feature\s*=\s*[\"']([^\"']*(?:legacy|compat|backward)[^\"']*)[\"']",
     re.IGNORECASE,
@@ -44,8 +51,12 @@ class Violation:
     detail: str
 
     def render(self) -> str:
-        relative = self.path.relative_to(ROOT)
+        relative = self.path.relative_to(ROOT) if self.path.is_relative_to(ROOT) else self.path
         return f"{relative}:{self.line}: {self.rule}: {self.detail}"
+
+
+def line_number(text: str, offset: int) -> int:
+    return text.count("\n", 0, offset) + 1
 
 
 def identifier_is_legacy(identifier: str) -> bool:
@@ -58,63 +69,63 @@ def identifier_is_legacy(identifier: str) -> bool:
     )
 
 
-def suppressed_lints(text: str) -> set[str]:
+def lint_names(match: re.Match[str]) -> set[str]:
     found: set[str] = set()
-    for match in LINT_SUPPRESSION.finditer(text):
-        for raw in match.group(1).split(","):
-            lint = raw.strip().split("::")[-1]
-            if lint in FORBIDDEN_SUPPRESSED_LINTS or lint.startswith("unused_"):
-                found.add(lint)
+    for raw in match.group(1).split(","):
+        lint = raw.strip().split("::")[-1]
+        if lint in FORBIDDEN_SUPPRESSED_LINTS or lint.startswith("unused_"):
+            found.add(lint)
     return found
 
 
 def inspect_source(path: Path) -> list[Violation]:
     text = path.read_text(encoding="utf-8")
     violations: list[Violation] = []
-    for line_number, line in enumerate(text.splitlines(), start=1):
-        if DEPRECATED_ATTRIBUTE.search(line):
-            violations.append(
-                Violation(
-                    path,
-                    line_number,
-                    "deprecated-api",
-                    "first-party production Rust must not declare #[deprecated] compatibility APIs",
-                )
-            )
 
-        for lint in sorted(suppressed_lints(line)):
+    for match in DEPRECATED_ATTRIBUTE.finditer(text):
+        violations.append(
+            Violation(
+                path,
+                line_number(text, match.start()),
+                "deprecated-api",
+                "first-party production Rust must not declare #[deprecated] compatibility APIs",
+            )
+        )
+
+    for match in LINT_SUPPRESSION.finditer(text):
+        for lint in sorted(lint_names(match)):
             violations.append(
                 Violation(
                     path,
-                    line_number,
+                    line_number(text, match.start()),
                     "lint-suppression",
                     f"must not suppress {lint}; remove the stale code or fix the warning",
                 )
             )
 
-        feature = FEATURE_GATE.search(line)
-        if feature is not None:
-            violations.append(
-                Violation(
-                    path,
-                    line_number,
-                    "compat-feature",
-                    f"compatibility feature gate {feature.group(1)!r} is not permitted",
-                )
+    for match in FEATURE_GATE.finditer(text):
+        violations.append(
+            Violation(
+                path,
+                line_number(text, match.start()),
+                "compat-feature",
+                f"compatibility feature gate {match.group(1)!r} is not permitted",
             )
+        )
 
-        for pattern in (DECLARATION, USE_ALIAS):
-            for match in pattern.finditer(line):
-                identifier = match.group(1)
-                if identifier_is_legacy(identifier):
-                    violations.append(
-                        Violation(
-                            path,
-                            line_number,
-                            "legacy-identifier",
-                            f"explicit legacy/compatibility identifier {identifier!r} is not permitted",
-                        )
+    for pattern in (DECLARATION, USE_ALIAS):
+        for match in pattern.finditer(text):
+            identifier = match.group(1)
+            if identifier_is_legacy(identifier):
+                violations.append(
+                    Violation(
+                        path,
+                        line_number(text, match.start()),
+                        "legacy-identifier",
+                        f"explicit legacy/compatibility identifier {identifier!r} is not permitted",
                     )
+                )
+
     return violations
 
 
