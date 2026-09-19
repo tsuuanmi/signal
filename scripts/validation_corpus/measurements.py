@@ -64,12 +64,20 @@ def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
             configuration_sha256 = row.get("configuration_sha256")
             if not isinstance(signal_version, str) or not signal_version:
                 raise ValueError(f"{path}: line {line_number} lacks signal_version")
-            for label, value in (
-                ("reference_sha256", reference_sha256),
-                ("configuration_sha256", configuration_sha256),
+            if (
+                not isinstance(reference_sha256, str)
+                or SHA256.fullmatch(reference_sha256) is None
             ):
-                if not isinstance(value, str) or SHA256.fullmatch(value) is None:
-                    raise ValueError(f"{path}: line {line_number} has invalid {label}")
+                raise ValueError(
+                    f"{path}: line {line_number} has invalid reference_sha256"
+                )
+            if (
+                not isinstance(configuration_sha256, str)
+                or SHA256.fullmatch(configuration_sha256) is None
+            ):
+                raise ValueError(
+                    f"{path}: line {line_number} has invalid configuration_sha256"
+                )
             current_identity = (
                 MEASUREMENT_SCHEMA_VERSION,
                 signal_version,

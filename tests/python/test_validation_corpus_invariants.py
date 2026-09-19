@@ -74,7 +74,8 @@ class ValidationCorpusInvariantTests(unittest.TestCase):
 
     def write_manifest(self, rows: list[dict[str, str]]) -> None:
         with self.manifest.open("w", encoding="utf-8", newline="") as target:
-            writer = csv.DictWriter(target, fieldnames=MANIFEST_COLUMNS)
+            fieldnames: list[str] = list(MANIFEST_COLUMNS)
+            writer = csv.DictWriter(target, fieldnames=fieldnames)
             writer.writeheader()
             writer.writerows(rows)
 
