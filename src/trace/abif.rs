@@ -159,6 +159,10 @@ mod tests {
     use super::*;
 
     const DIRECTORY_OFFSET: usize = 64;
+    const DIRECTORY_OFFSET_U32: u32 = 64;
+    const DIRECTORY_ENTRY_SIZE_U16: u16 = 28;
+    const DIRECTORY_ENTRY_SIZE_U32: u32 = 28;
+    const PAYLOAD_OFFSET_U32: u32 = 92;
 
     #[test]
     fn accepts_oversized_root_directory_allocation() -> Result<()> {
@@ -187,7 +191,7 @@ mod tests {
     fn returns_logical_payload_from_oversized_external_allocation() -> Result<()> {
         let payload_offset = DIRECTORY_OFFSET + DIRECTORY_ENTRY_SIZE;
         let mut bytes = vec![0_u8; payload_offset + 8];
-        write_header(&mut bytes, DIRECTORY_ENTRY_SIZE);
+        write_header(&mut bytes, DIRECTORY_ENTRY_SIZE_U32);
         write_entry(
             &mut bytes,
             DIRECTORY_OFFSET,
@@ -197,7 +201,7 @@ mod tests {
             1,
             4,
             8,
-            payload_offset,
+            PAYLOAD_OFFSET_U32,
             &[],
         );
         bytes[payload_offset..payload_offset + 8].copy_from_slice(b"ACGTpad!");
@@ -211,7 +215,7 @@ mod tests {
     #[test]
     fn rejects_allocation_smaller_than_logical_payload() {
         let mut bytes = vec![0_u8; DIRECTORY_OFFSET + DIRECTORY_ENTRY_SIZE];
-        write_header(&mut bytes, DIRECTORY_ENTRY_SIZE);
+        write_header(&mut bytes, DIRECTORY_ENTRY_SIZE_U32);
         write_entry(
             &mut bytes,
             DIRECTORY_OFFSET,
@@ -225,15 +229,15 @@ mod tests {
             b"ACG",
         );
 
-        let error = parse(bytes).expect_err("undersized allocation must fail");
-        assert!(
-            error
-                .to_string()
-                .contains("smaller than element size product 4")
-        );
+        let result = parse(bytes);
+        assert!(matches!(
+            result,
+            Err(Error::Abif(message))
+                if message.contains("smaller than element size product 4")
+        ));
     }
 
-    fn write_header(bytes: &mut [u8], root_data_size: usize) {
+    fn write_header(bytes: &mut [u8], root_data_size: u32) {
         bytes[0..4].copy_from_slice(b"ABIF");
         bytes[4..6].copy_from_slice(&101_u16.to_be_bytes());
         write_entry(
@@ -242,10 +246,10 @@ mod tests {
             *b"tdir",
             1,
             1023,
-            DIRECTORY_ENTRY_SIZE,
+            DIRECTORY_ENTRY_SIZE_U16,
             1,
             root_data_size,
-            DIRECTORY_OFFSET,
+            DIRECTORY_OFFSET_U32,
             &[],
         );
     }
@@ -257,27 +261,23 @@ mod tests {
         tag: [u8; 4],
         number: u32,
         element_type: u16,
-        element_size: usize,
-        element_count: usize,
-        data_size: usize,
-        data_offset: usize,
+        element_size: u16,
+        element_count: u32,
+        data_size: u32,
+        data_offset: u32,
         inline: &[u8],
     ) {
         bytes[offset..offset + 4].copy_from_slice(&tag);
         bytes[offset + 4..offset + 8].copy_from_slice(&number.to_be_bytes());
         bytes[offset + 8..offset + 10].copy_from_slice(&element_type.to_be_bytes());
-        bytes[offset + 10..offset + 12]
-            .copy_from_slice(&u16::try_from(element_size).unwrap().to_be_bytes());
-        bytes[offset + 12..offset + 16]
-            .copy_from_slice(&u32::try_from(element_count).unwrap().to_be_bytes());
-        bytes[offset + 16..offset + 20]
-            .copy_from_slice(&u32::try_from(data_size).unwrap().to_be_bytes());
+        bytes[offset + 10..offset + 12].copy_from_slice(&element_size.to_be_bytes());
+        bytes[offset + 12..offset + 16].copy_from_slice(&element_count.to_be_bytes());
+        bytes[offset + 16..offset + 20].copy_from_slice(&data_size.to_be_bytes());
         if data_size <= 4 {
             bytes[offset + 20..offset + 24].fill(0);
             bytes[offset + 20..offset + 20 + inline.len()].copy_from_slice(inline);
         } else {
-            bytes[offset + 20..offset + 24]
-                .copy_from_slice(&u32::try_from(data_offset).unwrap().to_be_bytes());
+            bytes[offset + 20..offset + 24].copy_from_slice(&data_offset.to_be_bytes());
         }
     }
 }
