@@ -29,6 +29,8 @@ A green Rust test suite does not by itself establish biological correctness.
 
 Data provenance and privacy rules are defined in [../data.md](../data.md).
 
+Local corpus execution and descriptive research-table preparation are documented under [Signal research](../research/Signal/README.md); neither step by itself establishes a production threshold.
+
 ## Release evidence
 
 Production release evidence follows ADR-0018 and must identify the exact source revision, toolchain, artifact, dependency state, automated gates, performance evidence, and real-trace validation status.

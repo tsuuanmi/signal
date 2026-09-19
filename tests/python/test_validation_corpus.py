@@ -12,7 +12,7 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 from scripts.validation_corpus.manifest import load_manifest
-from scripts.validation_corpus.measurements import measurement_summary
+from scripts.validation_corpus.measurements import load_measurements
 from scripts.validation_corpus.model import (
     CORPUS_SCHEMA_VERSION,
     MANIFEST_COLUMNS,
@@ -162,7 +162,11 @@ class ValidationCorpusTests(unittest.TestCase):
         )
 
         with self.assertRaisesRegex(ValueError, "unexpected read SHA-256"):
-            measurement_summary(path, case)
+            load_measurements(
+                path,
+                case.metadata.validation_case_id,
+                {trace.trace_sha256 for trace in case.traces},
+            )
 
     def test_run_corpus_publishes_only_after_all_cases_succeed(self) -> None:
         _, sha1 = self.trace("a.ab1", b"a")
