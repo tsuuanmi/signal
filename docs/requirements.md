@@ -120,7 +120,7 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 
 - **SRS-COMPAT-001:** Apollo comparisons MUST follow `compatibility.md`; known defects are intentional divergences, not parity failures.
 - **SRS-COMPAT-002:** Approved differential evidence MUST compare exact decoded arrays and unaffected deterministic results; normalized variants compare by full tuple without ignoring extras/missing calls.
-- **SRS-NFR-001:** Production code MUST forbid unsafe Rust and deprecated API use, and avoid production `unwrap`/`expect`.
+- **SRS-NFR-001:** Production code MUST forbid unsafe Rust, deny deprecated API use at crate roots, and avoid production `unwrap`/`expect`. First-party source MUST NOT suppress the deprecated-use diagnostic.
 - **SRS-NFR-002:** Scientific stage functions MUST be side-effect-free and return typed results; only pipeline-level operational logging and report publication write files.
 - **SRS-NFR-003:** Representative 500–1,000 base release analysis SHOULD complete within 30 seconds and 512 MiB on a documented host.
 - **SRS-NFR-004:** Every Rust source MUST have an exact current `docs/src` counterpart.
