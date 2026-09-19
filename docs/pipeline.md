@@ -273,7 +273,10 @@ Each removed candidate increments `excluded_variant_candidates` once, even when
 it fails more than one eligibility condition. The pure variant stage also returns
 a concise exclusion diagnostic containing kind, contig, normalized position when
 available, and all failed rules. Pipeline orchestration writes one WARN record per
-diagnostic without reference/alternate alleles.
+diagnostic without reference/alternate alleles. Sample aggregation logs aggregate
+counts of differential-locus observations and variant-associated calls that
+retain a basecall-independent profile; those operational counts do not alter the
+scientific result.
 
 ### Substep 6.4 — Ordering
 
@@ -293,6 +296,8 @@ The read has already located itself at this boundary. Its orientation and covere
 Before pairwise/locus aggregation, Signal derives a run-length reference coverage topology from every selected post-trim read segment. Each maximal interval records total read depth plus forward/reverse orientation depth. This counts all independently placed reads regardless of later pairwise eligibility and does not imply nucleotide agreement or consensus admission.
 
 Signal then builds a deterministic pairwise overlap graph from the SHA-sorted read registry. Every unordered pair is compared only at shared selected-alignment reference coordinates. `shared_positions` counts all shared coordinates, while the agreement denominator includes only positions where both query observations are canonical A/C/G/T. Equal canonical observations are agreements; unequal canonical observations are conflicts. Unresolved symbols and deletions do not enter that nucleotide denominator, so gap/indel evidence remains separate. A pair is eligible for later consensus reconciliation only when the comparable-base count reaches `sample_reconciliation.minimum_comparable_bases` and the agreement fraction reaches `sample_reconciliation.minimum_overlap_agreement`. Non-overlapping reads produce no pair edge and remain valid sample evidence.
+
+Before sparse locus/variant projection, sample reconciliation resolves every call-backed sample observation back to the authoritative `LocusEvidence` record by original call index. Its optional basecall-independent `EvidenceProfile` is retained internally in reference orientation: forward reads keep A/C/G/T order, reverse reads complement A/T and C/G. A zero-signal locus remains profile-less and deletion observations have no nucleotide profile. This internal evidence does not alter placement, overlap admission, callability, or variant eligibility and is not serialized by the current v7 sample report.
 
 Sparse locus aggregation then runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
 

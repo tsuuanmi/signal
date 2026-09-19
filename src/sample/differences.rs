@@ -9,6 +9,8 @@ use crate::model::sample_evidence::{
     LocusDifferenceEvidence, LocusDifferenceObservation, LocusState,
 };
 
+use super::profile;
+
 struct DifferenceBuilder {
     reference_base: char,
     observations: Vec<LocusDifferenceObservation>,
@@ -102,6 +104,7 @@ fn observation(
             state,
             base: None,
             quality: None,
+            profile: None,
         });
     }
 
@@ -120,6 +123,7 @@ fn observation(
         state,
         base: Some(column.query_base),
         quality: Some(quality.relative_quality_score),
+        profile: profile::for_call(read, call_index_0based)?,
     })
 }
 

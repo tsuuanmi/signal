@@ -4,6 +4,7 @@ mod aggregate;
 mod coverage;
 mod differences;
 mod overlap;
+mod profile;
 mod variants;
 
 pub(crate) use aggregate::aggregate;

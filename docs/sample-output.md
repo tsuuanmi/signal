@@ -250,6 +250,18 @@ evidence belongs.
 
 None of these arrays is a consensus result.
 
+## Internal evidence retained outside v7
+
+The sample science model also retains the existing basecall-independent
+`EvidenceProfile` for call-backed differential-locus observations and
+variant-associated calls, projected into reference A/C/G/T orientation.
+Zero-signal loci remain profile-less and deletions have no nucleotide profile.
+
+This evidence is intentionally **not serialized** in
+`signal.sample_evidence/v7`. The public document stays reviewer-focused while
+future sample interpretation can consume the internal profile without
+reconstructing it from called bases or peak thresholds.
+
 ## Contract boundary
 
 v7 remains compact and difference-focused. It does not serialize per-base
