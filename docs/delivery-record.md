@@ -16,7 +16,7 @@ Deliver one auditable AB1-to-primary-difference vertical slice in Rust. The impl
 8. Reference-free `signal basecall` using the same validated decode/re-calling/signal/QC path and publishing one typed `signal.basecalls/v1` JSON result without reference, alignment, or variants.
 9. Clean external batch reruns with complete preflight/build before selected-only
    destructive cleanup.
-10. Multi-read `signal sample` analysis over independently placed reads, publishing compact `signal.sample_evidence/v2` with a deterministic read registry, sparse differential loci, and normalized variant support.
+10. Multi-read `signal sample` analysis over independently placed reads, publishing compact `signal.sample_evidence/v3` with a deterministic read registry, sparse differential loci, and normalized variant support.
 11. Synthetic malformed/unit/end-to-end tests, deterministic output checks, and
    CI contract gates.
 
@@ -36,7 +36,7 @@ A successful core CLI invocation creates the command-specific basecall, analysis
 - compact v5 JSON exposes software and input/reference/configuration hashes, call count/trim, merged noisy regions, alignment summary, normalized variants with concise mapped supporting evidence, and warning counts; effective parameters remain in strict configuration schema v4;
 - internal coordinates and external 1-based variants are explicit;
 - circular rCRS origin-spanning reads are representable;
-- analysis v5 omits filenames, full sequences/windows/gapped rows, method constants, full peaks, and vendor data; basecalls v1 includes full sequences but omits reference/alignment/variant evidence; sample evidence v2 factors read identity/orientation/coverage once, emits only differential loci plus normalized variant support, and omits consensus/interpretation; no current contract emits compatibility output, genotype, heteroplasmy fraction, clinical meaning, VCF/BCF, or hidden regional correction;
+- analysis v6 omits filenames, full sequences/windows/gapped rows, method constants, full peaks, and vendor data; basecalls v1 includes full sequences but omits reference/alignment/variant evidence; sample evidence v3 factors read identity/orientation/coverage once, emits only differential loci plus normalized variant support, and omits consensus/interpretation; no current contract emits compatibility output, genotype, heteroplasmy fraction, clinical meaning, VCF/BCF, or hidden regional correction;
 - format/check/Clippy/tests/rustdoc/schema/TOML/reference/docs-mirror gates pass;
 - batch cleanup is limited to fully preflighted selected sample directories and matching logs, rejects ambiguity/collisions/symlinks, and preserves unselected artifacts;
 - approved real-trace validation is recorded before a scientific release claim.
