@@ -161,44 +161,62 @@ fn local_statistics(
     Ok((baselines, noise_sigmas))
 }
 
-/// Refines the event sample without consulting a basecall verdict.
+/// Refines the locus event without consulting a basecall verdict.
 ///
-/// The selected sample maximizes total non-negative baseline-corrected A/C/G/T
-/// amplitude within the PLOC window. Equal evidence prefers the sample nearest
-/// PLOC, then the lower sample coordinate.
+/// Candidate events are positive local maxima of total non-negative
+/// baseline-corrected A/C/G/T amplitude. The nearest candidate to PLOC wins;
+/// equal-distance candidates prefer greater total signal, then the lower sample
+/// coordinate. If the locus window has no positive total-signal local maximum,
+/// the validated PLOC sample is used directly.
 fn select_event_position(
     trace: &Chromatogram,
     window: LocusWindow,
     ploc: usize,
     baselines: [f64; 4],
 ) -> Result<usize> {
+    if window.start >= window.end || window.end > trace.sample_count() || !window.contains(ploc) {
+        return Err(Error::SignalProcessing(format!(
+            "invalid locus event window {}..{} at PLOC {ploc}",
+            window.start, window.end
+        )));
+    }
+
+    let search_start = window.start.max(1);
+    let search_end = window.end.min(trace.sample_count().saturating_sub(1));
     let mut best: Option<(usize, f64)> = None;
-    for position in window.start..window.end {
-        let total = (0..4)
-            .map(|channel| {
-                statistics::corrected_amplitude(
-                    trace.channels[channel][position],
-                    baselines[channel],
-                )
-            })
-            .sum::<f64>();
+
+    for position in search_start..search_end {
+        let left = corrected_total(trace, position - 1, baselines);
+        let current = corrected_total(trace, position, baselines);
+        let right = corrected_total(trace, position + 1, baselines);
+        let local = (left <= current && current > right) || (left < current && current >= right);
+        if !local || current <= 0.0 {
+            continue;
+        }
+
         let replace = best.is_none_or(|(best_position, best_total)| {
-            let evidence_order = total.total_cmp(&best_total);
-            evidence_order.is_gt()
-                || (evidence_order.is_eq()
-                    && (position.abs_diff(ploc), position)
-                        < (best_position.abs_diff(ploc), best_position))
+            let distance = position.abs_diff(ploc);
+            let best_distance = best_position.abs_diff(ploc);
+            distance < best_distance
+                || (distance == best_distance
+                    && (current.total_cmp(&best_total).is_gt()
+                        || (current.total_cmp(&best_total).is_eq()
+                            && position < best_position)))
         });
         if replace {
-            best = Some((position, total));
+            best = Some((position, current));
         }
     }
-    best.map(|(position, _)| position).ok_or_else(|| {
-        Error::SignalProcessing(format!(
-            "empty locus window {}..{} at PLOC {ploc}",
-            window.start, window.end
-        ))
-    })
+
+    Ok(best.map_or(ploc, |(position, _)| position))
+}
+
+fn corrected_total(trace: &Chromatogram, position: usize, baselines: [f64; 4]) -> f64 {
+    (0..4)
+        .map(|channel| {
+            statistics::corrected_amplitude(trace.channels[channel][position], baselines[channel])
+        })
+        .sum()
 }
 
 fn context_start(locus_index: usize, locus_count: usize, window_size_bases: usize) -> usize {
@@ -287,18 +305,65 @@ mod tests {
     }
 
     #[test]
-    fn event_refinement_prefers_total_evidence_then_ploc_proximity() -> Result<()> {
-        let mut trace = trace();
-        trace.channels[0][4] = 70;
-        trace.channels[1][4] = 70;
-        trace.channels[2][5] = 120;
-        let evidence = calculate(&trace, &config(5))?;
-        assert_eq!(evidence[2].event_position_0based, 4);
+    fn event_refinement_prefers_nearest_local_event_over_stronger_neighbor() -> Result<()> {
+        let mut channels = std::array::from_fn(|_| vec![0; 40]);
+        channels[0][15] = 220;
+        channels[2][18] = 120;
+        let trace = Chromatogram {
+            source_name: "synthetic.ab1".into(),
+            source_sha256: String::new(),
+            channels,
+            base_locations: vec![2, 10, 18, 26, 34],
+            vendor: VendorEvidence::default(),
+        };
 
-        trace.channels[0][6] = 70;
-        trace.channels[1][6] = 70;
         let evidence = calculate(&trace, &config(5))?;
-        assert_eq!(evidence[2].event_position_0based, 4);
+        assert_eq!(evidence[2].ploc_0based, 18);
+        assert_eq!(evidence[2].event_position_0based, 18);
+        assert_eq!(evidence[2].channel_heights, [0, 0, 120, 0]);
+        Ok(())
+    }
+
+    #[test]
+    fn event_refinement_breaks_equal_distance_by_signal_then_coordinate() -> Result<()> {
+        let mut channels = std::array::from_fn(|_| vec![0; 20]);
+        channels[0][5] = 100;
+        channels[2][7] = 120;
+        let trace = Chromatogram {
+            source_name: "synthetic.ab1".into(),
+            source_sha256: String::new(),
+            channels,
+            base_locations: vec![2, 6, 10, 14, 18],
+            vendor: VendorEvidence::default(),
+        };
+        let window = LocusWindow { start: 3, end: 9 };
+
+        assert_eq!(select_event_position(&trace, window, 6, [0.0; 4])?, 7);
+
+        let mut tied = trace.clone();
+        tied.channels[2][7] = 100;
+        assert_eq!(select_event_position(&tied, window, 6, [0.0; 4])?, 5);
+        Ok(())
+    }
+
+    #[test]
+    fn event_refinement_falls_back_to_ploc_without_positive_local_maximum() -> Result<()> {
+        let mut channels = std::array::from_fn(|_| vec![0; 12]);
+        channels[0][4] = 1;
+        channels[0][5] = 2;
+        channels[0][6] = 3;
+        let trace = Chromatogram {
+            source_name: "synthetic.ab1".into(),
+            source_sha256: String::new(),
+            channels,
+            base_locations: vec![1, 3, 5, 7, 9],
+            vendor: VendorEvidence::default(),
+        };
+
+        assert_eq!(
+            select_event_position(&trace, LocusWindow { start: 4, end: 7 }, 5, [0.0; 4])?,
+            5
+        );
         Ok(())
     }
 
