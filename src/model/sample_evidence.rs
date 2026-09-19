@@ -9,7 +9,7 @@ use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum OverlapExclusionReason {
-    OverlapBelowMinimum,
+    ComparableBasesBelowMinimum,
     AgreementBelowMinimum,
 }
 
