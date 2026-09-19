@@ -41,7 +41,6 @@ pub(super) fn aggregate(
             ))
         })?;
 
-        add(&mut result.support, profile.weights);
         result.contributors += 1;
         match read.alignment.orientation {
             Orientation::Forward => {
@@ -54,6 +53,9 @@ pub(super) fn aggregate(
             }
         }
     }
+
+    result.support =
+        std::array::from_fn(|channel| result.forward_support[channel] + result.reverse_support[channel]);
 
     if result.contributors != result.forward_contributors + result.reverse_contributors
         || !result
