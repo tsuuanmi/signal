@@ -30,7 +30,7 @@ Current supported behavior includes:
 - explicit primary and ambiguity states;
 - observational rolling signal-to-noise annotations;
 - deterministic read-quality scoring and end trimming;
-- forward/reverse semi-global alignment to one short reference;
+- forward/reverse profile-aware semi-global alignment to one short reference;
 - linear and circular reference handling;
 - primary-sequence SNVs and supported small insertions/deletions;
 - reviewer-facing reference-oriented A/C/G/T peak and quality evidence for reported variants;
@@ -49,7 +49,7 @@ signal-derived base re-calling
  ↓
 basic QC / trimming
  ↓
-forward-or-reverse alignment
+forward-or-reverse evidence-profile alignment
  ↓
 primary-sequence variant calling
  ↓
