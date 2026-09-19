@@ -7,8 +7,8 @@ Builds minimal SNV/indel allele representations while preserving the canonical g
 ## Responsibilities
 
 - Build SNV, insertion, and deletion `Variant` records with one-based positions.
-- Left-normalize linear indels and canonicalize circular indels so equivalent
-  repetitive indels share one representation.
+- Preserve the observed canonical alignment anchor for linear and circular indels; do not shift repeat-equivalent events a second time.
+- Derive a real predecessor anchor when one is available and use the existing right-anchor representation only for a true leading linear indel.
 - Validate call mappings and carry them through unchanged.
 
 ## Non-responsibilities
