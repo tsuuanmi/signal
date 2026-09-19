@@ -68,8 +68,8 @@ class AnalyzeSamplesTests(unittest.TestCase):
         (selected / "old.json").write_text("old", encoding="utf-8")
         (unselected / "keep.json").write_text("keep", encoding="utf-8")
         legacy_trace_log = self.log_dir / f"{trace.stem}.log"
-        sample_log = self.log_dir / "S1.sample.log"
-        unselected_log = self.log_dir / "S2.sample.log"
+        sample_log = self.log_dir / "S1.log"
+        unselected_log = self.log_dir / "S2.log"
         unrelated_log = self.log_dir / "service.log"
         for log in [
             legacy_trace_log,
@@ -115,7 +115,7 @@ class AnalyzeSamplesTests(unittest.TestCase):
         previous.write_text("old", encoding="utf-8")
         source = self.root / "outside.log"
         source.write_text("keep", encoding="utf-8")
-        (self.log_dir / "S1.sample.log").symlink_to(source)
+        (self.log_dir / "S1.log").symlink_to(source)
         workload = batch.discover_workload(self.trace_dir, ["S1"])
 
         with self.assertRaisesRegex(ValueError, "symlinked log"):
