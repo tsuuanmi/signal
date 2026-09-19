@@ -4,13 +4,13 @@ This document covers reference-guided analysis. Reference-free output is the sep
 
 `signal analyze <trace.ab1> --reference <reference.fasta>` writes one deterministic file named `results/<trace-stem>.json`. The `results/` directory is created when publication begins. The core CLI never overwrites an existing result. After validating a non-empty UTF-8 trace stem, Rust separately appends nondeterministic operational records to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`); that sidecar is outside the JSON contract.
 
-The authoritative contract is [`schemas/analysis-v6.schema.json`](schemas/analysis-v6.schema.json); a synthetic example is [`examples/analysis-v6.example.json`](examples/analysis-v6.example.json). Output v6 is intentionally incompatible with earlier result versions, and Signal emits no compatibility document or duplicate legacy fields. The strict scientific configuration remains schema version 5.
+The authoritative contract is [`schemas/analysis-v7.schema.json`](schemas/analysis-v7.schema.json); a synthetic example is [`examples/analysis-v7.example.json`](examples/analysis-v7.example.json). Output v6 is intentionally incompatible with earlier result versions, and Signal emits no compatibility document or duplicate legacy fields. The strict scientific configuration remains schema version 5.
 
 ## Top-level fields
 
 | Field | Meaning |
 |---|---|
-| `schema_version` | Always `signal.analysis/v6`. |
+| `schema_version` | Always `signal.analysis/v7`. |
 | `provenance` | Input, reference, and configuration identities. |
 | `read` | Original call count and the retained 0-based half-open trim interval. |
 | `signal_quality` | Merged candidate-noisy call/sample regions only. |
@@ -102,3 +102,20 @@ representation away from the observed alignment gap. The normalized
 | trim, segment, noisy-region `start`/`end` | 0-based half-open interval `[start, end)` |
 
 Variant alleles, call `base`, and peak labels are written on the supplied reference strand. `quality` remains an uncalibrated relative score; neither channel height nor quality implies genotype, zygosity, allele fraction, heteroplasmy, or clinical significance.
+
+## Trace integrity
+
+`signal_quality.integrity` preserves concise evidence about the trace foundation:
+
+- PLOC count;
+- optional PBAS/PCON counts;
+- minimum/median/maximum adjacent PLOC spacing when at least two loci exist;
+- exact signed-16-bit clipped channel-sample count;
+- optional maximum-to-median corrected event-signal ratio.
+
+A PBAS/PCON length mismatch is non-fatal and does not create/remove calls:
+Signal still processes exactly the valid PLOC-defined loci. Exact clipping and
+event-signal imbalance are observations only and do not change calls, trim,
+alignment, or variants. The ratio is not an artifact probability or dye-blob
+classification.
+
