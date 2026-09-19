@@ -70,7 +70,7 @@ Each overlap record contains:
 The configured defaults are Tracy-derived:
 
 ~~~text
-minimum_overlap_bases = 25
+minimum_comparable_bases = 25
 minimum_overlap_agreement = 0.50
 ~~~
 
@@ -81,7 +81,7 @@ the existing locus/normalized-variant evidence so future consensus can treat gap
 support as a separate evidence problem.
 
 An eligible edge has no exclusion reasons. An ineligible edge records
-`overlap_below_minimum`, `agreement_below_minimum`, or both. This decision
+`comparable_bases_below_minimum`, `agreement_below_minimum`, or both. This decision
 does not erase a read, mutate placement, or change read-level variant eligibility.
 
 ## Sparse locus differences
