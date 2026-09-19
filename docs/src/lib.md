@@ -20,7 +20,7 @@ Accepts `cli::Cli`; returns `error::Result<()>`.
 
 ## Invariants and errors
 
-The library forbids unsafe Rust and deprecated API use. It does not print or select process exit codes.
+The library forbids unsafe Rust and denies deprecated API use. The separate Rust source-policy gate rejects first-party `allow`/`expect(deprecated)` suppressions. It does not print or select process exit codes.
 Pipeline errors are preserved for the binary boundary.
 
 ## Dependencies
