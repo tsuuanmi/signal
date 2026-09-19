@@ -5,6 +5,7 @@ mod call_evidence;
 mod contribution;
 mod coverage;
 mod differences;
+mod nucleotide_support;
 mod overlap;
 mod variants;
 
