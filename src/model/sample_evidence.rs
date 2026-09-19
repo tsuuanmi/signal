@@ -41,8 +41,7 @@ pub(crate) struct LocusDifferenceObservation {
     pub(crate) read_index: usize,
     pub(crate) state: LocusState,
     pub(crate) base: Option<char>,
-    pub(crate) call_index_0based: Option<usize>,
-    pub(crate) relative_quality: Option<u8>,
+    pub(crate) quality: Option<u8>,
 }
 
 /// All covering-read observations retained at one differential reference locus.
@@ -57,9 +56,9 @@ pub(crate) struct LocusDifferenceEvidence {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct VariantCallEvidence {
     pub(crate) role: VariantCallRole,
-    pub(crate) call_index_0based: usize,
-    pub(crate) reference_position_1based: Option<usize>,
-    pub(crate) ploc_0based: usize,
+    pub(crate) base: char,
+    pub(crate) peak_heights: [i32; 4],
+    pub(crate) quality: u8,
 }
 
 /// One read observing a normalized variant, with configured eligibility retained.
