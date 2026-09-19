@@ -86,7 +86,7 @@ mod tests {
     use crate::model::locus_evidence::{EvidenceProfile, LocusEvidence};
     use crate::model::nucleotide::Nucleotide;
     use crate::model::quality::{CallQuality, QualityControlResult};
-    use crate::model::signal::SignalAnalysis;
+    use crate::model::signal::{NoisyRegion, SignalAnalysis};
     use crate::model::variant::{
         ObservedVariant, Variant, VariantCallMapping, VariantCallRole, VariantCallingResult,
         VariantExclusionReason, VariantKind,
@@ -272,7 +272,7 @@ mod tests {
 
     #[test]
     fn orders_reads_once_and_factors_read_identity_from_evidence() -> Result<()> {
-        let forward = observation(
+        let mut forward = observation(
             "a",
             "reference",
             "config",
@@ -280,6 +280,13 @@ mod tests {
             vec![column('G', 'A', Some(0), 72)],
             vec![snv(73, "A", "G")],
         );
+        forward.signal.noisy_regions.push(NoisyRegion {
+            call_start_0based: 0,
+            call_end_0based_exclusive: 1,
+            sample_start_0based: 0,
+            sample_end_0based_exclusive: 10,
+            minimum_primary_snr: 1.0,
+        });
         let reverse = observation(
             "b",
             "reference",
@@ -334,12 +341,20 @@ mod tests {
                 .map(|profile| profile.weights),
             Some([0.1, 0.2, 0.3, 0.4])
         );
+        assert_eq!(
+            evidence.locus_differences[0].observations[0].in_noisy_region,
+            Some(true)
+        );
         assert_eq!(evidence.locus_differences[0].observations[1].read_index, 1);
         assert_eq!(
             evidence.locus_differences[0].observations[1]
                 .profile
                 .map(|profile| profile.weights),
             Some([0.4, 0.3, 0.2, 0.1])
+        );
+        assert_eq!(
+            evidence.locus_differences[0].observations[1].in_noisy_region,
+            Some(false)
         );
         assert_eq!(evidence.variants.len(), 1);
         assert_eq!(evidence.variants[0].support_topology.reads, 2);
@@ -361,6 +376,7 @@ mod tests {
                 .map(|profile| profile.weights),
             Some([0.1, 0.2, 0.3, 0.4])
         );
+        assert!(evidence.variants[0].support[0].calls[0].in_noisy_region);
         assert_eq!(evidence.variants[0].support[1].read_index, 1);
         assert_eq!(
             evidence.variants[0].support[1].calls[0]
@@ -368,6 +384,7 @@ mod tests {
                 .map(|profile| profile.weights),
             Some([0.4, 0.3, 0.2, 0.1])
         );
+        assert!(!evidence.variants[0].support[1].calls[0].in_noisy_region);
         Ok(())
     }
 
@@ -432,6 +449,11 @@ mod tests {
         assert!(
             evidence.locus_differences[2].observations[0]
                 .profile
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[2].observations[0]
+                .in_noisy_region
                 .is_none()
         );
         Ok(())

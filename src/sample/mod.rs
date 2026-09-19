@@ -3,6 +3,7 @@
 mod aggregate;
 mod coverage;
 mod differences;
+mod noise;
 mod overlap;
 mod profile;
 mod variants;

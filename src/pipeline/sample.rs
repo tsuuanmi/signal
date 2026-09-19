@@ -115,6 +115,19 @@ fn run_logged(
         .flat_map(|support| &support.calls)
         .filter(|call| call.profile.is_some())
         .count();
+    let noisy_locus_observations = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter(|observation| observation.in_noisy_region == Some(true))
+        .count();
+    let noisy_variant_calls = evidence
+        .variants
+        .iter()
+        .flat_map(|variant| &variant.support)
+        .flat_map(|support| &support.calls)
+        .filter(|call| call.in_noisy_region)
+        .count();
     let locus_forward_reads = evidence
         .locus_differences
         .iter()
@@ -152,9 +165,9 @@ fn run_logged(
             concat!(
                 "event=sample_aggregation_completed elapsed_ms={} reads={} coverage_segments={} ",
                 "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
-                "locus_forward_reads={} locus_reverse_reads={} locus_reference_reads={} ",
-                "locus_alternate_reads={} locus_unresolved_reads={} locus_deletion_reads={} ",
-                "variants={} profiled_variant_calls={}"
+                "noisy_locus_observations={} locus_forward_reads={} locus_reverse_reads={} ",
+                "locus_reference_reads={} locus_alternate_reads={} locus_unresolved_reads={} ",
+                "locus_deletion_reads={} variants={} profiled_variant_calls={} noisy_variant_calls={}"
             ),
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
@@ -167,6 +180,7 @@ fn run_logged(
                 .count(),
             evidence.locus_differences.len(),
             profiled_locus_observations,
+            noisy_locus_observations,
             locus_forward_reads,
             locus_reverse_reads,
             locus_reference_reads,
@@ -174,7 +188,8 @@ fn run_logged(
             locus_unresolved_reads,
             locus_deletion_reads,
             evidence.variants.len(),
-            profiled_variant_calls
+            profiled_variant_calls,
+            noisy_variant_calls
         ),
     )?;
 
