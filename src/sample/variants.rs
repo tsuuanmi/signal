@@ -3,8 +3,8 @@
 use std::collections::{BTreeMap, BTreeSet};
 
 use crate::error::{Error, Result};
-use crate::model::read_observation::ReadObservation;
 use crate::model::alignment::Orientation;
+use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
     VariantCallEvidence, VariantEvidence, VariantSupport, VariantSupportTopology,
 };
@@ -59,8 +59,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<VariantEvidenc
                 support,
             })
         })
-        .collect::<Result<Vec<_>>>()?
-        .collect())
+        .collect::<Result<Vec<_>>>())
 }
 
 fn support_topology(
@@ -78,7 +77,12 @@ fn support_topology(
     for item in support {
         let read = reads
             .get(item.read_index)
-            .ok_or_else(|| Error::Sample(format!("variant support references missing read {}", item.read_index)))?;
+            .ok_or_else(|| {
+                Error::Sample(format!(
+                    "variant support references missing read {}",
+                    item.read_index
+                ))
+            })?;
         match read.alignment.orientation {
             Orientation::Forward => {
                 topology.forward_reads += 1;
