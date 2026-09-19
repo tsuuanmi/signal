@@ -197,6 +197,7 @@ uv run ruff format --check scripts/
 uv run ruff check scripts/
 uv run basedpyright scripts/
 uv run python scripts/validate_result_schemas.py
+uv run python scripts/validate_rust_source_policy.py
 
 cargo fmt --all --check
 cargo check --all-targets
