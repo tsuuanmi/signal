@@ -6,6 +6,7 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace `signal.sample_evidence/v2` with `signal.sample_evidence/v3` so observed SNV support can expose the new closed-enum exclusion reason `mixed_supporting_signal`; no v2 compatibility output is retained.
 - Replace `signal.analysis/v5` with `signal.analysis/v6`: variant-associated calls now expose only reference-oriented `base`, co-located A/C/G/T `peaks`, and uncalibrated `quality`; original call index, mapped call position, PLOC, trace-strand symbols, and maximum-peak-only summaries are removed without compatibility output.
 - Replace `signal.sample_evidence/v1` with compact `signal.sample_evidence/v2`: factor read name/SHA/orientation/coverage into one SHA-sorted read registry, replace dense `loci[]` with sparse `locus_differences[]`, and use unique reviewer-facing read names in public evidence without a v1 compatibility output.
 
@@ -41,7 +42,7 @@ All notable changes to this project are documented here.
 - Quality is explicitly uncalibrated relative score; vendor PCON remains separate.
 - rCRS topology is circular and origin-spanning alignments/indels have explicit canonical coordinates.
 - Basecalling is `signal.peak_recall/v3`: qualifying channels must pass the configured ratio at both their selected peak and the uniquely strongest primary peak sample, rejecting remote secondary maxima while preserving primary selection, tie handling, PLOC fallback, and one/two/three/four-channel call semantics.
-- Variant calling is `signal.primary_difference/v3`: normalized anchors must lie in configured inclusive regions; SNV and every inserted-base supporting call must meet the configured maximum-channel peak floor and strictly exceed the relative-quality threshold; deletion and insertion flanks are exempt.
+- Variant calling is `signal.primary_difference/v4`: normalized anchors must lie in configured inclusive regions; SNV and every inserted-base supporting call must meet the configured peak/quality gates; additionally, SNVs with more than one co-localized qualifying channel remain observed but are ineligible for clean reporting with `mixed_supporting_signal`. Insertions/deletions are not subjected to this point-mixed-signal rule.
 - Alignment scores are 64-bit (`i64`) while configuration score deltas remain 32-bit (`i32`).
 - Origin crossing is represented once by `alignment.wraps_origin`; Rust still counts it in the operational warning summary without duplicating it in JSON.
 - `P2BA.1` is ignored; only optional `PBAS.2` and `PCON.2` vendor evidence is consumed.
