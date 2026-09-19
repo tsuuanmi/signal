@@ -24,6 +24,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Internal call-backed sample evidence now preserves existing merged candidate-noisy-region membership for differential-locus observations and normalized-variant calls, with deletion context left absent and production aggregate logging, without changing `signal.sample_evidence/v7` or eligibility semantics.
 - Internal differential-locus evidence now retains factorized total/read-orientation/reference-alternate-unresolved-deletion support topology with production logging, without changing `signal.sample_evidence/v7` or introducing a consensus vote.
 - Internal sample reconciliation now preserves basecall-independent A/C/G/T `EvidenceProfile` values for call-backed differential-locus and normalized-variant evidence, projected to reference orientation without public schema changes or missing-profile fallback.
 - Factorized sample-variant support topology summarizing observed/eligible and forward/reverse read counts while preserving every authoritative per-read support record and avoiding confidence or independence claims.
