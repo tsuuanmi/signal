@@ -71,6 +71,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-OUT-002:** Core result publication is atomic and does not overwrite an existing result.
 - **INV-OUT-003:** Operational logs are separate from deterministic scientific result contracts.
 - **INV-OUT-004:** A versioned public schema is not mutated retroactively; incompatible contract changes require a new schema version.
+- **INV-OUT-005:** Validation measurement exports are separate ignored local artifacts. They reuse authoritative scientific evidence but cannot alter public result schemas, become production compatibility outputs, or apply research thresholds during export.
 
 ## Rust implementation
 
