@@ -46,3 +46,4 @@
 | [0042](0042-profile-heterogeneity-decomposition.md) | Decompose nucleotide profile heterogeneity | Accepted |
 | [0043](0043-directional-profile-distance.md) | Measure directional nucleotide-profile distance | Accepted |
 | [0044](0044-validation-measurement-export.md) | Separate validation measurements from public sample evidence | Accepted |
+| [0045](0045-validation-event-placement-diagnostics.md) | Export validation event-placement diagnostics | Accepted |
