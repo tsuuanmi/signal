@@ -82,8 +82,7 @@ fn supporting_evidence_reasons(
         let assessment = assess_call(mapping, calls, quality, config)?;
         peak_failed |= !assessment.peak_passes;
         quality_failed |= !assessment.quality_passes;
-        mixed_supporting_signal |=
-            variant.kind == VariantKind::Snv && assessment.mixed_signal;
+        mixed_supporting_signal |= variant.kind == VariantKind::Snv && assessment.mixed_signal;
     }
     let mut reasons = Vec::new();
     if peak_failed {
