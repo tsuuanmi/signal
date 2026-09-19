@@ -9,7 +9,7 @@ use crate::model::sample_evidence::{
     LocusDifferenceEvidence, LocusDifferenceObservation, LocusState, LocusSupportTopology,
 };
 
-use super::{noise, profile};
+use super::call_evidence;
 
 struct DifferenceBuilder {
     reference_base: char,
@@ -156,8 +156,7 @@ fn observation(
             state,
             base: None,
             quality: None,
-            profile: None,
-            in_noisy_region: None,
+            signal: None,
         });
     }
 
@@ -176,8 +175,7 @@ fn observation(
         state,
         base: Some(column.query_base),
         quality: Some(quality.relative_quality_score),
-        profile: profile::for_call(read, call_index_0based)?,
-        in_noisy_region: Some(noise::for_call(read, call_index_0based)),
+        signal: Some(call_evidence::for_call(read, call_index_0based)?),
     })
 }
 
