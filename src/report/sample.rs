@@ -20,7 +20,7 @@ pub(crate) struct CompletedSampleEvidence {
     pub(crate) evidence: SampleEvidence,
 }
 
-/// Builds `signal.sample_evidence/v2` without filesystem side effects.
+/// Builds `signal.sample_evidence/v3` without filesystem side effects.
 pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidenceResult> {
     let CompletedSampleEvidence {
         sample_id,
@@ -121,7 +121,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         .collect::<Result<Vec<_>>>()?;
 
     Ok(SampleEvidenceResult {
-        schema_version: "signal.sample_evidence/v2",
+        schema_version: "signal.sample_evidence/v3",
         sample_id,
         provenance: SampleProvenanceResult {
             reference: ReferenceResult {

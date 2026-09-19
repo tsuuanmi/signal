@@ -134,6 +134,28 @@ fn write_abif_fixture(
         p2ba,
         peak_heights,
         None,
+        None,
+    )
+}
+
+pub fn write_abif_with_secondary_signal(
+    path: &Path,
+    sequence: &str,
+    call_index: usize,
+    secondary_base: u8,
+    height: i16,
+) -> Result<(), Box<dyn std::error::Error>> {
+    write_abif_fixture_options(
+        path,
+        sequence,
+        sequence.as_bytes(),
+        1,
+        *b"ACGT",
+        None,
+        None,
+        None,
+        None,
+        Some((call_index, secondary_base, height)),
     )
 }
 
@@ -153,6 +175,7 @@ pub fn write_abif_with_background_noise(
         None,
         None,
         Some((noisy_calls, amplitude)),
+        None,
     )
 }
 
@@ -167,6 +190,7 @@ fn write_abif_fixture_options(
     p2ba: Option<Vec<u8>>,
     peak_heights: Option<Vec<i16>>,
     background_noise: Option<(std::ops::Range<usize>, i16)>,
+    secondary_signal: Option<(usize, u8, i16)>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let spacing = 4_usize;
     let signal_locations: Vec<usize> = (0..sequence.len())
@@ -200,6 +224,20 @@ fn write_abif_fixture_options(
     for (index, base) in sequence.bytes().enumerate() {
         let channel = channel_index(base)?;
         channels[channel][signal_locations[index]] = peak_heights[index];
+    }
+    if let Some((call_index, secondary_base, height)) = secondary_signal {
+        let position = *signal_locations
+            .get(call_index)
+            .ok_or("synthetic secondary-signal call index is out of range")?;
+        if height <= 0 {
+            return Err("synthetic secondary-signal height must be positive".into());
+        }
+        let secondary_channel = channel_index(secondary_base)?;
+        let primary_channel = channel_index(sequence.as_bytes()[call_index])?;
+        if secondary_channel == primary_channel {
+            return Err("synthetic secondary signal must use a different channel".into());
+        }
+        channels[secondary_channel][position] = height;
     }
     let mut records = Vec::new();
     for (index, base) in channel_order.iter().enumerate() {

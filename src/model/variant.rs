@@ -69,6 +69,8 @@ pub enum VariantExclusionReason {
     PeakBelowMinimum,
     /// At least one supporting call did not strictly exceed the quality threshold.
     RelativeQualityNotAboveThreshold,
+    /// An SNV supporting call retained more than one co-localized qualifying channel.
+    MixedSupportingSignal,
 }
 
 impl VariantExclusionReason {
@@ -80,6 +82,7 @@ impl VariantExclusionReason {
             Self::OutsideConfiguredRegion => "outside_configured_region",
             Self::PeakBelowMinimum => "peak_below_minimum",
             Self::RelativeQualityNotAboveThreshold => "relative_quality_not_above_threshold",
+            Self::MixedSupportingSignal => "mixed_supporting_signal",
         }
     }
 }

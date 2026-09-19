@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:signal:schema:sample-evidence:v2",
-  "title": "Signal sample evidence v2",
+  "$id": "urn:signal:schema:sample-evidence:v3",
+  "title": "Signal sample evidence v3",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,7 +14,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "signal.sample_evidence/v2"
+      "const": "signal.sample_evidence/v3"
     },
     "sample_id": {
       "type": "string",
@@ -219,7 +219,8 @@
         "indel_length_exceeded",
         "outside_configured_region",
         "peak_below_minimum",
-        "relative_quality_not_above_threshold"
+        "relative_quality_not_above_threshold",
+        "mixed_supporting_signal"
       ]
     },
     "variantCall": {

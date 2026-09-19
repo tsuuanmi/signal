@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.sample_evidence/v2",
+  "schema_version": "signal.sample_evidence/v3",
   "sample_id": "sample-001",
   "provenance": {
     "reference": {
@@ -140,7 +140,7 @@
           "read": "read-b",
           "eligible": false,
           "exclusion_reasons": [
-            "peak_below_minimum"
+            "mixed_supporting_signal"
           ],
           "calls": [
             {
@@ -148,11 +148,11 @@
               "base": "C",
               "peaks": {
                 "A": 14,
-                "C": 120,
+                "C": 790,
                 "G": 29,
-                "T": 18
+                "T": 300
               },
-              "quality": 24
+              "quality": 48
             }
           ]
         }

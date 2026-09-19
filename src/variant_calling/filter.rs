@@ -77,10 +77,12 @@ fn supporting_evidence_reasons(
     }
     let mut peak_failed = false;
     let mut quality_failed = false;
+    let mut mixed_supporting_signal = false;
     for mapping in supporting {
-        let (peak_passes, quality_passes) = call_passes(mapping, calls, quality, config)?;
-        peak_failed |= !peak_passes;
-        quality_failed |= !quality_passes;
+        let assessment = assess_call(mapping, calls, quality, config)?;
+        peak_failed |= !assessment.peak_passes;
+        quality_failed |= !assessment.quality_passes;
+        mixed_supporting_signal |= variant.kind == VariantKind::Snv && assessment.mixed_signal;
     }
     let mut reasons = Vec::new();
     if peak_failed {
@@ -89,15 +91,24 @@ fn supporting_evidence_reasons(
     if quality_failed {
         reasons.push(VariantExclusionReason::RelativeQualityNotAboveThreshold);
     }
+    if mixed_supporting_signal {
+        reasons.push(VariantExclusionReason::MixedSupportingSignal);
+    }
     Ok(reasons)
 }
 
-fn call_passes(
+struct SupportingCallAssessment {
+    peak_passes: bool,
+    quality_passes: bool,
+    mixed_signal: bool,
+}
+
+fn assess_call(
     mapping: &VariantCallMapping,
     calls: &BaseCalls,
     quality: &QualityControlResult,
     config: &VariantCallingConfig,
-) -> Result<(bool, bool)> {
+) -> Result<SupportingCallAssessment> {
     let index = mapping.call_index_0based;
     let call = calls.calls.get(index).ok_or_else(|| {
         Error::Variant(format!(
@@ -120,10 +131,11 @@ fn call_passes(
         .map(|peak| peak.height)
         .max()
         .ok_or_else(|| Error::Variant(format!("call index {index} has no channel peaks")))?;
-    Ok((
-        highest_peak >= config.minimum_peak_height,
-        score.relative_quality_score > config.relative_quality_threshold,
-    ))
+    Ok(SupportingCallAssessment {
+        peak_passes: highest_peak >= config.minimum_peak_height,
+        quality_passes: score.relative_quality_score > config.relative_quality_threshold,
+        mixed_signal: call.qualifying_channels.len() > 1,
+    })
 }
 
 #[cfg(test)]
@@ -304,6 +316,46 @@ mod tests {
         assert_eq!(
             result.excluded[1].reasons,
             vec![VariantExclusionReason::RelativeQualityNotAboveThreshold]
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn excludes_mixed_snv_but_does_not_apply_the_gate_to_insertions() -> Result<()> {
+        let (mut calls, quality) = evidence(&[200, 200], &[31, 31]);
+        for call in &mut calls.calls {
+            call.qualifying_channels = vec![Nucleotide::A, Nucleotide::C];
+            call.ambiguity = 'M';
+        }
+        let extracted = VariantCallingResult {
+            reported: vec![
+                variant(
+                    VariantKind::Snv,
+                    1,
+                    vec![mapping(VariantCallRole::Supporting, 0)],
+                ),
+                variant(
+                    VariantKind::Ins,
+                    2,
+                    vec![mapping(VariantCallRole::Supporting, 1)],
+                ),
+            ],
+            observed: Vec::new(),
+            excluded: Vec::new(),
+        };
+
+        let result = apply(extracted, &calls, &quality, &config(vec![[1, 2]]))?;
+
+        assert_eq!(result.reported.len(), 1);
+        assert_eq!(result.reported[0].kind, VariantKind::Ins);
+        assert_eq!(
+            result.observed[0].exclusion_reasons,
+            vec![VariantExclusionReason::MixedSupportingSignal]
+        );
+        assert!(result.observed[1].eligible());
+        assert_eq!(
+            result.excluded[0].reasons,
+            vec![VariantExclusionReason::MixedSupportingSignal]
         );
         Ok(())
     }

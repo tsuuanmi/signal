@@ -109,11 +109,11 @@ primary and ambiguity symbols.
 
 Calculates observation-only signal-quality features from the immutable analyzed channels and basecalling evidence. It uses full-width, stride-one windows of configured size `5..=10` calls. Each base call retains the sample interval used for peak selection, so a rolling call interval maps to one exact channel-sample span.
 
-For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every internal window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison; compact v5 serializes only each merged region's minimum primary SNR.
+For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every internal window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison; compact analysis v6 serializes only each merged region's minimum primary SNR.
 
 Signal processing also derives one internal local-context record per call. The configured rolling-window width selects a deterministic nearby rolling sample span for each locus. Per-channel baseline and first-difference-MAD noise use the same functions as rolling analysis. When a unique primary event exists, its four co-located raw channel values are baseline-corrected and converted to per-channel SNR observations.
 
-Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows do not form a noisy interval. Clean gaps are never filled. Windows and per-call observations remain internal; compact v5 emits only merged regions. These annotations do not alter calls, candidate-noisy classification, quality, trimming, alignment, warning totals, variant eligibility, or the compact JSON contracts. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
+Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows do not form a noisy interval. Clean gaps are never filled. Windows and per-call observations remain internal; compact analysis v6 emits only merged regions. These annotations do not alter calls, candidate-noisy classification, quality, trimming, alignment, warning totals, variant eligibility, or the compact JSON contracts. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
 
 ## Stage 4 — Quality control (`signal.apollo_relative_quality/v1`,
 `signal.apollo_end_trim/v1`)
@@ -204,7 +204,7 @@ compiled cell cap.
 
 The traceback internally decodes the selected path into equal-length gapped query and
 gapped reference strings, an operation-run string (e.g. `5M`, `3M1I1M`), and
-alignment metrics. Compact v5 emits only the selected alignment summary and
+alignment metrics. Compact analysis v6 emits only the selected alignment summary and
 reference segments, not the rows, operation runs, or score. When multiple paths tie, a documented state order
 (match > deletion > insertion) makes the result deterministic. Metrics are:
 
@@ -228,7 +228,7 @@ For a circular reference, the aligned span is projected back onto the reference;
 if it crosses the origin it is split into two segments and `wraps_origin` is
 `true`.
 
-## Stage 6 — Variant calling (`signal.primary_difference/v3`)
+## Stage 6 — Variant calling (`signal.primary_difference/v4`)
 
 Extracts normalized primary-sequence differences from the selected alignment.
 Only differences in the primary sequence are considered; no allele-frequency,
@@ -279,7 +279,7 @@ or equal to `minimum_peak_height` and an uncalibrated relative score strictly
 greater than `relative_quality_threshold`. Insertion flanks are not evaluated.
 Deletions have no supporting trace base, so their flanks are not subjected to
 peak or quality thresholds; their normalized anchor must still be in a region.
-Vendor PCON is not used by this filter.
+Vendor PCON is not used by this filter. For SNVs, a supporting call with more than one co-localized qualifying channel is retained as a normalized observation but is ineligible for clean-SNV reporting with `mixed_supporting_signal`. Insertions and deletions are not subjected to this point-mixed-signal gate; persistent mixed-length evidence is a separate method boundary.
 
 Each removed candidate increments `excluded_variant_candidates` once, even when
 it fails more than one eligibility condition. The pure variant stage also returns
@@ -304,12 +304,12 @@ The read has already located itself at this boundary. Its orientation and covere
 
 Sparse locus aggregation runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
 
-Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v2.
+Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v3.
 
 ## Output
 
 `analyze` publishes `signal.analysis/v6` at `results/<trace-stem>.json`.
-`sample` publishes `signal.sample_evidence/v2` at
+`sample` publishes `signal.sample_evidence/v3` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
@@ -350,12 +350,14 @@ diagnostic. The following limitations are intentional and documented:
 - **Single reference, single orientation.** The query is aligned to one
   reference record in one of two orientations. Multi-contig references,
   alternative references, and reference search/indexing are out of scope.
-- **Primary-sequence variants only.** Variants are derived from the conservative
-  signal-derived primary sequence. A two-channel ambiguity may still contribute
-  its strongest base to a primary-sequence difference, but it is not a genotype or
-  heteroplasmy call. Unresolved N differences, indels longer than
-  `max_indel_length`, out-of-region candidates, and SNV/insertion candidates
-  below configured supporting-signal thresholds are excluded.
+- **Primary-sequence variants only.** Differences are derived from the conservative
+  signal-derived primary sequence. A mixed two- or three-channel call may still
+  produce a normalized strongest-base SNV observation, but it is retained only as
+  evidence and is not eligible for ordinary clean-SNV reporting. Unresolved N
+  differences, indels longer than `max_indel_length`, out-of-region candidates,
+  mixed-supporting SNVs, and SNV/insertion candidates below configured supporting-
+  signal thresholds are excluded from the single-read report. This does not infer
+  genotype or heteroplasmy.
 - **Sanger trace limitations.** Basecalling depends on the quality of the
   four-channel signal and the vendor-defined basecall positions. Poor signal,
   mixed templates, and sequencing artifacts can produce unresolved (`N`) calls

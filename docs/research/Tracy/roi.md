@@ -4,6 +4,8 @@ This is the compact prioritization layer. Detailed rationale lives in the focuse
 
 This ranking is relative to Signal's current scope: deterministic Sanger AB1 processing for short references, with basecalling, alignment, and conservative variant reporting already implemented.
 
+**Promotion note (2026-09-19):** rank 1 has been promoted into production architecture as ADR-0027 and `signal.primary_difference/v4`. The research rationale remains here; root SRS/ADR/source are authoritative for current behavior.
+
 ROI combines expected biological correctness/review value, reuse of existing Signal evidence, implementation and validation cost, architectural disruption, and risk of unsupported biological claims.
 
 ## Ranking

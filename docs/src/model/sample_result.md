@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Defines serializable `signal.sample_evidence/v2` result records.
+Defines serializable `signal.sample_evidence/v3` result records.
 
 ## Responsibilities
 

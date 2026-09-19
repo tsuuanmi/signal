@@ -73,7 +73,7 @@ input behavior to `signal analyze`.
 
 ## Analysis output privacy
 
-Compact v5 omits the trace filename, full called sequences, individual rolling
+Compact analysis v6 omits the trace filename, full called sequences, individual rolling
 windows, gapped alignment rows, full per-channel peaks, and vendor data. It keeps
 input/reference/configuration hashes, reference identity, read/trim and merged
 noisy-region summaries, normalized alleles, concise call mappings, and supporting
@@ -86,7 +86,7 @@ payloads but still follow the same policy; `logs/` is ignored.
 
 ## Sample evidence output privacy
 
-`signal.sample_evidence/v2` intentionally contains the sample identifier plus each
+`signal.sample_evidence/v3` intentionally contains the sample identifier plus each
 contributing AB1 basename for reviewer traceability, along with input SHA-256,
 alignment/coverage summaries, sparse differential loci, normalized variants, and
 concise call mappings. Filenames, hashes, and biological differences can be
@@ -94,7 +94,7 @@ identifying, so sample-evidence JSON follows the same approval, storage, retenti
 and redistribution policy as its AB1 sources.
 
 Repository examples MUST use synthetic sample/read names and synthetic input hashes.
-Do not commit a local sample result merely because v2 is compact. Real local outputs
+Do not commit a local sample result merely because v3 is compact. Real local outputs
 may inform exploratory development, but release/compatibility evidence requires the
 approval record described below.
 

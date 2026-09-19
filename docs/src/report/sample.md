@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Projects internal `SampleEvidence` into `signal.sample_evidence/v2`.
+Projects internal `SampleEvidence` into `signal.sample_evidence/v3`.
 
 ## Responsibilities
 

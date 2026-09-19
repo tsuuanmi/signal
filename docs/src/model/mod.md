@@ -35,7 +35,7 @@ No filesystem access, argument parsing, logging, or algorithm execution.
   contracts.
 - `basecall_result`: reference-free `BasecallResult` matching basecalls schema v1.
 - `sample_evidence`: compact internal read-registry, differential-locus, and normalized-variant evidence.
-- `sample_result`: public `signal.sample_evidence/v2` records.
+- `sample_result`: public `signal.sample_evidence/v3` records.
 
 ## Invariants and errors
 

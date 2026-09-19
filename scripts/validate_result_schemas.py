@@ -16,8 +16,8 @@ ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v6.schema.json"
 ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v6.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v1.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v1.example.json"
-SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v2.schema.json"
-SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v2.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v3.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v3.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -187,6 +187,12 @@ def rejected_sample_shapes(
     empty_variant_calls = copy.deepcopy(example)
     empty_variant_calls["variants"][0]["support"][0]["calls"] = []
 
+    unknown_exclusion_reason = copy.deepcopy(example)
+    unknown_exclusion_reason["variants"][0]["support"][0]["eligible"] = False
+    unknown_exclusion_reason["variants"][0]["support"][0]["exclusion_reasons"] = [
+        "unsupported_reason"
+    ]
+
     return [
         ("sample evidence with no reads", missing_reads),
         ("sample evidence with invalid sample id", invalid_sample_id),
@@ -207,6 +213,10 @@ def rejected_sample_shapes(
         ),
         ("sample variant call without peaks", missing_call_peaks),
         ("sample variant support without mapped calls", empty_variant_calls),
+        (
+            "sample variant support with unknown exclusion reason",
+            unknown_exclusion_reason,
+        ),
     ]
 
 

@@ -8,13 +8,13 @@ use predicates::prelude::*;
 use serde_json::Value;
 use tempfile::tempdir;
 
-use support::{write_abif, write_config, write_reference};
+use support::{write_abif, write_abif_with_secondary_signal, write_config, write_reference};
 
 const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
 const SAMPLE_ID: &str = "sample-1";
 
 #[test]
-fn writes_deterministic_compact_sample_evidence_v2() -> Result<(), Box<dyn std::error::Error>> {
+fn writes_deterministic_compact_sample_evidence_v3() -> Result<(), Box<dyn std::error::Error>> {
     let first = tempdir()?;
     let second = tempdir()?;
 
@@ -50,7 +50,7 @@ fn writes_deterministic_compact_sample_evidence_v2() -> Result<(), Box<dyn std::
     assert_eq!(first_bytes, second_bytes);
 
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v2");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v3");
     assert_eq!(value["sample_id"], SAMPLE_ID);
     assert_object_keys(
         &value,
@@ -120,6 +120,63 @@ fn writes_deterministic_compact_sample_evidence_v2() -> Result<(), Box<dyn std::
         assert!(!text.contains(repeated));
     }
 
+    Ok(())
+}
+
+#[test]
+fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let trace = directory.path().join("mixed-read.ab1");
+    let mut query = QUERY.to_owned();
+    query.replace_range(10..11, "T");
+
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+    let config_text = fs::read_to_string(&config)?;
+    fs::write(
+        &config,
+        config_text.replace("best_section_fraction=0.10", "best_section_fraction=1.0"),
+    )?;
+    write_abif_with_secondary_signal(&trace, &query, 10, b'C', 400)?;
+
+    let mut command = Command::new(env!("CARGO_BIN_EXE_signal"));
+    command
+        .current_dir(directory.path())
+        .env("SIGNAL_CONFIG", &config)
+        .arg("sample")
+        .arg(SAMPLE_ID)
+        .arg(&trace)
+        .arg("--reference")
+        .arg(&reference)
+        .assert()
+        .success();
+
+    let value: Value = serde_json::from_slice(&fs::read(sample_output_path(directory.path()))?)?;
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v3");
+    let variants = value["variants"]
+        .as_array()
+        .ok_or("variants must be an array")?;
+    assert_eq!(variants.len(), 1);
+    let support = variants[0]["support"]
+        .as_array()
+        .ok_or("support must be an array")?;
+    assert_eq!(support.len(), 1);
+    assert_eq!(support[0]["read"], "mixed-read");
+    assert_eq!(support[0]["eligible"], false);
+    let reasons = support[0]["exclusion_reasons"]
+        .as_array()
+        .ok_or("exclusion_reasons must be an array")?;
+    assert!(
+        reasons
+            .iter()
+            .any(|reason| reason == "mixed_supporting_signal")
+    );
+    let call = &support[0]["calls"][0];
+    assert_eq!(call["base"], "T");
+    assert_eq!(call["peaks"]["T"], 1000);
+    assert_eq!(call["peaks"]["C"], 400);
     Ok(())
 }
 

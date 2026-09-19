@@ -1,4 +1,4 @@
-//! Serializable `signal.sample_evidence/v2` contract.
+//! Serializable `signal.sample_evidence/v3` contract.
 
 use serde::Serialize;
 

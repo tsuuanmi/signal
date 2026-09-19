@@ -7,7 +7,7 @@ This roadmap is a sequencing of research and validation work, not a commitment t
 Before changing alignment semantics:
 
 ```text
-mixed-supporting-call gate for simple variants
+mixed-supporting-call gate for simple variants  # promoted to ADR-0027 / primary_difference v4
 PLOC completeness/suspicion diagnostics
 artifact test corpus
 saturation/high-amplitude-outlier observations
@@ -195,7 +195,7 @@ assay-specific LoD/LoQ
 
 | Priority | Improvement | Expected ROI | Effort |
 |---|---|---:|---:|
-| P0 | mixed-supporting-call simple-variant gate | Very high | Low |
+| Promoted | mixed-supporting-call simple-variant gate | Implemented via ADR-0027 / `signal.primary_difference/v4` | Low |
 | P0 | PLOC completeness + artifact validation | Very high | Low-Medium |
 | P0 | richer `LocusEvidence` / peak geometry | Very high | Medium |
 | P0 | basecall-independent evidence profile | Very high | Medium |

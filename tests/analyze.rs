@@ -12,8 +12,8 @@ use tempfile::tempdir;
 use support::{
     analysis_output_path, write_abif, write_abif_with_background_noise,
     write_abif_with_channel_order, write_abif_with_peak_heights, write_abif_with_ploc,
-    write_abif_with_short_pbas, write_abif_with_unused_p2ba, write_abif_with_vendor, write_config,
-    write_reference,
+    write_abif_with_secondary_signal, write_abif_with_short_pbas, write_abif_with_unused_p2ba,
+    write_abif_with_vendor, write_config, write_reference,
 };
 
 const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
@@ -281,6 +281,36 @@ fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>
             .ok_or("call is not an object")?
             .contains_key("ploc")
     );
+    Ok(())
+}
+
+#[test]
+fn excludes_mixed_supporting_snv_without_erasing_the_observation()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut query = QUERY.to_owned();
+    query.replace_range(10..11, "T");
+
+    write_abif_with_secondary_signal(&trace, &query, 10, b'C', 400)?;
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+    let config_text = fs::read_to_string(&config)?;
+    fs::write(
+        &config,
+        config_text.replace("best_section_fraction=0.10", "best_section_fraction=1.0"),
+    )?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["variants"].as_array().map(Vec::len), Some(0));
+    assert_eq!(value["warnings"]["excluded_variant_candidates"], 1);
+
+    let log = fs::read_to_string(directory.path().join("logs/trace.log"))?;
+    assert!(log.contains("event=variant_removed kind=SNV"));
+    assert!(log.contains("mixed_supporting_signal"));
     Ok(())
 }
 

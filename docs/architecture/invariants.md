@@ -23,6 +23,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-BIO-002:** A mixed/secondary signal is an observation, not automatically heteroplasmy, genotype, contamination, or mixture.
 - **INV-BIO-003:** A single chromatogram produces read-level evidence, not a sample-level biological conclusion.
 - **INV-BIO-004:** A derived confidence value is not an error probability or Phred score unless separately calibrated and validated.
+- **INV-BIO-005:** A strongest canonical base with more than one co-localized qualifying channel is mixed signal evidence, not an ordinary clean substitution. If it yields a normalized SNV observation, the observation remains preserved but is not clean-report eligible.
 
 ## Read placement and sample boundaries
 
@@ -35,7 +36,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-SAMPLE-003:** Sample evidence defines read identity, unique reviewer-facing filename stem, orientation, and post-trim coverage once in a SHA-sorted read registry. Public locus and normalized-variant evidence reference reads by that unique name; internal aggregation MAY use deterministic indexes but MUST NOT expose them as reviewer-facing identifiers.
 - **INV-SAMPLE-004:** Duplicate trace content cannot be counted twice within one sample evidence result.
 - **INV-SAMPLE-005:** A locus record exists only when at least one covering read is alternate, unresolved, or deleted. Every covering read at that retained locus remains explicit so reference support and its focused quality evidence are not lost.
-- **INV-SAMPLE-006:** Normalized variant support preserves configured eligibility, exclusion reasons, and concise original-call mappings; read-level filtering MUST NOT erase a normalized observation.
+- **INV-SAMPLE-006:** Normalized variant support preserves configured eligibility, exclusion reasons, and reviewer-facing reference-oriented base/peak/quality evidence; internal call mappings remain authoritative for scientific traceability, and read-level filtering MUST NOT erase a normalized observation.
 
 ## Pipeline
 
