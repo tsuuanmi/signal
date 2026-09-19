@@ -338,7 +338,7 @@ mod tests {
     fn reference() -> Reference {
         Reference {
             name: "ref".into(),
-            sequence: "CAAAAG".into(),
+            sequence: "GCCAAAAGTT".into(),
             topology: ReferenceTopology::Linear,
             sequence_sha256: String::new(),
         }
@@ -346,8 +346,18 @@ mod tests {
 
     #[test]
     fn forward_and_reverse_reads_share_canonical_deletion_coordinate() -> Result<()> {
-        let forward = align_best(&qc("CAAAG"), &signal("CAAAG"), &reference(), &config())?;
-        let reverse = align_best(&qc("CTTTG"), &signal("CTTTG"), &reference(), &config())?;
+        let forward = align_best(
+            &qc("GCCAAAGTT"),
+            &signal("GCCAAAGTT"),
+            &reference(),
+            &config(),
+        )?;
+        let reverse = align_best(
+            &qc("AACTTTGGC"),
+            &signal("AACTTTGGC"),
+            &reference(),
+            &config(),
+        )?;
 
         assert_eq!(forward.orientation, Orientation::Forward);
         assert_eq!(reverse.orientation, Orientation::Reverse);
@@ -362,7 +372,7 @@ mod tests {
             .iter()
             .find(|column| column.query_base == '-')
             .and_then(|column| column.reference_index_0based);
-        assert_eq!(forward_deleted, Some(4));
+        assert_eq!(forward_deleted, Some(6));
         assert_eq!(reverse_deleted, forward_deleted);
         Ok(())
     }
