@@ -7,6 +7,7 @@ mod coverage;
 mod differences;
 mod nucleotide_support;
 mod overlap;
+mod profile_geometry;
 mod variants;
 
 pub(crate) use aggregate::aggregate;
