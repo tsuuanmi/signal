@@ -16,7 +16,7 @@ pub(crate) struct CompletedAnalysis {
     pub(crate) read: ReadObservation,
 }
 
-/// Builds the compact v5 document without filesystem side effects.
+/// Builds the compact v6 document without filesystem side effects.
 pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisResult> {
     let CompletedAnalysis { reference, read } = completed;
     let ReadObservation {
@@ -36,7 +36,8 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
         ));
     }
     let warnings = warning_summary(&calls, variants.excluded_count());
-    let variant_results = variant::project(variants.reported, &calls, &quality)?;
+    let variant_results =
+        variant::project(variants.reported, &calls, &quality, alignment.orientation)?;
     let signal_quality = signal::project(signal);
     let reference_segments = alignment
         .reference_segments
@@ -48,7 +49,7 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
         .collect();
 
     Ok(AnalysisResult {
-        schema_version: "signal.analysis/v5",
+        schema_version: "signal.analysis/v6",
         provenance: ProvenanceResult {
             input: InputResult {
                 sha256: input_sha256,
