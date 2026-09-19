@@ -38,7 +38,7 @@ alignment, and variant-calling result.
 
 ## Traceability
 
-ADR-0023 and ADR-0028; `INV-EVID-004` through `INV-EVID-005`; `INV-READ-001` through `INV-READ-004`; `SRS-ALN-007` through `SRS-ALN-009`.
+ADR-0023, ADR-0028, and ADR-0029; `INV-EVID-004` through `INV-EVID-006`; `INV-READ-001` through `INV-READ-004`; `SRS-ALN-007` through `SRS-ALN-011`.
 
 ## Status
 
