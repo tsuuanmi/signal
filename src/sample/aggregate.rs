@@ -333,7 +333,10 @@ mod tests {
                 .reference_reads,
             0
         );
-        assert_eq!(evidence.locus_differences[0].support_topology.profile_reads, 2);
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.profile_reads,
+            2
+        );
         assert_eq!(
             evidence.locus_differences[0]
                 .support_topology
@@ -466,9 +469,18 @@ mod tests {
                 .deletion_reads,
             1
         );
-        assert_eq!(evidence.locus_differences[0].support_topology.profile_reads, 1);
-        assert_eq!(evidence.locus_differences[1].support_topology.profile_reads, 0);
-        assert_eq!(evidence.locus_differences[2].support_topology.profile_reads, 0);
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.profile_reads,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[1].support_topology.profile_reads,
+            0
+        );
+        assert_eq!(
+            evidence.locus_differences[2].support_topology.profile_reads,
+            0
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
