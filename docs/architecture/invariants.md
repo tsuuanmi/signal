@@ -9,6 +9,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-EVID-003:** Vendor PBAS/PCON are vendor evidence, not authoritative Signal output.
 - **INV-EVID-004:** `LocusEvidence` and `EvidenceProfile` are derived directly from immutable analyzed A/C/G/T channel values and PLOC-defined geometry; primary/ambiguity calls, selected basecall peaks, and qualifying-channel thresholds MUST NOT determine profile membership or weights.
 - **INV-EVID-005:** A zero-positive-signal locus has no evidence profile; the system MUST NOT synthesize a uniform or reference-guided profile as a fallback.
+- **INV-EVID-006:** Reference placement MAY consume `EvidenceProfile`, but reference context MUST NOT mutate or rewrite upstream locus evidence or base calls.
 
 ## Coordinates and identity
 
