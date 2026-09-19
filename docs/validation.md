@@ -60,6 +60,19 @@ This preparation step revalidates corpus/measurement provenance, streams joined 
 read-observation rows to CSV, and reports descriptive nearest-rank geometry percentiles.
 It does not choose a threshold or inspect holdout data to tune a rule.
 
+A completed research dataset can then be audited with:
+
+```bash
+uv run python scripts/audit_validation_corpus.py \
+  --corpus-dir validation-results/full-20260919 \
+  --research-dir validation-results/research/full-20260919 \
+  --output-dir validation-results/audit/full-20260919
+```
+
+The audit publishes read/locus/case review strata only. Corpus-relative outlier flags and
+retained-edge discordance context MUST NOT be treated as truth, automatic exclusion, or a
+production QC gate.
+
 Threshold development must follow `docs/research/Signal/validation-corpus.md` and `docs/research/Signal/threshold-research.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Unexpected extreme basecall/profile disagreements must first be characterized with the v2 event-placement diagnostics described in `docs/research/Signal/event-position-diagnostics.md` rather than absorbed into a fitted threshold. Point-mixture and length/indel studies remain separate.
 
 ## Performance

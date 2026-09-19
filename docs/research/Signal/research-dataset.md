@@ -133,6 +133,22 @@ The CSV tables and research index remain under ignored `validation-results/` and
 the AB1/corpus privacy policy. Hashes, truth metadata, and biological geometry can still be
 identifying even though local trace paths are omitted.
 
+## Downstream audit step
+
+After the descriptive dataset is generated, observational curation strata can be derived
+without changing truth or threshold-fit metadata:
+
+```bash
+uv run python scripts/audit_validation_corpus.py \
+  --corpus-dir validation-results/full-20260919 \
+  --research-dir validation-results/research/full-20260919 \
+  --output-dir validation-results/audit/full-20260919
+```
+
+The audit consumes the research tables plus corpus validation-log metrics and publishes a
+separate `signal.validation_audit/v1` artifact. See
+[audit-strata.md](audit-strata.md).
+
 ## Next research step
 
 After the real corpus is reviewed and the development/holdout split plus false-positive

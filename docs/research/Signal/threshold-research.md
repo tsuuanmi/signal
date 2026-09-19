@@ -52,6 +52,8 @@ false-positive objective, development split, and locked holdout are reviewed and
 
 See [research-dataset.md](research-dataset.md) for the implemented table boundary.
 
+Before freezing development/holdout membership, use [audit-strata.md](audit-strata.md) to review corpus-relative technical challenge strata. Audit flags are review context only and must not be copied into truth labels or used as an automatic exclusion rule.
+
 ## Research order
 
 Research each metric independently before combining them into a multivariate rule.
