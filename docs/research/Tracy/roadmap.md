@@ -88,7 +88,7 @@ Before consensus, remaining research includes:
 
 ```text
 basecall-independent local nucleotide evidence # promoted internally via ADR-0034
-artifact/quality-aware local contribution       # noisy-region context via ADR-0036, quantitative call signal evidence via ADR-0037, and profile-availability denominator via ADR-0038; eligibility policy remains research
+artifact/quality-aware local contribution       # noisy-region context via ADR-0036, quantitative call signal evidence via ADR-0037, profile availability via ADR-0038, and structural contributor eligibility via ADR-0039; quality/artifact weighting remains research
 factorized support topology          # variant dimensions via ADR-0033; differential-locus state/orientation via ADR-0035
 optional declared assay metadata QC
 ```
