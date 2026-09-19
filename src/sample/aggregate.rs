@@ -575,22 +575,30 @@ mod tests {
                 .mean_profile
                 .is_none()
         );
-        assert!(evidence.locus_differences[1]
-            .nucleotide_support
-            .heterogeneity
-            .is_none());
-        assert!(evidence.locus_differences[2]
-            .nucleotide_support
-            .heterogeneity
-            .is_none());
-        assert!(evidence.locus_differences[1]
-            .nucleotide_support
-            .directional_profile_distance
-            .is_none());
-        assert!(evidence.locus_differences[2]
-            .nucleotide_support
-            .directional_profile_distance
-            .is_none());
+        assert!(
+            evidence.locus_differences[1]
+                .nucleotide_support
+                .heterogeneity
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[2]
+                .nucleotide_support
+                .heterogeneity
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[1]
+                .nucleotide_support
+                .directional_profile_distance
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[2]
+                .nucleotide_support
+                .directional_profile_distance
+                .is_none()
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
@@ -675,10 +683,12 @@ mod tests {
         assert!((heterogeneity.within_profile_impurity - 0.7).abs() < 1e-12);
         assert_eq!(heterogeneity.between_profile_dispersion, 0.0);
         assert!((heterogeneity.total_profile_heterogeneity - 0.7).abs() < 1e-12);
-        assert!(evidence.locus_differences[0]
-            .nucleotide_support
-            .directional_profile_distance
-            .is_none());
+        assert!(
+            evidence.locus_differences[0]
+                .nucleotide_support
+                .directional_profile_distance
+                .is_none()
+        );
         Ok(())
     }
 
