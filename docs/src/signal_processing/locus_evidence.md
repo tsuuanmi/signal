@@ -19,7 +19,7 @@ No use of primary calls, ambiguity codes, selected basecall peaks, qualifying-ch
 
 ## Tests
 
-Tests cover context placement, unresolved/basecall-independent loci, mixed-channel mass retention, deterministic event refinement, and zero-signal loci.
+Tests cover context placement, unresolved/basecall-independent loci, mixed-channel mass retention, neighboring-event rejection, equal-distance event tie handling, PLOC fallback, and zero-signal loci.
 
 ## Status
 
