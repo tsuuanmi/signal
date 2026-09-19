@@ -8,7 +8,7 @@ Builds reference-coordinate sample-locus evidence for either sparse production d
 
 - Select differential loci for production or every covered reference locus for validation.
 - Retain every covering read at selected loci, including reference, alternate, unresolved, and deletion observations.
-- Resolve call-backed quality and reference-oriented `CallSignalEvidence` once from the authoritative read observation.
+- Resolve and retain each call-backed observation's original call index, quality, and reference-oriented `CallSignalEvidence` once from the authoritative read observation; deletions retain no source call index.
 - Classify structural nucleotide contribution and derive support topology plus nucleotide-profile support/geometry.
 - Reject insertion columns, duplicate read contributions to one reference coordinate, inconsistent reference bases, and missing call/quality evidence.
 

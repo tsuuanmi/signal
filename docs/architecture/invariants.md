@@ -72,6 +72,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-OUT-003:** Operational logs are separate from deterministic scientific result contracts.
 - **INV-OUT-004:** A versioned public schema is not mutated retroactively; incompatible contract changes require a new schema version.
 - **INV-OUT-005:** Validation measurement exports are separate ignored local artifacts. They reuse authoritative scientific evidence but cannot alter public result schemas, become production compatibility outputs, or apply research thresholds during export.
+- **INV-OUT-006:** Validation event diagnostics expose existing call and signal provenance only. Source chromatogram sample coordinates remain unchanged, while all diagnostic A/C/G/T arrays are projected to the selected reference orientation. Diagnostics cannot reselect events or mutate scientific evidence.
 
 ## Rust implementation
 

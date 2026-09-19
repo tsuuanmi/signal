@@ -186,6 +186,7 @@ fn observation(
         let signal = None;
         return Ok(SampleLocusObservation {
             read_index,
+            call_index_0based: None,
             state,
             base: None,
             quality: None,
@@ -207,6 +208,7 @@ fn observation(
     let signal = Some(call_evidence::for_call(read, call_index_0based)?);
     Ok(SampleLocusObservation {
         read_index,
+        call_index_0based: Some(call_index_0based),
         state,
         base: Some(column.query_base),
         quality: Some(quality.relative_quality_score),

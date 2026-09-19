@@ -42,7 +42,7 @@ Operational trace-stage records are written to `logs/validation-001.validation.l
 
 ## Row schema
 
-Each line is one `signal.validation_locus/v1` object containing:
+Each line is one `signal.validation_locus/v2` object. v2 replaces the research-only v1 schema and retains the same locus-level aggregates plus one nested `observations[]` diagnostic record per read.
 
 ~~~text
 schema_version
@@ -90,7 +90,39 @@ directional_profile_distance
 noisy_observations
 missing_profile_observations
 deletion_observations
+observations[]
 ~~~
+
+Each call-backed `observations[]` entry additionally preserves:
+
+~~~text
+read_sha256
+orientation
+state
+aligned_base
+quality
+call_index_0based
+source_primary
+source_ambiguity
+ploc_0based
+window_start_0based
+window_end_0based_exclusive
+primary_peak_position_0based
+primary_peak_offset_from_ploc
+event_position_0based
+event_offset_from_ploc
+event_offset_from_primary_peak
+channel_peak_positions_acgt_reference[4]
+channel_peak_heights_acgt_reference[4]
+channel_peak_sources_acgt_reference[4]
+primary_peak_heights_acgt_reference[4]
+corrected_amplitudes_acgt_reference[4]
+snrs_acgt_reference[4]
+profile_acgt_reference[4]
+in_noisy_region
+~~~
+
+All A/C/G/T arrays are ordered A,C,G,T on the selected reference strand. PLOC, primary-peak, event, and call-window positions remain source chromatogram sample coordinates. Deletion observations use null call/event diagnostics.
 
 Optional profile/geometry values are JSON `null` when the required evidence partition does not exist.
 
