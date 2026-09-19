@@ -95,7 +95,10 @@ fn validate_evidence(evidence: &LocusEvidence, context_width: usize) -> Result<(
             == context_width
         && evidence.context_sample_start_0based <= evidence.window_start_0based
         && evidence.window_end_0based_exclusive <= evidence.context_sample_end_0based_exclusive;
-    let valid_metrics = evidence.channel_baselines.iter().all(|value| value.is_finite())
+    let valid_metrics = evidence
+        .channel_baselines
+        .iter()
+        .all(|value| value.is_finite())
         && evidence
             .channel_noise_sigmas
             .iter()
