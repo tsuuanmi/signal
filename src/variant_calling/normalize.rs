@@ -227,7 +227,7 @@ mod tests {
     }
 
     #[test]
-    fn left_normalizes_homopolymer_insertion() -> Result<()> {
+    fn preserves_canonical_homopolymer_insertion_anchor() -> Result<()> {
         let variant = insertion(
             &reference("CAAAAG", ReferenceTopology::Linear),
             Some(4),
@@ -235,9 +235,9 @@ mod tests {
             "A".into(),
             inserted_calls(),
         )?;
-        assert_eq!(variant.position_1based, 1);
-        assert_eq!(variant.reference, "C");
-        assert_eq!(variant.alternate, "CA");
+        assert_eq!(variant.position_1based, 5);
+        assert_eq!(variant.reference, "A");
+        assert_eq!(variant.alternate, "AA");
         Ok(())
     }
 
@@ -263,13 +263,15 @@ mod tests {
             "A".into(),
             calls.clone(),
         )?;
-        assert_eq!(variant.position_1based, 1);
+        assert_eq!(variant.position_1based, 5);
+        assert_eq!(variant.reference, "AA");
+        assert_eq!(variant.alternate, "A");
         assert_eq!(variant.calls, calls);
         Ok(())
     }
 
     #[test]
-    fn circular_normalization_is_bounded() -> Result<()> {
+    fn circular_representation_preserves_origin_seam_anchor() -> Result<()> {
         let variant = deletion(
             &reference("AAAA", ReferenceTopology::Circular),
             Some(3),
@@ -278,51 +280,25 @@ mod tests {
             "A".into(),
             deletion_flanks(),
         )?;
-        assert_eq!(variant.position_1based, 1);
+        assert_eq!(variant.position_1based, 4);
         assert_eq!(variant.reference, "AA");
         assert_eq!(variant.alternate, "A");
         Ok(())
     }
 
     #[test]
-    fn circular_repeat_normalization_is_anchor_independent() -> Result<()> {
+    fn circular_insertion_preserves_observed_seam_anchor() -> Result<()> {
         let reference = reference("AACAA", ReferenceTopology::Circular);
-        let after_zero = deletion(
-            &reference,
-            Some(0),
-            1,
-            Some(2),
-            "A".into(),
-            deletion_flanks(),
-        )?;
-        let after_four = deletion(
+        let variant = insertion(
             &reference,
             Some(4),
-            0,
-            Some(1),
+            Some(0),
             "A".into(),
-            deletion_flanks(),
+            inserted_calls(),
         )?;
-        assert_eq!(after_zero.position_1based, 3);
-        assert_eq!(after_zero.reference, "CA");
-        assert_eq!(after_zero.alternate, "C");
-        assert_eq!(after_four.position_1based, after_zero.position_1based);
-        assert_eq!(after_four.reference, after_zero.reference);
-        assert_eq!(after_four.alternate, after_zero.alternate);
-        Ok(())
-    }
-
-    #[test]
-    fn circular_insertion_normalization_is_anchor_independent() -> Result<()> {
-        let reference = reference("AACAA", ReferenceTopology::Circular);
-        let after_zero = insertion(&reference, Some(0), Some(1), "A".into(), inserted_calls())?;
-        let after_four = insertion(&reference, Some(4), Some(0), "A".into(), inserted_calls())?;
-        assert_eq!(after_zero.position_1based, 3);
-        assert_eq!(after_zero.reference, "C");
-        assert_eq!(after_zero.alternate, "CA");
-        assert_eq!(after_four.position_1based, after_zero.position_1based);
-        assert_eq!(after_four.reference, after_zero.reference);
-        assert_eq!(after_four.alternate, after_zero.alternate);
+        assert_eq!(variant.position_1based, 5);
+        assert_eq!(variant.reference, "A");
+        assert_eq!(variant.alternate, "AA");
         Ok(())
     }
 
