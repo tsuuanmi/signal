@@ -62,6 +62,7 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- Canonical mtDNA alignment now requires repeat-equivalent maximum-score indel placements to resolve to one 3'/right-most rCRS-light-strand topology rather than remaining arbitrary or failing solely because a gap can slide through a homopolymer/repeat. This alignment rule is distinct from VCF-style left-normalized variant serialization and requires implementation/normalization reconciliation under ADR-0047.
 - Reference-guided alignment substitution scores now derive from `EvidenceProfile`; affine gap, traceback, circular topology, public primary-sequence callable/identity metrics, and downstream primary-sequence variant extraction remain unchanged. Internal/logged alignment scores are fixed-point units rather than raw configured score totals.
 - PLOC neighboring-midpoint window geometry is shared between basecalling and signal evidence instead of being owned only by the caller; obsolete basecall-dependent `CallSignalMetrics`/`PrimaryEventSignalMetrics` are removed.
 - Candidate-noisy signal annotations are observation-only and do not affect calls, trim bounds, alignments, warning totals, or variant eligibility.
