@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Provides append-only operational logging for one analyzed trace.
+Provides append-only operational logging for one command operation.
 
 ## Responsibilities
 
