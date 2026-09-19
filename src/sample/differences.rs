@@ -9,7 +9,7 @@ use crate::model::sample_evidence::{
     LocusDifferenceEvidence, LocusDifferenceObservation, LocusState, LocusSupportTopology,
 };
 
-use super::call_evidence;
+use super::{call_evidence, contribution};
 
 struct DifferenceBuilder {
     reference_base: char,
@@ -174,12 +174,14 @@ fn observation(
 ) -> Result<LocusDifferenceObservation> {
     let state = classify(column);
     if state == LocusState::Deletion {
+        let signal = None;
         return Ok(LocusDifferenceObservation {
             read_index,
             state,
             base: None,
             quality: None,
-            signal: None,
+            signal,
+            nucleotide_contribution: contribution::classify(state, signal),
         });
     }
 
@@ -193,12 +195,14 @@ fn observation(
         .filter(|quality| quality.index_0based == call_index_0based)
         .ok_or_else(|| Error::Sample("aligned call lacks matching quality evidence".into()))?;
 
+    let signal = Some(call_evidence::for_call(read, call_index_0based)?);
     Ok(LocusDifferenceObservation {
         read_index,
         state,
         base: Some(column.query_base),
         quality: Some(quality.relative_quality_score),
-        signal: Some(call_evidence::for_call(read, call_index_0based)?),
+        signal,
+        nucleotide_contribution: contribution::classify(state, signal),
     })
 }
 
