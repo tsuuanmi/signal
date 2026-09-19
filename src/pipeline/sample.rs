@@ -113,7 +113,11 @@ fn run_logged(
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
             evidence.overlaps.len(),
-            evidence.overlaps.iter().filter(|overlap| overlap.eligible).count(),
+            evidence
+                .overlaps
+                .iter()
+                .filter(|overlap| overlap.eligible)
+                .count(),
             evidence.locus_differences.len(),
             evidence.variants.len()
         ),
