@@ -1,9 +1,9 @@
 //! Projection of variant-associated calls into concise signal records.
 
 use crate::error::{Error, Result};
+use crate::model::alignment::Orientation;
 use crate::model::basecalls::BaseCalls;
 use crate::model::quality::QualityControlResult;
-use crate::model::alignment::Orientation;
 use crate::model::result::{PeakHeightsResult, VariantCallResult, VariantResult};
 use crate::model::variant::{Variant, VariantCallMapping};
 
@@ -67,9 +67,7 @@ fn project_call(
     Ok(VariantCallResult {
         role: mapping.role,
         base: orientation.reference_base(call.primary),
-        peaks: PeakHeightsResult::from(
-            orientation.reference_peak_heights(primary.channel_heights),
-        ),
+        peaks: PeakHeightsResult::from(orientation.reference_peak_heights(primary.channel_heights)),
         quality: score.relative_quality_score,
     })
 }
