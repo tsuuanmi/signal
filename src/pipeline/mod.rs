@@ -7,6 +7,7 @@ mod observation;
 mod read;
 mod sample;
 mod sample_metrics;
+mod sample_reads;
 
 use std::time::Instant;
 
