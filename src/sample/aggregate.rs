@@ -71,7 +71,9 @@ mod tests {
     use crate::model::alignment::{
         Alignment, AlignmentColumn, AlignmentMetrics, Orientation, ReferenceSegment,
     };
-    use crate::model::basecalls::{BaseCall, BaseCalls, ChannelPeak, PeakSource};
+    use crate::model::basecalls::{
+        BaseCall, BaseCalls, ChannelPeak, PeakSource, PrimaryPeakEvidence,
+    };
     use crate::model::nucleotide::Nucleotide;
     use crate::model::quality::{CallQuality, QualityControlResult};
     use crate::model::signal::SignalAnalysis;
@@ -144,7 +146,10 @@ mod tests {
                             position_0based: index_0based * 10,
                             source: PeakSource::LocalMaximum,
                         }),
-                        primary_peak_evidence: None,
+                        primary_peak_evidence: Some(PrimaryPeakEvidence {
+                            position_0based: index_0based * 10,
+                            channel_heights: [10, 20, 100, 30],
+                        }),
                         primary: 'G',
                         ambiguity: 'G',
                         qualifying_channels: vec![Nucleotide::G],
@@ -319,7 +324,7 @@ mod tests {
             observations[1].state,
             crate::model::sample_evidence::LocusState::Reference
         );
-        assert_eq!(observations[1].relative_quality, Some(50));
+        assert_eq!(observations[1].quality, Some(50));
         Ok(())
     }
 
@@ -380,7 +385,12 @@ mod tests {
             evidence.variants[0].support[1].exclusion_reasons,
             vec![VariantExclusionReason::PeakBelowMinimum]
         );
-        assert_eq!(evidence.variants[0].support[0].calls[0].ploc_0based, 0);
+        assert_eq!(evidence.variants[0].support[0].calls[0].base, 'G');
+        assert_eq!(
+            evidence.variants[0].support[0].calls[0].peak_heights,
+            [10, 20, 100, 30]
+        );
+        assert_eq!(evidence.variants[0].support[0].calls[0].quality, 50);
         Ok(())
     }
 
