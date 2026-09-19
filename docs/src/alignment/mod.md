@@ -19,7 +19,7 @@ output formatting.
 ## Key types and functions
 
 - `align_best(qc, signal, reference, config) -> Result<Alignment>`: the public entry point, re-exported from `orient`.
-- Child modules: `scoring` (fixed-point profile substitution scores and state ordering), `gotoh` (DP matrices), `traceback` (primary-sequence aligned columns and metrics), `orient` (profile orientation, strand selection, and coordinate projection).
+- Child modules: `scoring` (fixed-point profile substitution scores and state ordering), `gotoh` (DP matrices), `traceback` (primary-sequence aligned columns and metrics), `canonical` (score-verified repeat-equivalent 3'/right-most gap placement), and `orient` (profile orientation, strand selection, and coordinate projection).
 
 ## Invariants and errors
 
