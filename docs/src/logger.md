@@ -22,8 +22,7 @@ or recovery policy.
 
 ## Key types and functions
 
-- `Logger::open(trace_stem) -> Result<Logger>`: creates the directory and opens
-  the per-trace file.
+- `Logger::open(operation_stem) -> Result<Logger>`: creates the directory and opens the operation-scoped file.
 - `info`, `warn`, `error`: append one Apollo-style record.
 - `sync`: flushes and synchronizes the file.
 
