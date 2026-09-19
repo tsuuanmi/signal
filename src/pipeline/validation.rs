@@ -10,7 +10,7 @@ use crate::error::Result;
 use crate::logger::Logger;
 use crate::model::locus_evidence::EvidenceProfile;
 use crate::model::sample_evidence::{
-    LocusNucleotideSupport, NucleotideContribution, ProfileHeterogeneity, SampleLocusEvidence,
+    NucleotideContribution, ProfileHeterogeneity, SampleLocusEvidence,
 };
 use crate::report;
 use crate::sample as sample_science;
