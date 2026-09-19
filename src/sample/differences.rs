@@ -9,7 +9,7 @@ use crate::model::sample_evidence::{
     LocusDifferenceEvidence, LocusDifferenceObservation, LocusState, LocusSupportTopology,
 };
 
-use super::{noise, profile};
+use super::{contribution, noise, profile};
 
 struct DifferenceBuilder {
     reference_base: char,
@@ -108,6 +108,9 @@ fn support_topology(
         alternate_reads: 0,
         unresolved_reads: 0,
         deletion_reads: 0,
+        nucleotide_eligible_reads: 0,
+        eligible_forward_reads: 0,
+        eligible_reverse_reads: 0,
     };
 
     for observation in observations {
@@ -118,8 +121,21 @@ fn support_topology(
             ))
         })?;
         match read.alignment.orientation {
-            crate::model::alignment::Orientation::Forward => topology.forward_reads += 1,
-            crate::model::alignment::Orientation::Reverse => topology.reverse_reads += 1,
+            crate::model::alignment::Orientation::Forward => {
+                topology.forward_reads += 1;
+                if observation.nucleotide_contribution.is_eligible() {
+                    topology.eligible_forward_reads += 1;
+                }
+            }
+            crate::model::alignment::Orientation::Reverse => {
+                topology.reverse_reads += 1;
+                if observation.nucleotide_contribution.is_eligible() {
+                    topology.eligible_reverse_reads += 1;
+                }
+            }
+        }
+        if observation.nucleotide_contribution.is_eligible() {
+            topology.nucleotide_eligible_reads += 1;
         }
         match observation.state {
             LocusState::Reference => topology.reference_reads += 1,
@@ -135,6 +151,8 @@ fn support_topology(
                 + topology.alternate_reads
                 + topology.unresolved_reads
                 + topology.deletion_reads
+        || topology.nucleotide_eligible_reads
+            != topology.eligible_forward_reads + topology.eligible_reverse_reads
     {
         return Err(Error::Sample(
             "locus support topology counts are inconsistent".into(),
@@ -151,13 +169,15 @@ fn observation(
 ) -> Result<LocusDifferenceObservation> {
     let state = classify(column);
     if state == LocusState::Deletion {
+        let profile = None;
         return Ok(LocusDifferenceObservation {
             read_index,
             state,
             base: None,
             quality: None,
-            profile: None,
+            profile,
             in_noisy_region: None,
+            nucleotide_contribution: contribution::classify(state, profile),
         });
     }
 
@@ -171,13 +191,15 @@ fn observation(
         .filter(|quality| quality.index_0based == call_index_0based)
         .ok_or_else(|| Error::Sample("aligned call lacks matching quality evidence".into()))?;
 
+    let profile = profile::for_call(read, call_index_0based)?;
     Ok(LocusDifferenceObservation {
         read_index,
         state,
         base: Some(column.query_base),
         quality: Some(quality.relative_quality_score),
-        profile: profile::for_call(read, call_index_0based)?,
+        profile,
         in_noisy_region: Some(noise::for_call(read, call_index_0based)),
+        nucleotide_contribution: contribution::classify(state, profile),
     })
 }
 
