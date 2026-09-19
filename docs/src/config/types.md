@@ -34,7 +34,7 @@ No file I/O, environment handling, or algorithm execution.
 - `window_size_bases` must be in `5..=10`, `minimum_primary_snr` must be
   finite and positive, and `minimum_noisy_windows` must be at least 2.
 - `trim_window_size`, `max_relative_quality_score`, `minimum_retained_bases`,
-  `minimum_callable_bases` and `sample_reconciliation.minimum_overlap_bases` must be positive.
+  `minimum_callable_bases` and `sample_reconciliation.minimum_comparable_bases` must be positive.
 - `trim_stringency` must be finite and in `[0, 9]`.
 - `match_score` must be positive; `mismatch_score`, `gap_open_score`, and
   `gap_extension_score` must be negative.
