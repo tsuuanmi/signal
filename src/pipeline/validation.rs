@@ -377,9 +377,10 @@ fn observation_row<'a>(
         .primary_peak_evidence
         .as_ref()
         .map(|evidence| evidence.position_0based);
-    let primary_peak_heights = call.primary_peak_evidence.as_ref().map(|evidence| {
-        orientation.reference_peak_heights(evidence.channel_heights)
-    });
+    let primary_peak_heights = call
+        .primary_peak_evidence
+        .as_ref()
+        .map(|evidence| orientation.reference_peak_heights(evidence.channel_heights));
     let signal = observation.signal.ok_or_else(|| {
         Error::Sample(format!(
             "call-backed validation observation {call_index_0based} lacks signal evidence"
@@ -414,9 +415,9 @@ fn observation_row<'a>(
             orientation,
             call.peaks.map(|peak| peak.position_0based),
         )),
-        channel_peak_heights_acgt_reference: Some(orientation.reference_peak_heights(
-            call.peaks.map(|peak| peak.height),
-        )),
+        channel_peak_heights_acgt_reference: Some(
+            orientation.reference_peak_heights(call.peaks.map(|peak| peak.height)),
+        ),
         channel_peak_sources_acgt_reference: Some(reference_peak_sources(
             orientation,
             call.peaks.map(|peak| peak.source),
