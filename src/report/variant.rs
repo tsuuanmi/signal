@@ -2,20 +2,21 @@
 
 use crate::error::{Error, Result};
 use crate::model::basecalls::BaseCalls;
-use crate::model::coordinate::reference_one_based;
 use crate::model::quality::QualityControlResult;
-use crate::model::result::{VariantCallResult, VariantResult};
-use crate::model::variant::{Variant, VariantCallMapping, VariantCallRole};
+use crate::model::alignment::Orientation;
+use crate::model::result::{PeakHeightsResult, VariantCallResult, VariantResult};
+use crate::model::variant::{Variant, VariantCallMapping};
 
 /// Projects normalized variants and joins their original calls to essential evidence.
 pub(super) fn project(
     variants: Vec<Variant>,
     calls: &BaseCalls,
     quality: &QualityControlResult,
+    orientation: Orientation,
 ) -> Result<Vec<VariantResult>> {
     variants
         .into_iter()
-        .map(|variant| project_variant(variant, calls, quality))
+        .map(|variant| project_variant(variant, calls, quality, orientation))
         .collect()
 }
 
@@ -23,11 +24,12 @@ fn project_variant(
     variant: Variant,
     calls: &BaseCalls,
     quality: &QualityControlResult,
+    orientation: Orientation,
 ) -> Result<VariantResult> {
     let projected_calls = variant
         .calls
         .into_iter()
-        .map(|mapping| project_call(mapping, calls, quality))
+        .map(|mapping| project_call(mapping, calls, quality, orientation))
         .collect::<Result<Vec<_>>>()?;
     Ok(VariantResult {
         position: variant.position_1based,
@@ -42,6 +44,7 @@ fn project_call(
     mapping: VariantCallMapping,
     calls: &BaseCalls,
     quality: &QualityControlResult,
+    orientation: Orientation,
 ) -> Result<VariantCallResult> {
     let index = mapping.call_index_0based;
     let call = calls
@@ -56,24 +59,17 @@ fn project_call(
             "variant call index {index} does not match call/quality records"
         )));
     }
-    let supporting = mapping.role == VariantCallRole::Supporting;
+    let primary = call.primary_peak_evidence.as_ref().ok_or_else(|| {
+        Error::Report(format!(
+            "variant call index {index} lacks primary-event peak evidence"
+        ))
+    })?;
     Ok(VariantCallResult {
         role: mapping.role,
-        index,
-        position: mapping
-            .reference_position_0based
-            .map(reference_one_based)
-            .transpose()?,
-        ploc: call.ploc_0based,
-        primary: call.primary,
-        ambiguity: call.ambiguity,
-        maximum_peak_height: supporting.then(|| {
-            call.peaks
-                .iter()
-                .map(|peak| peak.height)
-                .max()
-                .unwrap_or_default()
-        }),
-        relative_quality: supporting.then_some(score.relative_quality_score),
+        base: orientation.reference_base(call.primary),
+        peaks: PeakHeightsResult::from(
+            orientation.reference_peak_heights(primary.channel_heights),
+        ),
+        quality: score.relative_quality_score,
     })
 }
