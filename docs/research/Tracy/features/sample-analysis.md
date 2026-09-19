@@ -182,6 +182,12 @@ sample-level consensus
 
 ## 26. Priority 1: Read Admission
 
+**Promotion note:** Signal's existing one-read alignment gates already reject
+insufficient callable/identity evidence before a `ReadObservation` exists.
+ADR-0030 promotes the Tracy-derived cross-read overlap/agreement portion as
+pairwise pre-consensus evidence. Broader artifact-aware global/local admission
+remains research.
+
 Tracy's assembly workflow excludes traces that do not align sufficiently well before they influence consensus.
 
 Signal should adopt the same general idea.
