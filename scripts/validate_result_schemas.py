@@ -159,6 +159,17 @@ def rejected_sample_shapes(
     invalid_overlap_agreement = copy.deepcopy(example)
     invalid_overlap_agreement["overlaps"][0]["agreement"] = 1.1
 
+    missing_overlap_agreement = copy.deepcopy(example)
+    missing_overlap_agreement["overlaps"][0].pop("agreement")
+
+    zero_comparable_with_agreement = copy.deepcopy(example)
+    zero_comparable_with_agreement["overlaps"][0]["comparable_bases"] = 0
+    zero_comparable_with_agreement["overlaps"][0]["agreements"] = 0
+    zero_comparable_with_agreement["overlaps"][0]["conflicts"] = 0
+
+    old_sample_schema = copy.deepcopy(example)
+    old_sample_schema["schema_version"] = "signal.sample_evidence/v3"
+
     invalid_sample_id = copy.deepcopy(example)
     invalid_sample_id["sample_id"] = "../sample"
 
@@ -219,6 +230,9 @@ def rejected_sample_shapes(
             ineligible_overlap_without_reason,
         ),
         ("overlap agreement above one", invalid_overlap_agreement),
+        ("overlap with comparable bases but no agreement", missing_overlap_agreement),
+        ("zero-comparable overlap with agreement", zero_comparable_with_agreement),
+        ("sample evidence using old schema version", old_sample_schema),
         ("sample evidence with invalid sample id", invalid_sample_id),
         (
             "sparse difference locus with only reference observations",
