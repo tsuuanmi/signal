@@ -11,6 +11,7 @@ CORPUS_SCHEMA_VERSION = "signal.validation_corpus/v1"
 MEASUREMENT_SCHEMA_VERSION = "signal.validation_locus/v2"
 RESEARCH_SCHEMA_VERSION = "signal.validation_research/v1"
 AUDIT_SCHEMA_VERSION = "signal.validation_audit/v1"
+CURATION_QUEUE_SCHEMA_VERSION = "signal.validation_curation_queue/v1"
 
 MANIFEST_COLUMNS = (
     "validation_case_id",

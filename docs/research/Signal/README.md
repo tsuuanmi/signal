@@ -9,6 +9,7 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 - [validation-measurements.md](validation-measurements.md): deterministic per-locus measurement export used by local threshold analysis.
 - [research-dataset.md](research-dataset.md): implemented hash-bound joined locus/observation tables and descriptive geometry summaries before threshold selection.
 - [audit-strata.md](audit-strata.md): implemented observational read/locus/case review strata for corpus curation without truth assignment or production QC.
+- [curation-queue.md](curation-queue.md): immutable audit-supported human-review queue plus separate editable decisions template before manifest reconciliation.
 - [event-position-diagnostics.md](event-position-diagnostics.md): validation study for explaining primary-basecall versus continuous-profile event placement before threshold fitting.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.
