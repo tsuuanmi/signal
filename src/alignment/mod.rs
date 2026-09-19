@@ -5,4 +5,4 @@ mod orient;
 mod scoring;
 mod traceback;
 
-pub(crate) use orient::align_best;
+pub(crate) use orient::{align_best, align_primary_counterfactual};
