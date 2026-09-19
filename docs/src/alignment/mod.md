@@ -38,7 +38,7 @@ by Apollo alignment commands.
 
 ## Requirements and decisions
 
-ADR-0004 and ADR-0029; `SRS-ALN-001` through `SRS-ALN-011`.
+ADR-0004, ADR-0029, and ADR-0047; `SRS-ALN-001` through `SRS-ALN-012`.
 
 ## Tests
 
