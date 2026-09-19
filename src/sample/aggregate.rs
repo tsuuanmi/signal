@@ -514,6 +514,21 @@ mod tests {
     }
 
     #[test]
+    fn rejects_misindexed_locus_evidence() {
+        let mut read = observation(
+            "a",
+            "reference",
+            "config",
+            Orientation::Forward,
+            vec![column('G', 'A', Some(0), 72)],
+            Vec::new(),
+        );
+        read.signal.loci[0].call_index_0based = 1;
+
+        assert!(aggregate(&[read], &sample_config()).is_err());
+    }
+
+    #[test]
     fn rejects_duplicate_reference_coordinate_within_one_read() {
         let read = observation(
             "a",
