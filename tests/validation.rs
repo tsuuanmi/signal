@@ -51,7 +51,7 @@ fn exports_all_covered_loci_without_production_result() -> Result<(), Box<dyn st
 
     assert_eq!(rows.len(), QUERY.len());
     assert!(rows.iter().all(|row| {
-        row["schema_version"] == "signal.validation_locus/v1"
+        row["schema_version"] == "signal.validation_locus/v2"
             && row["sample_id"] == SAMPLE_ID
             && row["reads"] == 2
             && row["reference_reads"] == 2
@@ -66,6 +66,28 @@ fn exports_all_covered_loci_without_production_result() -> Result<(), Box<dyn st
         rows.iter()
             .all(|row| row["directional_profile_distance"].is_number())
     );
+    assert!(rows.iter().all(|row| {
+        row["observations"].as_array().is_some_and(|observations| {
+            observations.len() == 2
+                && observations.iter().all(|observation| {
+                    observation["call_index_0based"].is_number()
+                        && observation["ploc_0based"].is_number()
+                        && observation["primary_peak_position_0based"].is_number()
+                        && observation["event_position_0based"].is_number()
+                        && observation["event_offset_from_ploc"].is_number()
+                        && observation["event_offset_from_primary_peak"].is_number()
+                        && observation["channel_peak_positions_acgt_reference"]
+                            .as_array()
+                            .is_some_and(|values| values.len() == 4)
+                        && observation["corrected_amplitudes_acgt_reference"]
+                            .as_array()
+                            .is_some_and(|values| values.len() == 4)
+                        && observation["profile_acgt_reference"]
+                            .as_array()
+                            .is_some_and(|values| values.len() == 4)
+                })
+        })
+    }));
 
     assert!(!directory.path().join("results").exists());
     assert!(
