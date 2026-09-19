@@ -201,8 +201,6 @@ const fn gap_kind(column: &RawColumn) -> Option<GapKind> {
 
 #[cfg(test)]
 mod tests {
-    use crate::model::alignment::AlignmentMetrics;
-
     use super::*;
 
     fn config() -> AlignmentConfig {
