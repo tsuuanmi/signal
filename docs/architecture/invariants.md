@@ -46,6 +46,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-SAMPLE-008:** Pairwise nucleotide agreement uses only coordinates where both reads carry canonical A/C/G/T query bases. Unresolved symbols and deletions remain outside that denominator; gap/indel evidence is never converted into fabricated nucleotide agreement.
 - **INV-SAMPLE-009:** Overlap eligibility is downstream evidence for future consensus and cannot rewrite read placement, read-level observations, or variant eligibility.
 - **INV-SAMPLE-010:** Sample coverage topology derives only from selected mapped reference segments and counts all independently placed reads. It cannot inherit pairwise overlap eligibility as read rejection, and orientation depth is not equivalent to nucleotide agreement, consensus confidence, or biological strand independence.
+- **INV-SAMPLE-011:** Normalized-variant support topology is a lossless summary of the existing per-read variant observations across eligibility and selected-orientation dimensions. It cannot add supporting reads, erase ineligible observations, count reference/unresolved/competing-event coverage as support for that variant, or become a confidence/independence verdict.
 
 ## Pipeline
 

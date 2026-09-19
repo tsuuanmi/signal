@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.sample_evidence/v6",
+  "schema_version": "signal.sample_evidence/v7",
   "sample_id": "sample-001",
   "provenance": {
     "reference": {
@@ -172,7 +172,15 @@
             }
           ]
         }
-      ]
+      ],
+      "support_topology": {
+        "reads": 1,
+        "eligible_reads": 1,
+        "forward_reads": 1,
+        "reverse_reads": 0,
+        "eligible_forward_reads": 1,
+        "eligible_reverse_reads": 0
+      }
     },
     {
       "position": 199,
@@ -218,7 +226,15 @@
             }
           ]
         }
-      ]
+      ],
+      "support_topology": {
+        "reads": 2,
+        "eligible_reads": 1,
+        "forward_reads": 1,
+        "reverse_reads": 1,
+        "eligible_forward_reads": 1,
+        "eligible_reverse_reads": 0
+      }
     }
   ]
 }

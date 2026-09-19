@@ -88,7 +88,7 @@ Before consensus, remaining research includes:
 
 ```text
 artifact/quality-aware local contribution
-factorized support topology
+factorized support topology          # read/eligibility/orientation dimensions promoted via ADR-0033
 optional declared assay metadata QC
 ```
 
@@ -112,7 +112,7 @@ local coverage denominator          # promoted via ADR-0032
 forward/reverse support topology     # promoted via ADR-0032
 coverage map                         # promoted via ADR-0032
 evidence-weighted consensus
-sample-level candidate variants
+sample-level candidate variants     # support topology foundation promoted via ADR-0033
 ```
 
 Do not use Tracy-style quality-blind majority voting as the final decision rule.

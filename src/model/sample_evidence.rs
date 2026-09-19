@@ -104,6 +104,17 @@ pub(crate) struct VariantSupport {
     pub(crate) calls: Vec<VariantCallEvidence>,
 }
 
+/// Factorized topology of reads observing one normalized variant.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct VariantSupportTopology {
+    pub(crate) reads: usize,
+    pub(crate) eligible_reads: usize,
+    pub(crate) forward_reads: usize,
+    pub(crate) reverse_reads: usize,
+    pub(crate) eligible_forward_reads: usize,
+    pub(crate) eligible_reverse_reads: usize,
+}
+
 /// One normalized observed variant with factorized read support.
 #[derive(Debug, Clone)]
 pub(crate) struct VariantEvidence {
@@ -111,6 +122,7 @@ pub(crate) struct VariantEvidence {
     pub(crate) reference: String,
     pub(crate) alternate: String,
     pub(crate) kind: VariantKind,
+    pub(crate) support_topology: VariantSupportTopology,
     pub(crate) support: Vec<VariantSupport>,
 }
 

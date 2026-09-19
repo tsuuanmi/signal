@@ -16,8 +16,8 @@ ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v7.schema.json"
 ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v7.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v2.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v2.example.json"
-SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v6.schema.json"
-SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v6.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v7.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v7.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -173,6 +173,84 @@ def rejected_basecall_shapes(
     ]
 
 
+def validate_sample_support_topology_document(
+    document: dict[str, Any], label: str, errors: list[str]
+) -> None:
+    reads = document.get("reads")
+    variants = document.get("variants")
+    if not isinstance(reads, list) or not isinstance(variants, list):
+        return
+
+    orientations: dict[str, str] = {}
+    for read in reads:
+        if not isinstance(read, dict):
+            continue
+        name = read.get("name")
+        alignment = read.get("alignment")
+        orientation = (
+            alignment.get("orientation") if isinstance(alignment, dict) else None
+        )
+        if isinstance(name, str) and orientation in {"forward", "reverse"}:
+            if name in orientations:
+                errors.append(f"{label}: duplicate read name {name!r}")
+                continue
+            orientations[name] = orientation
+
+    for index, variant in enumerate(variants):
+        if not isinstance(variant, dict):
+            continue
+        support = variant.get("support")
+        topology = variant.get("support_topology")
+        if not isinstance(support, list) or not isinstance(topology, dict):
+            continue
+
+        expected = {
+            "reads": len(support),
+            "eligible_reads": 0,
+            "forward_reads": 0,
+            "reverse_reads": 0,
+            "eligible_forward_reads": 0,
+            "eligible_reverse_reads": 0,
+        }
+        seen: set[str] = set()
+        valid = True
+        for item in support:
+            if not isinstance(item, dict):
+                valid = False
+                continue
+            read_name = item.get("read")
+            if not isinstance(read_name, str) or read_name not in orientations:
+                errors.append(
+                    f"{label}: variant {index} support references unknown read {read_name!r}"
+                )
+                valid = False
+                continue
+            if read_name in seen:
+                errors.append(
+                    f"{label}: variant {index} repeats read {read_name!r} in support"
+                )
+                valid = False
+                continue
+            seen.add(read_name)
+            orientation = orientations[read_name]
+            expected[f"{orientation}_reads"] += 1
+            if item.get("eligible") is True:
+                expected["eligible_reads"] += 1
+                expected[f"eligible_{orientation}_reads"] += 1
+
+        if valid and any(topology.get(key) != value for key, value in expected.items()):
+            errors.append(
+                f"{label}: variant {index} support_topology does not match support/read orientation"
+            )
+
+
+def validate_sample_support_topology(paths: list[Path], errors: list[str]) -> None:
+    for path in paths:
+        document = load_json(path)
+        if isinstance(document, dict):
+            validate_sample_support_topology_document(document, str(path), errors)
+
+
 def rejected_sample_shapes(
     example: dict[str, Any],
 ) -> list[tuple[str, dict[str, Any]]]:
@@ -202,7 +280,12 @@ def rejected_sample_shapes(
     zero_comparable_with_agreement["overlaps"][0]["conflicts"] = 0
 
     old_sample_schema = copy.deepcopy(example)
-    old_sample_schema["schema_version"] = "signal.sample_evidence/v5"
+    old_sample_schema["schema_version"] = "signal.sample_evidence/v6"
+
+    missing_support_topology = copy.deepcopy(example)
+    missing_support_topology["variants"][0].pop("support_topology")
+    zero_support_topology_reads = copy.deepcopy(example)
+    zero_support_topology_reads["variants"][0]["support_topology"]["reads"] = 0
 
     missing_coverage = copy.deepcopy(example)
     missing_coverage.pop("coverage")
@@ -277,6 +360,8 @@ def rejected_sample_shapes(
         ("overlap with comparable bases but no agreement", missing_overlap_agreement),
         ("zero-comparable overlap with agreement", zero_comparable_with_agreement),
         ("sample evidence using old schema version", old_sample_schema),
+        ("sample variant without support topology", missing_support_topology),
+        ("sample variant topology with zero reads", zero_support_topology_reads),
         ("sample evidence without coverage topology", missing_coverage),
         ("sample evidence with empty coverage topology", empty_coverage),
         ("sample coverage with zero read depth", zero_coverage_depth),
@@ -360,6 +445,7 @@ def main(argv: list[str] | None = None) -> int:
     validate_documents(analysis_validator, analysis_paths, errors)
     validate_documents(basecall_validator, basecall_paths, errors)
     validate_documents(sample_validator, sample_paths, errors)
+    validate_sample_support_topology(sample_paths, errors)
 
     analysis_example = load_json(ANALYSIS_EXAMPLE)
     valid_shapes = analysis_call_shapes(analysis_example)
@@ -372,7 +458,54 @@ def main(argv: list[str] | None = None) -> int:
             )
     rejected_analysis = rejected_analysis_shapes(analysis_example)
     rejected_basecalls = rejected_basecall_shapes(load_json(BASECALL_EXAMPLE))
-    rejected_samples = rejected_sample_shapes(load_json(SAMPLE_EXAMPLE))
+    sample_example = load_json(SAMPLE_EXAMPLE)
+    rejected_samples = rejected_sample_shapes(sample_example)
+    inconsistent_topology = copy.deepcopy(sample_example)
+    inconsistent_topology["variants"][0]["support_topology"]["forward_reads"] += 1
+    semantic_rejection_errors: list[str] = []
+    validate_sample_support_topology_document(
+        inconsistent_topology,
+        "synthetic inconsistent support topology",
+        semantic_rejection_errors,
+    )
+    if not semantic_rejection_errors:
+        errors.append("expected inconsistent sample support topology to be rejected")
+
+    duplicate_support = copy.deepcopy(sample_example)
+    duplicate_support["variants"][0]["support"].append(
+        copy.deepcopy(duplicate_support["variants"][0]["support"][0])
+    )
+    duplicate_support_errors: list[str] = []
+    validate_sample_support_topology_document(
+        duplicate_support,
+        "synthetic duplicate variant support",
+        duplicate_support_errors,
+    )
+    if not duplicate_support_errors:
+        errors.append("expected duplicate sample variant support read to be rejected")
+
+    unknown_support = copy.deepcopy(sample_example)
+    unknown_support["variants"][0]["support"][0]["read"] = "unknown-read"
+    unknown_support_errors: list[str] = []
+    validate_sample_support_topology_document(
+        unknown_support,
+        "synthetic unknown support read",
+        unknown_support_errors,
+    )
+    if not unknown_support_errors:
+        errors.append("expected unknown sample variant support read to be rejected")
+
+    duplicate_read_name = copy.deepcopy(sample_example)
+    duplicate_read_name["reads"][1]["name"] = duplicate_read_name["reads"][0]["name"]
+    duplicate_read_errors: list[str] = []
+    validate_sample_support_topology_document(
+        duplicate_read_name,
+        "synthetic duplicate read name",
+        duplicate_read_errors,
+    )
+    if not duplicate_read_errors:
+        errors.append("expected duplicate sample read name to be rejected")
+
     assert_rejected(analysis_validator, rejected_analysis, errors)
     assert_rejected(basecall_validator, rejected_basecalls, errors)
     assert_rejected(sample_validator, rejected_samples, errors)

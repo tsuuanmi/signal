@@ -14,7 +14,7 @@ const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
 const SAMPLE_ID: &str = "sample-1";
 
 #[test]
-fn writes_deterministic_compact_sample_evidence_v6() -> Result<(), Box<dyn std::error::Error>> {
+fn writes_deterministic_compact_sample_evidence_v7() -> Result<(), Box<dyn std::error::Error>> {
     let first = tempdir()?;
     let second = tempdir()?;
 
@@ -50,7 +50,7 @@ fn writes_deterministic_compact_sample_evidence_v6() -> Result<(), Box<dyn std::
     assert_eq!(first_bytes, second_bytes);
 
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v6");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v7");
     assert_eq!(value["sample_id"], SAMPLE_ID);
     assert_object_keys(
         &value,
@@ -142,6 +142,12 @@ fn writes_deterministic_compact_sample_evidence_v6() -> Result<(), Box<dyn std::
     assert_eq!(variant["reference"], "G");
     assert_eq!(variant["alternate"], "A");
     assert_eq!(variant["kind"], "SNV");
+    assert_eq!(variant["support_topology"]["reads"], 1);
+    assert_eq!(variant["support_topology"]["eligible_reads"], 1);
+    assert_eq!(variant["support_topology"]["forward_reads"], 0);
+    assert_eq!(variant["support_topology"]["reverse_reads"], 1);
+    assert_eq!(variant["support_topology"]["eligible_forward_reads"], 0);
+    assert_eq!(variant["support_topology"]["eligible_reverse_reads"], 1);
     let support = variant["support"]
         .as_array()
         .ok_or("variant support must be an array")?;
@@ -197,7 +203,7 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
         .success();
 
     let value: Value = serde_json::from_slice(&fs::read(sample_output_path(directory.path()))?)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v6");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v7");
     assert_eq!(value["overlaps"], serde_json::json!([]));
     let coverage = value["coverage"]
         .as_array()
@@ -208,6 +214,12 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
         .as_array()
         .ok_or("variants must be an array")?;
     assert_eq!(variants.len(), 1);
+    assert_eq!(variants[0]["support_topology"]["reads"], 1);
+    assert_eq!(variants[0]["support_topology"]["eligible_reads"], 0);
+    assert_eq!(variants[0]["support_topology"]["forward_reads"], 1);
+    assert_eq!(variants[0]["support_topology"]["reverse_reads"], 0);
+    assert_eq!(variants[0]["support_topology"]["eligible_forward_reads"], 0);
+    assert_eq!(variants[0]["support_topology"]["eligible_reverse_reads"], 0);
     let support = variants[0]["support"]
         .as_array()
         .ok_or("support must be an array")?;

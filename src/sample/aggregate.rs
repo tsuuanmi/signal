@@ -286,6 +286,18 @@ mod tests {
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         assert_eq!(evidence.locus_differences[0].observations[1].read_index, 1);
         assert_eq!(evidence.variants.len(), 1);
+        assert_eq!(evidence.variants[0].support_topology.reads, 2);
+        assert_eq!(evidence.variants[0].support_topology.eligible_reads, 2);
+        assert_eq!(evidence.variants[0].support_topology.forward_reads, 1);
+        assert_eq!(evidence.variants[0].support_topology.reverse_reads, 1);
+        assert_eq!(
+            evidence.variants[0].support_topology.eligible_forward_reads,
+            1
+        );
+        assert_eq!(
+            evidence.variants[0].support_topology.eligible_reverse_reads,
+            1
+        );
         assert_eq!(evidence.variants[0].support[0].read_index, 0);
         assert_eq!(evidence.variants[0].support[1].read_index, 1);
         Ok(())
@@ -416,6 +428,18 @@ mod tests {
         let evidence = aggregate(&[forward, reverse], &sample_config())?;
 
         assert_eq!(evidence.variants[0].support.len(), 2);
+        assert_eq!(evidence.variants[0].support_topology.reads, 2);
+        assert_eq!(evidence.variants[0].support_topology.eligible_reads, 1);
+        assert_eq!(evidence.variants[0].support_topology.forward_reads, 1);
+        assert_eq!(evidence.variants[0].support_topology.reverse_reads, 1);
+        assert_eq!(
+            evidence.variants[0].support_topology.eligible_forward_reads,
+            1
+        );
+        assert_eq!(
+            evidence.variants[0].support_topology.eligible_reverse_reads,
+            0
+        );
         assert!(evidence.variants[0].support[0].eligible);
         assert!(!evidence.variants[0].support[1].eligible);
         assert_eq!(

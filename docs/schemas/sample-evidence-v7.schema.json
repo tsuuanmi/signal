@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:signal:schema:sample-evidence:v6",
-  "title": "Signal sample evidence v6",
+  "$id": "urn:signal:schema:sample-evidence:v7",
+  "title": "Signal sample evidence v7",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,7 +16,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "signal.sample_evidence/v6"
+      "const": "signal.sample_evidence/v7"
     },
     "sample_id": {
       "type": "string",
@@ -344,6 +344,7 @@
         "reference",
         "alternate",
         "kind",
+        "support_topology",
         "support"
       ],
       "properties": {
@@ -373,6 +374,9 @@
           "items": {
             "$ref": "#/$defs/variantSupport"
           }
+        },
+        "support_topology": {
+          "$ref": "#/$defs/variantSupportTopology"
         }
       }
     },
@@ -728,6 +732,44 @@
           ]
         }
       ]
+    },
+    "variantSupportTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reads",
+        "eligible_reads",
+        "forward_reads",
+        "reverse_reads",
+        "eligible_forward_reads",
+        "eligible_reverse_reads"
+      ],
+      "properties": {
+        "reads": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "eligible_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "forward_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reverse_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eligible_forward_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "eligible_reverse_reads": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

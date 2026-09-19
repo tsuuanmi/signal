@@ -114,6 +114,7 @@ The repository already contains or explores functionality beyond this baseline, 
 - independently placed multi-read sample evidence with Tracy-derived pairwise overlap/admission, sparse differential loci, and normalized variant support;
 - observation-only trace-integrity evidence for PLOC/vendor cardinality, PLOC spacing, exact clipping, and event-signal scale;
 - pre-consensus run-length sample coverage topology with total/forward/reverse read depth;
+- factorized normalized-variant support topology across observed/eligible and selected forward/reverse reads;
 - richer per-call evidence.
 
 These capabilities are not treated as disposable experiments merely because they are beyond the simplest validation path. Where their current behavior is coherent and tested, future work builds on them.
