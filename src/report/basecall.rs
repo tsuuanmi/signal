@@ -21,7 +21,7 @@ pub(crate) struct CompletedBasecall {
     pub(crate) quality: QualityControlResult,
 }
 
-/// Builds `signal.basecalls/v1` without filesystem side effects.
+/// Builds `signal.basecalls/v2` without filesystem side effects.
 pub(crate) fn build(completed: CompletedBasecall) -> Result<BasecallResult> {
     let CompletedBasecall {
         config,
@@ -67,7 +67,7 @@ pub(crate) fn build(completed: CompletedBasecall) -> Result<BasecallResult> {
         .count();
 
     Ok(BasecallResult {
-        schema_version: "signal.basecalls/v1",
+        schema_version: "signal.basecalls/v2",
         provenance: BasecallProvenanceResult {
             input: InputResult {
                 sha256: trace.source_sha256,
@@ -89,6 +89,10 @@ pub(crate) fn build(completed: CompletedBasecall) -> Result<BasecallResult> {
             unresolved_primary_calls,
             multi_channel_unresolved_calls,
             vendor_disagreements,
+            ploc_vendor_length_mismatches: signal_analysis
+                .integrity
+                .vendor_length_mismatch_count(),
+            clipped_channel_samples: signal_analysis.integrity.clipped_channel_samples,
         },
     })
 }
