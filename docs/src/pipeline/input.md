@@ -9,8 +9,7 @@ declared input exactly once.
 
 - Require every declared AB1 and reference input to be a non-empty regular file.
 - Load the strict configuration and require its source file to exist.
-- Derive the command-specific output target and reject an existing target or a
-  parent path that exists but is not a directory.
+- Derive and validate output targets for publishing commands; sample scientific input loading remains independent from the production result target so validation tooling can reuse the same loaded traces/reference/config.
 - Load one chromatogram for `analyze`/`basecall`, or one or more chromatograms
   for `sample`; load the reference only for reference-guided commands.
 - Validate the sample identifier used only for deterministic sample result/log
@@ -25,8 +24,8 @@ algorithm execution.
 
 - `AnalysisInputs`: loaded config, chromatogram, reference, and analysis target.
 - `BasecallInputs`: loaded config, chromatogram, and reference-free target.
-- `SampleInputs`: loaded config, one or more chromatograms, shared reference, and
-  sample-evidence target.
+- `SampleInputs`: loaded config, one or more chromatograms, and shared reference.
+- `sample_output(sample_id)`: derives and validates the production sample-evidence target.
 - `load_analysis(args)`, `load_basecall(args)`, and `load_sample(args)`:
   command-specific entry points.
 - `trace_stem(trace) -> Result<&str>`: validates the UTF-8 stem used by

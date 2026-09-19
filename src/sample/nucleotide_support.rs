@@ -5,15 +5,14 @@ use crate::model::alignment::Orientation;
 use crate::model::locus_evidence::EvidenceProfile;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
-    LocusDifferenceObservation, LocusNucleotideSupport, NucleotideContribution,
-    ProfileHeterogeneity,
+    LocusNucleotideSupport, NucleotideContribution, ProfileHeterogeneity, SampleLocusObservation,
 };
 
 use super::profile_geometry;
 
 /// Adds each eligible normalized profile with unit read mass.
 pub(super) fn aggregate(
-    observations: &[LocusDifferenceObservation],
+    observations: &[SampleLocusObservation],
     reads: &[&ReadObservation],
 ) -> Result<LocusNucleotideSupport> {
     let mut result = LocusNucleotideSupport {

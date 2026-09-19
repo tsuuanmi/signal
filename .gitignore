@@ -1,6 +1,7 @@
 data/
 results
 logs/
+validation-results/
 .env
 __pycache__/
 

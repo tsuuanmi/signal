@@ -25,7 +25,7 @@
 
 ### Integration tests
 
-Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v2 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v7 JSON, internal rolling-window behavior and merged noisy-region projection, profile-aware forward/reverse placement, reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular profile alignment segments, and public primary-sequence alignment metrics/call quality, strict config v5, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v7 integrity/overlap/schema rejection cases plus batch preflight, ambiguity/symlink rejection, selected-only destructive cleanup, temporary helper trace logging, sample-only persistent logging, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
+Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v2 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v7 JSON, internal rolling-window behavior and merged noisy-region projection, profile-aware forward/reverse placement, reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular profile alignment segments, and public primary-sequence alignment metrics/call quality, strict config v5, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v7 integrity/overlap/schema rejection cases plus batch preflight, ambiguity/symlink rejection, selected-only destructive cleanup, temporary helper trace logging, sample-only persistent logging, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure. Dedicated Rust validation integration tests require all-reference covered loci to appear in `signal.validation_locus/v1`, keep production `results/` untouched, and enforce atomic no-overwrite measurement publication.
 
 ### Differential and real-trace validation
 
@@ -34,6 +34,21 @@ An ignored local trace is not a golden. Before use, record approval, source cont
 ## Biological validation
 
 `LocusEvidence` and `EvidenceProfile` are observation-only signal representations, not allele fractions or genotype probabilities. The rolling SNR feature and relative quality score are not error probabilities. Validation must not call it Phred or infer clinical sensitivity. A behavior-changing signal cleaner must additionally preserve synthetic 10–30% secondary peaks under baseline drift, impulse noise, compressed peaks, homopolymers, and read ends. Low-level heteroplasmy, genotype, pathogenicity, and diagnostic claims require separate methods and studies.
+
+## Profile-geometry threshold research
+
+Production profile geometry remains threshold-free. Empirical threshold research uses the dedicated `signal-validation` binary so clean reference-matching loci are measured as well as differential loci without changing `signal.sample_evidence/v7`.
+
+A local export runs the same trace/read/sample science path and publishes one deterministic JSON object per covered reference locus to `validation-results/<sample-id>.jsonl`:
+
+```bash
+SIGNAL_CONFIG=config/signal.toml \
+  cargo run --release --bin signal-validation -- \
+  validation-001 trace-a.ab1 trace-b.ab1 \
+  --reference references/rCRS.fasta
+```
+
+Real validation exports are identifying scientific derivatives and remain ignored local artifacts. Threshold development must follow `docs/research/Signal/validation-corpus.md` and `docs/research/Signal/threshold-research.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Point-mixture and length/indel studies remain separate.
 
 ## Performance
 

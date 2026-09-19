@@ -1,4 +1,4 @@
-//! Sparse extraction of loci where at least one read differs from the reference.
+//! Reference-coordinate sample-locus evidence shared by production and validation.
 
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -6,18 +6,27 @@ use crate::error::{Error, Result};
 use crate::model::alignment::AlignmentColumn;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
-    LocusDifferenceEvidence, LocusDifferenceObservation, LocusState, LocusSupportTopology,
+    LocusState, LocusSupportTopology, SampleLocusEvidence, SampleLocusObservation,
 };
 
 use super::{call_evidence, contribution, nucleotide_support};
 
-struct DifferenceBuilder {
-    reference_base: char,
-    observations: Vec<LocusDifferenceObservation>,
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum LocusSelection {
+    Differential,
+    AllCovered,
 }
 
-pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenceEvidence>> {
-    let mut differences: BTreeMap<usize, DifferenceBuilder> = BTreeMap::new();
+struct LocusBuilder {
+    reference_base: char,
+    observations: Vec<SampleLocusObservation>,
+}
+
+pub(crate) fn aggregate(
+    reads: &[&ReadObservation],
+    selection: LocusSelection,
+) -> Result<Vec<SampleLocusEvidence>> {
+    let mut loci: BTreeMap<usize, LocusBuilder> = BTreeMap::new();
 
     for read in reads {
         for column in &read.alignment.columns {
@@ -26,21 +35,20 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
             };
             if column.reference_base == '-' {
                 return Err(Error::Sample(
-                    "reference-coordinate difference cannot contain an insertion column".into(),
+                    "reference-coordinate locus cannot contain an insertion column".into(),
                 ));
             }
-            if classify(column) == LocusState::Reference {
+            let state = classify(column);
+            if selection == LocusSelection::Differential && state == LocusState::Reference {
                 continue;
             }
             let position_1based = reference_index_0based
                 .checked_add(1)
                 .ok_or_else(|| Error::Sample("reference coordinate overflow".into()))?;
-            let entry = differences
-                .entry(position_1based)
-                .or_insert_with(|| DifferenceBuilder {
-                    reference_base: column.reference_base,
-                    observations: Vec::new(),
-                });
+            let entry = loci.entry(position_1based).or_insert_with(|| LocusBuilder {
+                reference_base: column.reference_base,
+                observations: Vec::new(),
+            });
             if entry.reference_base != column.reference_base {
                 return Err(Error::Sample(format!(
                     "reference base disagrees at position {position_1based}"
@@ -49,7 +57,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
         }
     }
 
-    if differences.is_empty() {
+    if loci.is_empty() {
         return Ok(Vec::new());
     }
 
@@ -62,7 +70,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
             let position_1based = reference_index_0based
                 .checked_add(1)
                 .ok_or_else(|| Error::Sample("reference coordinate overflow".into()))?;
-            let Some(entry) = differences.get_mut(&position_1based) else {
+            let Some(entry) = loci.get_mut(&position_1based) else {
                 continue;
             };
             if !seen.insert(position_1based) {
@@ -82,12 +90,11 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
         }
     }
 
-    differences
-        .into_iter()
+    loci.into_iter()
         .map(|(position_1based, built)| {
             let support_topology = support_topology(&built.observations, reads)?;
             let nucleotide_support = nucleotide_support::aggregate(&built.observations, reads)?;
-            Ok(LocusDifferenceEvidence {
+            Ok(SampleLocusEvidence {
                 position_1based,
                 reference_base: built.reference_base,
                 support_topology,
@@ -99,7 +106,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
 }
 
 fn support_topology(
-    observations: &[LocusDifferenceObservation],
+    observations: &[SampleLocusObservation],
     reads: &[&ReadObservation],
 ) -> Result<LocusSupportTopology> {
     let mut topology = LocusSupportTopology {
@@ -173,11 +180,11 @@ fn observation(
     read_index: usize,
     read: &ReadObservation,
     column: &AlignmentColumn,
-) -> Result<LocusDifferenceObservation> {
+) -> Result<SampleLocusObservation> {
     let state = classify(column);
     if state == LocusState::Deletion {
         let signal = None;
-        return Ok(LocusDifferenceObservation {
+        return Ok(SampleLocusObservation {
             read_index,
             state,
             base: None,
@@ -198,7 +205,7 @@ fn observation(
         .ok_or_else(|| Error::Sample("aligned call lacks matching quality evidence".into()))?;
 
     let signal = Some(call_evidence::for_call(read, call_index_0based)?);
-    Ok(LocusDifferenceObservation {
+    Ok(SampleLocusObservation {
         read_index,
         state,
         base: Some(column.query_base),

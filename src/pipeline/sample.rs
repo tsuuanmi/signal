@@ -5,11 +5,11 @@ use std::time::Instant;
 use crate::cli::SampleArgs;
 use crate::error::Result;
 use crate::logger::Logger;
-use crate::pipeline::{input, observation};
+use crate::pipeline::input;
 use crate::report::{self, CompletedSampleEvidence};
 use crate::sample as sample_science;
 
-use super::sample_metrics;
+use super::{sample_metrics, sample_reads};
 
 /// Runs one sample-evidence operation with one sample-level append-only log.
 pub(crate) fn run(args: &SampleArgs) -> Result<()> {
@@ -50,6 +50,7 @@ fn run_logged(
     *stage = "input_loading";
     let stage_started = Instant::now();
     let inputs = input::load_sample(args)?;
+    let output = input::sample_output(&args.sample_id)?;
     logger.info(
         module_path!(),
         line!(),
@@ -68,38 +69,19 @@ fn run_logged(
             inputs.reference.len(),
             inputs.config.source_path.display().to_string(),
             inputs.config.source_sha256,
-            inputs.output.display().to_string()
+            output.display().to_string()
         ),
     )?;
 
-    let mut reads = Vec::with_capacity(inputs.traces.len());
-    let mut warning_total = 0usize;
-    for (index, trace) in inputs.traces.iter().enumerate() {
-        logger.info(
-            module_path!(),
-            line!(),
-            format_args!(
-                "event=sample_read_started read_index={} trace_name={:?} trace_sha256={}",
-                index, trace.source_name, trace.source_sha256
-            ),
-        )?;
-        let completed =
-            observation::build(trace, &inputs.reference, &inputs.config, logger, stage)?;
-        warning_total += completed.warning_total;
-        logger.info(
-            module_path!(),
-            line!(),
-            format_args!(
-                "event=sample_read_completed read_index={} trace_sha256={} orientation={:?} segments={} variants={}",
-                index,
-                completed.read.input_sha256,
-                completed.read.alignment.orientation,
-                completed.read.alignment.reference_segments.len(),
-                completed.read.variants.reported.len()
-            ),
-        )?;
-        reads.push(completed.read);
-    }
+    let completed_reads = sample_reads::build(
+        &inputs.traces,
+        &inputs.reference,
+        &inputs.config,
+        logger,
+        stage,
+    )?;
+    let reads = completed_reads.reads;
+    let warning_total = completed_reads.warning_total;
 
     *stage = "sample_aggregation";
     let stage_started = Instant::now();
@@ -172,7 +154,6 @@ fn run_logged(
 
     *stage = "reporting";
     let stage_started = Instant::now();
-    let output = inputs.output.clone();
     let result = report::build_sample(CompletedSampleEvidence {
         sample_id: args.sample_id.clone(),
         reference: inputs.reference,

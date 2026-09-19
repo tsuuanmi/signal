@@ -24,6 +24,7 @@ mod report;
 mod sample;
 mod signal_processing;
 mod trace;
+pub mod validation;
 mod variant_calling;
 
 use cli::{Cli, Command};

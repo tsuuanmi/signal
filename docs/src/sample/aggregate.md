@@ -9,11 +9,11 @@ Owns sample-level validation, deterministic read ordering, and assembly of compa
 - Require at least one independently completed read.
 - Require identical reference/configuration identities.
 - Reject duplicate trace content by SHA-256 even when filenames differ.
-- Sort reads by SHA-256 so internal registry indexes are deterministic and independent of CLI order.
+- Sort reads by SHA-256 so internal registry indexes are deterministic and independent of CLI order; expose the same validated ordering internally for dense validation-locus aggregation.
 - Build the one top-level read registry with source basename, stable identity, trace-integrity evidence, and selected post-trim alignment summary.
 - Consume the validated `SampleReconciliationConfig`.
 - Derive run-length total/forward/reverse coverage topology from the read registry.
-- Delegate pairwise overlap admission, sparse differential-locus extraction with profile retention, and normalized variant aggregation/support-topology/profile derivation.
+- Delegate pairwise overlap admission, sparse production locus selection through the shared locus builder, and normalized variant aggregation/support-topology/profile derivation.
 
 ## Non-responsibilities
 

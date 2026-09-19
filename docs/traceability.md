@@ -14,7 +14,8 @@ This map helps developers and agents move from intent to implementation without 
 | `SRS-VAR-*` | `pipeline.md` Stage 6 | `src/variant_calling/`, `src/model/variant.rs` | SNV/indel/normalization mapping tests + mixed-supporting-signal eligibility + real truth | analysis variants |
 | `SRS-OUT-*` | output docs, architecture | `src/report/`, `src/pipeline/` | schema/example + publication tests | JSON schemas |
 | `SRS-BAT-*` | data/batch docs | `scripts/analyze_samples.py` | Python batch tests | external orchestration behavior |
-| `SRS-NFR-*`, `SRS-VAL-*` | architecture/invariants, validation | cross-cutting | CI, fuzz/property/release evidence as adopted | release evidence |
+| `SRS-NFR-*` | architecture/invariants, validation | cross-cutting | CI, fuzz/property/release evidence as adopted | release evidence |
+| `SRS-VAL-*` | `validation.md`, ADR-0044, Signal validation research | `src/validation/`, `src/pipeline/validation.rs`, `src/pipeline/sample_reads.rs`, `src/sample/loci.rs` | `tests/validation.rs`, synthetic ABIF, CI, grouped local corpus studies | ignored `signal.validation_locus/v1` research JSONL; no production schema change |
 
 ## Navigation rule
 

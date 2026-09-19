@@ -7,12 +7,15 @@ mod observation;
 mod read;
 mod sample;
 mod sample_metrics;
+mod sample_reads;
+mod validation;
 
 use std::time::Instant;
 
 use crate::cli::{AnalyzeArgs, BasecallArgs, SampleArgs};
 use crate::error::{Error, Result};
 use crate::logger::Logger;
+use crate::validation::ValidationExportRequest;
 
 /// Runs one AB1-to-reference analysis.
 pub(crate) fn analyze(args: &AnalyzeArgs) -> Result<()> {
@@ -27,6 +30,11 @@ pub(crate) fn basecall(args: &BasecallArgs) -> Result<()> {
 /// Runs one multi-read sample evidence operation.
 pub(crate) fn sample(args: &SampleArgs) -> Result<()> {
     sample::run(args)
+}
+
+/// Runs one local validation measurement export.
+pub(crate) fn validation_export(request: &ValidationExportRequest) -> Result<()> {
+    validation::run(request)
 }
 
 /// Records a terminal operation failure without discarding either error.

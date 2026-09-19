@@ -24,6 +24,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Local `signal-validation` research tooling now exports deterministic all-covered per-locus `signal.validation_locus/v1` JSONL under ignored `validation-results/`, reusing the authoritative read/sample science path so clean reference loci can define empirical null distributions without changing `signal.sample_evidence/v7` or applying thresholds.
+- Validation research now specifies corpus strata, truth/provenance hierarchy, grouped anti-leakage development/holdout design, LoB/LoD-style threshold research, point-mixture versus length-mixture separation, and explicit promotion gates before any profile-geometry threshold can enter production.
 - Internal eligible-profile evidence now retains threshold-free within-read impurity, between-read dispersion, total heterogeneity, and forward/reverse Total Variation geometry, preserving the distinction between reproducible mixed chromatogram evidence and disagreement across otherwise clean reads without adding thresholds or biological verdicts.
 - Sample aggregation operational metrics now live in a dedicated pipeline module instead of the sample orchestration path, including production consumption of profile-geometry summaries.
 - Internal differential loci now derive arithmetic mean A/C/G/T evidence profiles for non-empty total/forward/reverse unit-mass support partitions, preserving contributor counts and avoiding any winning-base, agreement, or confidence interpretation.

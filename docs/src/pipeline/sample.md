@@ -7,7 +7,7 @@ Runs one multi-read sample-evidence operation.
 ## Responsibilities
 
 - Load one validated sample identifier, one shared reference/configuration, and one or more traces.
-- Process every trace independently through `pipeline::observation`.
+- Process every trace through shared `pipeline::sample_reads`, which delegates each trace to the authoritative `pipeline::observation` path and is reused by validation export.
 - Aggregate completed observations through `sample::aggregate` using the strict sample-reconciliation overlap policy.
 - Delegate `sample_aggregation_completed` metric extraction to `pipeline::sample_metrics`, including profile availability, contribution states, support mass, mean-profile availability, threshold-free profile heterogeneity, directional profile distance, signal-context counts, and locus/variant topology. These remain evidence summaries rather than consensus or confidence verdicts.
 - Build and atomically publish one `signal.sample_evidence/v7` document at `results/<sample-id>.sample.json`.

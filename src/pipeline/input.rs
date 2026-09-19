@@ -29,7 +29,6 @@ pub(crate) struct SampleInputs {
     pub(crate) config: Config,
     pub(crate) traces: Vec<Chromatogram>,
     pub(crate) reference: Reference,
-    pub(crate) output: PathBuf,
 }
 
 /// Validates and loads one trace, one reference, and one configuration.
@@ -76,8 +75,6 @@ pub(crate) fn load_sample(args: &SampleArgs) -> Result<SampleInputs> {
     }
     require_regular_file(&args.reference, "reference")?;
     let config = load_config()?;
-    let output = sample_output_path(&args.sample_id);
-    validate_output(&output)?;
     let traces = args
         .traces
         .iter()
@@ -88,7 +85,6 @@ pub(crate) fn load_sample(args: &SampleArgs) -> Result<SampleInputs> {
         config,
         traces,
         reference,
-        output,
     })
 }
 
@@ -144,8 +140,10 @@ fn basecall_output_path(trace: &Path) -> Result<PathBuf> {
     Ok(PathBuf::from("results").join(format!("{}.basecalls.json", trace_stem(trace)?)))
 }
 
-fn sample_output_path(sample_id: &str) -> PathBuf {
-    PathBuf::from("results").join(format!("{sample_id}.sample.json"))
+pub(crate) fn sample_output(sample_id: &str) -> Result<PathBuf> {
+    let output = PathBuf::from("results").join(format!("{sample_id}.sample.json"));
+    validate_output(&output)?;
+    Ok(output)
 }
 
 /// Returns the validated UTF-8 trace stem shared by result and log paths.

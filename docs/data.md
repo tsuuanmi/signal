@@ -92,6 +92,8 @@ normalized variants with factorized read/eligibility/orientation support topolog
 identifying, so sample-evidence JSON follows the same approval, storage, retention,
 and redistribution policy as its AB1 sources.
 
+Validation JSONL under `validation-results/` contains per-locus profile geometry and reference coordinates. It is a derived biological artifact with the same approval, storage, retention, and redistribution constraints as the source AB1 and must not be committed.
+
 Repository examples MUST use synthetic sample/read names and synthetic input hashes.
 Do not commit a local sample result merely because v7 is compact. Real local outputs
 may inform exploratory development, but release/compatibility evidence requires the
@@ -107,7 +109,7 @@ never sequence strings or JSON bodies.
 
 ## Privacy and repository policy
 
-- `data/`, `results`, and `logs/` remain listed in `.gitignore`.
+- `data/`, `results`, `logs/`, and `validation-results/` remain listed in `.gitignore`.
 - Do not force-add AB1 files, manifests, sample identifiers, or derived outputs.
 - Do not copy local traces into `tests/fixtures/` without explicit approval.
 - Treat filenames and manifests as potentially identifying metadata.
