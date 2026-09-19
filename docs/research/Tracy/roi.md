@@ -4,7 +4,7 @@ This is the compact prioritization layer. Detailed rationale lives in the focuse
 
 This ranking is relative to Signal's current scope: deterministic Sanger AB1 processing for short references, with basecalling, alignment, and conservative variant reporting already implemented.
 
-**Promotion note (2026-09-19):** rank 1 has been promoted into production architecture as ADR-0027 and `signal.primary_difference/v4`. The research rationale remains here; root SRS/ADR/source are authoritative for current behavior.
+**Promotion note (2026-09-19):** rank 1 is production behavior via ADR-0027 / `signal.primary_difference/v4`, and the rank-3 evidence-profile lesson is now formalized via ADR-0028 as basecall-independent `LocusEvidence -> EvidenceProfile`. The research rationale remains here; root SRS/ADR/source are authoritative for current behavior.
 
 ROI combines expected biological correctness/review value, reuse of existing Signal evidence, implementation and validation cost, architectural disruption, and risk of unsupported biological claims.
 
@@ -14,7 +14,7 @@ ROI combines expected biological correctness/review value, reuse of existing Sig
 |---|---|---|---|
 | 1 | Use secondary/mixed signal in simple-variant eligibility | Very high | Prevent a strongest-base difference from being presented as an ordinary clean SNV when the same locus has meaningful competing signal. |
 | 2 | PLOC completeness + artifact-resilience validation | Very high | Protect the evidence foundation before richer profile methods amplify upstream mistakes; motivated by real Tracy failures on incomplete peak locations and high-amplitude artifacts. |
-| 3 | Evidence profile independent of thresholded basecall membership | Very high | Preserve measured A/C/G/T evidence rather than rebuilding a profile only from channels already admitted by the caller. |
+| 3 | Evidence profile independent of thresholded basecall membership | Very high | Promoted via ADR-0028: preserve measured A/C/G/T evidence rather than rebuilding a profile only from channels already admitted by the caller. |
 | 4 | Trace-profile-aware alignment | Very high | Reuse the existing Gotoh engine with evidence-aware substitution scoring and explicit numeric/tie semantics. |
 | 5 | Forward/reverse trace reconciliation | High | Combine independent strand evidence with explicit overlap admission and preserve conflicts. |
 | 6 | Reference-guided multi-trace consensus | High, post-MVP | Combine overlapping reads in reference coordinates without falling back to quality-blind majority vote. |
