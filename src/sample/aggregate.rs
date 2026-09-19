@@ -54,9 +54,7 @@ pub(crate) fn aggregate(
     })
 }
 
-pub(crate) fn validated_ordered_reads(
-    reads: &[ReadObservation],
-) -> Result<Vec<&ReadObservation>> {
+pub(crate) fn validated_ordered_reads(reads: &[ReadObservation]) -> Result<Vec<&ReadObservation>> {
     let first = reads
         .first()
         .ok_or_else(|| Error::Sample("at least one read observation is required".into()))?;
