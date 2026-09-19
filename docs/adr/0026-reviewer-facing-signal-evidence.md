@@ -54,7 +54,7 @@ For deletions, Signal emits real flanking call signal/quality and never fabricat
 evidence at a deleted reference base. Insertions retain supporting inserted calls
 plus available flanks.
 
-Sample evidence v2 uses the same call-evidence shape. Its public `read` references
+At adoption, sample evidence v2 used the same call-evidence shape. Its public `read` references
 use unique filename stems rather than numeric registry indexes; SHA-256 remains the
 scientific content identity and filenames remain non-authoritative for placement or
 reconciliation.
@@ -75,3 +75,7 @@ reconciliation.
 This decision does not calibrate quality to Phred, infer allele fraction or
 heteroplasmy, change basecalling, alter trimming/alignment, or use filenames as
 scientific keys.
+
+## Follow-up
+
+ADR-0027 advances sample evidence to v3 for mixed-SNV eligibility while retaining the same reviewer-facing `role/base/peaks/quality` call-evidence shape.
