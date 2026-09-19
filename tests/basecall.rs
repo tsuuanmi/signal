@@ -74,7 +74,10 @@ fn writes_deterministic_reference_free_json() -> Result<(), Box<dyn std::error::
     assert_eq!(value["read"]["trim"]["start"], 0);
     assert_eq!(value["read"]["trim"]["end"], QUERY.len());
     assert!(value["signal_quality"]["noisy_regions"].is_array());
-    assert_eq!(value["signal_quality"]["integrity"]["ploc_count"], QUERY.len());
+    assert_eq!(
+        value["signal_quality"]["integrity"]["ploc_count"],
+        QUERY.len()
+    );
     assert_eq!(
         value["signal_quality"]["integrity"]["vendor_primary_count"],
         QUERY.len()
