@@ -20,7 +20,7 @@ No scientific logic, file parsing, output writing, or configuration defaults.
 
 ## Invariants and errors
 
-Help/version are owned by Clap. The binary crate forbids unsafe Rust and deprecated API use. Library failures produce a nonzero exit and are never converted into fake success.
+Help/version are owned by Clap. The binary crate forbids unsafe Rust and denies deprecated API use; first-party suppression is rejected by the Rust source-policy gate. Library failures produce a nonzero exit and are never converted into fake success.
 
 ## Dependencies
 
