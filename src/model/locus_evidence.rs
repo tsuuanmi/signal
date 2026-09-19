@@ -48,8 +48,7 @@ mod tests {
 
     #[test]
     fn normalizes_positive_corrected_signal() {
-        let Some(profile) =
-            EvidenceProfile::from_corrected_amplitudes([0.0, 40.0, 100.0, 0.0])
+        let Some(profile) = EvidenceProfile::from_corrected_amplitudes([0.0, 40.0, 100.0, 0.0])
         else {
             panic!("positive signal should produce a profile");
         };
