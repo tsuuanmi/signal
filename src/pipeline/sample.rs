@@ -139,6 +139,38 @@ fn run_logged(
         .flat_map(|support| &support.calls)
         .filter(|call| call.signal.in_noisy_region)
         .count();
+    let locus_positive_corrected_channels = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter_map(|observation| observation.signal.as_ref())
+        .flat_map(|signal| signal.corrected_amplitudes)
+        .filter(|value| *value > 0.0)
+        .count();
+    let locus_positive_snr_channels = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter_map(|observation| observation.signal.as_ref())
+        .flat_map(|signal| signal.snrs)
+        .filter(|value| *value > 0.0)
+        .count();
+    let variant_positive_corrected_channels = evidence
+        .variants
+        .iter()
+        .flat_map(|variant| &variant.support)
+        .flat_map(|support| &support.calls)
+        .flat_map(|call| call.signal.corrected_amplitudes)
+        .filter(|value| *value > 0.0)
+        .count();
+    let variant_positive_snr_channels = evidence
+        .variants
+        .iter()
+        .flat_map(|variant| &variant.support)
+        .flat_map(|support| &support.calls)
+        .flat_map(|call| call.signal.snrs)
+        .filter(|value| *value > 0.0)
+        .count();
     let locus_forward_reads = evidence
         .locus_differences
         .iter()
@@ -176,9 +208,11 @@ fn run_logged(
             concat!(
                 "event=sample_aggregation_completed elapsed_ms={} reads={} coverage_segments={} ",
                 "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
-                "noisy_locus_observations={} locus_forward_reads={} locus_reverse_reads={} ",
-                "locus_reference_reads={} locus_alternate_reads={} locus_unresolved_reads={} ",
-                "locus_deletion_reads={} variants={} profiled_variant_calls={} noisy_variant_calls={}"
+                "noisy_locus_observations={} locus_positive_corrected_channels={} locus_positive_snr_channels={} ",
+                "locus_forward_reads={} locus_reverse_reads={} locus_reference_reads={} ",
+                "locus_alternate_reads={} locus_unresolved_reads={} locus_deletion_reads={} variants={} ",
+                "profiled_variant_calls={} noisy_variant_calls={} variant_positive_corrected_channels={} ",
+                "variant_positive_snr_channels={}"
             ),
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
@@ -192,6 +226,8 @@ fn run_logged(
             evidence.locus_differences.len(),
             profiled_locus_observations,
             noisy_locus_observations,
+            locus_positive_corrected_channels,
+            locus_positive_snr_channels,
             locus_forward_reads,
             locus_reverse_reads,
             locus_reference_reads,
@@ -200,7 +236,9 @@ fn run_logged(
             locus_deletion_reads,
             evidence.variants.len(),
             profiled_variant_calls,
-            noisy_variant_calls
+            noisy_variant_calls,
+            variant_positive_corrected_channels,
+            variant_positive_snr_channels
         ),
     )?;
 
