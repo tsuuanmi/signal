@@ -69,9 +69,7 @@ class GroupAccumulator:
                 self.values[metric].append(value)
 
 
-def metric_summary(
-    groups: Sequence[GroupAccumulator], metric: str
-) -> dict[str, Any]:
+def metric_summary(groups: Sequence[GroupAccumulator], metric: str) -> dict[str, Any]:
     values = array("d")
     missing = 0
     for group in groups:

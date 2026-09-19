@@ -147,12 +147,12 @@ def publish_research(corpus_dir: Path, output_dir: Path) -> None:
     validate_new_directory(output_dir, (corpus_dir,))
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     if not output_dir.parent.is_dir() or output_dir.parent.is_symlink():
-        raise ValueError(f"output parent is not a regular directory: {output_dir.parent}")
+        raise ValueError(
+            f"output parent is not a regular directory: {output_dir.parent}"
+        )
 
     corpus = load_research_corpus(corpus_dir)
-    stage = Path(
-        tempfile.mkdtemp(prefix=f".{output_dir.name}.", dir=output_dir.parent)
-    )
+    stage = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.", dir=output_dir.parent))
     try:
         build_staged_research(corpus, stage)
         try:

@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 import math
 import re
-from pathlib import Path
 from collections.abc import Iterator
+from pathlib import Path
 from typing import Any
 
 from .measurements import load_measurements
@@ -215,13 +215,13 @@ def read_metadata(record: Any, label: str) -> dict[str, Any]:
         raise TypeError(f"{label}.artifact_tags must be an array of non-empty strings")
     if len(artifact_tags) != len(set(artifact_tags)):
         raise ValueError(f"{label}.artifact_tags must be unique")
-    direction = optional_string(record["declared_direction"], f"{label}.declared_direction")
+    direction = optional_string(
+        record["declared_direction"], f"{label}.declared_direction"
+    )
     if direction not in {None, "forward", "reverse"}:
         raise ValueError(f"{label}.declared_direction is invalid")
     return {
-        "trace_sha256": sha256_string(
-            record["trace_sha256"], f"{label}.trace_sha256"
-        ),
+        "trace_sha256": sha256_string(record["trace_sha256"], f"{label}.trace_sha256"),
         "pcr_replicate_id": optional_string(
             record["pcr_replicate_id"], f"{label}.pcr_replicate_id"
         ),
@@ -298,7 +298,9 @@ def load_research_corpus(corpus_dir: Path) -> ResearchCorpus:
             read = read_metadata(raw_read, f"{label}.reads[{read_index}]")
             read_sha256 = read["trace_sha256"]
             if read_sha256 in reads or read_sha256 in global_reads:
-                raise ValueError(f"duplicate trace SHA-256 in corpus index: {read_sha256}")
+                raise ValueError(
+                    f"duplicate trace SHA-256 in corpus index: {read_sha256}"
+                )
             reads[read_sha256] = read
             global_reads.add(read_sha256)
         observed_trace_count += len(reads)
@@ -448,9 +450,7 @@ def iter_research_rows(
     """Yield one joined locus row plus its joined observation rows at a time."""
     for case in corpus.cases:
         case_id = case.metadata["validation_case_id"]
-        validated = load_measurements(
-            case.measurement_file, case_id, set(case.reads)
-        )
+        validated = load_measurements(case.measurement_file, case_id, set(case.reads))
         summary = validated.summary
         if summary.signal_version != corpus.signal_version:
             raise ValueError(f"{case_id}: Signal version differs from corpus index")
