@@ -7,7 +7,7 @@ Defines the Signal library boundary and dispatches parsed commands.
 ## Responsibilities
 
 - Declare the internal subsystem graph, including the private operational logger.
-- Expose the intentional CLI, configuration, error, and model surfaces.
+- Expose the intentional CLI, configuration, error, model, and explicit local-validation surfaces.
 - Route commands to `pipeline`.
 
 ## Inputs and outputs
