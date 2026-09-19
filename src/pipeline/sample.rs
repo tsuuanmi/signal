@@ -106,27 +106,38 @@ fn run_logged(
         .locus_differences
         .iter()
         .flat_map(|difference| &difference.observations)
-        .filter(|observation| observation.profile.is_some())
+        .filter(|observation| {
+            observation
+                .signal
+                .as_ref()
+                .and_then(|signal| signal.profile)
+                .is_some()
+        })
         .count();
     let profiled_variant_calls = evidence
         .variants
         .iter()
         .flat_map(|variant| &variant.support)
         .flat_map(|support| &support.calls)
-        .filter(|call| call.profile.is_some())
+        .filter(|call| call.signal.profile.is_some())
         .count();
     let noisy_locus_observations = evidence
         .locus_differences
         .iter()
         .flat_map(|difference| &difference.observations)
-        .filter(|observation| observation.in_noisy_region == Some(true))
+        .filter(|observation| {
+            observation
+                .signal
+                .as_ref()
+                .is_some_and(|signal| signal.in_noisy_region)
+        })
         .count();
     let noisy_variant_calls = evidence
         .variants
         .iter()
         .flat_map(|variant| &variant.support)
         .flat_map(|support| &support.calls)
-        .filter(|call| call.in_noisy_region)
+        .filter(|call| call.signal.in_noisy_region)
         .count();
     let locus_forward_reads = evidence
         .locus_differences
