@@ -124,7 +124,10 @@ def rejected_analysis_shapes(
         ("analysis using old schema version", old_schema),
         ("analysis without trace integrity", missing_integrity),
         ("analysis with invalid event-signal ratio", invalid_integrity_ratio),
-        ("analysis with more than two vendor length mismatches", excessive_vendor_mismatches),
+        (
+            "analysis with more than two vendor length mismatches",
+            excessive_vendor_mismatches,
+        ),
     ]
 
 
@@ -163,7 +166,10 @@ def rejected_basecall_shapes(
         ("basecall using old schema version", old_schema),
         ("basecall without trace integrity", missing_integrity),
         ("single-PLOC basecall carrying spacing summary", invalid_single_ploc_spacing),
-        ("basecall with more than two vendor length mismatches", excessive_vendor_mismatches),
+        (
+            "basecall with more than two vendor length mismatches",
+            excessive_vendor_mismatches,
+        ),
     ]
 
 
