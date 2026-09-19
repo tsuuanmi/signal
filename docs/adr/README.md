@@ -43,3 +43,5 @@
 | [0039](0039-nucleotide-contribution-eligibility.md) | Define structural nucleotide contribution eligibility | Accepted |
 | [0040](0040-unweighted-nucleotide-profile-support.md) | Accumulate eligible profiles with unit read mass | Accepted |
 | [0041](0041-mean-nucleotide-evidence-profiles.md) | Derive mean nucleotide evidence profiles | Accepted |
+| [0042](0042-profile-heterogeneity-decomposition.md) | Decompose nucleotide profile heterogeneity | Accepted |
+| [0043](0043-directional-profile-distance.md) | Measure directional nucleotide-profile distance | Accepted |
