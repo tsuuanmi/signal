@@ -26,8 +26,7 @@ No extraction, normalization, or inference.
 - `Variant`: contig, normalized one-based position, reference/alternate alleles,
   kind, and mapped calls. Report-only classification and normalization labels are
   not stored.
-- `VariantExclusionReason`: stable structural, region, peak, and relative-quality
-  rejection reasons with operational labels.
+- `VariantExclusionReason`: stable structural, region, peak, relative-quality, and mixed-supporting-signal rejection reasons with operational labels.
 - `ObservedVariant`: one normalized canonical variant plus the configured exclusion reasons that determine whether it is eligible.
 - `ExcludedVariant`: concise allele-free diagnostic for a candidate that is not reportable.
 - `VariantCallingResult`: configured-eligible `reported` variants, normalized `observed` candidates with eligibility retained, plus concise exclusion diagnostics; `excluded_count()` derives the warning count.
@@ -39,7 +38,7 @@ No extraction, normalization, or inference.
   alt)` tuple.
 - `reference_position_0based` is `None` only for inserted query calls; deletion
   evidence is flanking calls only.
-- Every normalized canonical candidate remains in `observed` even when configured region/signal thresholds exclude it from `reported`. Structural candidates that cannot form a valid normalized variant remain diagnostics only.
+- Every normalized canonical candidate remains in `observed` even when configured region/signal/mixed-support eligibility excludes it from `reported`. Structural candidates that cannot form a valid normalized variant remain diagnostics only.
 - Each excluded candidate appears exactly once in diagnostics. Its reason list is deduplicated by rule, and its position is absent when normalization never produced one.
 
 ## Dependencies
