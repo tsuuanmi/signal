@@ -107,7 +107,7 @@ never sequence strings or JSON bodies.
 
 ## Privacy and repository policy
 
-- `data/`, `results`, and `logs/` remain listed in `.gitignore`.
+- `data/`, `results`, `logs/`, and `validation-results/` remain listed in `.gitignore`.
 - Do not force-add AB1 files, manifests, sample identifiers, or derived outputs.
 - Do not copy local traces into `tests/fixtures/` without explicit approval.
 - Treat filenames and manifests as potentially identifying metadata.
