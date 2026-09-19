@@ -21,8 +21,10 @@ pub(super) fn for_call(
             ))
         })?;
 
-    Ok(locus.profile.map(|profile| match read.alignment.orientation {
-        Orientation::Forward => profile,
-        Orientation::Reverse => profile.complemented(),
-    }))
+    Ok(locus
+        .profile
+        .map(|profile| match read.alignment.orientation {
+            Orientation::Forward => profile,
+            Orientation::Reverse => profile.complemented(),
+        }))
 }
