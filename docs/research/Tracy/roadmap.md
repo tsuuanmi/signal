@@ -89,7 +89,7 @@ Before consensus, remaining research includes:
 ```text
 basecall-independent local nucleotide evidence # promoted internally via ADR-0034
 artifact/quality-aware local contribution
-factorized support topology          # read/eligibility/orientation dimensions promoted via ADR-0033
+factorized support topology          # variant dimensions via ADR-0033; differential-locus state/orientation via ADR-0035
 optional declared assay metadata QC
 ```
 
