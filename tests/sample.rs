@@ -14,7 +14,7 @@ const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
 const SAMPLE_ID: &str = "sample-1";
 
 #[test]
-fn writes_deterministic_compact_sample_evidence_v7() -> Result<(), Box<dyn std::error::Error>> {
+fn writes_deterministic_compact_sample_evidence_v8() -> Result<(), Box<dyn std::error::Error>> {
     let first = tempdir()?;
     let second = tempdir()?;
 
@@ -61,7 +61,7 @@ fn writes_deterministic_compact_sample_evidence_v7() -> Result<(), Box<dyn std::
     assert_eq!(first_bytes, second_bytes);
 
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v7");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v8");
     assert_eq!(value["sample_id"], SAMPLE_ID);
     assert_object_keys(
         &value,
@@ -133,6 +133,17 @@ fn writes_deterministic_compact_sample_evidence_v7() -> Result<(), Box<dyn std::
     let difference = &differences[0];
     assert_eq!(difference["position"], 15);
     assert_eq!(difference["reference"], "G");
+    let topology = &difference["support_topology"];
+    assert_eq!(topology["reads"], 2);
+    assert_eq!(topology["forward_reads"], 1);
+    assert_eq!(topology["reverse_reads"], 1);
+    assert_eq!(topology["reference_reads"], 1);
+    assert_eq!(topology["alternate_reads"], 1);
+    assert_eq!(topology["unresolved_reads"], 0);
+    assert_eq!(topology["deletion_reads"], 0);
+    assert_eq!(topology["profile_reads"], 2);
+    assert_eq!(topology["profile_forward_reads"], 1);
+    assert_eq!(topology["profile_reverse_reads"], 1);
     let observations = difference["observations"]
         .as_array()
         .ok_or("observations must be an array")?;
@@ -141,8 +152,24 @@ fn writes_deterministic_compact_sample_evidence_v7() -> Result<(), Box<dyn std::
     let reverse_observation = observation_for_read(observations, "read-reverse")?;
     assert_eq!(forward_observation["state"], "reference");
     assert_eq!(forward_observation["base"], "G");
+    assert_eq!(forward_observation["in_noisy_region"], false);
+    assert_profile(forward_observation)?;
+    assert!(
+        forward_observation["profile"]["G"]
+            .as_f64()
+            .ok_or("forward G profile must be numeric")?
+            > 0.9
+    );
     assert_eq!(reverse_observation["state"], "alternate");
     assert_eq!(reverse_observation["base"], "A");
+    assert_eq!(reverse_observation["in_noisy_region"], false);
+    assert_profile(reverse_observation)?;
+    assert!(
+        reverse_observation["profile"]["A"]
+            .as_f64()
+            .ok_or("reverse A profile must be numeric")?
+            > 0.9
+    );
 
     let variants = value["variants"]
         .as_array()
@@ -214,7 +241,7 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
         .success();
 
     let value: Value = serde_json::from_slice(&fs::read(sample_output_path(directory.path()))?)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v7");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v8");
     assert_eq!(value["overlaps"], serde_json::json!([]));
     let coverage = value["coverage"]
         .as_array()
@@ -294,6 +321,24 @@ fn observation_for_read<'a>(
         .iter()
         .find(|observation| observation["read"] == read)
         .ok_or_else(|| format!("missing observation for read {read}").into())
+}
+
+fn assert_profile(observation: &Value) -> Result<(), Box<dyn std::error::Error>> {
+    let profile = observation["profile"]
+        .as_object()
+        .ok_or("profile must be an object")?;
+    assert_eq!(
+        profile.keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>(),
+        ["A", "C", "G", "T"].into_iter().collect()
+    );
+    let total = ["A", "C", "G", "T"]
+        .into_iter()
+        .map(|base| profile[base].as_f64().ok_or("profile weight must be numeric"))
+        .collect::<Result<Vec<_>, _>>()?
+        .into_iter()
+        .sum::<f64>();
+    assert!((total - 1.0).abs() < 1e-12);
+    Ok(())
 }
 
 fn reverse_complement(sequence: &str) -> String {

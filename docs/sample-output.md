@@ -2,10 +2,10 @@
 
 `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>`
 writes one deterministic `results/<sample-id>.sample.json` document identified as
-`signal.sample_evidence/v7`. The authoritative schema is
-[`schemas/sample-evidence-v7.schema.json`](schemas/sample-evidence-v7.schema.json)
+`signal.sample_evidence/v8`. The authoritative schema is
+[`schemas/sample-evidence-v8.schema.json`](schemas/sample-evidence-v8.schema.json)
 and the example is
-[`examples/sample-evidence-v7.example.json`](examples/sample-evidence-v7.example.json).
+[`examples/sample-evidence-v8.example.json`](examples/sample-evidence-v8.example.json).
 
 The sample identifier and read names are reviewer-facing provenance. They never
 constrain scientific placement, orientation, overlap discovery, or variant
@@ -121,17 +121,32 @@ match. It answers:
 
 > What did each covering read actually observe at this reference coordinate?
 
+Each retained locus also exposes `support_topology` derived from the same
+authoritative observations:
+
+- total and forward/reverse read counts;
+- reference/alternate/unresolved/deletion read counts;
+- profile-bearing read count and its forward/reverse partition.
+
+These counts are evidence topology only. They are not a vote, confidence score,
+or claim of biological independence.
+
 At a retained locus, `observations[]` contains every read that covers that locus,
-including reads that agree with the reference. A called observation contains:
+including reads that agree with the reference. A call-backed observation contains:
 
 - `read`: human-readable read name;
 - `state`: `reference`, `alternate`, or `unresolved`;
 - `base`: reference-oriented observed base;
-- `quality`: the existing uncalibrated relative quality score, exposed under
-  the concise reviewer-facing field name.
+- `quality`: the existing uncalibrated relative quality score;
+- optional `profile`: normalized basecall-independent A/C/G/T evidence already
+  projected to reference orientation;
+- `in_noisy_region`: whether the source call falls inside the existing merged
+  candidate-noisy call context.
 
-A deletion observation contains only `read` and `state: "deletion"`; Signal
-does not fabricate a deleted-base signal or quality value.
+A valid zero-signal call has no `profile`; Signal does not invent a called-base,
+uniform, or reference-derived replacement. A deletion observation contains only
+`read` and `state: "deletion"`; Signal does not fabricate deleted-base
+quality, profile, or noisy-call context.
 
 Dense all-reference positions are omitted. The compact default is explicit:
 
@@ -250,32 +265,34 @@ evidence belongs.
 
 None of these arrays is a consensus result.
 
-## Internal evidence retained outside v7
+## Differential-locus signal evidence in v8
 
-The sample science model also retains the existing basecall-independent
-`EvidenceProfile` for call-backed differential-locus observations and
-variant-associated calls, projected into reference A/C/G/T orientation.
-Zero-signal loci remain profile-less and deletions have no nucleotide profile.
+v8 promotes the smallest reviewer-useful part of the internal sample signal
+evidence into `locus_differences[]`: the normalized A/C/G/T
+`EvidenceProfile`, existing noisy-region membership, and factorized support
+topology.
 
-This evidence is intentionally **not serialized** in
-`signal.sample_evidence/v7`. The public document stays reviewer-focused while
-future sample interpretation can consume the internal profile without
-reconstructing it from called bases or peak thresholds.
+The richer quantitative evidence remains internal: corrected amplitudes,
+per-channel SNR, aggregate mean profiles, profile heterogeneity decomposition,
+and directional profile distance are not part of the compact public contract.
+That keeps routine sample JSON focused while preserving enough chromatogram
+shape to distinguish a clean cross-read disagreement from mixed signal within a
+read.
 
 ## Contract boundary
 
-v7 remains compact and difference-focused. It does not serialize per-base
+v8 remains compact and difference-focused. It does not serialize per-base
 evidence for loci where every covering read agrees with the reference. Pairwise
 overlap records summarize only admission-relevant counts rather than dense
 per-coordinate comparisons. The scientific pipeline still processes each read
 independently before sample aggregation.
 
-The current implementation emits v7 only. Earlier sample-evidence contracts are
+The current implementation emits v8 only. Earlier sample-evidence contracts are
 not emitted as aliases or compatibility output.
 
 ## Non-goals
 
-The v7 contract contains no consensus sequence, sample-level adjudicated variant
+The v8 contract contains no consensus sequence, sample-level adjudicated variant
 verdict, majority-vote result, genotype, heteroplasmy estimate, haplogroup
 interpretation, F/R pair object, primer/HV placement rule, or filename-derived
 placement. `overlaps[]` is an evidence/admission graph, not a pair-first merge

@@ -5,6 +5,9 @@ This plan is constrained by [`requirements.md`](requirements.md), [`architecture
 This document translates the high-ROI Tracy lessons into Signal's current
 architecture. It is a design sequence, not an approved implementation contract.
 
+**Closure status (2026-09-20):** the high-value production-learning sequence is complete. Root ADRs/SRS/source have promoted the evidence foundation, profile-aware placement, generic N-read reconciliation, support topology, profile geometry, and public differential-locus evidence preservation. The detailed phase notes below are retained as research history; unimplemented mixed-indel/phase-shift, calibrated consensus, large-reference search, and interchange work is explicitly deferred and should not be treated as unfinished work for this phase.
+
+
 Current core flow:
 
 ```text

@@ -1,6 +1,6 @@
 # Tracy Research Roadmap
 
-This roadmap is a sequencing of research and validation work, not a commitment to ship every phase. The 2026-09 source/issue audit adds an evidence-foundation gate before profile work.
+This roadmap records the Tracy-derived research sequence. The production-learning phase is closed as of 2026-09-20: high-value foundations through sample evidence preservation have been promoted, while the remaining phases are explicit follow-on research rather than open Tracy-phase blockers.
 
 ## Phase 0 — protect the evidence foundation
 
@@ -186,12 +186,12 @@ assay-specific LoD/LoQ
 | Promoted | evidence-aware Gotoh scorer | Implemented via ADR-0029 / `signal.profile_gotoh/v1` | Medium |
 | Promoted | explicit read admission / overlap policy | Implemented via ADR-0030 / `signal.sample_evidence/v4` | Low-Medium |
 | Promoted | generic N-read evidence reconciliation, F/R as first validation case | Implemented via ADR-0023 through ADR-0025; strengthened by ADR-0030 | Medium-High |
-| Promoted/P1 | reference-guided multi-read consensus | Coverage denominator/orientation topology foundation implemented via ADR-0032; contributor/voting policy remains P1 | Medium-High |
+| Promoted | reference-guided multi-read evidence foundation | Coverage/orientation, variant/locus topology, contribution eligibility, profile geometry, and public differential-locus profile/noisy context are implemented through ADR-0032..0043 and ADR-0053; final consensus decision policy remains separate research | Medium-High |
 | P1 | change-point length-mixture detection | High | Medium |
 | P1 | candidate +/-N phase-shift evaluation | High | Medium |
 | P1 | poly-C/repeat context | High | Medium |
 | P2 | multi-amplicon whole-mtDNA consensus | High | High |
-| P2 | review/evidence artifact | Medium-High | Medium |
+| Promoted | review/evidence artifact | Validation audit/curation artifacts plus `signal.sample_evidence/v8` preserve reviewer-facing evidence without consensus interpretation | Medium-High |
 | P3 | VCF/BCF projection | Medium | Low-Medium |
 | Defer | quantitative heteroplasmy | Potentially high | Very high |
 | Skip now | FM-index / large-reference candidate search | Very low for current scope | High |

@@ -16,7 +16,7 @@ Deliver one auditable AB1-to-primary-difference vertical slice in Rust. The impl
 8. Reference-free `signal basecall` using the same validated decode/re-calling/signal/QC path and publishing one typed `signal.basecalls/v2` JSON result with trace-integrity evidence but without reference, alignment, or variants.
 9. Clean external batch reruns with complete preflight/build before selected-only
    destructive cleanup.
-10. Multi-read `signal sample` analysis over independently placed reads, publishing compact `signal.sample_evidence/v7` with per-read trace integrity, a deterministic read registry, run-length total/forward/reverse coverage topology, Tracy-derived pairwise overlap/admission evidence, sparse differential loci, and normalized variants with factorized read/eligibility/orientation support topology.
+10. Multi-read `signal sample` analysis over independently placed reads, publishing compact `signal.sample_evidence/v8` with per-read trace integrity, a deterministic read registry, run-length total/forward/reverse coverage topology, Tracy-derived pairwise overlap/admission evidence, sparse differential loci with factorized support topology plus per-read A/C/G/T profile/noisy context, and normalized variants with factorized read/eligibility/orientation support topology.
 11. Synthetic malformed/unit/end-to-end tests, deterministic output checks, and
    CI contract gates.
 

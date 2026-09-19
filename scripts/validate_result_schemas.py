@@ -16,8 +16,8 @@ ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v7.schema.json"
 ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v7.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v2.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v2.example.json"
-SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v7.schema.json"
-SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v7.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v8.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v8.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -196,6 +196,77 @@ def validate_sample_support_topology_document(
                 continue
             orientations[name] = orientation
 
+    loci = document.get("locus_differences")
+    if isinstance(loci, list):
+        for index, locus in enumerate(loci):
+            if not isinstance(locus, dict):
+                continue
+            observations = locus.get("observations")
+            topology = locus.get("support_topology")
+            if not isinstance(observations, list) or not isinstance(topology, dict):
+                continue
+
+            expected = {
+                "reads": len(observations),
+                "forward_reads": 0,
+                "reverse_reads": 0,
+                "reference_reads": 0,
+                "alternate_reads": 0,
+                "unresolved_reads": 0,
+                "deletion_reads": 0,
+                "profile_reads": 0,
+                "profile_forward_reads": 0,
+                "profile_reverse_reads": 0,
+            }
+            seen: set[str] = set()
+            valid = True
+            for observation in observations:
+                if not isinstance(observation, dict):
+                    valid = False
+                    continue
+                read_name = observation.get("read")
+                state = observation.get("state")
+                if not isinstance(read_name, str) or read_name not in orientations:
+                    errors.append(
+                        f"{label}: locus {index} observation references unknown read {read_name!r}"
+                    )
+                    valid = False
+                    continue
+                if read_name in seen:
+                    errors.append(
+                        f"{label}: locus {index} repeats read {read_name!r} in observations"
+                    )
+                    valid = False
+                    continue
+                seen.add(read_name)
+                orientation = orientations[read_name]
+                expected[f"{orientation}_reads"] += 1
+                if state in {"reference", "alternate", "unresolved", "deletion"}:
+                    expected[f"{state}_reads"] += 1
+                else:
+                    valid = False
+
+                profile = observation.get("profile")
+                if isinstance(profile, dict):
+                    expected["profile_reads"] += 1
+                    expected[f"profile_{orientation}_reads"] += 1
+                    weights = [profile.get(base) for base in ("A", "C", "G", "T")]
+                    if all(isinstance(value, (int, float)) for value in weights):
+                        total = sum(float(value) for value in weights)
+                        if abs(total - 1.0) > 1e-9:
+                            errors.append(
+                                f"{label}: locus {index} observation profile does not sum to one"
+                            )
+                    else:
+                        valid = False
+
+            if valid and any(
+                topology.get(key) != value for key, value in expected.items()
+            ):
+                errors.append(
+                    f"{label}: locus {index} support_topology does not match observations/read orientation"
+                )
+
     for index, variant in enumerate(variants):
         if not isinstance(variant, dict):
             continue
@@ -280,7 +351,16 @@ def rejected_sample_shapes(
     zero_comparable_with_agreement["overlaps"][0]["conflicts"] = 0
 
     old_sample_schema = copy.deepcopy(example)
-    old_sample_schema["schema_version"] = "signal.sample_evidence/v6"
+    old_sample_schema["schema_version"] = "signal.sample_evidence/v7"
+
+    missing_locus_support_topology = copy.deepcopy(example)
+    missing_locus_support_topology["locus_differences"][0].pop("support_topology")
+    missing_locus_noisy_context = copy.deepcopy(example)
+    missing_locus_noisy_context["locus_differences"][0]["observations"][0].pop(
+        "in_noisy_region"
+    )
+    out_of_range_profile = copy.deepcopy(example)
+    out_of_range_profile["locus_differences"][0]["observations"][0]["profile"]["A"] = 1.1
 
     missing_support_topology = copy.deepcopy(example)
     missing_support_topology["variants"][0].pop("support_topology")
@@ -360,6 +440,9 @@ def rejected_sample_shapes(
         ("overlap with comparable bases but no agreement", missing_overlap_agreement),
         ("zero-comparable overlap with agreement", zero_comparable_with_agreement),
         ("sample evidence using old schema version", old_sample_schema),
+        ("sample locus without support topology", missing_locus_support_topology),
+        ("sample called locus without noisy context", missing_locus_noisy_context),
+        ("sample locus profile with out-of-range channel", out_of_range_profile),
         ("sample variant without support topology", missing_support_topology),
         ("sample variant topology with zero reads", zero_support_topology_reads),
         ("sample evidence without coverage topology", missing_coverage),
@@ -460,6 +543,33 @@ def main(argv: list[str] | None = None) -> int:
     rejected_basecalls = rejected_basecall_shapes(load_json(BASECALL_EXAMPLE))
     sample_example = load_json(SAMPLE_EXAMPLE)
     rejected_samples = rejected_sample_shapes(sample_example)
+    invalid_profile_mass = copy.deepcopy(sample_example)
+    invalid_profile_mass["locus_differences"][0]["observations"][0]["profile"] = {
+        "A": 0.4,
+        "C": 0.4,
+        "G": 0.4,
+        "T": 0.0,
+    }
+    invalid_profile_errors: list[str] = []
+    validate_sample_support_topology_document(
+        invalid_profile_mass,
+        "synthetic invalid locus profile mass",
+        invalid_profile_errors,
+    )
+    if not invalid_profile_errors:
+        errors.append("expected invalid sample locus profile mass to be rejected")
+
+    inconsistent_locus_topology = copy.deepcopy(sample_example)
+    inconsistent_locus_topology["locus_differences"][0]["support_topology"]["forward_reads"] += 1
+    inconsistent_locus_errors: list[str] = []
+    validate_sample_support_topology_document(
+        inconsistent_locus_topology,
+        "synthetic inconsistent locus support topology",
+        inconsistent_locus_errors,
+    )
+    if not inconsistent_locus_errors:
+        errors.append("expected inconsistent sample locus support topology to be rejected")
+
     inconsistent_topology = copy.deepcopy(sample_example)
     inconsistent_topology["variants"][0]["support_topology"]["forward_reads"] += 1
     semantic_rejection_errors: list[str] = []

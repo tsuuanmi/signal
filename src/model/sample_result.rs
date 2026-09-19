@@ -1,4 +1,4 @@
-//! Serializable `signal.sample_evidence/v7` contract.
+//! Serializable `signal.sample_evidence/v8` contract.
 
 use serde::Serialize;
 
@@ -66,7 +66,36 @@ pub(crate) struct SampleOverlapResult {
 pub(crate) struct SampleLocusDifferenceResult {
     pub(crate) position: usize,
     pub(crate) reference: char,
+    pub(crate) support_topology: SampleLocusSupportTopologyResult,
     pub(crate) observations: Vec<SampleLocusDifferenceObservationResult>,
+}
+
+/// Factorized read/state/profile topology for one differential locus.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleLocusSupportTopologyResult {
+    pub(crate) reads: usize,
+    pub(crate) forward_reads: usize,
+    pub(crate) reverse_reads: usize,
+    pub(crate) reference_reads: usize,
+    pub(crate) alternate_reads: usize,
+    pub(crate) unresolved_reads: usize,
+    pub(crate) deletion_reads: usize,
+    pub(crate) profile_reads: usize,
+    pub(crate) profile_forward_reads: usize,
+    pub(crate) profile_reverse_reads: usize,
+}
+
+/// Reference-oriented normalized A/C/G/T evidence at one call-backed locus.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleEvidenceProfileResult {
+    #[serde(rename = "A")]
+    pub(crate) a: f64,
+    #[serde(rename = "C")]
+    pub(crate) c: f64,
+    #[serde(rename = "G")]
+    pub(crate) g: f64,
+    #[serde(rename = "T")]
+    pub(crate) t: f64,
 }
 
 /// One covering read's observation at a differential locus.
@@ -78,6 +107,10 @@ pub(crate) struct SampleLocusDifferenceObservationResult {
     pub(crate) base: Option<char>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) quality: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) profile: Option<SampleEvidenceProfileResult>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) in_noisy_region: Option<bool>,
 }
 
 /// One normalized observed variant and its supporting reads.

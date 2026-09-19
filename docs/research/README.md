@@ -17,7 +17,7 @@ docs/research/<topic>/
 └── ... focused notes
 ```
 
-The Tracy research work follows this model under `docs/research/Tracy/`.
+The Tracy research work follows this model under `docs/research/Tracy/`; its production-learning phase is closed, with remaining topics explicitly deferred to separate research tracks.
 
 ## Promotion
 

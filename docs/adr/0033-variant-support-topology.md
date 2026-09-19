@@ -84,7 +84,7 @@ metadata has an explicit authoritative input contract.
 ### Public contract
 
 `signal.sample_evidence/v6` is replaced by
-`signal.sample_evidence/v7`.
+`signal.sample_evidence/v8`.
 
 Every item in `variants[]` now requires `support_topology` alongside the
 authoritative per-read `support[]` records.

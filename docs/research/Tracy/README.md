@@ -4,6 +4,27 @@ This directory is the structured research documentation for what Signal can lear
 
 It intentionally mirrors the organization of the root Signal documentation: requirements, architecture, ADRs, validation, roadmap, implementation notes, and focused method documents. These files are **research design**, not current production behavior. A research decision becomes normative only when it is promoted into the root Signal requirements/ADR/schema set and implemented.
 
+## Status — production-learning phase closed
+
+The Tracy comparison phase is closed as of 2026-09-20. The high-value lessons that fit Signal's current short-reference mtDNA scope have either been promoted into the root production architecture or deliberately deferred.
+
+Promoted work now includes:
+
+- mixed-signal-aware simple-SNV eligibility;
+- explicit PLOC/trace-integrity evidence;
+- basecall-independent A/C/G/T `EvidenceProfile`;
+- fixed-point profile-aware placement;
+- evidence-derived orientation and covered span;
+- independent per-trace processing followed by generic N-read reference-coordinate reconciliation;
+- pairwise overlap/admission evidence without pair-first F/R merging;
+- coverage, variant, and differential-locus support topology;
+- structural nucleotide contribution plus threshold-free profile aggregation/geometry;
+- reviewer-facing differential-locus A/C/G/T profile/noisy context via ADR-0053 / `signal.sample_evidence/v8`;
+- local validation/audit/curation infrastructure for later threshold research.
+
+The remaining Tracy-inspired topics are no longer blockers for this phase. Persistent mixed-signal/phase-shift detection, poly-C recovery, calibrated weighting/consensus, large-reference search, VCF/BCF projection, and quantitative heteroplasmy belong to separate research tracks with their own validation requirements.
+
+
 ## Requirements and architecture
 
 - [`requirements.md`](requirements.md): Tracy-informed research SRS.
