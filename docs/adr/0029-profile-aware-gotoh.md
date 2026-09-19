@@ -71,8 +71,11 @@ Between forward and reverse orientations, only the best fixed-point profile scor
 selects an orientation. An exact score tie is an explicit alignment error. Primary
 basecall exact-match/mismatch counts do not break a profile-score tie.
 
-Within the selected orientation, modulo-distinct equally scoring placements remain
-an explicit error.
+Within the selected orientation, genuinely distinct equally scoring placements remain
+an explicit error. ADR-0047 supersedes the earlier blanket treatment of modulo-distinct
+ties: optimal placements that differ only by repeat-equivalent indel shifting are
+canonicalized to one deterministic 3'/right-most mtDNA alignment before uniqueness is
+assessed.
 
 ### Existing admission metrics
 
