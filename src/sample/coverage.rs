@@ -21,22 +21,24 @@ pub(super) fn summarize(reads: &[SampleReadEvidence]) -> Result<Vec<SampleCovera
     for read in reads {
         validate_segments(read)?;
         for segment in &read.alignment.reference_segments {
-            let start = events.entry(segment.start_0based).or_default();
-            let end = events.entry(segment.end_0based_exclusive).or_default();
             match read.alignment.orientation {
                 Orientation::Forward => {
+                    let start = events.entry(segment.start_0based).or_default();
                     start.forward_starts = start.forward_starts.checked_add(1).ok_or_else(|| {
                         Error::Sample("forward coverage start count overflow".into())
                     })?;
+                    let end = events.entry(segment.end_0based_exclusive).or_default();
                     end.forward_ends = end
                         .forward_ends
                         .checked_add(1)
                         .ok_or_else(|| Error::Sample("forward coverage end count overflow".into()))?;
                 }
                 Orientation::Reverse => {
+                    let start = events.entry(segment.start_0based).or_default();
                     start.reverse_starts = start.reverse_starts.checked_add(1).ok_or_else(|| {
                         Error::Sample("reverse coverage start count overflow".into())
                     })?;
+                    let end = events.entry(segment.end_0based_exclusive).or_default();
                     end.reverse_ends = end
                         .reverse_ends
                         .checked_add(1)
@@ -90,6 +92,12 @@ pub(super) fn summarize(reads: &[SampleReadEvidence]) -> Result<Vec<SampleCovera
 }
 
 fn validate_segments(read: &SampleReadEvidence) -> Result<()> {
+    if read.alignment.reference_segments.is_empty() {
+        return Err(Error::Sample(format!(
+            "read {} has no mapped reference coverage",
+            read.input_sha256
+        )));
+    }
     let mut segments = read.alignment.reference_segments.clone();
     segments.sort_by_key(|segment| (segment.start_0based, segment.end_0based_exclusive));
     let mut previous_end = None;
@@ -281,6 +289,12 @@ mod tests {
             ]
         );
         Ok(())
+    }
+
+    #[test]
+    fn rejects_missing_reference_segments() {
+        let reads = vec![read("a", Orientation::Forward, &[])];
+        assert!(summarize(&reads).is_err());
     }
 
     #[test]
