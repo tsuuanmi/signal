@@ -2,8 +2,7 @@
 
 ## Purpose
 
-Produces minimal, left-normalized (or circular-canonical) indel and SNV
-representations, preserving the mapped original-call evidence.
+Builds minimal SNV/indel allele representations while preserving the canonical gap placement already chosen by alignment and the mapped original-call evidence.
 
 ## Responsibilities
 
