@@ -385,7 +385,11 @@ mod tests {
                 .corrected_amplitudes,
             [1.0, 2.0, 3.0, 4.0]
         );
-        assert!(evidence.variants[0].support[0].calls[0].signal.in_noisy_region);
+        assert!(
+            evidence.variants[0].support[0].calls[0]
+                .signal
+                .in_noisy_region
+        );
         assert_eq!(evidence.variants[0].support[1].read_index, 1);
         assert_eq!(
             evidence.variants[0].support[1].calls[0]
@@ -400,7 +404,11 @@ mod tests {
                 .corrected_amplitudes,
             [4.0, 3.0, 2.0, 1.0]
         );
-        assert!(!evidence.variants[0].support[1].calls[0].signal.in_noisy_region);
+        assert!(
+            !evidence.variants[0].support[1].calls[0]
+                .signal
+                .in_noisy_region
+        );
         Ok(())
     }
 
@@ -463,9 +471,11 @@ mod tests {
             evidence.locus_differences[2].observations[0].state,
             crate::model::sample_evidence::LocusState::Deletion
         );
-        assert!(evidence.locus_differences[2].observations[0]
-            .signal
-            .is_none());
+        assert!(
+            evidence.locus_differences[2].observations[0]
+                .signal
+                .is_none()
+        );
         Ok(())
     }
 
