@@ -7,7 +7,7 @@ Defines immutable basecall-independent evidence at one PLOC-defined locus.
 ## Responsibilities
 
 - Represent raw co-located A/C/G/T channel values, local baseline/noise, corrected amplitudes, and SNR.
-- Preserve the source PLOC window and the independently refined event sample.
+- Preserve the source PLOC window, independently refined event sample, absolute event/PLOC displacement, and minimum/maximum immediately adjacent PLOC spacing.
 - Represent an optional normalized `EvidenceProfile` whose A/C/G/T weights come directly from corrected signal mass.
 - Provide channel complementation for reverse-orientation alignment without changing profile mass.
 
