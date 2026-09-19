@@ -8,10 +8,10 @@ Builds sparse reference-coordinate evidence only where at least one read differs
 
 - First identify positions with at least one `alternate`, `unresolved`, or `deletion` state.
 - Then retain every covering read at those positions, including `reference` observations.
-- Preserve reference-oriented observed base, uncalibrated quality, the matching basecall-independent `EvidenceProfile`, and existing merged noisy-region membership for called observations.
-- Resolve profile evidence by original call index and project reverse-read A/C/G/T weights to reference orientation.
-- Preserve a valid missing/zero-signal profile as absent without called-base or reference fallback.
-- Keep deletions free of fabricated base/quality/profile/noisy-call evidence.
+- Preserve reference-oriented observed base and uncalibrated quality plus one coherent `CallSignalEvidence` for every called observation.
+- Resolve the matching `LocusEvidence` once by original call index and project corrected amplitudes, SNRs, optional profile weights, and noisy-region membership into one reference-oriented signal object.
+- Preserve a valid missing/zero-signal profile inside that object without called-base or reference fallback.
+- Keep deletions free of fabricated base/quality/call-signal evidence.
 - Keep insertion columns out of reference-coordinate locus evidence.
 - Reject duplicate contribution from one read to the same reference coordinate.
 - Derive one internal support topology per retained locus: total reads, forward/reverse reads, and reference/alternate/unresolved/deletion reads, with both partitions required to sum to total reads.
