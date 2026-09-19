@@ -24,9 +24,8 @@ difference exists.
 
 ## Decision
 
-Signal replaces `signal.sample_evidence/v1` with `signal.sample_evidence/v2`. The
-current implementation emits v2 only; no v1 compatibility result or alias is
-retained.
+Signal replaces `signal.sample_evidence/v1` with `signal.sample_evidence/v2`. At
+adoption, Signal emitted v2 only; no v1 compatibility result or alias was retained.
 
 ### Read registry
 
@@ -93,3 +92,7 @@ than a mutation of the accepted v1 schema. The v1 schema/example and implementat
 This decision does not add consensus, majority voting, conflict adjudication,
 genotype, heteroplasmy estimation, haplogroup inference, metadata-driven
 placement, or canonical F/R pairing.
+
+## Follow-up
+
+ADR-0027 advances the current sample contract to `signal.sample_evidence/v3` solely to add the closed-enum `mixed_supporting_signal` eligibility reason. The compact read registry and sparse-difference architecture defined here remain authoritative.
