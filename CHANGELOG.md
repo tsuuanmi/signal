@@ -70,7 +70,7 @@ All notable changes to this project are documented here.
 - Relative quality scores manually clamp the score fraction to `[0, 1]` so results stay in `[0, max_relative_quality_score]`.
 - Operational logs now record concise aggregate metrics and timings for every processing stage, exact warning categories, stage-aware failures, and each removed variant's kind/position/reasons without alleles or raw scientific payloads.
 - The bundled `variant_calling.minimum_peak_height` is raised from 100 to 150.
-- The external batch runner now preflights and builds before destructive cleanup, removes only selected sample result directories and matching selected logs, rejects ambiguous identities, collisions, and symlinked cleanup targets, preserves unselected artifacts, and reruns the selected workload from a clean state. A later analysis failure may leave partial new outputs.
+- The external batch runner now preflights and builds before destructive cleanup, removes only selected sample result directories and selected sample logs, rejects ambiguous identities and symlinked cleanup targets, preserves unselected artifacts, writes helper trace-operation logs only to temporary workspaces, and persists one nested trace-aware sample log per sample. A later analysis failure may leave partial new outputs.
 - Rename the stale documentation names to `docs/delivery-record.md` and `docs/requirements.md`.
 
 ### Fixed
