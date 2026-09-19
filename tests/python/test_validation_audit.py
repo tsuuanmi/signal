@@ -308,7 +308,7 @@ class ValidationAuditTests(unittest.TestCase):
             callable_columns = 50 if extreme else 400
             log_lines.extend(
                 [
-                    f'2026 | INFO | x - event=sample_read_started '
+                    f"2026 | INFO | x - event=sample_read_started "
                     f'trace_name="trace-{index}.ab1" trace_sha256={read_sha256}',
                     "2026 | INFO | x - event=basecalling_completed calls=500",
                     "2026 | INFO | x - event=signal_processing_completed "
