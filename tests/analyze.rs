@@ -297,6 +297,11 @@ fn excludes_mixed_supporting_snv_without_erasing_the_observation()
     write_abif_with_secondary_signal(&trace, &query, 10, b'C', 400)?;
     write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
     write_config(&config, "linear")?;
+    let config_text = fs::read_to_string(&config)?;
+    fs::write(
+        &config,
+        config_text.replace("best_section_fraction=0.10", "best_section_fraction=1.0"),
+    )?;
 
     run(&trace, &reference, &config, directory.path())?.success();
     let value = read_result(directory.path(), &trace)?;
