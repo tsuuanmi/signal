@@ -2,10 +2,10 @@
 
 `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>`
 writes one deterministic `results/<sample-id>.sample.json` document identified as
-`signal.sample_evidence/v2`. The authoritative schema is
-[`schemas/sample-evidence-v2.schema.json`](schemas/sample-evidence-v2.schema.json)
+`signal.sample_evidence/v3`. The authoritative schema is
+[`schemas/sample-evidence-v3.schema.json`](schemas/sample-evidence-v3.schema.json)
 and the example is
-[`examples/sample-evidence-v2.example.json`](examples/sample-evidence-v2.example.json).
+[`examples/sample-evidence-v3.example.json`](examples/sample-evidence-v3.example.json).
 
 The sample identifier and read names are reviewer-facing provenance. They never
 constrain scientific placement, orientation, overlap discovery, or variant
@@ -126,9 +126,11 @@ can also carry flanking calls because a deletion has no signal at the deleted
 reference base and an insertion is bounded by aligned reference bases.
 
 An eligible support has an empty exclusion list. An ineligible support retains one
-or more reasons such as `outside_configured_region`,
-`peak_below_minimum`, or
-`relative_quality_not_above_threshold`. The latter name remains explicit because
+or more reasons such as `outside_configured_region`, `peak_below_minimum`,
+`relative_quality_not_above_threshold`, or `mixed_supporting_signal`.
+`mixed_supporting_signal` means an SNV's supporting call retained more than one
+co-localized qualifying channel under the authoritative basecalling rule; the
+normalized observation remains evidence, but it is not presented as a clean SNV. The latter name remains explicit because
 the configured gate still operates on the internal relative-quality method even
 though the public numeric field is simply `quality`.
 
@@ -160,7 +162,7 @@ per-base evidence for loci where every covering read agrees with the reference.
 The scientific pipeline still processes each read independently before sample
 aggregation.
 
-The current implementation emits v2 only. There is no v1 alias or compatibility
+The current implementation emits v3 only. There is no v1/v2 alias or compatibility
 output.
 
 ## Non-goals
