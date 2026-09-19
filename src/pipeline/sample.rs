@@ -101,14 +101,19 @@ fn run_logged(
 
     *stage = "sample_aggregation";
     let stage_started = Instant::now();
-    let evidence = sample_science::aggregate(&reads)?;
+    let evidence = sample_science::aggregate(&reads, &inputs.config.sample_reconciliation)?;
     logger.info(
         module_path!(),
         line!(),
         format_args!(
-            "event=sample_aggregation_completed elapsed_ms={} reads={} locus_differences={} variants={}",
+            concat!(
+                "event=sample_aggregation_completed elapsed_ms={} reads={} overlaps={} ",
+                "eligible_overlaps={} locus_differences={} variants={}"
+            ),
             stage_started.elapsed().as_millis(),
             evidence.reads.len(),
+            evidence.overlaps.len(),
+            evidence.overlaps.iter().filter(|overlap| overlap.eligible).count(),
             evidence.locus_differences.len(),
             evidence.variants.len()
         ),
