@@ -198,9 +198,26 @@ HV2R or HV3F is absent.
 
 ## 49. Profile Consensus Algorithm
 
-A simple first implementation can sum weighted profile evidence.
+The Tracy source pinned by this research remains current upstream at
+`0672fb096b98c4fd36da47d634c8b89cd86cb217`. In pairwise consensus, overlapping
+profile columns are combined by direct vector addition before normalization. That
+is useful evidence that profile combination works, but it effectively gives the
+two admitted traces equal profile mass at that column; it is not a calibrated
+local-quality weighting model.
 
-For each reference coordinate:
+Signal should therefore separate three steps:
+
+```text
+profile availability
+ -> contribution eligibility
+ -> contribution weighting
+```
+
+ADR-0038 promotes only the first step: at each retained differential locus,
+Signal counts how many observations actually have an `EvidenceProfile` and
+factors that denominator by selected forward/reverse orientation.
+
+Only after a separately validated contributor policy exists should Signal form:
 
 ```text
 support_A = Σ observation_weight × profile_A
@@ -209,17 +226,9 @@ support_G = Σ observation_weight × profile_G
 support_T = Σ observation_weight × profile_T
 ```
 
-Observation weight may depend on:
-
-```text
-read admission
-local call evidence
-strand
-alignment confidence
-noise state
-```
-
-It should initially remain interpretable and deterministic.
+A future observation weight may consider read admission, local quantitative
+signal evidence, alignment context, and noise/artifact state, but must not reuse
+an unrelated threshold or silently treat profile presence as confidence.
 
 Avoid opaque nonlinear confidence logic before a validation corpus exists.
 
