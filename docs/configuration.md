@@ -26,7 +26,7 @@ Unknown keys, missing sections, duplicate TOML keys, unsupported schema versions
 | | `gap_extension_score` | `-4` | negative |
 | | `minimum_callable_bases` | `20` | positive |
 | | `minimum_identity` | `0.80` | finite `(0,1]` |
-| `sample_reconciliation` | `minimum_overlap_bases` | `25` | positive |
+| `sample_reconciliation` | `minimum_comparable_bases` | `25` | positive |
 | | `minimum_overlap_agreement` | `0.50` | finite `(0,1]` |
 | `variant_calling` | `max_indel_length` | `50` | `1..=50` |
 | | `minimum_peak_height` | `150` | `1..=32767` |
