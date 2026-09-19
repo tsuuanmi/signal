@@ -14,7 +14,7 @@
 ```text
 AB1 -> decode -> basecalling -> signal_processing -> quality_control
                                                    |
-                                                   +-> basecall report v1
+                                                   +-> basecall report v2
                                                    |
 FASTA -----------------------------------------> alignment -> variant_calling
                                                               |
@@ -22,10 +22,10 @@ FASTA -----------------------------------------> alignment -> variant_calling
                                                        ReadObservation
                                                          /          \
                                                         v            v
-                                               analysis report v6   SampleEvidence
+                                               analysis report v7   SampleEvidence
                                                                         |
                                                                         v
-                                                         sample_evidence/v3
+                                                         sample_evidence/v5
 ```
 
 `pipeline::observation` is the one authoritative reference-guided read path.
@@ -48,12 +48,12 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `trace` | canonical ABIF decode | base calling |
 | `reference` | one-record FASTA and identity | alignment |
 | `basecalling` | basecall peak selection and primary/ambiguity calls inside shared PLOC locus geometry | trimming and reference knowledge |
-| `signal_processing` | rolling sample-domain SNR, basecall-independent `LocusEvidence`/`EvidenceProfile`, and merged candidate-noisy regions | channel mutation, calibrated quality, basecall classification, reference interpretation, and variant eligibility |
+| `signal_processing` | rolling sample-domain SNR, basecall-independent `LocusEvidence`/`EvidenceProfile`, trace-integrity observations, and merged candidate-noisy regions | channel mutation, calibrated quality, artifact reclassification, basecall classification, reference interpretation, and variant eligibility |
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
 | `alignment` | fixed-point evidence-profile Gotoh scoring, traceback, orientation, circular projection | variant extraction and evidence mutation |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
 | `sample` | deterministic read ordering, pairwise reference-coordinate overlap admission, sparse differential-locus evidence, and normalized-variant aggregation | input loading, filename/HV pairing, consensus and interpretation |
-| `report` | analysis-v6/basecalls-v1/sample-evidence-v4 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
+| `report` | analysis-v7/basecalls-v2/sample-evidence-v5 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
 | `pipeline` | command sequencing plus shared reference-independent `read` and reference-guided `observation` paths | algorithm internals |
 
 Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. Shared `locus` geometry is reference-free and classification-free. `signal_processing` derives locus profiles from `Chromatogram` channel evidence directly; alignment consumes those immutable profiles for placement without mutating them or the upstream base calls. Existing rolling noisy-window analysis still consumes basecall window records. No algorithm module depends back on signal processing.
@@ -64,7 +64,7 @@ Trace samples, rolling signal-window call indexes, and original call indexes are
 
 ## Output projection and transaction
 
-Compact `signal.analysis/v6` projects one completed read observation. `signal.basecalls/v1` projects the shared reference-independent stages. `signal.sample_evidence/v4` projects independently placed reads into one deterministic read registry, pairwise overlap/admission evidence, sparse differential-locus observations, and normalized variant support. Read identity/orientation/coverage are factored once at top level; public locus and variant records use unique reviewer-facing read names while internal aggregation remains deterministically SHA-ordered. It omits dense all-reference loci and contains no consensus or sample-level variant verdict. Configuration remains schema version 5, and no compatibility result is assembled.
+Compact `signal.analysis/v7` projects one completed read observation including concise trace-integrity evidence. `signal.basecalls/v2` projects the shared reference-independent stages. `signal.sample_evidence/v5` projects independently placed reads into one deterministic read registry, pairwise overlap/admission evidence, sparse differential-locus observations, and normalized variant support. Read identity/orientation/coverage are factored once at top level; public locus and variant records use unique reviewer-facing read names while internal aggregation remains deterministically SHA-ordered. It omits dense all-reference loci and contains no consensus or sample-level variant verdict. Configuration remains schema version 5, and no compatibility result is assembled.
 
 The completed typed result is serialized before filesystem publication. The core CLI writes a sibling temporary file, flushes and synchronizes it, creates the final path without overwrite, removes the temporary link, and synchronizes the directory. A failed core invocation leaves no command result and never replaces an existing file. Operational logs are deliberately separate, timestamped, run-correlated, escaped to one physical line, and append-only. Pipeline orchestration records aggregate metrics and elapsed time at every stage boundary, each removed variant's kind/position/reasons without alleles, the final warning categories, and stage-aware terminal failures. Mandatory pre-publication records are synchronized before the result transaction begins; no required record is written after a successful publication.
 
