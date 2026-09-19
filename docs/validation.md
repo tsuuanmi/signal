@@ -48,7 +48,7 @@ SIGNAL_CONFIG=config/signal.toml \
   --reference references/rCRS.fasta
 ```
 
-Real validation exports are identifying scientific derivatives and remain ignored local artifacts. Threshold development must follow `docs/research/Signal/validation-corpus.md` and `docs/research/Signal/threshold-research.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Point-mixture and length/indel studies remain separate.
+Real validation exports are identifying scientific derivatives and remain ignored local artifacts. Threshold development must follow `docs/research/Signal/validation-corpus.md` and `docs/research/Signal/threshold-research.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Unexpected extreme basecall/profile disagreements must first be characterized with the v2 event-placement diagnostics described in `docs/research/Signal/event-position-diagnostics.md` rather than absorbed into a fitted threshold. Point-mixture and length/indel studies remain separate.
 
 ## Performance
 
