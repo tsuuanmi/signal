@@ -2,16 +2,20 @@
 
 use std::collections::BTreeSet;
 
+use crate::config::SampleReconciliationConfig;
 use crate::error::{Error, Result};
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
     SampleEvidence, SampleReadAlignmentEvidence, SampleReadEvidence,
 };
 
-use super::{differences, variants};
+use super::{differences, overlap, variants};
 
 /// Aggregates independently processed reads without using filenames or pair labels as merge keys.
-pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
+pub(crate) fn aggregate(
+    reads: &[ReadObservation],
+    config: &SampleReconciliationConfig,
+) -> Result<SampleEvidence> {
     let first = reads
         .first()
         .ok_or_else(|| Error::Sample("at least one read observation is required".into()))?;
@@ -61,6 +65,7 @@ pub(crate) fn aggregate(reads: &[ReadObservation]) -> Result<SampleEvidence> {
         reference_sha256,
         configuration_sha256,
         reads: read_evidence,
+        overlaps: overlap::assess(&ordered, config)?,
         locus_differences: differences::aggregate(&ordered)?,
         variants: variants::aggregate(&ordered)?,
     })
@@ -83,6 +88,13 @@ mod tests {
     };
 
     use super::*;
+
+    fn sample_config() -> SampleReconciliationConfig {
+        SampleReconciliationConfig {
+            minimum_overlap_bases: 1,
+            minimum_overlap_agreement: 0.5,
+        }
+    }
 
     fn observation(
         input_sha256: &str,
@@ -240,7 +252,7 @@ mod tests {
             vec![snv(73, "A", "G")],
         );
 
-        let evidence = aggregate(&[reverse, forward])?;
+        let evidence = aggregate(&[reverse, forward], &sample_config())?;
 
         assert_eq!(evidence.reads[0].input_name, "a.ab1");
         assert_eq!(evidence.reads[1].input_name, "b.ab1");
@@ -271,7 +283,7 @@ mod tests {
             Vec::new(),
         );
 
-        let evidence = aggregate(&[read])?;
+        let evidence = aggregate(&[read], &sample_config())?;
 
         assert_eq!(evidence.locus_differences.len(), 3);
         assert_eq!(evidence.locus_differences[0].position_1based, 12);
@@ -309,7 +321,7 @@ mod tests {
             Vec::new(),
         );
 
-        let evidence = aggregate(&[reference, alternate])?;
+        let evidence = aggregate(&[reference, alternate], &sample_config())?;
 
         assert_eq!(evidence.locus_differences.len(), 1);
         let observations = &evidence.locus_differences[0].observations;
@@ -347,7 +359,7 @@ mod tests {
             Vec::new(),
         );
 
-        let evidence = aggregate(&[first, second])?;
+        let evidence = aggregate(&[first, second], &sample_config())?;
 
         assert!(evidence.locus_differences.is_empty());
         Ok(())
@@ -376,7 +388,7 @@ mod tests {
         reverse.variants.observed[0].exclusion_reasons =
             vec![VariantExclusionReason::PeakBelowMinimum];
 
-        let evidence = aggregate(&[forward, reverse])?;
+        let evidence = aggregate(&[forward, reverse], &sample_config())?;
 
         assert_eq!(evidence.variants[0].support.len(), 2);
         assert!(evidence.variants[0].support[0].eligible);
@@ -405,7 +417,7 @@ mod tests {
             Vec::new(),
         );
 
-        assert!(aggregate(&[read]).is_err());
+        assert!(aggregate(&[read], &sample_config()).is_err());
     }
 
     #[test]
@@ -420,7 +432,7 @@ mod tests {
             vec![variant.clone(), variant],
         );
 
-        assert!(aggregate(&[read]).is_err());
+        assert!(aggregate(&[read], &sample_config()).is_err());
     }
 
     #[test]
@@ -441,7 +453,7 @@ mod tests {
             vec![column('A', 'A', Some(0), 0)],
             Vec::new(),
         );
-        assert!(aggregate(&[first.clone(), incompatible]).is_err());
+        assert!(aggregate(&[first.clone(), incompatible], &sample_config()).is_err());
 
         let mut duplicate = observation(
             "a",
@@ -452,6 +464,6 @@ mod tests {
             Vec::new(),
         );
         duplicate.input_name = "renamed-copy.ab1".into();
-        assert!(aggregate(&[first, duplicate]).is_err());
+        assert!(aggregate(&[first, duplicate], &sample_config()).is_err());
     }
 }
