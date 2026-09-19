@@ -1,5 +1,6 @@
 //! Bounded semi-global Gotoh dynamic programming.
 
+use crate::alignment::canonical;
 use crate::alignment::scoring::{NEGATIVE_INFINITY, State, add, scaled, substitution};
 use crate::alignment::traceback::{RawAlignment, TracebackInput, decode};
 use crate::config::{AlignmentConfig, MAX_ALIGNMENT_CELLS};
@@ -127,7 +128,7 @@ pub(crate) fn align(
         if bounded_best_score.is_some_and(|best| score < best) {
             break;
         }
-        let raw = decode(TracebackInput {
+        let mut raw = decode(TracebackInput {
             query: query_bytes,
             reference: reference_bytes,
             trace: &trace,
@@ -136,6 +137,7 @@ pub(crate) fn align(
             state,
             score,
         })?;
+        canonical::right_align(&mut raw, profiles, config, modulo_length)?;
         if let Some(length) = modulo_length
             && raw.end_reference - raw.start_reference > length
         {
