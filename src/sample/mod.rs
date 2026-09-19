@@ -1,6 +1,7 @@
 //! Sample-level evidence aggregation in reference-coordinate and variant space.
 
 mod aggregate;
+mod contribution;
 mod coverage;
 mod differences;
 mod noise;
