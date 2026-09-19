@@ -13,6 +13,7 @@ differential locus without making a consensus decision.
 - Preserve total, forward-only, and reverse-only A/C/G/T support vectors plus
   contributor counts.
 - Derive total support from the forward/reverse partitions.
+- Derive an arithmetic mean `EvidenceProfile` for each non-empty total/forward/reverse partition by dividing support by contributor count.
 
 ## Non-responsibilities
 
