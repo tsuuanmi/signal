@@ -5,10 +5,11 @@ use std::time::Instant;
 
 use serde::Serialize;
 
+use crate::alignment;
 use crate::cli::SampleArgs;
 use crate::error::{Error, Result};
 use crate::logger::Logger;
-use crate::model::alignment::Orientation;
+use crate::model::alignment::{Alignment, Orientation};
 use crate::model::basecalls::PeakSource;
 use crate::model::locus_evidence::EvidenceProfile;
 use crate::model::read_observation::ReadObservation;
@@ -22,7 +23,7 @@ use crate::validation::ValidationExportRequest;
 
 use super::{input, sample_reads};
 
-const SCHEMA_VERSION: &str = "signal.validation_locus/v2";
+const SCHEMA_VERSION: &str = "signal.validation_locus/v3";
 
 #[derive(Serialize)]
 struct ValidationLocusRow<'a> {
@@ -104,6 +105,11 @@ struct ValidationObservationRow<'a> {
     snrs_acgt_reference: Option<[f64; 4]>,
     profile_acgt_reference: Option<[f64; 4]>,
     in_noisy_region: Option<bool>,
+
+    primary_counterfactual_orientation: Orientation,
+    primary_counterfactual_base_at_locus: Option<char>,
+    primary_counterfactual_call_reference_position_1based: Option<usize>,
+    primary_counterfactual_same_call_locus: Option<bool>,
 }
 
 pub(crate) fn run(request: &ValidationExportRequest) -> Result<()> {
@@ -163,6 +169,17 @@ fn run_logged(
     *stage = "sample_aggregation";
     let evidence = sample_science::aggregate(&reads, &inputs.config.sample_reconciliation)?;
     let covered = sample_science::all_covered_loci(&reads)?;
+    let primary_counterfactuals = covered
+        .reads
+        .iter()
+        .map(|read| {
+            alignment::align_primary_counterfactual(
+                &read.quality,
+                &inputs.reference,
+                &inputs.config.alignment,
+            )
+        })
+        .collect::<Result<Vec<_>>>()?;
 
     *stage = "validation_serialization";
     let bytes = serialize_rows(
@@ -170,6 +187,7 @@ fn run_logged(
         &evidence.reference_sha256,
         &evidence.configuration_sha256,
         &covered.reads,
+        &primary_counterfactuals,
         &covered.loci,
     )?;
     let output = output_path(&request.sample_id);
@@ -205,6 +223,7 @@ fn serialize_rows(
     reference_sha256: &str,
     configuration_sha256: &str,
     reads: &[&ReadObservation],
+    primary_counterfactuals: &[Alignment],
     loci: &[SampleLocusEvidence],
 ) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
@@ -214,6 +233,7 @@ fn serialize_rows(
             reference_sha256,
             configuration_sha256,
             reads,
+            primary_counterfactuals,
             locus,
         )?;
         serde_json::to_writer(&mut bytes, &row)?;
@@ -227,6 +247,7 @@ fn row<'a>(
     reference_sha256: &'a str,
     configuration_sha256: &'a str,
     reads: &'a [&'a ReadObservation],
+    primary_counterfactuals: &'a [Alignment],
     locus: &'a SampleLocusEvidence,
 ) -> Result<ValidationLocusRow<'a>> {
     let topology = locus.support_topology;
@@ -239,7 +260,14 @@ fn row<'a>(
     let observations = locus
         .observations
         .iter()
-        .map(|observation| observation_row(observation, reads))
+        .map(|observation| {
+            observation_row(
+                observation,
+                reads,
+                primary_counterfactuals,
+                locus.position_1based,
+            )
+        })
         .collect::<Result<Vec<_>>>()?;
 
     Ok(ValidationLocusRow {
@@ -315,6 +343,8 @@ fn row<'a>(
 fn observation_row<'a>(
     observation: &'a SampleLocusObservation,
     reads: &'a [&'a ReadObservation],
+    primary_counterfactuals: &'a [Alignment],
+    position_1based: usize,
 ) -> Result<ValidationObservationRow<'a>> {
     let read = reads.get(observation.read_index).ok_or_else(|| {
         Error::Sample(format!(
@@ -322,6 +352,16 @@ fn observation_row<'a>(
             observation.read_index
         ))
     })?;
+    let counterfactual = primary_counterfactuals
+        .get(observation.read_index)
+        .ok_or_else(|| {
+            Error::Sample(format!(
+                "validation locus observation references missing primary counterfactual {}",
+                observation.read_index
+            ))
+        })?;
+    let counterfactual_base_at_locus =
+        query_base_at_reference_position(counterfactual, position_1based)?;
 
     let Some(call_index_0based) = observation.call_index_0based else {
         return Ok(ValidationObservationRow {
@@ -349,6 +389,10 @@ fn observation_row<'a>(
             snrs_acgt_reference: None,
             profile_acgt_reference: None,
             in_noisy_region: None,
+            primary_counterfactual_orientation: counterfactual.orientation,
+            primary_counterfactual_base_at_locus: counterfactual_base_at_locus,
+            primary_counterfactual_call_reference_position_1based: None,
+            primary_counterfactual_same_call_locus: None,
         });
     };
 
@@ -386,6 +430,10 @@ fn observation_row<'a>(
             "call-backed validation observation {call_index_0based} lacks signal evidence"
         ))
     })?;
+    let counterfactual_call_reference_position_1based =
+        reference_position_for_call(counterfactual, call_index_0based)?;
+    let primary_counterfactual_same_call_locus =
+        Some(counterfactual_call_reference_position_1based == Some(position_1based));
 
     Ok(ValidationObservationRow {
         read_sha256: &read.input_sha256,
@@ -427,7 +475,60 @@ fn observation_row<'a>(
         snrs_acgt_reference: Some(signal.snrs),
         profile_acgt_reference: signal.profile.map(|profile| profile.weights),
         in_noisy_region: Some(signal.in_noisy_region),
+        primary_counterfactual_orientation: counterfactual.orientation,
+        primary_counterfactual_base_at_locus: counterfactual_base_at_locus,
+        primary_counterfactual_call_reference_position_1based:
+            counterfactual_call_reference_position_1based,
+        primary_counterfactual_same_call_locus,
     })
+}
+
+fn reference_position_for_call(
+    alignment: &Alignment,
+    call_index_0based: usize,
+) -> Result<Option<usize>> {
+    let mut matches = alignment
+        .columns
+        .iter()
+        .filter(|column| column.original_call_index_0based == Some(call_index_0based));
+    let column = matches.next().ok_or_else(|| {
+        Error::Sample(format!(
+            "primary counterfactual is missing source call {call_index_0based}"
+        ))
+    })?;
+    if matches.next().is_some() {
+        return Err(Error::Sample(format!(
+            "primary counterfactual duplicates source call {call_index_0based}"
+        )));
+    }
+    column
+        .reference_index_0based
+        .map(|position| {
+            position
+                .checked_add(1)
+                .ok_or_else(|| Error::Sample("counterfactual reference coordinate overflow".into()))
+        })
+        .transpose()
+}
+
+fn query_base_at_reference_position(
+    alignment: &Alignment,
+    position_1based: usize,
+) -> Result<Option<char>> {
+    let position_0based = position_1based
+        .checked_sub(1)
+        .ok_or_else(|| Error::Sample("validation reference position must be one-based".into()))?;
+    let mut matches = alignment
+        .columns
+        .iter()
+        .filter(|column| column.reference_index_0based == Some(position_0based));
+    let base = matches.next().map(|column| column.query_base);
+    if matches.next().is_some() {
+        return Err(Error::Sample(format!(
+            "primary counterfactual duplicates reference position {position_1based}"
+        )));
+    }
+    Ok(base)
 }
 
 fn signed_offset(position: usize, anchor: usize) -> Result<i64> {
