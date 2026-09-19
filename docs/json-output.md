@@ -4,7 +4,7 @@ This document covers reference-guided analysis. Reference-free output is the sep
 
 `signal analyze <trace.ab1> --reference <reference.fasta>` writes one deterministic file named `results/<trace-stem>.json`. The `results/` directory is created when publication begins. The core CLI never overwrites an existing result. After validating a non-empty UTF-8 trace stem, Rust separately appends nondeterministic operational records to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`); that sidecar is outside the JSON contract.
 
-The authoritative contract is [`schemas/analysis-v6.schema.json`](schemas/analysis-v6.schema.json); a synthetic example is [`examples/analysis-v6.example.json`](examples/analysis-v6.example.json). Output v6 is intentionally incompatible with earlier result versions, and Signal emits no compatibility document or duplicate legacy fields. The strict scientific configuration remains schema version 4.
+The authoritative contract is [`schemas/analysis-v6.schema.json`](schemas/analysis-v6.schema.json); a synthetic example is [`examples/analysis-v6.example.json`](examples/analysis-v6.example.json). Output v6 is intentionally incompatible with earlier result versions, and Signal emits no compatibility document or duplicate legacy fields. The strict scientific configuration remains schema version 5.
 
 ## Top-level fields
 
