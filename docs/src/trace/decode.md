@@ -11,7 +11,7 @@ chromatogram.
 - Parse the ABIF container and decode the required tags: `FWO_.1` (channel
   order), `DATA.9-12` (channels), `PLOC.2` (base locations), and optional
   `PBAS.2` and `PCON.2` (vendor evidence). `P2BA.1` is ignored.
-- Reorder channels into canonical A/C/G/T order and validate all lengths.
+- Reorder channels into canonical A/C/G/T order and validate channel/PLOC structure while preserving optional vendor-series cardinality independently.
 
 ## Non-responsibilities
 
@@ -23,7 +23,7 @@ No base re-calling, trimming, alignment, or reporting.
   `mod.rs`.
 - `decode(...) -> Result<Chromatogram>`: tag decoding into the model.
 - `require_layout`, `decode_i16`, `decode_optional_string`,
-  `decode_optional_bytes`, `validate_vendor_length`, `channel_index`: helpers.
+  `decode_optional_bytes`, `channel_index`: helpers.
 
 ## Invariants and errors
 
@@ -32,7 +32,9 @@ No base re-calling, trimming, alignment, or reporting.
 - `FWO_.1` must be a four-base A/C/G/T permutation.
 - `DATA.9-12` channels must be non-empty and equally sized.
 - `PLOC.2` must be non-empty, strictly increasing, and within the sample range.
-- Vendor strings must use uppercase DNA/RNA IUPAC symbols and match the PLOC length.
+- Vendor strings must use uppercase DNA/RNA IUPAC symbols. Optional PBAS/PCON
+  length mismatch is retained for downstream integrity evidence and does not
+  create/remove PLOC-defined loci.
 - PCON.2 may use the ABIF byte or char one-byte element type.
 - All offsets and lengths are checked; malformed input returns `Error::Abif`,
   never a panic.
