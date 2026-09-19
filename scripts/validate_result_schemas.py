@@ -150,7 +150,7 @@ def rejected_sample_shapes(
 
     eligible_overlap_with_reason = copy.deepcopy(example)
     eligible_overlap_with_reason["overlaps"][0]["exclusion_reasons"] = [
-        "overlap_below_minimum"
+        "comparable_bases_below_minimum"
     ]
 
     ineligible_overlap_without_reason = copy.deepcopy(example)
