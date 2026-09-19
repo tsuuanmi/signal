@@ -16,7 +16,7 @@
 - FWO permutation, channel cardinality, PLOC ordering/bounds, vendor lengths;
 - FASTA records/symbols/length;
 - midpoint windows, plateau peaks, PLOC fallback, ties, ambiguity ratios/IUPAC;
-- signal baseline/first-difference MAD, noise floor, full rolling windows, thresholds, and merged regions;
+- shared PLOC locus geometry; basecall-independent event refinement; zero-signal profile absence; threshold-independent A/C/G/T profile mass; signal baseline/first-difference MAD, noise floor, full rolling windows, thresholds, and merged regions;
 - penalty windows, zero-penalty scoring, trim bounds/minimum length;
 - Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
 - forward/reverse mapping, circular origin, ambiguous placement/orientation;
@@ -33,7 +33,7 @@ An ignored local trace is not a golden. Before use, record approval, source cont
 
 ## Biological validation
 
-The rolling SNR feature and relative quality score are not error probabilities. Validation must not call it Phred or infer clinical sensitivity. A behavior-changing signal cleaner must additionally preserve synthetic 10–30% secondary peaks under baseline drift, impulse noise, compressed peaks, homopolymers, and read ends. Low-level heteroplasmy, genotype, pathogenicity, and diagnostic claims require separate methods and studies.
+`LocusEvidence` and `EvidenceProfile` are observation-only signal representations, not allele fractions or genotype probabilities. The rolling SNR feature and relative quality score are not error probabilities. Validation must not call it Phred or infer clinical sensitivity. A behavior-changing signal cleaner must additionally preserve synthetic 10–30% secondary peaks under baseline drift, impulse noise, compressed peaks, homopolymers, and read ends. Low-level heteroplasmy, genotype, pathogenicity, and diagnostic claims require separate methods and studies.
 
 ## Performance
 

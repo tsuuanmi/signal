@@ -4,14 +4,14 @@
 
 Signal reads the analyzed ABIF `DATA.9`–`DATA.12` arrays in canonical A/C/G/T order. These are instrument-analyzed fluorescence channels, not raw detector channels. The current ABIF boundary does not retain a spectral matrix, mobility model, or raw-channel baseline metadata.
 
-The `signal.windowed_snr/v1` stage is deliberately observational. It calculates rolling windows internally and emits only merged candidate-noisy regions in compact v5; it does not smooth channels, re-call bases, trim internal sequence, change an alignment, or remove a variant.
+The signal-processing stage is deliberately observational. It retains `signal.windowed_snr/v1` noisy-window behavior and now also derives internal basecall-independent `LocusEvidence` / `EvidenceProfile`. Compact public JSON still emits only merged candidate-noisy regions; signal processing does not smooth channels, re-call bases, trim internal sequence, change an alignment, or remove a variant.
 
 ## Coordinate domains
 
 - **Sample indexes** address A/C/G/T channel values and PLOC positions.
 - **Call indexes** address base calls, quality records, and variant mappings.
 
-Both are 0-based. Window and region intervals are half-open. Each base call retains the midpoint-derived sample interval used by peak selection, allowing signal analysis to map a rolling call window to exactly one sample span without reconstructing geometry.
+Both are 0-based. Window and region intervals are half-open. Shared PLOC geometry defines one midpoint-derived locus window per vendor locus. Basecalling and signal evidence consume that same geometry without one stage re-deriving the other's classification.
 
 ## Method
 
@@ -27,7 +27,21 @@ peak_snr = max(0, selected_peak_height - baseline) / noise_sigma
 
 The one-unit floor reflects signed-short quantization and prevents NaN or infinity. Within each call, baseline-corrected selected peaks are ranked deterministically by value and then A/C/G/T order. A window records its minimum primary SNR and maximum secondary SNR internally. Values are rounded to six decimal places before threshold comparison; only each merged region's minimum primary SNR is serialized.
 
-A window is `candidate_noisy` only when its minimum primary SNR is strictly below the configured threshold. Overlapping or adjacent candidate windows are unioned; clean gaps are never filled. Secondary SNR participates only in internal observation and does not make a window noisy because a strong secondary peak may be real mixed signal. Compact v5 omits individual windows and secondary-SNR values.
+A window is `candidate_noisy` only when its minimum primary SNR is strictly below the configured threshold. Overlapping or adjacent candidate windows are unioned; clean gaps are never filled. Secondary SNR participates only in internal observation and does not make a window noisy because a strong secondary peak may be real mixed signal. Compact v6 omits individual windows and secondary-SNR values.
+
+## Locus evidence and evidence profile
+
+For each PLOC-defined locus, Signal selects a deterministic rolling context and estimates A/C/G/T local baseline and first-difference-MAD noise with the same primitives used by windowed SNR. Event refinement then examines every sample in the locus window and selects the sample with the largest sum of non-negative baseline-corrected A/C/G/T amplitudes. Equal totals prefer the sample nearest PLOC, then the lower sample coordinate.
+
+At that one event sample, `LocusEvidence` retains raw A/C/G/T channel values, local baseline/noise, corrected amplitudes, and per-channel SNR. `EvidenceProfile` normalizes only the positive corrected signal mass:
+
+```text
+weight[channel] = corrected_amplitude[channel] / sum(corrected_amplitudes)
+```
+
+If the total corrected amplitude is zero, the profile is absent. Signal does not inject a uniform profile, reference base, or caller-derived fallback.
+
+This profile is intentionally independent of primary base, ambiguity/IUPAC code, selected basecall peaks, qualifying-channel membership, and `secondary_peak_ratio`. The current primary caller and Gotoh alignment remain unchanged; the profile is an internal evidence foundation for later evidence-aware alignment and persistent mixed-signal methods.
 
 ## Interpretation limits
 

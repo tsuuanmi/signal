@@ -16,8 +16,7 @@ Accepts `cli::Cli`; returns `error::Result<()>`.
 
 ## Key types and functions
 
-- `run(cli: Cli) -> Result<()>`: dispatches `Command::Analyze` and
-  `Command::Basecall` to their pipeline entry points.
+- `run(cli: Cli) -> Result<()>`: dispatches `Command::Analyze`, `Command::Basecall`, and `Command::Sample` to their pipeline entry points.
 
 ## Invariants and errors
 
@@ -27,9 +26,7 @@ Pipeline errors are preserved for the binary boundary.
 ## Dependencies
 
 - `cli`, `config`, `error`, `model` are public.
-- `alignment`, `basecalling`, `logger`, `pipeline`, `quality_control`,
-  `reference`, `report`, `signal_processing`, `trace`, and `variant_calling` are
-  private.
+- `alignment`, `basecalling`, `locus`, `logger`, `pipeline`, `quality_control`, `reference`, `report`, `sample`, `signal_processing`, `trace`, and `variant_calling` are private.
 
 ## Apollo mapping
 

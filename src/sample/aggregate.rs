@@ -159,7 +159,7 @@ mod tests {
                 primary_sequence: "G".repeat(call_count),
             },
             signal: SignalAnalysis {
-                call_metrics: Vec::new(),
+                loci: Vec::new(),
                 windows: Vec::new(),
                 noisy_regions: Vec::new(),
             },

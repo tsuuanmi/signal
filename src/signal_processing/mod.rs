@@ -1,7 +1,7 @@
 //! Observation-only rolling signal-quality analysis.
 
-mod call_metrics;
 mod features;
+mod locus_evidence;
 mod regions;
 mod statistics;
 
@@ -11,17 +11,17 @@ use crate::model::basecalls::BaseCalls;
 use crate::model::signal::SignalAnalysis;
 use crate::model::trace::Chromatogram;
 
-/// Calculates rolling SNR features and merged candidate-noisy intervals.
+/// Calculates rolling SNR features, basecall-independent locus evidence, and merged noisy regions.
 pub(crate) fn analyze(
     trace: &Chromatogram,
     calls: &BaseCalls,
     config: &SignalProcessingConfig,
 ) -> Result<SignalAnalysis> {
     let windows = features::calculate(trace, calls, config)?;
-    let call_metrics = call_metrics::calculate(trace, calls, &windows, config)?;
+    let loci = locus_evidence::calculate(trace, config)?;
     let noisy_regions = regions::merge(&windows, config.minimum_noisy_windows);
     Ok(SignalAnalysis {
-        call_metrics,
+        loci,
         windows,
         noisy_regions,
     })

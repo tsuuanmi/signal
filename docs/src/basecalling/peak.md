@@ -2,13 +2,11 @@
 
 ## Purpose
 
-Builds validated basecall windows around each PLOC locus and selects the
-strongest positive local peak per channel.
+Selects the strongest positive local peak per channel inside shared validated PLOC locus windows.
 
 ## Responsibilities
 
-- Construct symmetric neighboring-midpoint half-open windows around each PLOC
-  position, with edge windows derived from the local spacing.
+- Reuse shared symmetric neighboring-midpoint half-open locus windows.
 - For each channel, find the strongest positive local maximum inside the window,
   falling back to the PLOC sample when no positive local maximum exists.
 - Return each channel's base, selected height, 0-based sample position, and
@@ -20,8 +18,8 @@ No ratio thresholding, IUPAC mapping, or call orchestration.
 
 ## Key types and functions
 
-- `CallWindow`: a half-open `[start, end)` sample window.
-- `windows(trace) -> Result<Vec<CallWindow>>`: builds one window per PLOC locus.
+- `LocusWindow`: shared half-open `[start, end)` sample geometry from `src/locus.rs`.
+- `windows(trace) -> Result<Vec<LocusWindow>>`: maps shared geometry errors into the basecalling stage.
 - `peaks(trace, window, ploc) -> [ChannelPeak; 4]`: returns the selected peak for
   each of the four channels.
 - `midpoint(left, right) -> Result<usize>`: checked midpoint arithmetic.
@@ -31,7 +29,7 @@ No ratio thresholding, IUPAC mapping, or call orchestration.
 - At least two PLOC positions are required; otherwise `Error::Basecalling`.
 - Every window must satisfy `start < end`, `end <= sample_count`, and contain its
   PLOC position; violations return `Error::Basecalling`.
-- Midpoint overflow returns `Error::Basecalling`.
+- Shared locus-window geometry errors are mapped to `Error::Basecalling`.
 - A peak is a positive local maximum; when none exists, the PLOC sample is used
   and recorded as `PeakSource::PlocFallback` at the PLOC position.
 - Every selected peak position remains within its call window; call orchestration
@@ -39,6 +37,7 @@ No ratio thresholding, IUPAC mapping, or call orchestration.
 
 ## Dependencies
 
+- `locus` for authoritative PLOC window geometry.
 - `model::basecalls` for `ChannelPeak` and `PeakSource`.
 - `model::nucleotide` for `Nucleotide`.
 - `model::trace` for `Chromatogram`.

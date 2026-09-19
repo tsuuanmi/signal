@@ -111,9 +111,9 @@ Calculates observation-only signal-quality features from the immutable analyzed 
 
 For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every internal window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison; compact analysis v6 serializes only each merged region's minimum primary SNR.
 
-Signal processing also derives one internal local-context record per call. The configured rolling-window width selects a deterministic nearby rolling sample span for each locus. Per-channel baseline and first-difference-MAD noise use the same functions as rolling analysis. When a unique primary event exists, its four co-located raw channel values are baseline-corrected and converted to per-channel SNR observations.
+Signal processing also derives one authoritative internal `LocusEvidence` record per PLOC-defined locus. The configured rolling-window width selects a deterministic nearby sample context for baseline/noise estimation. Inside the shared locus window, event refinement selects the sample with maximum total non-negative baseline-corrected A/C/G/T signal, breaking ties by nearest PLOC and then lower sample coordinate. At that event, Signal retains raw A/C/G/T values, corrected amplitudes, SNR, and an optional normalized `EvidenceProfile`. The profile is absent when corrected signal mass is zero and is independent of primary/ambiguity calls, selected basecall peaks, qualifying-channel membership, and `secondary_peak_ratio`.
 
-Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows do not form a noisy interval. Clean gaps are never filled. Windows and per-call observations remain internal; compact analysis v6 emits only merged regions. These annotations do not alter calls, candidate-noisy classification, quality, trimming, alignment, warning totals, variant eligibility, or the compact JSON contracts. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
+Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows do not form a noisy interval. Clean gaps are never filled. Windows and per-locus evidence remain internal; compact analysis v6 emits only merged regions. These annotations do not alter calls, candidate-noisy classification, quality, trimming, alignment, warning totals, variant eligibility, or the compact JSON contracts. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
 
 ## Stage 4 — Quality control (`signal.apollo_relative_quality/v1`,
 `signal.apollo_end_trim/v1`)
@@ -294,7 +294,7 @@ deduplicated.
 
 ## One-read observation boundary
 
-After variant calling, Signal materializes a `ReadObservation` that owns the input identity, base calls, signal observations, quality-control result, selected alignment, and read-level variant result for exactly one trace.
+After variant calling, Signal materializes a `ReadObservation` that owns the input identity, base calls, basecall-independent locus/signal observations, quality-control result, selected alignment, and read-level variant result for exactly one trace.
 
 The read has already located itself at this boundary. Its orientation and covered reference segments come from evidence-driven semi-global alignment and circular projection; filenames or nominal HV/F/R labels are not placement inputs. This same one-read product feeds both the current analysis report and implemented sample-level reconciliation.
 

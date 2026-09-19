@@ -104,16 +104,24 @@ pub(crate) fn process(
         .iter()
         .map(|window| window.maximum_secondary_snr)
         .fold(0.0_f64, f64::max);
+    let profiled_loci = signal
+        .loci
+        .iter()
+        .filter(|locus| locus.profile.is_some())
+        .count();
     logger.info(
         module_path!(),
         line!(),
         format_args!(
             concat!(
-                "event=signal_processing_completed elapsed_ms={} windows={} noisy_windows={} ",
-                "noisy_regions={} noisy_calls={} window_size_bases={} minimum_noisy_windows={} ",
-                "minimum_primary_snr={:.4} maximum_secondary_snr={:.4}"
+                "event=signal_processing_completed elapsed_ms={} loci={} profiled_loci={} ",
+                "windows={} noisy_windows={} noisy_regions={} noisy_calls={} ",
+                "window_size_bases={} minimum_noisy_windows={} minimum_primary_snr={:.4} ",
+                "maximum_secondary_snr={:.4}"
             ),
             stage_started.elapsed().as_millis(),
+            signal.loci.len(),
+            profiled_loci,
             signal.windows.len(),
             signal.noisy_window_count(),
             signal.noisy_regions.len(),

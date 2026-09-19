@@ -7,6 +7,8 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-EVID-001:** Decoded analyzed A/C/G/T channel arrays are immutable source evidence after validation.
 - **INV-EVID-002:** Derived signal features, corrected waveforms, quality values, alignments, and variants never overwrite the source evidence from which they were derived.
 - **INV-EVID-003:** Vendor PBAS/PCON are vendor evidence, not authoritative Signal output.
+- **INV-EVID-004:** `LocusEvidence` and `EvidenceProfile` are derived directly from immutable analyzed A/C/G/T channel values and PLOC-defined geometry; primary/ambiguity calls, selected basecall peaks, and qualifying-channel thresholds MUST NOT determine profile membership or weights.
+- **INV-EVID-005:** A zero-positive-signal locus has no evidence profile; the system MUST NOT synthesize a uniform or reference-guided profile as a fallback.
 
 ## Coordinates and identity
 
