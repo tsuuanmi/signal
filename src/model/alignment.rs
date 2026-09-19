@@ -12,6 +12,30 @@ pub enum Orientation {
     Reverse,
 }
 
+impl Orientation {
+    /// Projects one trace-strand canonical base onto the reference strand.
+    pub(crate) const fn reference_base(self, base: char) -> char {
+        match self {
+            Self::Forward => base,
+            Self::Reverse => match base {
+                'A' => 'T',
+                'C' => 'G',
+                'G' => 'C',
+                'T' => 'A',
+                other => other,
+            },
+        }
+    }
+
+    /// Projects A/C/G/T channel heights from trace strand to reference strand.
+    pub(crate) const fn reference_peak_heights(self, peaks: [i32; 4]) -> [i32; 4] {
+        match self {
+            Self::Forward => peaks,
+            Self::Reverse => [peaks[3], peaks[2], peaks[1], peaks[0]],
+        }
+    }
+}
+
 /// One half-open segment on the original reference.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ReferenceSegment {
