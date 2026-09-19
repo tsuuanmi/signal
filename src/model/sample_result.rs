@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 
-use crate::model::result::{AlignmentResult, ReferenceResult};
+use crate::model::result::{AlignmentResult, PeakHeightsResult, ReferenceResult};
 use crate::model::sample_evidence::LocusState;
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
@@ -43,14 +43,12 @@ pub(crate) struct SampleLocusDifferenceResult {
 /// One covering read's observation at a differential locus.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleLocusDifferenceObservationResult {
-    pub(crate) read: usize,
+    pub(crate) read: String,
     pub(crate) state: LocusState,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(crate) base: Option<char>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) index: Option<usize>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) relative_quality: Option<u8>,
+    pub(crate) quality: Option<u8>,
 }
 
 /// One normalized observed variant and its supporting reads.
@@ -66,7 +64,7 @@ pub(crate) struct SampleVariantResult {
 /// One read contributing to a normalized variant.
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleVariantSupportResult {
-    pub(crate) read: usize,
+    pub(crate) read: String,
     pub(crate) eligible: bool,
     pub(crate) exclusion_reasons: Vec<VariantExclusionReason>,
     pub(crate) calls: Vec<SampleVariantCallResult>,
@@ -76,8 +74,7 @@ pub(crate) struct SampleVariantSupportResult {
 #[derive(Debug, Serialize)]
 pub(crate) struct SampleVariantCallResult {
     pub(crate) role: VariantCallRole,
-    pub(crate) index: usize,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) position: Option<usize>,
-    pub(crate) ploc: usize,
+    pub(crate) base: char,
+    pub(crate) peaks: PeakHeightsResult,
+    pub(crate) quality: u8,
 }
