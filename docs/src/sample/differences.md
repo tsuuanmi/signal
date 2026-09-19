@@ -12,6 +12,7 @@ Builds sparse reference-coordinate locus evidence only where at least one read d
 - Preserve original call index and relative quality for called observations.
 - Keep deletion observations free of fabricated base/call/quality evidence.
 - Keep insertion columns out of reference-coordinate locus evidence.
+- Reject duplicate contribution from one read to the same reference coordinate instead of silently duplicating support.
 
 ## Sparse semantics
 
