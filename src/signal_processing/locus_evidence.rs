@@ -292,6 +292,9 @@ mod tests {
         assert_eq!(locus.call_index_0based, 2);
         assert_eq!(locus.ploc_0based, 5);
         assert_eq!(locus.event_position_0based, 5);
+        assert_eq!(locus.event_ploc_distance, 0);
+        assert_eq!(locus.minimum_adjacent_ploc_spacing, Some(2));
+        assert_eq!(locus.maximum_adjacent_ploc_spacing, Some(2));
         assert_eq!(locus.channel_heights, [0, 0, 100, 0]);
         assert_eq!(locus.corrected_amplitudes, [0.0, 0.0, 100.0, 0.0]);
         assert_eq!(locus.snrs, [0.0, 0.0, 100.0, 0.0]);
@@ -299,6 +302,23 @@ mod tests {
             locus.profile.as_ref().map(|profile| profile.weights),
             Some([0.0, 0.0, 1.0, 0.0])
         );
+        Ok(())
+    }
+
+    #[test]
+    fn adjacent_spacing_tracks_local_ploc_geometry() -> Result<()> {
+        let mut trace = trace();
+        trace.base_locations = vec![1, 3, 5, 8, 9];
+        let evidence = calculate(&trace, &config(5))?;
+
+        assert_eq!(evidence[0].minimum_adjacent_ploc_spacing, Some(2));
+        assert_eq!(evidence[0].maximum_adjacent_ploc_spacing, Some(2));
+        assert_eq!(evidence[2].minimum_adjacent_ploc_spacing, Some(2));
+        assert_eq!(evidence[2].maximum_adjacent_ploc_spacing, Some(3));
+        assert_eq!(evidence[3].minimum_adjacent_ploc_spacing, Some(1));
+        assert_eq!(evidence[3].maximum_adjacent_ploc_spacing, Some(3));
+        assert_eq!(evidence[4].minimum_adjacent_ploc_spacing, Some(1));
+        assert_eq!(evidence[4].maximum_adjacent_ploc_spacing, Some(1));
         Ok(())
     }
 
@@ -325,6 +345,7 @@ mod tests {
         trace.channels[2][5] = 120;
         let evidence = calculate(&trace, &config(5))?;
         assert_eq!(evidence[2].event_position_0based, 4);
+        assert_eq!(evidence[2].event_ploc_distance, 1);
 
         trace.channels[0][6] = 70;
         trace.channels[1][6] = 70;
