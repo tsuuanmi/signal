@@ -7,9 +7,9 @@ then atomically creates `results/<trace-stem>.basecalls.json`. It does not load 
 reference, align, or call variants. Existing targets are never overwritten.
 
 The authoritative contract is
-[`schemas/basecalls-v1.schema.json`](schemas/basecalls-v1.schema.json); a synthetic
-example is [`examples/basecalls-v1.example.json`](examples/basecalls-v1.example.json).
-Every object is closed and `schema_version` is `signal.basecalls/v1`.
+[`schemas/basecalls-v2.schema.json`](schemas/basecalls-v2.schema.json); a synthetic
+example is [`examples/basecalls-v2.example.json`](examples/basecalls-v2.example.json).
+Every object is closed and `schema_version` is `signal.basecalls/v2`.
 
 ## Fields
 
@@ -22,10 +22,15 @@ Every object is closed and `schema_version` is `signal.basecalls/v1`.
 - `read.ambiguity`: canonical/IUPAC ambiguity symbol at each locus.
 - `read.retained`: the primary sequence inside `read.trim` after end trimming.
 - `read.trim`: 0-based half-open call interval `[start, end)`.
+- `signal_quality.integrity`: PLOC/vendor-series cardinality evidence, adjacent
+  PLOC spacing summary, exact signed-16-bit clipping count, and optional
+  maximum-to-median corrected event-signal ratio. These observations do not
+  reclassify artifacts or alter the read.
 - `signal_quality.noisy_regions`: merged observation-only call/sample intervals
   and their minimum primary SNR. Individual rolling windows are omitted.
-- `warnings`: unresolved-primary and multi-channel-unresolved counts, plus vendor
-  disagreement count when optional vendor calls are available.
+- `warnings`: unresolved-primary and multi-channel-unresolved counts, vendor
+  disagreement count when optional vendor calls are available, vendor/PLOC
+  cardinality mismatch count, and exact clipped-channel-sample count.
 
 The primary and ambiguity sequence lengths equal `call_count`; trim bounds lie
 within that count; and `retained` equals the primary sequence slice selected by
