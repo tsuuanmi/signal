@@ -127,8 +127,7 @@ placement has been established.
 - Sample locus states and call-to-reference mappings become deterministic across equivalent
   gap placements.
 - Alignment canonicalization no longer inherits VCF left-normalization by accident.
-- Variant normalization must be reconciled with the canonical alignment in a subsequent
-  implementation change.
+- Variant representation preserves canonical alignment placement; positional repeat canonicalization has one authoritative implementation in `alignment::canonical`.
 - Phylogenetic/EMPOP special-region notation remains a separate future layer.
 
 ## Validation requirements
