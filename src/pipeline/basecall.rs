@@ -76,7 +76,9 @@ fn run_logged(
     } = read::process(&inputs.trace, &inputs.config, logger, stage)?;
     let warning_total = warnings.unresolved_primary_calls
         + warnings.multi_channel_unresolved_calls
-        + warnings.vendor_disagreements;
+        + warnings.vendor_disagreements
+        + warnings.ploc_vendor_length_mismatches
+        + warnings.clipped_channel_samples;
     if warning_total > 0 {
         logger.warn(
             module_path!(),
@@ -84,12 +86,15 @@ fn run_logged(
             format_args!(
                 concat!(
                     "event=basecall_warning_summary total={} unresolved_primary_calls={} ",
-                    "multi_channel_unresolved_calls={} vendor_disagreements={}"
+                    "multi_channel_unresolved_calls={} vendor_disagreements={} ",
+                    "ploc_vendor_length_mismatches={} clipped_channel_samples={}"
                 ),
                 warning_total,
                 warnings.unresolved_primary_calls,
                 warnings.multi_channel_unresolved_calls,
-                warnings.vendor_disagreements
+                warnings.vendor_disagreements,
+                warnings.ploc_vendor_length_mismatches,
+                warnings.clipped_channel_samples
             ),
         )?;
     }
