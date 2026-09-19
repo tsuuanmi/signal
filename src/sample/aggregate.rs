@@ -391,10 +391,7 @@ mod tests {
             "reference",
             "config",
             Orientation::Forward,
-            vec![
-                column('G', 'A', Some(0), 72),
-                column('A', 'A', Some(1), 72),
-            ],
+            vec![column('G', 'A', Some(0), 72), column('A', 'A', Some(1), 72)],
             Vec::new(),
         );
 
