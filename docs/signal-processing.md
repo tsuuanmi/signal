@@ -69,7 +69,7 @@ alignment, or variants.
 
 For each PLOC-defined locus, Signal selects a deterministic rolling context and estimates A/C/G/T local baseline and first-difference-MAD noise with the same primitives used by windowed SNR. Event refinement then examines every sample in the locus window and selects the sample with the largest sum of non-negative baseline-corrected A/C/G/T amplitudes. Equal totals prefer the sample nearest PLOC, then the lower sample coordinate.
 
-At that one event sample, `LocusEvidence` retains raw A/C/G/T channel values, local baseline/noise, corrected amplitudes, and per-channel SNR. `EvidenceProfile` normalizes only the positive corrected signal mass:
+At that one event sample, `LocusEvidence` retains raw A/C/G/T channel values, local baseline/noise, corrected amplitudes, and per-channel SNR. It also preserves the absolute refined-event/PLOC displacement and minimum/maximum spacing to immediately adjacent PLOC loci in trace-sample units. Edge loci use their one available spacing as both minimum and maximum. These geometry values are observation-only; Signal does not threshold them into compressed/expanded-spacing or neighbor-interference labels. `EvidenceProfile` normalizes only the positive corrected signal mass:
 
 ```text
 weight[channel] = corrected_amplitude[channel] / sum(corrected_amplitudes)
