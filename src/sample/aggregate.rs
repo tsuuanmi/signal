@@ -16,33 +16,12 @@ pub(crate) fn aggregate(
     reads: &[ReadObservation],
     config: &SampleReconciliationConfig,
 ) -> Result<SampleEvidence> {
-    let first = reads
+    let ordered = validated_ordered_reads(reads)?;
+    let first = ordered
         .first()
         .ok_or_else(|| Error::Sample("at least one read observation is required".into()))?;
     let reference_sha256 = first.reference_sha256.clone();
     let configuration_sha256 = first.configuration_sha256.clone();
-
-    let mut identities = BTreeSet::new();
-    for read in reads {
-        if read.reference_sha256 != reference_sha256 {
-            return Err(Error::Sample(
-                "all reads must use the same reference identity".into(),
-            ));
-        }
-        if read.configuration_sha256 != configuration_sha256 {
-            return Err(Error::Sample(
-                "all reads must use the same scientific configuration identity".into(),
-            ));
-        }
-        if !identities.insert(read.input_sha256.as_str()) {
-            return Err(Error::Sample(
-                "duplicate input trace content cannot contribute twice".into(),
-            ));
-        }
-    }
-
-    let mut ordered: Vec<&ReadObservation> = reads.iter().collect();
-    ordered.sort_by(|left, right| left.input_sha256.cmp(&right.input_sha256));
 
     let read_evidence: Vec<SampleReadEvidence> = ordered
         .iter()
@@ -73,6 +52,37 @@ pub(crate) fn aggregate(
         locus_differences: loci::aggregate(&ordered, loci::LocusSelection::Differential)?,
         variants: variants::aggregate(&ordered)?,
     })
+}
+
+pub(crate) fn validated_ordered_reads(
+    reads: &[ReadObservation],
+) -> Result<Vec<&ReadObservation>> {
+    let first = reads
+        .first()
+        .ok_or_else(|| Error::Sample("at least one read observation is required".into()))?;
+
+    let mut identities = BTreeSet::new();
+    for read in reads {
+        if read.reference_sha256 != first.reference_sha256 {
+            return Err(Error::Sample(
+                "all reads must use the same reference identity".into(),
+            ));
+        }
+        if read.configuration_sha256 != first.configuration_sha256 {
+            return Err(Error::Sample(
+                "all reads must use the same scientific configuration identity".into(),
+            ));
+        }
+        if !identities.insert(read.input_sha256.as_str()) {
+            return Err(Error::Sample(
+                "duplicate input trace content cannot contribute twice".into(),
+            ));
+        }
+    }
+
+    let mut ordered = reads.iter().collect::<Vec<_>>();
+    ordered.sort_by(|left, right| left.input_sha256.cmp(&right.input_sha256));
+    Ok(ordered)
 }
 
 #[cfg(test)]
