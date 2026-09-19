@@ -54,8 +54,9 @@ pub(super) fn aggregate(
         }
     }
 
-    result.support =
-        std::array::from_fn(|channel| result.forward_support[channel] + result.reverse_support[channel]);
+    result.support = std::array::from_fn(|channel| {
+        result.forward_support[channel] + result.reverse_support[channel]
+    });
 
     if result.contributors != result.forward_contributors + result.reverse_contributors
         || !result
