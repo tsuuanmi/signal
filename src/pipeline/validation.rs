@@ -6,11 +6,15 @@ use std::time::Instant;
 use serde::Serialize;
 
 use crate::cli::SampleArgs;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::logger::Logger;
+use crate::model::alignment::Orientation;
+use crate::model::basecalls::PeakSource;
 use crate::model::locus_evidence::EvidenceProfile;
+use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
-    NucleotideContribution, ProfileHeterogeneity, SampleLocusEvidence,
+    LocusState, NucleotideContribution, ProfileHeterogeneity, SampleLocusEvidence,
+    SampleLocusObservation,
 };
 use crate::report;
 use crate::sample as sample_science;
@@ -18,7 +22,7 @@ use crate::validation::ValidationExportRequest;
 
 use super::{input, sample_reads};
 
-const SCHEMA_VERSION: &str = "signal.validation_locus/v1";
+const SCHEMA_VERSION: &str = "signal.validation_locus/v2";
 
 #[derive(Serialize)]
 struct ValidationLocusRow<'a> {
@@ -67,6 +71,39 @@ struct ValidationLocusRow<'a> {
     noisy_observations: usize,
     missing_profile_observations: usize,
     deletion_observations: usize,
+    observations: Vec<ValidationObservationRow<'a>>,
+}
+
+#[derive(Serialize)]
+struct ValidationObservationRow<'a> {
+    read_sha256: &'a str,
+    orientation: Orientation,
+    state: LocusState,
+    aligned_base: Option<char>,
+    quality: Option<u8>,
+    call_index_0based: Option<usize>,
+
+    source_primary: Option<char>,
+    source_ambiguity: Option<char>,
+    ploc_0based: Option<usize>,
+    window_start_0based: Option<usize>,
+    window_end_0based_exclusive: Option<usize>,
+
+    primary_peak_position_0based: Option<usize>,
+    primary_peak_offset_from_ploc: Option<i64>,
+    event_position_0based: Option<usize>,
+    event_offset_from_ploc: Option<i64>,
+    event_offset_from_primary_peak: Option<i64>,
+
+    channel_peak_positions_acgt: Option<[usize; 4]>,
+    channel_peak_heights_acgt: Option<[i32; 4]>,
+    channel_peak_sources_acgt: Option<[PeakSource; 4]>,
+    primary_peak_heights_acgt_reference: Option<[i32; 4]>,
+
+    corrected_amplitudes_acgt_reference: Option<[f64; 4]>,
+    snrs_acgt_reference: Option<[f64; 4]>,
+    profile_acgt_reference: Option<[f64; 4]>,
+    in_noisy_region: Option<bool>,
 }
 
 pub(crate) fn run(request: &ValidationExportRequest) -> Result<()> {
@@ -125,14 +162,15 @@ fn run_logged(
 
     *stage = "sample_aggregation";
     let evidence = sample_science::aggregate(&reads, &inputs.config.sample_reconciliation)?;
-    let loci = sample_science::all_covered_loci(&reads)?;
+    let covered = sample_science::all_covered_loci(&reads)?;
 
     *stage = "validation_serialization";
     let bytes = serialize_rows(
         &request.sample_id,
         &evidence.reference_sha256,
         &evidence.configuration_sha256,
-        &loci,
+        &covered.reads,
+        &covered.loci,
     )?;
     let output = output_path(&request.sample_id);
 
@@ -146,7 +184,7 @@ fn run_logged(
             ),
             started.elapsed().as_millis(),
             request.sample_id,
-            loci.len(),
+            covered.loci.len(),
             evidence.locus_differences.len(),
             output.display().to_string(),
             bytes.len()
@@ -166,11 +204,18 @@ fn serialize_rows(
     sample_id: &str,
     reference_sha256: &str,
     configuration_sha256: &str,
+    reads: &[&ReadObservation],
     loci: &[SampleLocusEvidence],
 ) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
     for locus in loci {
-        let row = row(sample_id, reference_sha256, configuration_sha256, locus);
+        let row = row(
+            sample_id,
+            reference_sha256,
+            configuration_sha256,
+            reads,
+            locus,
+        )?;
         serde_json::to_writer(&mut bytes, &row)?;
         bytes.push(b'\n');
     }
@@ -181,8 +226,9 @@ fn row<'a>(
     sample_id: &'a str,
     reference_sha256: &'a str,
     configuration_sha256: &'a str,
+    reads: &'a [&'a ReadObservation],
     locus: &'a SampleLocusEvidence,
-) -> ValidationLocusRow<'a> {
+) -> Result<ValidationLocusRow<'a>> {
     let topology = locus.support_topology;
     let support = locus.nucleotide_support;
     let mean = profile_channels(support.mean_profile);
@@ -190,7 +236,13 @@ fn row<'a>(
     let forward_geometry = geometry_channels(support.forward_heterogeneity);
     let reverse_geometry = geometry_channels(support.reverse_heterogeneity);
 
-    ValidationLocusRow {
+    let observations = locus
+        .observations
+        .iter()
+        .map(|observation| observation_row(observation, reads))
+        .collect::<Result<Vec<_>>>()?;
+
+    Ok(ValidationLocusRow {
         schema_version: SCHEMA_VERSION,
         signal_version: env!("CARGO_PKG_VERSION"),
         sample_id,
@@ -256,6 +308,123 @@ fn row<'a>(
                 observation.nucleotide_contribution == NucleotideContribution::DeletionEvent
             })
             .count(),
+        observations,
+    })
+}
+
+fn observation_row<'a>(
+    observation: &'a SampleLocusObservation,
+    reads: &'a [&'a ReadObservation],
+) -> Result<ValidationObservationRow<'a>> {
+    let read = reads.get(observation.read_index).ok_or_else(|| {
+        Error::Sample(format!(
+            "validation locus observation references missing read {}",
+            observation.read_index
+        ))
+    })?;
+
+    let Some(call_index_0based) = observation.call_index_0based else {
+        return Ok(ValidationObservationRow {
+            read_sha256: &read.input_sha256,
+            orientation: read.alignment.orientation,
+            state: observation.state,
+            aligned_base: observation.base,
+            quality: observation.quality,
+            call_index_0based: None,
+            source_primary: None,
+            source_ambiguity: None,
+            ploc_0based: None,
+            window_start_0based: None,
+            window_end_0based_exclusive: None,
+            primary_peak_position_0based: None,
+            primary_peak_offset_from_ploc: None,
+            event_position_0based: None,
+            event_offset_from_ploc: None,
+            event_offset_from_primary_peak: None,
+            channel_peak_positions_acgt: None,
+            channel_peak_heights_acgt: None,
+            channel_peak_sources_acgt: None,
+            primary_peak_heights_acgt_reference: None,
+            corrected_amplitudes_acgt_reference: None,
+            snrs_acgt_reference: None,
+            profile_acgt_reference: None,
+            in_noisy_region: None,
+        });
+    };
+
+    let call = read
+        .calls
+        .calls
+        .get(call_index_0based)
+        .filter(|call| call.index_0based == call_index_0based)
+        .ok_or_else(|| {
+            Error::Sample(format!(
+                "validation call index {call_index_0based} is inconsistent"
+            ))
+        })?;
+    let locus = read
+        .signal
+        .loci
+        .get(call_index_0based)
+        .filter(|locus| locus.call_index_0based == call_index_0based)
+        .ok_or_else(|| {
+            Error::Sample(format!(
+                "validation signal locus {call_index_0based} is inconsistent"
+            ))
+        })?;
+    let orientation = read.alignment.orientation;
+    let primary_peak_position = call
+        .primary_peak_evidence
+        .as_ref()
+        .map(|evidence| evidence.position_0based);
+    let primary_peak_heights = call.primary_peak_evidence.as_ref().map(|evidence| {
+        orientation.reference_peak_heights(evidence.channel_heights)
+    });
+    let signal = observation.signal.ok_or_else(|| {
+        Error::Sample(format!(
+            "call-backed validation observation {call_index_0based} lacks signal evidence"
+        ))
+    })?;
+
+    Ok(ValidationObservationRow {
+        read_sha256: &read.input_sha256,
+        orientation,
+        state: observation.state,
+        aligned_base: observation.base,
+        quality: observation.quality,
+        call_index_0based: Some(call_index_0based),
+        source_primary: Some(call.primary),
+        source_ambiguity: Some(call.ambiguity),
+        ploc_0based: Some(call.ploc_0based),
+        window_start_0based: Some(call.window_start_0based),
+        window_end_0based_exclusive: Some(call.window_end_0based_exclusive),
+        primary_peak_position_0based: primary_peak_position,
+        primary_peak_offset_from_ploc: primary_peak_position
+            .map(|position| signed_offset(position, call.ploc_0based)),
+        event_position_0based: Some(locus.event_position_0based),
+        event_offset_from_ploc: Some(signed_offset(
+            locus.event_position_0based,
+            call.ploc_0based,
+        )),
+        event_offset_from_primary_peak: primary_peak_position.map(|position| {
+            signed_offset(locus.event_position_0based, position)
+        }),
+        channel_peak_positions_acgt: Some(call.peaks.map(|peak| peak.position_0based)),
+        channel_peak_heights_acgt: Some(call.peaks.map(|peak| peak.height)),
+        channel_peak_sources_acgt: Some(call.peaks.map(|peak| peak.source)),
+        primary_peak_heights_acgt_reference: primary_peak_heights,
+        corrected_amplitudes_acgt_reference: Some(signal.corrected_amplitudes),
+        snrs_acgt_reference: Some(signal.snrs),
+        profile_acgt_reference: signal.profile.map(|profile| profile.weights),
+        in_noisy_region: Some(signal.in_noisy_region),
+    })
+}
+
+fn signed_offset(position: usize, anchor: usize) -> i64 {
+    if position >= anchor {
+        i64::try_from(position - anchor).unwrap_or(i64::MAX)
+    } else {
+        -i64::try_from(anchor - position).unwrap_or(i64::MAX)
     }
 }
 
