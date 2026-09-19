@@ -11,7 +11,7 @@
   },
   "reads": [
     {
-      "name": "read-a.ab1",
+      "name": "read-a",
       "sha256": "1111111111111111111111111111111111111111111111111111111111111111",
       "alignment": {
         "orientation": "forward",
@@ -29,7 +29,7 @@
       }
     },
     {
-      "name": "read-b.ab1",
+      "name": "read-b",
       "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "alignment": {
         "orientation": "reverse",
@@ -53,18 +53,16 @@
       "reference": "C",
       "observations": [
         {
-          "read": 0,
+          "read": "read-a",
           "state": "alternate",
           "base": "T",
-          "index": 49,
-          "relative_quality": 56
+          "quality": 56
         },
         {
-          "read": 1,
+          "read": "read-b",
           "state": "reference",
           "base": "C",
-          "index": 110,
-          "relative_quality": 52
+          "quality": 52
         }
       ]
     },
@@ -73,18 +71,16 @@
       "reference": "T",
       "observations": [
         {
-          "read": 0,
+          "read": "read-a",
           "state": "alternate",
           "base": "C",
-          "index": 98,
-          "relative_quality": 56
+          "quality": 56
         },
         {
-          "read": 1,
+          "read": "read-b",
           "state": "alternate",
           "base": "C",
-          "index": 61,
-          "relative_quality": 48
+          "quality": 48
         }
       ]
     }
@@ -97,15 +93,20 @@
       "kind": "SNV",
       "support": [
         {
-          "read": 0,
+          "read": "read-a",
           "eligible": true,
           "exclusion_reasons": [],
           "calls": [
             {
               "role": "supporting",
-              "index": 49,
-              "position": 150,
-              "ploc": 612
+              "base": "T",
+              "peaks": {
+                "A": 20,
+                "C": 40,
+                "G": 800,
+                "T": 15
+              },
+              "quality": 56
             }
           ]
         }
@@ -118,20 +119,25 @@
       "kind": "SNV",
       "support": [
         {
-          "read": 0,
+          "read": "read-a",
           "eligible": true,
           "exclusion_reasons": [],
           "calls": [
             {
               "role": "supporting",
-              "index": 98,
-              "position": 199,
-              "ploc": 1200
+              "base": "C",
+              "peaks": {
+                "A": 20,
+                "C": 40,
+                "G": 800,
+                "T": 15
+              },
+              "quality": 56
             }
           ]
         },
         {
-          "read": 1,
+          "read": "read-b",
           "eligible": false,
           "exclusion_reasons": [
             "peak_below_minimum"
@@ -139,9 +145,14 @@
           "calls": [
             {
               "role": "supporting",
-              "index": 61,
-              "position": 199,
-              "ploc": 744
+              "base": "C",
+              "peaks": {
+                "A": 20,
+                "C": 40,
+                "G": 800,
+                "T": 15
+              },
+              "quality": 24
             }
           ]
         }
