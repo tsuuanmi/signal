@@ -239,9 +239,7 @@ def select_cases(
             raise ValueError(f"unknown validation case: {missing[0]}")
         requested_set = set(requested)
         selected = [
-            case
-            for case in cases
-            if case.metadata.validation_case_id in requested_set
+            case for case in cases if case.metadata.validation_case_id in requested_set
         ]
     if limit is not None:
         if limit < 1:

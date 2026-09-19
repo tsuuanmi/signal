@@ -53,7 +53,7 @@ def parser() -> argparse.ArgumentParser:
         "--output-dir",
         type=Path,
         default=Path("validation-results/corpus"),
-        help="atomic corpus output directory",
+        help="staged no-overwrite corpus output directory",
     )
     built.add_argument(
         "--case",

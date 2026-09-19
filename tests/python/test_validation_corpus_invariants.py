@@ -18,7 +18,9 @@ from scripts.validation_corpus.runner import run_corpus
 
 class ValidationCorpusInvariantTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temporary = tempfile.TemporaryDirectory(prefix="signal-validation-invariant-")
+        self.temporary = tempfile.TemporaryDirectory(
+            prefix="signal-validation-invariant-"
+        )
         self.root = Path(self.temporary.name)
         self.data = self.root / "data"
         self.data.mkdir()
@@ -91,9 +93,7 @@ class ValidationCorpusInvariantTests(unittest.TestCase):
 
     def test_publication_failure_rolls_back_new_output(self) -> None:
         sha = self.trace("a.ab1", b"a")
-        self.write_manifest(
-            [self.row("case-1", "a.ab1", sha, "development")]
-        )
+        self.write_manifest([self.row("case-1", "a.ab1", sha, "development")])
         cases = load_manifest(self.manifest)
         output = self.root / "validation-results" / "corpus"
 

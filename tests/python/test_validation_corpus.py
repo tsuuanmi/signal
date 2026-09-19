@@ -203,9 +203,7 @@ class ValidationCorpusTests(unittest.TestCase):
             )
             log_dir = Path(env["SIGNAL_LOG_DIR"])
             log_dir.mkdir(parents=True, exist_ok=True)
-            (log_dir / f"{case_id}.validation.log").write_text(
-                "log", encoding="utf-8"
-            )
+            (log_dir / f"{case_id}.validation.log").write_text("log", encoding="utf-8")
             return SimpleNamespace(returncode=0, stderr="")
 
         with patch(
