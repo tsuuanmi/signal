@@ -137,7 +137,7 @@ sample succeeds.
 Current public result contracts are:
 
 - `signal.basecalls/v1` — reference-free primary/ambiguity/retained read result;
-- `signal.analysis/v5` — compact reference-guided analysis result;
+- `signal.analysis/v6` — compact reference-guided analysis result with reviewer-facing four-channel peak evidence;
 - `signal.sample_evidence/v2` — compact multi-read coverage, sparse locus differences, and normalized-variant evidence.
 
 The schemas, examples, coordinate conventions, and human-readable semantics live under [docs/contracts](docs/contracts/README.md).
