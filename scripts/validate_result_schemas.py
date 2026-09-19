@@ -12,8 +12,8 @@ from typing import Any
 from jsonschema import Draft202012Validator, SchemaError, ValidationError
 
 ROOT = Path(__file__).resolve().parents[1]
-ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v5.schema.json"
-ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v5.example.json"
+ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v6.schema.json"
+ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v6.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v1.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v1.example.json"
 SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v2.schema.json"
@@ -48,12 +48,9 @@ def analysis_call_shapes(example: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     """Return valid SNV, insertion, and deletion analysis documents."""
     snv = copy.deepcopy(example)
     supporting = copy.deepcopy(snv["variants"][0]["calls"][0])
-    inserted = copy.deepcopy(supporting)
-    inserted.pop("position")
     flanking = copy.deepcopy(supporting)
     flanking["role"] = "flanking"
-    flanking.pop("maximum_peak_height")
-    flanking.pop("relative_quality")
+    flanking["base"] = "A"
 
     insertion = copy.deepcopy(example)
     insertion["variants"][0].update(
@@ -61,7 +58,7 @@ def analysis_call_shapes(example: dict[str, Any]) -> tuple[dict[str, Any], ...]:
             "reference": "A",
             "alternate": "AG",
             "kind": "INS",
-            "calls": [flanking, inserted],
+            "calls": [flanking, supporting],
         }
     )
     deletion = copy.deepcopy(example)
@@ -76,7 +73,6 @@ def rejected_analysis_shapes(
 ) -> list[tuple[str, dict[str, Any]]]:
     snv, insertion, deletion = analysis_call_shapes(example)
     supporting = copy.deepcopy(snv["variants"][0]["calls"][0])
-    inserted = copy.deepcopy(insertion["variants"][0]["calls"][1])
     flanking = copy.deepcopy(deletion["variants"][0]["calls"][0])
 
     def document(kind: str, calls: list[dict[str, Any]]) -> dict[str, Any]:
@@ -85,10 +81,12 @@ def rejected_analysis_shapes(
         built["variants"][0]["calls"] = calls
         return built
 
-    missing_evidence = copy.deepcopy(inserted)
-    missing_evidence.pop("relative_quality")
-    verbose_flank = copy.deepcopy(flanking)
-    verbose_flank["maximum_peak_height"] = 800
+    missing_peaks = copy.deepcopy(supporting)
+    missing_peaks.pop("peaks")
+    missing_quality = copy.deepcopy(supporting)
+    missing_quality.pop("quality")
+    legacy_pointer = copy.deepcopy(supporting)
+    legacy_pointer["ploc"] = 123
     missing_metric = copy.deepcopy(example)
     missing_metric["signal_quality"]["noisy_regions"][0].pop("minimum_primary_snr")
     negative_metric = copy.deepcopy(example)
@@ -102,13 +100,12 @@ def rejected_analysis_shapes(
 
     return [
         ("SNV with no calls", document("SNV", [])),
-        ("SNV supporting call without position", document("SNV", [inserted])),
         ("SNV flanking call", document("SNV", [flanking])),
-        ("INS with aligned supporting call", document("INS", [supporting])),
         ("INS with only flanking calls", document("INS", [flanking])),
-        ("INS supporting call missing quality", document("INS", [missing_evidence])),
         ("DEL supporting call", document("DEL", [supporting])),
-        ("DEL flank with verbose evidence", document("DEL", [verbose_flank])),
+        ("variant call without peaks", document("SNV", [missing_peaks])),
+        ("variant call without quality", document("SNV", [missing_quality])),
+        ("variant call with legacy pointer", document("SNV", [legacy_pointer])),
         ("noisy region missing primary SNR", missing_metric),
         ("noisy region with negative primary SNR", negative_metric),
         ("signal quality with removed windows", unknown_field),
@@ -160,8 +157,8 @@ def rejected_sample_shapes(
     observation = verbose_deletion["locus_differences"][0]["observations"][0]
     observation["state"] = "deletion"
 
-    negative_read = copy.deepcopy(example)
-    negative_read["variants"][0]["support"][0]["read"] = -1
+    empty_read = copy.deepcopy(example)
+    empty_read["variants"][0]["support"][0]["read"] = ""
 
     repeated_identity = copy.deepcopy(example)
     repeated_identity["variants"][0]["support"][0]["read_name"] = "legacy.ab1"
@@ -184,8 +181,8 @@ def rejected_sample_shapes(
     ineligible_without_reason = copy.deepcopy(example)
     ineligible_without_reason["variants"][0]["support"][0]["eligible"] = False
 
-    missing_call_pointer = copy.deepcopy(example)
-    missing_call_pointer["variants"][0]["support"][0]["calls"][0].pop("ploc")
+    missing_call_peaks = copy.deepcopy(example)
+    missing_call_peaks["variants"][0]["support"][0]["calls"][0].pop("peaks")
 
     empty_variant_calls = copy.deepcopy(example)
     empty_variant_calls["variants"][0]["support"][0]["calls"] = []
@@ -198,7 +195,7 @@ def rejected_sample_shapes(
             all_reference_locus,
         ),
         ("deletion difference carrying called-base fields", verbose_deletion),
-        ("sample evidence with negative read reference", negative_read),
+        ("sample evidence with empty read reference", empty_read),
         ("sample support with repeated read identity", repeated_identity),
         ("sample evidence using removed loci field", legacy_loci),
         ("sample evidence with consensus field", unknown_field),
@@ -208,7 +205,7 @@ def rejected_sample_shapes(
             "ineligible sample variant support without exclusion reason",
             ineligible_without_reason,
         ),
-        ("sample variant call without ploc", missing_call_pointer),
+        ("sample variant call without peaks", missing_call_peaks),
         ("sample variant support without mapped calls", empty_variant_calls),
     ]
 
