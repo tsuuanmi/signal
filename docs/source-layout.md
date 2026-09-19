@@ -18,7 +18,7 @@ src/
 ├── basecalling/{mod,iupac,peak,call}.rs
 ├── signal_processing/{mod,features,integrity,locus_evidence,regions,statistics}.rs
 ├── quality_control/{mod,penalty,quality,trim}.rs
-├── alignment/{mod,scoring,gotoh,traceback,orient}.rs
+├── alignment/{mod,scoring,gotoh,traceback,canonical,orient}.rs
 ├── variant_calling/{mod,mapping,extract,normalize,filter}.rs
 ├── sample/{mod,aggregate,call_evidence,contribution,coverage,loci,nucleotide_support,overlap,profile_geometry,variants}.rs
 ├── report/{mod,json,basecall,sample,signal,variant,atomic}.rs
