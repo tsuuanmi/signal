@@ -95,9 +95,9 @@ struct ValidationObservationRow<'a> {
     event_offset_from_ploc: Option<i64>,
     event_offset_from_primary_peak: Option<i64>,
 
-    channel_peak_positions_acgt: Option<[usize; 4]>,
-    channel_peak_heights_acgt: Option<[i32; 4]>,
-    channel_peak_sources_acgt: Option<[PeakSource; 4]>,
+    channel_peak_positions_acgt_reference: Option<[usize; 4]>,
+    channel_peak_heights_acgt_reference: Option<[i32; 4]>,
+    channel_peak_sources_acgt_reference: Option<[PeakSource; 4]>,
     primary_peak_heights_acgt_reference: Option<[i32; 4]>,
 
     corrected_amplitudes_acgt_reference: Option<[f64; 4]>,
@@ -341,9 +341,9 @@ fn observation_row<'a>(
             event_position_0based: None,
             event_offset_from_ploc: None,
             event_offset_from_primary_peak: None,
-            channel_peak_positions_acgt: None,
-            channel_peak_heights_acgt: None,
-            channel_peak_sources_acgt: None,
+            channel_peak_positions_acgt_reference: None,
+            channel_peak_heights_acgt_reference: None,
+            channel_peak_sources_acgt_reference: None,
             primary_peak_heights_acgt_reference: None,
             corrected_amplitudes_acgt_reference: None,
             snrs_acgt_reference: None,
@@ -400,18 +400,27 @@ fn observation_row<'a>(
         window_end_0based_exclusive: Some(call.window_end_0based_exclusive),
         primary_peak_position_0based: primary_peak_position,
         primary_peak_offset_from_ploc: primary_peak_position
-            .map(|position| signed_offset(position, call.ploc_0based)),
+            .map(|position| signed_offset(position, call.ploc_0based))
+            .transpose()?,
         event_position_0based: Some(locus.event_position_0based),
         event_offset_from_ploc: Some(signed_offset(
             locus.event_position_0based,
             call.ploc_0based,
+        )?),
+        event_offset_from_primary_peak: primary_peak_position
+            .map(|position| signed_offset(locus.event_position_0based, position))
+            .transpose()?,
+        channel_peak_positions_acgt_reference: Some(reference_usize_values(
+            orientation,
+            call.peaks.map(|peak| peak.position_0based),
         )),
-        event_offset_from_primary_peak: primary_peak_position.map(|position| {
-            signed_offset(locus.event_position_0based, position)
-        }),
-        channel_peak_positions_acgt: Some(call.peaks.map(|peak| peak.position_0based)),
-        channel_peak_heights_acgt: Some(call.peaks.map(|peak| peak.height)),
-        channel_peak_sources_acgt: Some(call.peaks.map(|peak| peak.source)),
+        channel_peak_heights_acgt_reference: Some(orientation.reference_peak_heights(
+            call.peaks.map(|peak| peak.height),
+        )),
+        channel_peak_sources_acgt_reference: Some(reference_peak_sources(
+            orientation,
+            call.peaks.map(|peak| peak.source),
+        )),
         primary_peak_heights_acgt_reference: primary_peak_heights,
         corrected_amplitudes_acgt_reference: Some(signal.corrected_amplitudes),
         snrs_acgt_reference: Some(signal.snrs),
@@ -420,11 +429,30 @@ fn observation_row<'a>(
     })
 }
 
-fn signed_offset(position: usize, anchor: usize) -> i64 {
-    if position >= anchor {
-        i64::try_from(position - anchor).unwrap_or(i64::MAX)
+fn signed_offset(position: usize, anchor: usize) -> Result<i64> {
+    let magnitude = i64::try_from(position.abs_diff(anchor))
+        .map_err(|_| Error::Sample("validation sample-coordinate offset exceeds i64".into()))?;
+    Ok(if position >= anchor {
+        magnitude
     } else {
-        -i64::try_from(anchor - position).unwrap_or(i64::MAX)
+        -magnitude
+    })
+}
+
+const fn reference_usize_values(orientation: Orientation, values: [usize; 4]) -> [usize; 4] {
+    match orientation {
+        Orientation::Forward => values,
+        Orientation::Reverse => [values[3], values[2], values[1], values[0]],
+    }
+}
+
+const fn reference_peak_sources(
+    orientation: Orientation,
+    values: [PeakSource; 4],
+) -> [PeakSource; 4] {
+    match orientation {
+        Orientation::Forward => values,
+        Orientation::Reverse => [values[3], values[2], values[1], values[0]],
     }
 }
 
