@@ -13,7 +13,7 @@ Owns sample-level validation, deterministic read ordering, and assembly of compa
 - Build the one top-level read registry with source basename, stable identity, trace-integrity evidence, and selected post-trim alignment summary.
 - Consume the validated `SampleReconciliationConfig`.
 - Derive run-length total/forward/reverse coverage topology from the read registry.
-- Delegate pairwise overlap admission, sparse differential-locus extraction, and normalized variant aggregation/support-topology derivation.
+- Delegate pairwise overlap admission, sparse differential-locus extraction with profile retention, and normalized variant aggregation/support-topology/profile derivation.
 
 ## Non-responsibilities
 
@@ -25,7 +25,7 @@ Internal indexes are deterministic implementation references only. Public review
 
 ## Tests
 
-Unit tests cover deterministic SHA ordering with coverage/overlap evidence bound to that registry, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention with factorized support topology, duplicate locus/variant support rejection, incompatible identities, and renamed duplicate content.
+Unit tests cover deterministic SHA ordering with coverage/overlap evidence bound to that registry, forward/reverse profile projection, missing-profile preservation, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention with factorized support topology, duplicate locus/variant support rejection, incompatible identities, and renamed duplicate content.
 
 ## Status
 
