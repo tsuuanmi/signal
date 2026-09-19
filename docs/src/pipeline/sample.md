@@ -9,7 +9,7 @@ Runs one multi-read sample-evidence operation.
 - Load one validated sample identifier, one shared reference/configuration, and one or more traces.
 - Process every trace independently through `pipeline::observation`.
 - Aggregate completed observations through `sample::aggregate` using the strict sample-reconciliation overlap policy.
-- Log read, coverage-segment, pairwise-overlap/admission, sparse differential-locus, normalized-variant, retained profile availability with forward/reverse counts, structural nucleotide-contribution states, local noisy-region membership, positive corrected-amplitude/SNR channel counts, and aggregate differential-locus topology counts. These remain evidence summaries rather than consensus or confidence verdicts.
+- Log read, coverage-segment, pairwise-overlap/admission, sparse differential-locus, normalized-variant, retained profile availability with forward/reverse counts, structural nucleotide-contribution states, unweighted eligible-profile support topology/mass, local noisy-region membership, positive corrected-amplitude/SNR channel counts, and aggregate differential-locus topology counts. These remain evidence summaries rather than consensus or confidence verdicts.
 - Build and atomically publish one `signal.sample_evidence/v7` document at `results/<sample-id>.sample.json`.
 - Write sample-level operational records to `$SIGNAL_LOG_DIR/<sample-id>.sample.log`.
 
