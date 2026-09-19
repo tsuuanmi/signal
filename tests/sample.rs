@@ -218,14 +218,8 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
     assert_eq!(variants[0]["support_topology"]["eligible_reads"], 0);
     assert_eq!(variants[0]["support_topology"]["forward_reads"], 1);
     assert_eq!(variants[0]["support_topology"]["reverse_reads"], 0);
-    assert_eq!(
-        variants[0]["support_topology"]["eligible_forward_reads"],
-        0
-    );
-    assert_eq!(
-        variants[0]["support_topology"]["eligible_reverse_reads"],
-        0
-    );
+    assert_eq!(variants[0]["support_topology"]["eligible_forward_reads"], 0);
+    assert_eq!(variants[0]["support_topology"]["eligible_reverse_reads"], 0);
     let support = variants[0]["support"]
         .as_array()
         .ok_or("support must be an array")?;
