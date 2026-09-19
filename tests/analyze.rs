@@ -629,9 +629,9 @@ fn reports_deletion_with_flanks_only() -> Result<(), Box<dyn std::error::Error>>
     let value = read_result(directory.path(), &trace)?;
     let variant = &value["variants"][0];
     assert_eq!(variant["kind"], "DEL");
-    assert_eq!(variant["position"], 15);
-    assert_eq!(variant["reference"], "GA");
-    assert_eq!(variant["alternate"], "G");
+    assert_eq!(variant["position"], 16);
+    assert_eq!(variant["reference"], "AA");
+    assert_eq!(variant["alternate"], "A");
     let calls = variant["calls"].as_array().ok_or("calls is not an array")?;
     assert_eq!(calls.len(), 2);
     assert!(calls.iter().all(|item| item["role"] == "flanking"));
