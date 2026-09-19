@@ -176,7 +176,8 @@
         },
         "ploc_vendor_length_mismatches": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 2
         },
         "clipped_channel_samples": {
           "type": "integer",
