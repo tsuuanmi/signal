@@ -289,13 +289,7 @@ mod tests {
     #[test]
     fn circular_insertion_preserves_observed_seam_anchor() -> Result<()> {
         let reference = reference("AACAA", ReferenceTopology::Circular);
-        let variant = insertion(
-            &reference,
-            Some(4),
-            Some(0),
-            "A".into(),
-            inserted_calls(),
-        )?;
+        let variant = insertion(&reference, Some(4), Some(0), "A".into(), inserted_calls())?;
         assert_eq!(variant.position_1based, 5);
         assert_eq!(variant.reference, "A");
         assert_eq!(variant.alternate, "AA");
