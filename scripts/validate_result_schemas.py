@@ -105,6 +105,8 @@ def rejected_analysis_shapes(
     invalid_integrity_ratio["signal_quality"]["integrity"][
         "maximum_to_median_event_signal_ratio"
     ] = 0.5
+    excessive_vendor_mismatches = copy.deepcopy(example)
+    excessive_vendor_mismatches["warnings"]["ploc_vendor_length_mismatches"] = 3
 
     return [
         ("SNV with no calls", document("SNV", [])),
@@ -122,6 +124,7 @@ def rejected_analysis_shapes(
         ("analysis using old schema version", old_schema),
         ("analysis without trace integrity", missing_integrity),
         ("analysis with invalid event-signal ratio", invalid_integrity_ratio),
+        ("analysis with more than two vendor length mismatches", excessive_vendor_mismatches),
     ]
 
 
@@ -147,6 +150,8 @@ def rejected_basecall_shapes(
     invalid_single_ploc_spacing = copy.deepcopy(example)
     integrity = invalid_single_ploc_spacing["signal_quality"]["integrity"]
     integrity["ploc_count"] = 1
+    excessive_vendor_mismatches = copy.deepcopy(example)
+    excessive_vendor_mismatches["warnings"]["ploc_vendor_length_mismatches"] = 3
 
     return [
         ("basecall primary with unsupported symbol", invalid_primary),
@@ -158,6 +163,7 @@ def rejected_basecall_shapes(
         ("basecall using old schema version", old_schema),
         ("basecall without trace integrity", missing_integrity),
         ("single-PLOC basecall carrying spacing summary", invalid_single_ploc_spacing),
+        ("basecall with more than two vendor length mismatches", excessive_vendor_mismatches),
     ]
 
 
