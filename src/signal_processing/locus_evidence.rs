@@ -114,7 +114,9 @@ fn validate_evidence(evidence: &LocusEvidence, context_width: usize) -> Result<(
             .zip(evidence.channel_baselines)
             .zip(evidence.corrected_amplitudes)
             .all(|((&height, baseline), corrected)| {
-                corrected == statistics::corrected_amplitude(height, baseline)
+                corrected
+                    .total_cmp(&statistics::corrected_amplitude(height, baseline))
+                    .is_eq()
             });
     let total = evidence.corrected_amplitudes.iter().sum::<f64>();
     let valid_profile = match (total > 0.0, evidence.profile) {
@@ -123,7 +125,7 @@ fn validate_evidence(evidence: &LocusEvidence, context_width: usize) -> Result<(
             .weights
             .iter()
             .zip(evidence.corrected_amplitudes)
-            .all(|(&weight, amplitude)| weight == amplitude / total),
+            .all(|(&weight, amplitude)| weight.total_cmp(&(amplitude / total)).is_eq()),
         _ => false,
     };
     if valid_coordinates && valid_metrics && valid_profile {
@@ -178,8 +180,9 @@ fn select_event_position(
             })
             .sum::<f64>();
         let replace = best.is_none_or(|(best_position, best_total)| {
-            total > best_total
-                || (total == best_total
+            let evidence_order = total.total_cmp(&best_total);
+            evidence_order.is_gt()
+                || (evidence_order.is_eq()
                     && (position.abs_diff(ploc), position)
                         < (best_position.abs_diff(ploc), best_position))
         });
