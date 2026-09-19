@@ -33,6 +33,9 @@ pub(super) fn for_call(
     });
 
     Ok(CallSignalEvidence {
+        event_ploc_distance: locus.event_ploc_distance,
+        minimum_adjacent_ploc_spacing: locus.minimum_adjacent_ploc_spacing,
+        maximum_adjacent_ploc_spacing: locus.maximum_adjacent_ploc_spacing,
         corrected_amplitudes: orientation.reference_signal_values(locus.corrected_amplitudes),
         snrs: orientation.reference_signal_values(locus.snrs),
         profile,
