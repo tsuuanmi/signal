@@ -16,6 +16,18 @@ impl EvidenceProfile {
             weights: amplitudes.map(|amplitude| amplitude / total),
         })
     }
+
+    /// Complements A/C/G/T evidence while preserving its total mass.
+    pub(crate) const fn complemented(self) -> Self {
+        Self {
+            weights: [
+                self.weights[3],
+                self.weights[2],
+                self.weights[1],
+                self.weights[0],
+            ],
+        }
+    }
 }
 
 /// Immutable signal evidence at one PLOC-defined locus.
@@ -53,6 +65,14 @@ mod tests {
             panic!("positive signal should produce a profile");
         };
         assert_eq!(profile.weights, [0.0, 2.0 / 7.0, 5.0 / 7.0, 0.0]);
+    }
+
+    #[test]
+    fn complements_channel_weights() {
+        let profile = EvidenceProfile {
+            weights: [0.1, 0.2, 0.3, 0.4],
+        };
+        assert_eq!(profile.complemented().weights, [0.4, 0.3, 0.2, 0.1]);
     }
 
     #[test]
