@@ -29,11 +29,7 @@ pub(crate) fn align_best(
     let forward_query = qc.retained_sequence.clone();
     let reverse_query = reverse_complement(&forward_query);
     let forward_profiles = retained_profiles(qc, signal)?;
-    let reverse_profiles = forward_profiles
-        .iter()
-        .rev()
-        .map(|profile| profile.map(EvidenceProfile::complemented))
-        .collect::<Vec<_>>();
+    let reverse_profiles = reverse_profiles(&forward_profiles);
     let forward_mapping = (qc.trim_start_0based..qc.trim_end_0based_exclusive).collect();
     let reverse_mapping = (qc.trim_start_0based..qc.trim_end_0based_exclusive)
         .rev()
@@ -158,6 +154,14 @@ fn retained_profiles(
     Ok(profiles)
 }
 
+fn reverse_profiles(profiles: &[Option<EvidenceProfile>]) -> Vec<Option<EvidenceProfile>> {
+    profiles
+        .iter()
+        .rev()
+        .map(|profile| profile.map(EvidenceProfile::complemented))
+        .collect()
+}
+
 fn compare(left: &RawAlignment, right: &RawAlignment) -> Ordering {
     left.score.cmp(&right.score)
 }
@@ -200,5 +204,60 @@ fn segments(alignment: &RawAlignment, reference: &Reference) -> (Vec<ReferenceSe
                 )
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::model::alignment::AlignmentMetrics;
+
+    use super::*;
+
+    fn raw(score: i64, exact_matches: usize, mismatches: usize, gap_opens: usize) -> RawAlignment {
+        RawAlignment {
+            score,
+            start_reference: 0,
+            end_reference: 1,
+            columns: Vec::new(),
+            metrics: AlignmentMetrics {
+                exact_matches,
+                mismatches,
+                gap_opens,
+                callable_columns: exact_matches + mismatches,
+                callable_identity: 0.0,
+                unresolved_query_bases: 0,
+            },
+        }
+    }
+
+    #[test]
+    fn reverse_profiles_reverse_order_and_complement_channels() {
+        let profiles = vec![
+            Some(EvidenceProfile {
+                weights: [1.0, 0.0, 0.0, 0.0],
+            }),
+            None,
+            Some(EvidenceProfile {
+                weights: [0.0, 1.0, 0.0, 0.0],
+            }),
+        ];
+        let reversed = reverse_profiles(&profiles);
+        assert_eq!(
+            reversed[0].map(|profile| profile.weights),
+            Some([0.0, 0.0, 1.0, 0.0])
+        );
+        assert!(reversed[1].is_none());
+        assert_eq!(
+            reversed[2].map(|profile| profile.weights),
+            Some([0.0, 0.0, 0.0, 1.0])
+        );
+    }
+
+    #[test]
+    fn orientation_comparison_uses_profile_score_only() {
+        let left = raw(100, 1, 9, 5);
+        let right = raw(100, 10, 0, 0);
+        assert_eq!(compare(&left, &right), Ordering::Equal);
+        assert_eq!(compare(&raw(101, 0, 10, 10), &right), Ordering::Greater);
     }
 }
