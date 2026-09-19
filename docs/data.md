@@ -53,8 +53,8 @@ The wrapper performs a clean selected rerun:
    target;
 4. build the release binary unless `--no-build` is supplied, then require a
    regular binary;
-5. destructively remove only `results/<selected-sample>/` directories and logs
-   matching selected trace stems/sample identities;
+5. destructively remove only `results/<selected-sample>/` directories and the
+   matching `logs/<selected-sample>.sample.log` files;
 6. run each selected trace through the one-file CLI and atomically place each new
    result without overwrite, synchronizing both the result directory and every
    parent that gained a newly created directory entry.
