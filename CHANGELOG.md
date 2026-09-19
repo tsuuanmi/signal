@@ -24,6 +24,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Local validation audit now publishes hash-bound `signal.validation_audit/v1` read/locus/case review strata from completed corpus, research tables, and SHA-bound validation-log metrics. Corpus-relative low-identity/high-noise/aggressive-trim/short-coverage flags require sufficiently populated amplicon-direction strata; mixed loci retain retained-read edge/orientation context. Audit flags remain observational and do not alter truth, holdout assignment, eligibility, or production thresholds.
+
 - Local validation research now streams completed corpora into hash-bound `signal.validation_research/v1` datasets with joined locus/observation CSV tables and exact descriptive nearest-rank profile-geometry percentiles, while deliberately performing no threshold selection or holdout tuning.
 
 - Local validation research now has manifest-driven corpus orchestration that SHA-256 binds each trace to exactly one validation case, enforces source-group holdout consistency, preserves truth/grouping metadata outside the Rust core, validates `signal.validation_locus/v2` provenance, and stages all selected cases before no-overwrite publication under ignored `validation-results/`.

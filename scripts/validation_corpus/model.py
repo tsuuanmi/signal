@@ -10,6 +10,7 @@ MANIFEST_SCHEMA_VERSION = "signal.validation_manifest/v1"
 CORPUS_SCHEMA_VERSION = "signal.validation_corpus/v1"
 MEASUREMENT_SCHEMA_VERSION = "signal.validation_locus/v2"
 RESEARCH_SCHEMA_VERSION = "signal.validation_research/v1"
+AUDIT_SCHEMA_VERSION = "signal.validation_audit/v1"
 
 MANIFEST_COLUMNS = (
     "validation_case_id",

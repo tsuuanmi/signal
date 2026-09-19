@@ -51,3 +51,4 @@
 | [0047](0047-canonical-right-aligned-mtdna-gaps.md) | Canonical right-aligned mtDNA gap placement | Accepted |
 | [0048](0048-validation-corpus-orchestration.md) | Provenance-first local validation corpus orchestration | Accepted |
 | [0049](0049-validation-research-dataset.md) | Separate descriptive validation datasets from threshold selection | Accepted |
+| [0050](0050-validation-audit-strata.md) | Keep validation audit strata observational and separate from truth | Accepted |
