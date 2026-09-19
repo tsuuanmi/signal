@@ -11,7 +11,7 @@ no-overwrite publication.
   focused builders.
 - Share deterministic JSON serialization across
   `signal.analysis/v7`, `signal.basecalls/v2`, and
-  `signal.sample_evidence/v6`.
+  `signal.sample_evidence/v7`.
 - Keep analysis projection, basecall projection, sample projection, shared
   trace-integrity/signal projection, variant projection, and publication in
   separate focused modules.
@@ -25,8 +25,8 @@ calling, sample aggregation, or operational logging.
 
 - `build_analysis(completed)`: projects one `ReadObservation` to analysis v7.
 - `build_basecall(completed)`: projects reference-free read stages to basecalls
-  v1.
-- `build_sample(completed)`: projects `SampleEvidence` to sample-evidence v6.
+  v2.
+- `build_sample(completed)`: projects `SampleEvidence` to sample-evidence v7.
 - `serialize(result) -> Result<Vec<u8>>`: deterministic pretty JSON plus one
   trailing newline.
 - `publish(path, bytes) -> Result<()>`: atomic no-overwrite publication.
