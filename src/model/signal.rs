@@ -27,10 +27,6 @@ pub struct NoisyRegion {
 /// Complete observation-only signal analysis.
 #[derive(Debug, Clone)]
 pub struct SignalAnalysis {
-    #[allow(
-        dead_code,
-        reason = "retained for upcoming evidence-aware alignment and mixed-signal stages"
-    )]
     pub(crate) loci: Vec<LocusEvidence>,
     pub(crate) windows: Vec<SignalWindow>,
     pub(crate) noisy_regions: Vec<NoisyRegion>,
