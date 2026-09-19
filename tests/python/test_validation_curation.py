@@ -181,12 +181,15 @@ class ValidationCurationTests(unittest.TestCase):
         ) as source:
             rows = list(csv.DictReader(source))
         self.assertEqual(len(rows), 4)
-        self.assertEqual([row["item_type"] for row in rows], [
-            "mixed_locus",
-            "mixed_locus",
-            "mixed_locus",
-            "read",
-        ])
+        self.assertEqual(
+            [row["item_type"] for row in rows],
+            [
+                "mixed_locus",
+                "mixed_locus",
+                "mixed_locus",
+                "read",
+            ],
+        )
         self.assertEqual([row["position_1based"] for row in rows[:2]], ["253", "253"])
         self.assertEqual(rows[0]["recurrence_cases"], "2")
         self.assertIn("recurrent_mixed_locus", rows[0]["review_reasons"])
