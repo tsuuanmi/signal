@@ -73,7 +73,7 @@ input behavior to `signal analyze`.
 
 ## Analysis output privacy
 
-Compact analysis v6 omits the trace filename, full called sequences, individual rolling
+Compact analysis v7 omits the trace filename, full called sequences, individual rolling
 windows, gapped alignment rows, full per-channel peaks, and vendor data. It keeps
 input/reference/configuration hashes, reference identity, read/trim and merged
 noisy-region summaries, normalized alleles, concise call mappings, and supporting
@@ -86,15 +86,15 @@ payloads but still follow the same policy; `logs/` is ignored.
 
 ## Sample evidence output privacy
 
-`signal.sample_evidence/v5` intentionally contains the sample identifier plus each
+`signal.sample_evidence/v6` intentionally contains the sample identifier plus each
 contributing AB1 basename for reviewer traceability, along with input SHA-256,
-trace-integrity and alignment/coverage summaries, pairwise overlap/admission evidence, sparse differential loci,
+trace-integrity and alignment summaries, run-length total/forward/reverse coverage topology, pairwise overlap/admission evidence, sparse differential loci,
 normalized variants, and concise call mappings. Filenames, hashes, and biological differences can be
 identifying, so sample-evidence JSON follows the same approval, storage, retention,
 and redistribution policy as its AB1 sources.
 
 Repository examples MUST use synthetic sample/read names and synthetic input hashes.
-Do not commit a local sample result merely because v4 is compact. Real local outputs
+Do not commit a local sample result merely because v6 is compact. Real local outputs
 may inform exploratory development, but release/compatibility evidence requires the
 approval record described below.
 
@@ -102,7 +102,7 @@ approval record described below.
 
 `results/<trace-stem>.basecalls.json` contains complete primary, ambiguity, and
 retained sequence strings. It is therefore more directly identifying than compact
-analysis v6 and follows the same approval, storage, retention, and redistribution
+analysis v7 and follows the same approval, storage, retention, and redistribution
 policy as its source AB1. Its operational log records counts and stage metrics but
 never sequence strings or JSON bodies.
 
