@@ -61,20 +61,22 @@ mod tests {
     }
 
     #[test]
-    fn separates_replicated_mixture_from_between_read_disagreement() {
+    fn separates_replicated_mixture_from_between_read_disagreement() -> Result<(), &'static str> {
         let mixed = profile([0.5, 0.0, 0.5, 0.0]);
-        let replicated = heterogeneity(Some(mixed), impurity(mixed) * 2.0, 2).unwrap();
+        let replicated = heterogeneity(Some(mixed), impurity(mixed) * 2.0, 2)
+            .ok_or("replicated mixture geometry is missing")?;
         assert_eq!(replicated.within_profile_impurity, 0.5);
         assert_eq!(replicated.between_profile_dispersion, 0.0);
         assert_eq!(replicated.total_profile_heterogeneity, 0.5);
 
         let pure_a = profile([1.0, 0.0, 0.0, 0.0]);
         let pure_g = profile([0.0, 0.0, 1.0, 0.0]);
-        let disagreement =
-            heterogeneity(Some(mixed), impurity(pure_a) + impurity(pure_g), 2).unwrap();
+        let disagreement = heterogeneity(Some(mixed), impurity(pure_a) + impurity(pure_g), 2)
+            .ok_or("inter-read disagreement geometry is missing")?;
         assert_eq!(disagreement.within_profile_impurity, 0.0);
         assert_eq!(disagreement.between_profile_dispersion, 0.5);
         assert_eq!(disagreement.total_profile_heterogeneity, 0.5);
+        Ok(())
     }
 
     #[test]
