@@ -49,6 +49,7 @@ pub(crate) fn aggregate(
         .map(|read| SampleReadEvidence {
             input_name: read.input_name.clone(),
             input_sha256: read.input_sha256.clone(),
+            integrity: read.signal.integrity.clone(),
             alignment: SampleReadAlignmentEvidence {
                 orientation: read.alignment.orientation,
                 callable_bases: read.alignment.metrics.callable_columns,
@@ -171,6 +172,16 @@ mod tests {
                 primary_sequence: "G".repeat(call_count),
             },
             signal: SignalAnalysis {
+                integrity: crate::model::signal::TraceIntegrity {
+                    ploc_count: call_count,
+                    vendor_primary_count: None,
+                    vendor_quality_count: None,
+                    minimum_ploc_spacing: None,
+                    median_ploc_spacing: None,
+                    maximum_ploc_spacing: None,
+                    clipped_channel_samples: 0,
+                    maximum_to_median_event_signal_ratio: None,
+                },
                 loci: Vec::new(),
                 windows: Vec::new(),
                 noisy_regions: Vec::new(),
