@@ -24,6 +24,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Local validation research now has manifest-driven corpus orchestration that SHA-256 binds each trace to exactly one validation case, enforces source-group holdout consistency, preserves truth/grouping metadata outside the Rust core, validates `signal.validation_locus/v2` provenance, and stages all selected cases before no-overwrite publication under ignored `validation-results/`.
+
 - Local `signal-validation` research tooling now exports deterministic all-covered per-locus `signal.validation_locus/v2` JSONL under ignored `validation-results/`; v2 replaces research-only v1 and adds strict per-read call/PLOC/primary-peak/signal-event diagnostics with reference-oriented channel evidence so unexplained basecall/profile disagreement can be investigated before threshold fitting.
 - Validation event-placement research now explicitly compares primary basecall event selection with total-corrected-signal event refinement without changing either scientific rule or introducing artifact/heteroplasmy verdicts.
 - Validation research now specifies corpus strata, truth/provenance hierarchy, grouped anti-leakage development/holdout design, LoB/LoD-style threshold research, point-mixture versus length-mixture separation, and explicit promotion gates before any profile-geometry threshold can enter production.
