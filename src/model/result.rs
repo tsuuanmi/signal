@@ -1,4 +1,4 @@
-//! Compact serializable `signal.analysis/v6` contract.
+//! Compact serializable `signal.analysis/v7` contract.
 
 use serde::Serialize;
 
