@@ -273,7 +273,10 @@ Each removed candidate increments `excluded_variant_candidates` once, even when
 it fails more than one eligibility condition. The pure variant stage also returns
 a concise exclusion diagnostic containing kind, contig, normalized position when
 available, and all failed rules. Pipeline orchestration writes one WARN record per
-diagnostic without reference/alternate alleles.
+diagnostic without reference/alternate alleles. Sample aggregation logs aggregate
+counts of differential-locus observations and variant-associated calls that
+retain a basecall-independent profile; those operational counts do not alter the
+scientific result.
 
 ### Substep 6.4 — Ordering
 
