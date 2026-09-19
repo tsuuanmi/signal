@@ -4,7 +4,7 @@ mod aggregate;
 mod call_evidence;
 mod contribution;
 mod coverage;
-mod differences;
+mod loci;
 mod nucleotide_support;
 mod overlap;
 mod profile_geometry;
