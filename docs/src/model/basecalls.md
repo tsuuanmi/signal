@@ -2,61 +2,18 @@
 
 ## Purpose
 
-Defines the signal-derived call records and their peak evidence.
+Defines signal-derived base calls and peak evidence.
 
 ## Responsibilities
 
-- Represent per-channel peaks, optional primary-event evidence, the
-  primary/ambiguity calls, qualifying channels, and vendor-agreement state needed
-  by downstream analysis.
-- Represent the ordered call list and the primary sequence consumed by quality
-  control and alignment; ambiguity remains available on each `BaseCall` only.
+- Retain selected per-channel peaks, optional primary-event evidence, primary/ambiguity calls, qualifying channels, and vendor-agreement state.
+- Retain one shared-position `PrimaryPeakEvidence` containing raw analyzed A/C/G/T channel heights at the uniquely strongest primary-event coordinate.
 
-## Non-responsibilities
+## Evidence distinction
 
-No peak detection, ratio thresholding, or call orchestration.
+Selected per-channel peaks are the strongest events for each channel within the call window and may occur at different sample positions. `PrimaryPeakEvidence.channel_heights` samples all four channels at one shared primary-event coordinate.
 
-## Key types and functions
-
-- `PeakSource`: `LocalMaximum` or `PlocFallback`.
-- `ChannelPeak`: base, height, selected 0-based sample position, and source.
-- `PrimaryPeakEvidence`: the selected sample position of a uniquely strongest
-  primary event plus raw analyzed A/C/G/T channel values at that shared sample,
-  ordered by `Nucleotide::ALL`.
-- `BaseCall`: original index, PLOC position, sample-window bounds, selected
-  per-channel peaks, optional primary-event evidence, primary/ambiguity calls,
-  qualifying channels, and vendor agreement.
-- `BaseCalls`: ordered calls plus `primary_sequence`, with `len()` and
-  `is_empty()`; aggregate ambiguity text is not duplicated.
-
-## Invariants and errors
-
-- Every call retains one non-empty 0-based half-open sample window containing
-  its PLOC and all four selected peak positions.
-- The call vector and primary sequence have equal lengths; each call carries its
-  own ambiguity symbol.
-- When present, `primary_peak_evidence.position_0based` equals the selected
-  position of the unique primary channel and lies within the call window.
-- `BaseCalls::len()` equals the number of call loci.
-
-## Dependencies
-
-- `model::nucleotide` for `Nucleotide`.
-- `serde` only for serializing the `PeakSource` enum in compact reports.
-
-## Biological semantics
-
-Each call records all four selected channel peaks and every channel that reached
-the ambiguity threshold, capturing clean, mixed, and unresolved positions.
-Selected per-channel peaks and primary-event channel values represent different
-observations: each selected peak is the strongest event for one channel in the
-call window, while primary-event values are all four channels sampled at one
-shared primary-event coordinate. The vendor agreement flag allows quality
-applicability checks without influencing the signal-derived result.
-
-## Tests
-
-No dedicated unit tests; behavior is exercised through `basecalling::call`.
+Reviewer-facing variant output uses the latter because it answers the direct question: what were A/C/G/T signals at the call that produced this base? Peak positions, sources, and broader per-window objects remain internal.
 
 ## Status
 
