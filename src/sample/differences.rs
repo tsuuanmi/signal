@@ -6,7 +6,7 @@ use crate::error::{Error, Result};
 use crate::model::alignment::AlignmentColumn;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
-    LocusDifferenceEvidence, LocusDifferenceObservation, LocusState,
+    LocusDifferenceEvidence, LocusDifferenceObservation, LocusState, LocusSupportTopology,
 };
 
 use super::profile;
@@ -82,14 +82,66 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
         }
     }
 
-    Ok(differences
+    differences
         .into_iter()
-        .map(|(position_1based, built)| LocusDifferenceEvidence {
-            position_1based,
-            reference_base: built.reference_base,
-            observations: built.observations,
+        .map(|(position_1based, built)| {
+            let support_topology = support_topology(&built.observations, reads)?;
+            Ok(LocusDifferenceEvidence {
+                position_1based,
+                reference_base: built.reference_base,
+                support_topology,
+                observations: built.observations,
+            })
         })
-        .collect())
+        .collect()
+}
+
+fn support_topology(
+    observations: &[LocusDifferenceObservation],
+    reads: &[&ReadObservation],
+) -> Result<LocusSupportTopology> {
+    let mut topology = LocusSupportTopology {
+        reads: observations.len(),
+        forward_reads: 0,
+        reverse_reads: 0,
+        reference_reads: 0,
+        alternate_reads: 0,
+        unresolved_reads: 0,
+        deletion_reads: 0,
+    };
+
+    for observation in observations {
+        let read = reads.get(observation.read_index).ok_or_else(|| {
+            Error::Sample(format!(
+                "locus observation references missing read {}",
+                observation.read_index
+            ))
+        })?;
+        match read.alignment.orientation {
+            crate::model::alignment::Orientation::Forward => topology.forward_reads += 1,
+            crate::model::alignment::Orientation::Reverse => topology.reverse_reads += 1,
+        }
+        match observation.state {
+            LocusState::Reference => topology.reference_reads += 1,
+            LocusState::Alternate => topology.alternate_reads += 1,
+            LocusState::Unresolved => topology.unresolved_reads += 1,
+            LocusState::Deletion => topology.deletion_reads += 1,
+        }
+    }
+
+    if topology.reads != topology.forward_reads + topology.reverse_reads
+        || topology.reads
+            != topology.reference_reads
+                + topology.alternate_reads
+                + topology.unresolved_reads
+                + topology.deletion_reads
+    {
+        return Err(Error::Sample(
+            "locus support topology counts are inconsistent".into(),
+        ));
+    }
+
+    Ok(topology)
 }
 
 fn observation(

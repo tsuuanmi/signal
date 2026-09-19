@@ -89,7 +89,7 @@ Before consensus, remaining research includes:
 ```text
 basecall-independent local nucleotide evidence # promoted internally via ADR-0034
 artifact/quality-aware local contribution
-factorized support topology          # read/eligibility/orientation dimensions promoted via ADR-0033
+factorized support topology          # variant dimensions via ADR-0033; differential-locus state/orientation via ADR-0035
 optional declared assay metadata QC
 ```
 
@@ -110,7 +110,7 @@ Add:
 manifest/sample identity
 read admission
 local coverage denominator          # promoted via ADR-0032
-forward/reverse support topology     # promoted via ADR-0032
+forward/reverse support topology     # coverage via ADR-0032; differential loci via ADR-0035
 coverage map                         # promoted via ADR-0032
 evidence-weighted consensus         # profile-retention foundation promoted via ADR-0034; weighting policy remains research
 sample-level candidate variants     # support topology foundation promoted via ADR-0033
