@@ -32,9 +32,8 @@ The immutable queue contains exactly:
 1. every mixed reference/alternate locus from `locus-audit.csv`;
 2. every read with non-empty `audit_flags` from `read-audit.csv`.
 
-No case-only review items are duplicated because case context is already represented by
-the case identifier plus mixed-locus and edge-discordance counts copied into each queue
-row.
+No case-only review items are duplicated. Case-level summaries remain in the source audit
+and the queue carries the validation case identifier needed to join them during review.
 
 Mixed loci record recurrence across distinct validation cases. Their review reasons are
 descriptive only:
@@ -43,9 +42,7 @@ descriptive only:
 - `recurrent_mixed_locus` when the same reference position appears in more than one
   case;
 - `edge_discordance` when already present in the audit;
-- `noisy_alternate` when at least one alternate observation is in a noisy region;
-- `single_orientation_alternate` when alternate evidence is not observed from both
-  selected orientations.
+- `noisy_alternate` when at least one alternate observation is in a noisy region.
 
 Read review reasons are the existing audit flags unchanged.
 

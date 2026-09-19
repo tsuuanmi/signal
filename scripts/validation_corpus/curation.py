@@ -7,7 +7,6 @@ import json
 import os
 import shutil
 import tempfile
-from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -61,8 +60,6 @@ QUEUE_COLUMNS = (
     "review_reasons",
     "audit_flags",
     "recurrence_cases",
-    "case_mixed_loci",
-    "case_edge_discordance_loci",
     "alternate_observations",
     "alternate_noisy_observations",
     "alternate_near_read_edge_observations",
@@ -109,9 +106,7 @@ def load_csv(
             raise ValueError(f"{path}: unexpected columns")
         rows = list(reader)
     if len(rows) != expected_rows:
-        raise ValueError(
-            f"{path}: expected {expected_rows} rows, found {len(rows)}"
-        )
+        raise ValueError(f"{path}: expected {expected_rows} rows, found {len(rows)}")
     return rows
 
 
@@ -135,7 +130,7 @@ def boolean(value: str, label: str) -> bool:
 
 def validate_audit_source(
     audit_dir: Path,
-) -> tuple[dict[str, Any], list[dict[str, str]], list[dict[str, str]], list[dict[str, str]]]:
+) -> tuple[dict[str, Any], list[dict[str, str]], list[dict[str, str]]]:
     index_path = audit_dir / "index.json"
     if not index_path.is_file():
         raise ValueError(f"audit index is not a regular file: {index_path}")
@@ -143,105 +138,83 @@ def validate_audit_source(
     strict_keys(index, AUDIT_INDEX_FIELDS, "audit index")
     if index["schema_version"] != AUDIT_SCHEMA_VERSION:
         raise ValueError(f"unsupported audit schema: {index['schema_version']!r}")
-    if index["read_audit_file"] != "read-audit.csv":
-        raise ValueError("audit read file must be read-audit.csv")
-    if index["locus_audit_file"] != "locus-audit.csv":
-        raise ValueError("audit locus file must be locus-audit.csv")
-    if index["case_audit_file"] != "case-audit.csv":
-        raise ValueError("audit case file must be case-audit.csv")
-    if index["read_audit_columns"] != list(READ_AUDIT_COLUMNS):
-        raise ValueError("audit read columns differ from the current contract")
-    if index["locus_audit_columns"] != list(LOCUS_AUDIT_COLUMNS):
-        raise ValueError("audit locus columns differ from the current contract")
-    if index["case_audit_columns"] != list(CASE_AUDIT_COLUMNS):
-        raise ValueError("audit case columns differ from the current contract")
 
-    read_path = audit_dir / "read-audit.csv"
-    locus_path = audit_dir / "locus-audit.csv"
-    case_path = audit_dir / "case-audit.csv"
-    for path, field in (
-        (read_path, "read_audit_sha256"),
-        (locus_path, "locus_audit_sha256"),
-        (case_path, "case_audit_sha256"),
-    ):
-        if index[field] != file_sha256(path):
-            raise ValueError(f"{path.name} SHA-256 mismatch")
-
-    reads = load_csv(read_path, READ_AUDIT_COLUMNS, int(index["read_audit_rows"]))
-    loci = load_csv(
-        locus_path,
-        LOCUS_AUDIT_COLUMNS,
-        int(index["locus_audit_rows"]),
+    specs = (
+        (
+            "read-audit.csv",
+            READ_AUDIT_COLUMNS,
+            "read_audit_file",
+            "read_audit_sha256",
+            "read_audit_rows",
+            "read_audit_columns",
+        ),
+        (
+            "locus-audit.csv",
+            LOCUS_AUDIT_COLUMNS,
+            "locus_audit_file",
+            "locus_audit_sha256",
+            "locus_audit_rows",
+            "locus_audit_columns",
+        ),
+        (
+            "case-audit.csv",
+            CASE_AUDIT_COLUMNS,
+            "case_audit_file",
+            "case_audit_sha256",
+            "case_audit_rows",
+            "case_audit_columns",
+        ),
     )
-    cases = load_csv(case_path, CASE_AUDIT_COLUMNS, int(index["case_audit_rows"]))
-    return index, reads, loci, cases
+    loaded: dict[str, list[dict[str, str]]] = {}
+    for filename, columns, file_key, sha_key, rows_key, columns_key in specs:
+        if index[file_key] != filename:
+            raise ValueError(f"audit {file_key} must be {filename}")
+        if index[columns_key] != list(columns):
+            raise ValueError(f"audit {columns_key} differ from the current contract")
+        path = audit_dir / filename
+        if index[sha_key] != file_sha256(path):
+            raise ValueError(f"{filename} SHA-256 mismatch")
+        if filename != "case-audit.csv":
+            loaded[filename] = load_csv(path, columns, int(index[rows_key]))
+    return index, loaded["read-audit.csv"], loaded["locus-audit.csv"]
 
 
-def case_context(cases: list[dict[str, str]]) -> dict[str, tuple[int, int]]:
-    result: dict[str, tuple[int, int]] = {}
-    for line, row in enumerate(cases, 2):
-        case_id = row["validation_case_id"]
-        if not case_id or case_id in result:
-            raise ValueError(f"case-audit.csv:{line}: invalid or duplicate case ID")
-        result[case_id] = (
-            nonnegative_int(row["mixed_loci"], f"case-audit.csv:{line}.mixed_loci"),
-            nonnegative_int(
-                row["edge_discordance_loci"],
-                f"case-audit.csv:{line}.edge_discordance_loci",
-            ),
-        )
-    return result
-
-
-def locus_recurrence(loci: list[dict[str, str]]) -> dict[int, int]:
+def locus_queue_rows(loci: list[dict[str, str]]) -> list[dict[str, Any]]:
     cases_by_position: dict[int, set[str]] = {}
+    parsed: list[tuple[dict[str, str], int]] = []
     seen: set[tuple[str, int]] = set()
-    for line, row in enumerate(loci, 2):
-        case_id = row["validation_case_id"]
-        position = nonnegative_int(
-            row["position_1based"],
-            f"locus-audit.csv:{line}.position_1based",
-        )
-        key = (case_id, position)
-        if not case_id or key in seen:
-            raise ValueError(f"locus-audit.csv:{line}: invalid or duplicate locus")
-        seen.add(key)
-        cases_by_position.setdefault(position, set()).add(case_id)
-    return {position: len(case_ids) for position, case_ids in cases_by_position.items()}
 
-
-def locus_reasons(row: dict[str, str], recurrence: int, label: str) -> str:
-    reasons = ["mixed_locus"]
-    if recurrence > 1:
-        reasons.append("recurrent_mixed_locus")
-    if boolean(row["edge_discordance"], f"{label}.edge_discordance"):
-        reasons.append("edge_discordance")
-    if nonnegative_int(
-        row["alternate_noisy_observations"],
-        f"{label}.alternate_noisy_observations",
-    ):
-        reasons.append("noisy_alternate")
-    if not boolean(
-        row["cross_orientation_alternate"],
-        f"{label}.cross_orientation_alternate",
-    ):
-        reasons.append("single_orientation_alternate")
-    return ";".join(reasons)
-
-
-def locus_queue_rows(
-    loci: list[dict[str, str]],
-    cases: dict[str, tuple[int, int]],
-) -> list[dict[str, Any]]:
-    recurrence = locus_recurrence(loci)
-    rows: list[dict[str, Any]] = []
     for line, row in enumerate(loci, 2):
         label = f"locus-audit.csv:{line}"
         case_id = row["validation_case_id"]
-        if case_id not in cases:
-            raise ValueError(f"{label}: unknown validation case {case_id!r}")
         position = nonnegative_int(row["position_1based"], f"{label}.position_1based")
-        mixed_loci, edge_loci = cases[case_id]
+        key = (case_id, position)
+        if not case_id or key in seen:
+            raise ValueError(f"{label}: invalid or duplicate locus")
+        seen.add(key)
+        cases_by_position.setdefault(position, set()).add(case_id)
+        parsed.append((row, position))
+
+    recurrence = {
+        position: len(case_ids) for position, case_ids in cases_by_position.items()
+    }
+    rows: list[dict[str, Any]] = []
+    for line, (row, position) in enumerate(parsed, 2):
+        label = f"locus-audit.csv:{line}"
+        reasons: list[str] = []
+        if recurrence[position] > 1:
+            reasons.append("recurrent_mixed_locus")
+        if boolean(row["edge_discordance"], f"{label}.edge_discordance"):
+            reasons.append("edge_discordance")
+        if nonnegative_int(
+            row["alternate_noisy_observations"],
+            f"{label}.alternate_noisy_observations",
+        ):
+            reasons.append("noisy_alternate")
+        if not reasons:
+            reasons.append("mixed_locus")
+
+        case_id = row["validation_case_id"]
         rows.append(
             {
                 "review_item_id": f"locus:{case_id}:{position}",
@@ -251,15 +224,9 @@ def locus_queue_rows(
                 "read_sha256": "",
                 "amplicon_id": "",
                 "declared_direction": "",
-                "review_reasons": locus_reasons(
-                    row,
-                    recurrence[position],
-                    label,
-                ),
+                "review_reasons": ";".join(reasons),
                 "audit_flags": row["audit_flags"],
                 "recurrence_cases": recurrence[position],
-                "case_mixed_loci": mixed_loci,
-                "case_edge_discordance_loci": edge_loci,
                 "alternate_observations": nonnegative_int(
                     row["alternate_observations"],
                     f"{label}.alternate_observations",
@@ -282,6 +249,7 @@ def locus_queue_rows(
                 "callable_columns": "",
             }
         )
+
     rows.sort(
         key=lambda row: (
             -int(row["recurrence_cases"]),
@@ -292,10 +260,7 @@ def locus_queue_rows(
     return rows
 
 
-def read_queue_rows(
-    reads: list[dict[str, str]],
-    cases: dict[str, tuple[int, int]],
-) -> list[dict[str, Any]]:
+def read_queue_rows(reads: list[dict[str, str]]) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     seen: set[str] = set()
     for line, row in enumerate(reads, 2):
@@ -305,12 +270,9 @@ def read_queue_rows(
         label = f"read-audit.csv:{line}"
         case_id = row["validation_case_id"]
         read_sha256 = row["read_sha256"]
-        if case_id not in cases:
-            raise ValueError(f"{label}: unknown validation case {case_id!r}")
-        if not read_sha256 or read_sha256 in seen:
-            raise ValueError(f"{label}: invalid or duplicate read SHA-256")
+        if not case_id or not read_sha256 or read_sha256 in seen:
+            raise ValueError(f"{label}: invalid or duplicate flagged read")
         seen.add(read_sha256)
-        mixed_loci, edge_loci = cases[case_id]
         rows.append(
             {
                 "review_item_id": f"read:{read_sha256}",
@@ -323,8 +285,6 @@ def read_queue_rows(
                 "review_reasons": flags,
                 "audit_flags": flags,
                 "recurrence_cases": "",
-                "case_mixed_loci": mixed_loci,
-                "case_edge_discordance_loci": edge_loci,
                 "alternate_observations": "",
                 "alternate_noisy_observations": "",
                 "alternate_near_read_edge_observations": "",
@@ -387,8 +347,8 @@ def queue_index(
     queue_path: Path,
     decisions_path: Path,
     queue_rows: list[dict[str, Any]],
+    locus_count: int,
 ) -> dict[str, Any]:
-    counts = Counter(str(row["item_type"]) for row in queue_rows)
     return {
         "schema_version": CURATION_QUEUE_SCHEMA_VERSION,
         "source_audit_sha256": file_sha256(audit_dir / "index.json"),
@@ -421,7 +381,10 @@ def queue_index(
         "queue_sha256": file_sha256(queue_path),
         "queue_rows": len(queue_rows),
         "queue_columns": list(QUEUE_COLUMNS),
-        "item_counts": dict(sorted(counts.items())),
+        "item_counts": {
+            "mixed_locus": locus_count,
+            "read": len(queue_rows) - locus_count,
+        },
         "decisions_template_file": "curation-decisions-template.csv",
         "decisions_template_sha256": file_sha256(decisions_path),
         "decisions_template_rows": len(queue_rows),
@@ -441,9 +404,9 @@ def publish_curation_queue(audit_dir: Path, output_dir: Path) -> None:
             f"output parent is not a regular directory: {output_dir.parent}"
         )
 
-    audit_index, reads, loci, cases = validate_audit_source(audit_dir)
-    case_map = case_context(cases)
-    queue_rows = locus_queue_rows(loci, case_map) + read_queue_rows(reads, case_map)
+    audit_index, reads, loci = validate_audit_source(audit_dir)
+    locus_rows = locus_queue_rows(loci)
+    queue_rows = locus_rows + read_queue_rows(reads)
     if not queue_rows:
         raise ValueError("audit contains no mixed loci or flagged reads to review")
 
@@ -461,6 +424,7 @@ def publish_curation_queue(audit_dir: Path, output_dir: Path) -> None:
                 queue_path,
                 decisions_path,
                 queue_rows,
+                len(locus_rows),
             ),
         )
         sync_directory(stage)

@@ -42,8 +42,8 @@ validation-results/curation/full-20260919/
 - every mixed reference/alternate locus;
 - every read with at least one audit flag.
 
-Case-only items are not duplicated. Each queue row carries the case identifier plus the
-case mixed-locus and edge-discordance counts needed for context.
+Case-only items are not duplicated. Each queue row carries the validation case identifier
+needed to join the existing case audit when additional case context is useful.
 
 For mixed loci the queue preserves:
 
@@ -63,7 +63,6 @@ mixed_locus
 recurrent_mixed_locus
 edge_discordance
 noisy_alternate
-single_orientation_alternate
 ```
 
 These strings are review context, not truth labels.

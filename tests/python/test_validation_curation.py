@@ -192,6 +192,7 @@ class ValidationCurationTests(unittest.TestCase):
         self.assertIn("recurrent_mixed_locus", rows[0]["review_reasons"])
         self.assertIn("edge_discordance", rows[1]["review_reasons"])
         self.assertIn("noisy_alternate", rows[1]["review_reasons"])
+        self.assertNotIn("single_orientation_alternate", rows[1]["review_reasons"])
         self.assertEqual(rows[-1]["read_sha256"], "1" * 64)
         self.assertEqual(rows[-1]["review_reasons"], "alignment_challenge")
 
