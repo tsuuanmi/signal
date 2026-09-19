@@ -51,7 +51,7 @@ Variants are primary-sequence differences between the read and the reference:
 single-nucleotide substitutions and small insertions/deletions. Linear-left or
 circular-canonical normalization remains algorithmic behavior, but fixed
 classification and normalization labels are not retained on `Variant` or emitted
-in compact v5. Each reported difference keeps a direct mapping back to the
+in compact v6. Each reported difference keeps a direct internal mapping back to the
 original trace calls that support or flank it, so normalized coordinates do not
 lose observed call evidence.
 
