@@ -38,8 +38,8 @@ claim of biological strand independence.
 ## Tests
 
 Unit tests cover tiled forward/reverse reads, overlapping depth, adjacent
-same-depth run merging, origin-spanning circular segments, and rejection of
-overlapping segments within one read.
+same-depth run merging, origin-spanning circular segments, missing mapped
+segments, and rejection of overlapping segments within one read.
 
 ## Status
 
