@@ -99,12 +99,23 @@ pub(crate) fn decode(input: TracebackInput<'_>) -> Result<RawAlignment> {
         }
     }
     reversed.reverse();
-    let gap_opens = gap_open_count(&reversed);
+    let metrics = metrics(&reversed);
+    Ok(RawAlignment {
+        score: input.score,
+        start_reference: column,
+        end_reference,
+        columns: reversed,
+        metrics,
+    })
+}
+
+pub(crate) fn metrics(columns: &[RawColumn]) -> AlignmentMetrics {
+    let gap_opens = gap_open_count(columns);
     let mut exact_matches = 0;
     let mut mismatches = 0;
     let mut callable_columns = 0;
     let mut unresolved_query_bases = 0;
-    for item in &reversed {
+    for item in columns {
         if item.query_base == 'N' {
             unresolved_query_bases += 1;
         }
@@ -122,20 +133,14 @@ pub(crate) fn decode(input: TracebackInput<'_>) -> Result<RawAlignment> {
     } else {
         exact_matches as f64 / callable_columns as f64
     };
-    Ok(RawAlignment {
-        score: input.score,
-        start_reference: column,
-        end_reference,
-        columns: reversed,
-        metrics: AlignmentMetrics {
-            exact_matches,
-            mismatches,
-            gap_opens,
-            callable_columns,
-            callable_identity,
-            unresolved_query_bases,
-        },
-    })
+    AlignmentMetrics {
+        exact_matches,
+        mismatches,
+        gap_opens,
+        callable_columns,
+        callable_identity,
+        unresolved_query_bases,
+    }
 }
 
 fn gap_open_count(columns: &[RawColumn]) -> usize {

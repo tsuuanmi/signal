@@ -210,6 +210,10 @@ fn segments(alignment: &RawAlignment, reference: &Reference) -> (Vec<ReferenceSe
 #[cfg(test)]
 mod tests {
     use crate::model::alignment::AlignmentMetrics;
+    use crate::model::locus_evidence::LocusEvidence;
+    use crate::model::quality::CallQuality;
+    use crate::model::reference::ReferenceTopology;
+    use crate::model::signal::TraceIntegrity;
 
     use super::*;
 
@@ -251,6 +255,126 @@ mod tests {
             reversed[2].map(|profile| profile.weights),
             Some([0.0, 0.0, 0.0, 1.0])
         );
+    }
+
+    fn qc(sequence: &str) -> QualityControlResult {
+        QualityControlResult {
+            per_call: sequence
+                .chars()
+                .enumerate()
+                .map(|(index_0based, _)| CallQuality {
+                    index_0based,
+                    penalty: 0,
+                    relative_quality_score: 60,
+                    vendor_quality_applies: false,
+                })
+                .collect(),
+            trim_start_0based: 0,
+            trim_end_0based_exclusive: sequence.len(),
+            retained_sequence: sequence.into(),
+        }
+    }
+
+    fn signal(sequence: &str) -> SignalAnalysis {
+        let loci = sequence
+            .bytes()
+            .enumerate()
+            .map(|(call_index_0based, base)| {
+                let weights = match base {
+                    b'A' => [1.0, 0.0, 0.0, 0.0],
+                    b'C' => [0.0, 1.0, 0.0, 0.0],
+                    b'G' => [0.0, 0.0, 1.0, 0.0],
+                    b'T' => [0.0, 0.0, 0.0, 1.0],
+                    _ => [0.0; 4],
+                };
+                LocusEvidence {
+                    call_index_0based,
+                    ploc_0based: call_index_0based,
+                    window_start_0based: call_index_0based,
+                    window_end_0based_exclusive: call_index_0based + 1,
+                    context_call_start_0based: call_index_0based,
+                    context_call_end_0based_exclusive: call_index_0based + 1,
+                    context_sample_start_0based: call_index_0based,
+                    context_sample_end_0based_exclusive: call_index_0based + 1,
+                    event_position_0based: call_index_0based,
+                    channel_heights: [0; 4],
+                    channel_baselines: [0.0; 4],
+                    channel_noise_sigmas: [1.0; 4],
+                    corrected_amplitudes: weights,
+                    snrs: weights,
+                    profile: Some(EvidenceProfile { weights }),
+                }
+            })
+            .collect();
+        SignalAnalysis {
+            integrity: TraceIntegrity {
+                ploc_count: sequence.len(),
+                vendor_primary_count: None,
+                vendor_quality_count: None,
+                minimum_ploc_spacing: None,
+                median_ploc_spacing: None,
+                maximum_ploc_spacing: None,
+                clipped_channel_samples: 0,
+                maximum_to_median_event_signal_ratio: None,
+            },
+            loci,
+            windows: Vec::new(),
+            noisy_regions: Vec::new(),
+        }
+    }
+
+    fn config() -> AlignmentConfig {
+        AlignmentConfig {
+            match_score: 3,
+            mismatch_score: -5,
+            ambiguous_score: 0,
+            gap_open_score: -10,
+            gap_extension_score: -4,
+            minimum_callable_bases: 1,
+            minimum_identity: 0.8,
+        }
+    }
+
+    fn reference() -> Reference {
+        Reference {
+            name: "ref".into(),
+            sequence: "GCCAAAAGTT".into(),
+            topology: ReferenceTopology::Linear,
+            sequence_sha256: String::new(),
+        }
+    }
+
+    #[test]
+    fn forward_and_reverse_reads_share_canonical_deletion_coordinate() -> Result<()> {
+        let forward = align_best(
+            &qc("GCCAAAGTT"),
+            &signal("GCCAAAGTT"),
+            &reference(),
+            &config(),
+        )?;
+        let reverse = align_best(
+            &qc("AACTTTGGC"),
+            &signal("AACTTTGGC"),
+            &reference(),
+            &config(),
+        )?;
+
+        assert_eq!(forward.orientation, Orientation::Forward);
+        assert_eq!(reverse.orientation, Orientation::Reverse);
+
+        let forward_deleted = forward
+            .columns
+            .iter()
+            .find(|column| column.query_base == '-')
+            .and_then(|column| column.reference_index_0based);
+        let reverse_deleted = reverse
+            .columns
+            .iter()
+            .find(|column| column.query_base == '-')
+            .and_then(|column| column.reference_index_0based);
+        assert_eq!(forward_deleted, Some(6));
+        assert_eq!(reverse_deleted, forward_deleted);
+        Ok(())
     }
 
     #[test]

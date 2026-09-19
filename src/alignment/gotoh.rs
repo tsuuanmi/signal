@@ -1,5 +1,6 @@
 //! Bounded semi-global Gotoh dynamic programming.
 
+use crate::alignment::canonical;
 use crate::alignment::scoring::{NEGATIVE_INFINITY, State, add, scaled, substitution};
 use crate::alignment::traceback::{RawAlignment, TracebackInput, decode};
 use crate::config::{AlignmentConfig, MAX_ALIGNMENT_CELLS};
@@ -127,7 +128,7 @@ pub(crate) fn align(
         if bounded_best_score.is_some_and(|best| score < best) {
             break;
         }
-        let raw = decode(TracebackInput {
+        let mut raw = decode(TracebackInput {
             query: query_bytes,
             reference: reference_bytes,
             trace: &trace,
@@ -136,6 +137,7 @@ pub(crate) fn align(
             state,
             score,
         })?;
+        canonical::right_align(&mut raw, profiles, config, modulo_length)?;
         if let Some(length) = modulo_length
             && raw.end_reference - raw.start_reference > length
         {
@@ -270,6 +272,51 @@ mod tests {
     #[test]
     fn rejects_query_profile_length_mismatch() {
         assert!(align("AC", &[None], "AC", &config(), None).is_err());
+    }
+
+    #[test]
+    fn canonicalizes_homopolymer_deletion_to_rightmost_reference_base() -> Result<()> {
+        let query = "GCCAAAGTT";
+        let alignments = align(query, &profiles(query), "GCCAAAAGTT", &config(), None)?;
+        assert_eq!(alignments.len(), 1);
+        let deletion = alignments[0]
+            .columns
+            .iter()
+            .find(|column| column.query_base == '-')
+            .ok_or_else(|| Error::Alignment("expected canonical deletion".into()))?;
+        assert_eq!(deletion.reference_index, Some(6));
+        assert_eq!(deletion.reference_base, 'A');
+        Ok(())
+    }
+
+    #[test]
+    fn canonicalizes_homopolymer_insertion_to_rightmost_boundary() -> Result<()> {
+        let query = "CAAAAAG";
+        let alignments = align(query, &profiles(query), "CAAAAG", &config(), None)?;
+        assert_eq!(alignments.len(), 1);
+        let insertion_index = alignments[0]
+            .columns
+            .iter()
+            .position(|column| column.reference_base == '-')
+            .ok_or_else(|| Error::Alignment("expected canonical insertion".into()))?;
+        assert_eq!(
+            alignments[0].columns[insertion_index - 1].reference_index,
+            Some(4)
+        );
+        assert_eq!(
+            alignments[0].columns[insertion_index + 1].reference_index,
+            Some(5)
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn preserves_distinct_repeat_placement_ambiguity_without_an_indel() -> Result<()> {
+        let query = "AAA";
+        let alignments = align(query, &profiles(query), "AAAAA", &config(), None)?;
+        assert_eq!(alignments.len(), 2);
+        assert_ne!(alignments[0].start_reference, alignments[1].start_reference);
+        Ok(())
     }
 
     #[test]
