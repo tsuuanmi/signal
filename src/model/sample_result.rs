@@ -1,4 +1,4 @@
-//! Serializable `signal.sample_evidence/v6` contract.
+//! Serializable `signal.sample_evidence/v7` contract.
 
 use serde::Serialize;
 
@@ -87,7 +87,19 @@ pub(crate) struct SampleVariantResult {
     pub(crate) reference: String,
     pub(crate) alternate: String,
     pub(crate) kind: VariantKind,
+    pub(crate) support_topology: SampleVariantSupportTopologyResult,
     pub(crate) support: Vec<SampleVariantSupportResult>,
+}
+
+/// Factorized read/orientation topology for one observed normalized variant.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleVariantSupportTopologyResult {
+    pub(crate) reads: usize,
+    pub(crate) eligible_reads: usize,
+    pub(crate) forward_reads: usize,
+    pub(crate) reverse_reads: usize,
+    pub(crate) eligible_forward_reads: usize,
+    pub(crate) eligible_reverse_reads: usize,
 }
 
 /// One read contributing to a normalized variant.
