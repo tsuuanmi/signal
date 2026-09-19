@@ -51,7 +51,9 @@ class Violation:
     detail: str
 
     def render(self) -> str:
-        relative = self.path.relative_to(ROOT) if self.path.is_relative_to(ROOT) else self.path
+        relative = (
+            self.path.relative_to(ROOT) if self.path.is_relative_to(ROOT) else self.path
+        )
         return f"{relative}:{self.line}: {self.rule}: {self.detail}"
 
 
@@ -158,7 +160,9 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
         return 1
-    print("OK: first-party Rust source contains no explicit legacy compatibility scaffolding")
+    print(
+        "OK: first-party Rust source contains no explicit legacy compatibility scaffolding"
+    )
     return 0
 
 
