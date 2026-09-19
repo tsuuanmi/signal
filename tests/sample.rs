@@ -328,12 +328,19 @@ fn assert_profile(observation: &Value) -> Result<(), Box<dyn std::error::Error>>
         .as_object()
         .ok_or("profile must be an object")?;
     assert_eq!(
-        profile.keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>(),
+        profile
+            .keys()
+            .map(String::as_str)
+            .collect::<std::collections::BTreeSet<_>>(),
         ["A", "C", "G", "T"].into_iter().collect()
     );
     let total = ["A", "C", "G", "T"]
         .into_iter()
-        .map(|base| profile[base].as_f64().ok_or("profile weight must be numeric"))
+        .map(|base| {
+            profile[base]
+                .as_f64()
+                .ok_or("profile weight must be numeric")
+        })
         .collect::<Result<Vec<_>, _>>()?
         .into_iter()
         .sum::<f64>();

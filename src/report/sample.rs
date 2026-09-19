@@ -110,14 +110,15 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                         state: observation.state,
                         base: observation.base,
                         quality: observation.quality,
-                        profile: signal.as_ref().and_then(|signal| signal.profile).map(|profile| {
-                            SampleEvidenceProfileResult {
+                        profile: signal
+                            .as_ref()
+                            .and_then(|signal| signal.profile)
+                            .map(|profile| SampleEvidenceProfileResult {
                                 a: profile.weights[0],
                                 c: profile.weights[1],
                                 g: profile.weights[2],
                                 t: profile.weights[3],
-                            }
-                        }),
+                            }),
                         in_noisy_region: signal.map(|signal| signal.in_noisy_region),
                     })
                 })
