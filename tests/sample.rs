@@ -14,7 +14,7 @@ const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
 const SAMPLE_ID: &str = "sample-1";
 
 #[test]
-fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::error::Error>> {
+fn writes_deterministic_compact_sample_evidence_v6() -> Result<(), Box<dyn std::error::Error>> {
     let first = tempdir()?;
     let second = tempdir()?;
 
@@ -50,7 +50,7 @@ fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::
     assert_eq!(first_bytes, second_bytes);
 
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v5");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v6");
     assert_eq!(value["sample_id"], SAMPLE_ID);
     assert_object_keys(
         &value,
@@ -59,6 +59,7 @@ fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::
             "sample_id",
             "provenance",
             "reads",
+            "coverage",
             "overlaps",
             "locus_differences",
             "variants",
@@ -76,6 +77,16 @@ fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::
     assert_eq!(reverse_read["integrity"]["ploc_count"], QUERY.len());
     assert_eq!(forward_read["integrity"]["clipped_channel_samples"], 0);
     assert_eq!(reverse_read["integrity"]["clipped_channel_samples"], 0);
+
+    let coverage = value["coverage"]
+        .as_array()
+        .ok_or("coverage must be an array")?;
+    assert_eq!(coverage.len(), 1);
+    assert_eq!(coverage[0]["reference"]["start"], 4);
+    assert_eq!(coverage[0]["reference"]["end"], 4 + QUERY.len());
+    assert_eq!(coverage[0]["read_depth"], 2);
+    assert_eq!(coverage[0]["forward_depth"], 1);
+    assert_eq!(coverage[0]["reverse_depth"], 1);
 
     let overlaps = value["overlaps"]
         .as_array()
@@ -186,8 +197,13 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
         .success();
 
     let value: Value = serde_json::from_slice(&fs::read(sample_output_path(directory.path()))?)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v5");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v6");
     assert_eq!(value["overlaps"], serde_json::json!([]));
+    let coverage = value["coverage"]
+        .as_array()
+        .ok_or("coverage must be an array")?;
+    assert_eq!(coverage.len(), 1);
+    assert_eq!(coverage[0]["read_depth"], 1);
     let variants = value["variants"]
         .as_array()
         .ok_or("variants must be an array")?;
