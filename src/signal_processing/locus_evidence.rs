@@ -60,7 +60,7 @@ pub(super) fn calculate(
             ))
         });
 
-        evidence.push(LocusEvidence {
+        let record = LocusEvidence {
             call_index_0based: locus_index,
             ploc_0based: ploc,
             window_start_0based: locus_window.start,
@@ -76,9 +76,64 @@ pub(super) fn calculate(
             corrected_amplitudes,
             snrs,
             profile: EvidenceProfile::from_corrected_amplitudes(corrected_amplitudes),
-        });
+        };
+        validate_evidence(&record, config.window_size_bases)?;
+        evidence.push(record);
     }
     Ok(evidence)
+}
+
+fn validate_evidence(evidence: &LocusEvidence, context_width: usize) -> Result<()> {
+    let valid_coordinates = evidence.window_start_0based < evidence.window_end_0based_exclusive
+        && evidence.window_start_0based <= evidence.ploc_0based
+        && evidence.ploc_0based < evidence.window_end_0based_exclusive
+        && evidence.window_start_0based <= evidence.event_position_0based
+        && evidence.event_position_0based < evidence.window_end_0based_exclusive
+        && evidence.context_call_start_0based <= evidence.call_index_0based
+        && evidence.call_index_0based < evidence.context_call_end_0based_exclusive
+        && evidence.context_call_end_0based_exclusive - evidence.context_call_start_0based
+            == context_width
+        && evidence.context_sample_start_0based <= evidence.window_start_0based
+        && evidence.window_end_0based_exclusive <= evidence.context_sample_end_0based_exclusive;
+    let valid_metrics = evidence.channel_baselines.iter().all(|value| value.is_finite())
+        && evidence
+            .channel_noise_sigmas
+            .iter()
+            .all(|value| value.is_finite() && *value >= 1.0)
+        && evidence
+            .corrected_amplitudes
+            .iter()
+            .all(|value| value.is_finite() && *value >= 0.0)
+        && evidence
+            .snrs
+            .iter()
+            .all(|value| value.is_finite() && *value >= 0.0)
+        && evidence
+            .channel_heights
+            .iter()
+            .zip(evidence.channel_baselines)
+            .zip(evidence.corrected_amplitudes)
+            .all(|((&height, baseline), corrected)| {
+                corrected == statistics::corrected_amplitude(height, baseline)
+            });
+    let total = evidence.corrected_amplitudes.iter().sum::<f64>();
+    let valid_profile = match (total > 0.0, evidence.profile) {
+        (false, None) => true,
+        (true, Some(profile)) => profile
+            .weights
+            .iter()
+            .zip(evidence.corrected_amplitudes)
+            .all(|(&weight, amplitude)| weight == amplitude / total),
+        _ => false,
+    };
+    if valid_coordinates && valid_metrics && valid_profile {
+        Ok(())
+    } else {
+        Err(Error::SignalProcessing(format!(
+            "inconsistent locus evidence at call {}",
+            evidence.call_index_0based
+        )))
+    }
 }
 
 fn local_statistics(
