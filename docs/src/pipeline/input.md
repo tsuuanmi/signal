@@ -24,8 +24,8 @@ algorithm execution.
 
 - `AnalysisInputs`: loaded config, chromatogram, reference, and analysis target.
 - `BasecallInputs`: loaded config, chromatogram, and reference-free target.
-- `SampleInputs`: loaded config, one or more chromatograms, shared reference, and
-  sample-evidence target.
+- `SampleInputs`: loaded config, one or more chromatograms, and shared reference.
+- `sample_output(sample_id)`: derives and validates the production sample-evidence target.
 - `load_analysis(args)`, `load_basecall(args)`, and `load_sample(args)`:
   command-specific entry points.
 - `trace_stem(trace) -> Result<&str>`: validates the UTF-8 stem used by
