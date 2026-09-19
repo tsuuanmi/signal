@@ -45,7 +45,7 @@ fn writes_deterministic_compact_sample_evidence_v7() -> Result<(), Box<dyn std::
             .stderr(predicate::str::is_empty());
 
         let log_dir = directory.join("logs");
-        let sample_log = log_dir.join(format!("{SAMPLE_ID}.sample.log"));
+        let sample_log = log_dir.join(format!("{SAMPLE_ID}.log"));
         let log = fs::read_to_string(&sample_log)?;
         assert!(log.contains("event=sample_read_started"));
         assert!(log.contains("event=basecalling_completed"));
