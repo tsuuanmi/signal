@@ -16,8 +16,8 @@ ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v6.schema.json"
 ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v6.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v1.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v1.example.json"
-SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v3.schema.json"
-SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v3.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v4.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v4.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -145,6 +145,20 @@ def rejected_sample_shapes(
     missing_reads = copy.deepcopy(example)
     missing_reads["reads"] = []
 
+    missing_overlaps = copy.deepcopy(example)
+    missing_overlaps.pop("overlaps")
+
+    eligible_overlap_with_reason = copy.deepcopy(example)
+    eligible_overlap_with_reason["overlaps"][0]["exclusion_reasons"] = [
+        "overlap_below_minimum"
+    ]
+
+    ineligible_overlap_without_reason = copy.deepcopy(example)
+    ineligible_overlap_without_reason["overlaps"][0]["eligible"] = False
+
+    invalid_overlap_agreement = copy.deepcopy(example)
+    invalid_overlap_agreement["overlaps"][0]["agreement"] = 1.1
+
     invalid_sample_id = copy.deepcopy(example)
     invalid_sample_id["sample_id"] = "../sample"
 
@@ -195,6 +209,16 @@ def rejected_sample_shapes(
 
     return [
         ("sample evidence with no reads", missing_reads),
+        ("sample evidence without overlap graph", missing_overlaps),
+        (
+            "eligible overlap with exclusion reason",
+            eligible_overlap_with_reason,
+        ),
+        (
+            "ineligible overlap without exclusion reason",
+            ineligible_overlap_without_reason,
+        ),
+        ("overlap agreement above one", invalid_overlap_agreement),
         ("sample evidence with invalid sample id", invalid_sample_id),
         (
             "sparse difference locus with only reference observations",
