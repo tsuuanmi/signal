@@ -82,6 +82,15 @@ pub(crate) struct SampleReadEvidence {
     pub(crate) alignment: SampleReadAlignmentEvidence,
 }
 
+/// Reference-oriented signal evidence associated with one source call.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct CallSignalEvidence {
+    pub(crate) corrected_amplitudes: [f64; 4],
+    pub(crate) snrs: [f64; 4],
+    pub(crate) profile: Option<EvidenceProfile>,
+    pub(crate) in_noisy_region: bool,
+}
+
 /// One observation at a covered locus retained because the sample differs there.
 #[derive(Debug, Clone)]
 pub(crate) struct LocusDifferenceObservation {
@@ -89,8 +98,7 @@ pub(crate) struct LocusDifferenceObservation {
     pub(crate) state: LocusState,
     pub(crate) base: Option<char>,
     pub(crate) quality: Option<u8>,
-    pub(crate) profile: Option<EvidenceProfile>,
-    pub(crate) in_noisy_region: Option<bool>,
+    pub(crate) signal: Option<CallSignalEvidence>,
 }
 
 /// All covering-read observations retained at one differential reference locus.
@@ -109,8 +117,7 @@ pub(crate) struct VariantCallEvidence {
     pub(crate) base: char,
     pub(crate) peak_heights: [i32; 4],
     pub(crate) quality: u8,
-    pub(crate) profile: Option<EvidenceProfile>,
-    pub(crate) in_noisy_region: bool,
+    pub(crate) signal: CallSignalEvidence,
 }
 
 /// One read observing a normalized variant, with configured eligibility retained.

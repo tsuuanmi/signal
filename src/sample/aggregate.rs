@@ -335,27 +335,29 @@ mod tests {
         );
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
+        let forward_signal = evidence.locus_differences[0].observations[0]
+            .signal
+            .as_ref()
+            .ok_or_else(|| Error::Sample("forward locus signal is missing".into()))?;
         assert_eq!(
-            evidence.locus_differences[0].observations[0]
-                .profile
-                .map(|profile| profile.weights),
+            forward_signal.profile.map(|profile| profile.weights),
             Some([0.1, 0.2, 0.3, 0.4])
         );
-        assert_eq!(
-            evidence.locus_differences[0].observations[0].in_noisy_region,
-            Some(true)
-        );
+        assert_eq!(forward_signal.corrected_amplitudes, [1.0, 2.0, 3.0, 4.0]);
+        assert_eq!(forward_signal.snrs, [1.0, 2.0, 3.0, 4.0]);
+        assert!(forward_signal.in_noisy_region);
         assert_eq!(evidence.locus_differences[0].observations[1].read_index, 1);
+        let reverse_signal = evidence.locus_differences[0].observations[1]
+            .signal
+            .as_ref()
+            .ok_or_else(|| Error::Sample("reverse locus signal is missing".into()))?;
         assert_eq!(
-            evidence.locus_differences[0].observations[1]
-                .profile
-                .map(|profile| profile.weights),
+            reverse_signal.profile.map(|profile| profile.weights),
             Some([0.4, 0.3, 0.2, 0.1])
         );
-        assert_eq!(
-            evidence.locus_differences[0].observations[1].in_noisy_region,
-            Some(false)
-        );
+        assert_eq!(reverse_signal.corrected_amplitudes, [4.0, 3.0, 2.0, 1.0]);
+        assert_eq!(reverse_signal.snrs, [4.0, 3.0, 2.0, 1.0]);
+        assert!(!reverse_signal.in_noisy_region);
         assert_eq!(evidence.variants.len(), 1);
         assert_eq!(evidence.variants[0].support_topology.reads, 2);
         assert_eq!(evidence.variants[0].support_topology.eligible_reads, 2);
@@ -372,19 +374,41 @@ mod tests {
         assert_eq!(evidence.variants[0].support[0].read_index, 0);
         assert_eq!(
             evidence.variants[0].support[0].calls[0]
+                .signal
                 .profile
                 .map(|profile| profile.weights),
             Some([0.1, 0.2, 0.3, 0.4])
         );
-        assert!(evidence.variants[0].support[0].calls[0].in_noisy_region);
+        assert_eq!(
+            evidence.variants[0].support[0].calls[0]
+                .signal
+                .corrected_amplitudes,
+            [1.0, 2.0, 3.0, 4.0]
+        );
+        assert!(
+            evidence.variants[0].support[0].calls[0]
+                .signal
+                .in_noisy_region
+        );
         assert_eq!(evidence.variants[0].support[1].read_index, 1);
         assert_eq!(
             evidence.variants[0].support[1].calls[0]
+                .signal
                 .profile
                 .map(|profile| profile.weights),
             Some([0.4, 0.3, 0.2, 0.1])
         );
-        assert!(!evidence.variants[0].support[1].calls[0].in_noisy_region);
+        assert_eq!(
+            evidence.variants[0].support[1].calls[0]
+                .signal
+                .corrected_amplitudes,
+            [4.0, 3.0, 2.0, 1.0]
+        );
+        assert!(
+            !evidence.variants[0].support[1].calls[0]
+                .signal
+                .in_noisy_region
+        );
         Ok(())
     }
 
@@ -439,8 +463,9 @@ mod tests {
         );
         assert!(
             evidence.locus_differences[1].observations[0]
-                .profile
-                .is_none()
+                .signal
+                .as_ref()
+                .is_some_and(|signal| signal.profile.is_none())
         );
         assert_eq!(
             evidence.locus_differences[2].observations[0].state,
@@ -448,12 +473,7 @@ mod tests {
         );
         assert!(
             evidence.locus_differences[2].observations[0]
-                .profile
-                .is_none()
-        );
-        assert!(
-            evidence.locus_differences[2].observations[0]
-                .in_noisy_region
+                .signal
                 .is_none()
         );
         Ok(())
