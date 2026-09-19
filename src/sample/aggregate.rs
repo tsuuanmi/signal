@@ -333,6 +333,24 @@ mod tests {
                 .reference_reads,
             0
         );
+        assert_eq!(
+            evidence.locus_differences[0]
+                .support_topology
+                .nucleotide_eligible_reads,
+            2
+        );
+        assert_eq!(
+            evidence.locus_differences[0]
+                .support_topology
+                .eligible_forward_reads,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[0]
+                .support_topology
+                .eligible_reverse_reads,
+            1
+        );
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         assert_eq!(
@@ -345,6 +363,10 @@ mod tests {
             evidence.locus_differences[0].observations[0].in_noisy_region,
             Some(true)
         );
+        assert_eq!(
+            evidence.locus_differences[0].observations[0].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::Eligible
+        );
         assert_eq!(evidence.locus_differences[0].observations[1].read_index, 1);
         assert_eq!(
             evidence.locus_differences[0].observations[1]
@@ -355,6 +377,10 @@ mod tests {
         assert_eq!(
             evidence.locus_differences[0].observations[1].in_noisy_region,
             Some(false)
+        );
+        assert_eq!(
+            evidence.locus_differences[0].observations[1].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::Eligible
         );
         assert_eq!(evidence.variants.len(), 1);
         assert_eq!(evidence.variants[0].support_topology.reads, 2);
@@ -443,6 +469,10 @@ mod tests {
                 .is_none()
         );
         assert_eq!(
+            evidence.locus_differences[1].observations[0].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::MissingProfile
+        );
+        assert_eq!(
             evidence.locus_differences[2].observations[0].state,
             crate::model::sample_evidence::LocusState::Deletion
         );
@@ -455,6 +485,10 @@ mod tests {
             evidence.locus_differences[2].observations[0]
                 .in_noisy_region
                 .is_none()
+        );
+        assert_eq!(
+            evidence.locus_differences[2].observations[0].nucleotide_contribution,
+            crate::model::sample_evidence::NucleotideContribution::DeletionEvent
         );
         Ok(())
     }
