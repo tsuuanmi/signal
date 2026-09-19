@@ -108,6 +108,9 @@ fn support_topology(
         alternate_reads: 0,
         unresolved_reads: 0,
         deletion_reads: 0,
+        profile_reads: 0,
+        profile_forward_reads: 0,
+        profile_reverse_reads: 0,
     };
 
     for observation in observations {
@@ -117,9 +120,27 @@ fn support_topology(
                 observation.read_index
             ))
         })?;
+        let has_profile = observation
+            .signal
+            .as_ref()
+            .and_then(|signal| signal.profile)
+            .is_some();
         match read.alignment.orientation {
-            crate::model::alignment::Orientation::Forward => topology.forward_reads += 1,
-            crate::model::alignment::Orientation::Reverse => topology.reverse_reads += 1,
+            crate::model::alignment::Orientation::Forward => {
+                topology.forward_reads += 1;
+                if has_profile {
+                    topology.profile_forward_reads += 1;
+                }
+            }
+            crate::model::alignment::Orientation::Reverse => {
+                topology.reverse_reads += 1;
+                if has_profile {
+                    topology.profile_reverse_reads += 1;
+                }
+            }
+        }
+        if has_profile {
+            topology.profile_reads += 1;
         }
         match observation.state {
             LocusState::Reference => topology.reference_reads += 1,
@@ -135,6 +156,8 @@ fn support_topology(
                 + topology.alternate_reads
                 + topology.unresolved_reads
                 + topology.deletion_reads
+        || topology.profile_reads != topology.profile_forward_reads + topology.profile_reverse_reads
+        || topology.profile_reads > topology.reads - topology.deletion_reads
     {
         return Err(Error::Sample(
             "locus support topology counts are inconsistent".into(),
