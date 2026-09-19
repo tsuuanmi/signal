@@ -4,19 +4,18 @@ use crate::config::SignalProcessingConfig;
 use crate::error::{Error, Result};
 use crate::locus::{self, LocusWindow};
 use crate::model::locus_evidence::{EvidenceProfile, LocusEvidence};
-use crate::model::signal::SignalWindow;
 use crate::model::trace::Chromatogram;
 
 use super::statistics;
 
 /// Calculates one immutable signal-evidence record per vendor-defined locus.
 ///
-/// Event refinement and profile construction use analyzed channel evidence
-/// directly. They do not consume primary calls, ambiguity codes, selected
-/// basecall peaks, or qualifying-channel membership.
+/// Event refinement, local statistics, and profile construction use analyzed
+/// channel evidence plus PLOC geometry directly. They do not consume basecall
+/// records, primary/ambiguity calls, selected basecall peaks, or qualifying
+/// channels.
 pub(super) fn calculate(
     trace: &Chromatogram,
-    windows: &[SignalWindow],
     config: &SignalProcessingConfig,
 ) -> Result<Vec<LocusEvidence>> {
     let locus_count = trace.call_count();
@@ -24,13 +23,6 @@ pub(super) fn calculate(
         return Err(Error::SignalProcessing(format!(
             "{locus_count} loci are fewer than window_size_bases {}",
             config.window_size_bases
-        )));
-    }
-    let expected_window_count = locus_count - config.window_size_bases + 1;
-    if windows.len() != expected_window_count {
-        return Err(Error::SignalProcessing(format!(
-            "expected {expected_window_count} rolling windows for {locus_count} loci, found {}",
-            windows.len()
         )));
     }
 
@@ -50,20 +42,11 @@ pub(super) fn calculate(
         .enumerate()
     {
         let context_start = context_start(locus_index, locus_count, config.window_size_bases);
-        let context = windows.get(context_start).ok_or_else(|| {
-            Error::SignalProcessing(format!(
-                "missing rolling context {context_start} for locus {locus_index}"
-            ))
-        })?;
-        validate_context(
-            context,
-            context_start,
-            locus_index,
-            trace.sample_count(),
-            config,
-        )?;
-
-        let (channel_baselines, channel_noise_sigmas) = local_statistics(trace, context)?;
+        let context_end = context_start + config.window_size_bases;
+        let context_sample_start = locus_windows[context_start].start;
+        let context_sample_end = locus_windows[context_end - 1].end;
+        let (channel_baselines, channel_noise_sigmas) =
+            local_statistics(trace, context_sample_start, context_sample_end)?;
         let event_position = select_event_position(trace, locus_window, ploc, channel_baselines)?;
         let channel_heights =
             std::array::from_fn(|channel| trace.channels[channel][event_position]);
@@ -82,10 +65,10 @@ pub(super) fn calculate(
             ploc_0based: ploc,
             window_start_0based: locus_window.start,
             window_end_0based_exclusive: locus_window.end,
-            context_call_start_0based: context.call_start_0based,
-            context_call_end_0based_exclusive: context.call_end_0based_exclusive,
-            context_sample_start_0based: context.sample_start_0based,
-            context_sample_end_0based_exclusive: context.sample_end_0based_exclusive,
+            context_call_start_0based: context_start,
+            context_call_end_0based_exclusive: context_end,
+            context_sample_start_0based: context_sample_start,
+            context_sample_end_0based_exclusive: context_sample_end,
             event_position_0based: event_position,
             channel_heights,
             channel_baselines,
@@ -98,32 +81,20 @@ pub(super) fn calculate(
     Ok(evidence)
 }
 
-fn validate_context(
-    context: &SignalWindow,
-    expected_start: usize,
-    locus_index: usize,
-    sample_count: usize,
-    config: &SignalProcessingConfig,
-) -> Result<()> {
-    if context.call_start_0based != expected_start
-        || context.call_end_0based_exclusive != expected_start + config.window_size_bases
-        || context.sample_start_0based >= context.sample_end_0based_exclusive
-        || context.sample_end_0based_exclusive > sample_count
-    {
+fn local_statistics(
+    trace: &Chromatogram,
+    sample_start: usize,
+    sample_end: usize,
+) -> Result<([f64; 4], [f64; 4])> {
+    if sample_start >= sample_end || sample_end > trace.sample_count() {
         return Err(Error::SignalProcessing(format!(
-            "invalid rolling context for locus {locus_index}"
+            "invalid locus context sample interval {sample_start}..{sample_end}"
         )));
     }
-    Ok(())
-}
-
-fn local_statistics(trace: &Chromatogram, context: &SignalWindow) -> Result<([f64; 4], [f64; 4])> {
     let mut baselines = [0.0; 4];
     let mut noise_sigmas = [0.0; 4];
     for channel in 0..4 {
-        let samples = &trace.channels[channel]
-            [context.sample_start_0based..context.sample_end_0based_exclusive];
-        let local = statistics::estimate(samples)?;
+        let local = statistics::estimate(&trace.channels[channel][sample_start..sample_end])?;
         baselines[channel] = local.baseline;
         noise_sigmas[channel] = local.noise_sigma;
     }
@@ -179,8 +150,6 @@ fn context_start(locus_index: usize, locus_count: usize, window_size_bases: usiz
 #[cfg(test)]
 mod tests {
     use crate::config::SignalProcessingConfig;
-    use crate::model::basecalls::{BaseCall, BaseCalls, ChannelPeak, PeakSource};
-    use crate::model::nucleotide::Nucleotide;
     use crate::model::trace::{Chromatogram, VendorEvidence};
 
     use super::*;
@@ -193,54 +162,18 @@ mod tests {
         }
     }
 
-    fn input() -> (Chromatogram, BaseCalls) {
+    fn trace() -> Chromatogram {
         let mut channels = std::array::from_fn(|_| vec![0; 12]);
         for (index, position) in [1_usize, 3, 5, 7, 9].into_iter().enumerate() {
-            let channel = index % 4;
-            channels[channel][position] = 100;
+            channels[index % 4][position] = 100;
         }
-        let calls = (0..5)
-            .map(|index| {
-                let ploc = 1 + index * 2;
-                BaseCall {
-                    index_0based: index,
-                    ploc_0based: ploc,
-                    window_start_0based: ploc.saturating_sub(1),
-                    window_end_0based_exclusive: (ploc + 1).min(12),
-                    peaks: std::array::from_fn(|channel| ChannelPeak {
-                        base: Nucleotide::ALL[channel],
-                        height: channels[channel][ploc],
-                        position_0based: ploc,
-                        source: PeakSource::LocalMaximum,
-                    }),
-                    primary_peak_evidence: None,
-                    primary: 'N',
-                    ambiguity: 'N',
-                    qualifying_channels: Vec::new(),
-                    vendor_agrees: None,
-                }
-            })
-            .collect::<Vec<_>>();
-        (
-            Chromatogram {
-                source_name: "synthetic.ab1".into(),
-                source_sha256: String::new(),
-                channels,
-                base_locations: vec![1, 3, 5, 7, 9],
-                vendor: VendorEvidence::default(),
-            },
-            BaseCalls {
-                primary_sequence: "NNNNN".into(),
-                calls,
-            },
-        )
-    }
-
-    fn evidence() -> Result<Vec<LocusEvidence>> {
-        let (trace, calls) = input();
-        let config = config(5);
-        let windows = super::super::features::calculate(&trace, &calls, &config)?;
-        calculate(&trace, &windows, &config)
+        Chromatogram {
+            source_name: "synthetic.ab1".into(),
+            source_sha256: String::new(),
+            channels,
+            base_locations: vec![1, 3, 5, 7, 9],
+            vendor: VendorEvidence::default(),
+        }
     }
 
     #[test]
@@ -260,8 +193,8 @@ mod tests {
     }
 
     #[test]
-    fn produces_profile_without_a_primary_basecall() -> Result<()> {
-        let evidence = evidence()?;
+    fn produces_profile_without_any_basecall_input() -> Result<()> {
+        let evidence = calculate(&trace(), &config(5))?;
         assert_eq!(evidence.len(), 5);
         let locus = &evidence[2];
         assert_eq!(locus.call_index_0based, 2);
@@ -278,12 +211,10 @@ mod tests {
     }
 
     #[test]
-    fn profile_retains_mixed_channel_mass_independent_of_threshold_membership() -> Result<()> {
-        let (mut trace, calls) = input();
+    fn profile_retains_mixed_channel_mass_without_threshold_membership() -> Result<()> {
+        let mut trace = trace();
         trace.channels[1][5] = 40;
-        let config = config(5);
-        let windows = super::super::features::calculate(&trace, &calls, &config)?;
-        let evidence = calculate(&trace, &windows, &config)?;
+        let evidence = calculate(&trace, &config(5))?;
         let profile = evidence[2]
             .profile
             .as_ref()
@@ -296,32 +227,27 @@ mod tests {
 
     #[test]
     fn event_refinement_prefers_total_evidence_then_ploc_proximity() -> Result<()> {
-        let (mut trace, calls) = input();
+        let mut trace = trace();
         trace.channels[0][4] = 70;
         trace.channels[1][4] = 70;
         trace.channels[2][5] = 120;
-        let config = config(5);
-        let windows = super::super::features::calculate(&trace, &calls, &config)?;
-        let evidence = calculate(&trace, &windows, &config)?;
+        let evidence = calculate(&trace, &config(5))?;
         assert_eq!(evidence[2].event_position_0based, 4);
 
         trace.channels[0][6] = 70;
         trace.channels[1][6] = 70;
-        let windows = super::super::features::calculate(&trace, &calls, &config)?;
-        let evidence = calculate(&trace, &windows, &config)?;
+        let evidence = calculate(&trace, &config(5))?;
         assert_eq!(evidence[2].event_position_0based, 4);
         Ok(())
     }
 
     #[test]
     fn zero_corrected_signal_has_no_profile() -> Result<()> {
-        let (mut trace, calls) = input();
+        let mut trace = trace();
         for channel in &mut trace.channels {
             channel.fill(0);
         }
-        let config = config(5);
-        let windows = super::super::features::calculate(&trace, &calls, &config)?;
-        let evidence = calculate(&trace, &windows, &config)?;
+        let evidence = calculate(&trace, &config(5))?;
         assert!(evidence.iter().all(|locus| locus.profile.is_none()));
         Ok(())
     }
