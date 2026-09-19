@@ -86,15 +86,15 @@ payloads but still follow the same policy; `logs/` is ignored.
 
 ## Sample evidence output privacy
 
-`signal.sample_evidence/v3` intentionally contains the sample identifier plus each
+`signal.sample_evidence/v4` intentionally contains the sample identifier plus each
 contributing AB1 basename for reviewer traceability, along with input SHA-256,
-alignment/coverage summaries, sparse differential loci, normalized variants, and
-concise call mappings. Filenames, hashes, and biological differences can be
+alignment/coverage summaries, pairwise overlap/admission evidence, sparse differential loci,
+normalized variants, and concise call mappings. Filenames, hashes, and biological differences can be
 identifying, so sample-evidence JSON follows the same approval, storage, retention,
 and redistribution policy as its AB1 sources.
 
 Repository examples MUST use synthetic sample/read names and synthetic input hashes.
-Do not commit a local sample result merely because v3 is compact. Real local outputs
+Do not commit a local sample result merely because v4 is compact. Real local outputs
 may inform exploratory development, but release/compatibility evidence requires the
 approval record described below.
 
@@ -102,7 +102,7 @@ approval record described below.
 
 `results/<trace-stem>.basecalls.json` contains complete primary, ambiguity, and
 retained sequence strings. It is therefore more directly identifying than compact
-analysis v5 and follows the same approval, storage, retention, and redistribution
+analysis v6 and follows the same approval, storage, retention, and redistribution
 policy as its source AB1. Its operational log records counts and stage metrics but
 never sequence strings or JSON bodies.
 
