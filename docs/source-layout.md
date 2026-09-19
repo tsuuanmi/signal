@@ -20,7 +20,7 @@ src/
 ├── quality_control/{mod,penalty,quality,trim}.rs
 ├── alignment/{mod,scoring,gotoh,traceback,orient}.rs
 ├── variant_calling/{mod,mapping,extract,normalize,filter}.rs
-├── sample/{mod,aggregate,coverage,overlap,differences,variants}.rs
+├── sample/{mod,aggregate,coverage,overlap,differences,profile,variants}.rs
 ├── report/{mod,json,basecall,sample,signal,variant,atomic}.rs
 └── pipeline/{mod,input,read,observation,analyze,basecall,sample}.rs
 ```
@@ -49,6 +49,6 @@ report -> completed models; no scientific computation
 - `extract` finds primary-sequence differences; `mapping` binds original calls to aligned reference positions; `normalize` defines canonical alleles/positions; `filter` applies configured region and supporting-signal eligibility.
 - `logger` appends timestamped per-trace operational records without entering scientific stages or JSON.
 - `json` assembles analysis v7 and owns shared serialization; `basecall` assembles basecalls v2; `sample` projects sample-evidence v7; `signal` is the shared integrity/noisy-region projection; `variant` projects mapped analysis calls; `atomic` is the one no-overwrite publisher.
-- `input` loads command-specific resources; `read` sequences reference-independent stages; `observation` owns one authoritative reference-guided read path; `sample/aggregate` validates and orders reads; `sample/coverage` builds run-length total/forward/reverse reference coverage topology; `sample/overlap` builds the Tracy-derived pairwise overlap/admission graph; `sample/differences` builds sparse differential-locus evidence; `sample/variants` aggregates normalized variant support and derives factorized read/eligibility/orientation support topology; command modules own only orchestration and publication.
+- `input` loads command-specific resources; `read` sequences reference-independent stages; `observation` owns one authoritative reference-guided read path; `sample/aggregate` validates and orders reads; `sample/coverage` builds run-length total/forward/reverse reference coverage topology; `sample/overlap` builds the Tracy-derived pairwise overlap/admission graph; `sample/differences` builds sparse differential-locus evidence; `sample/profile` resolves basecall-independent call profiles by original call index and projects them to reference orientation; `sample/variants` aggregates normalized variant support and derives factorized read/eligibility/orientation support topology; command modules own only orchestration and publication.
 
 VCF has no source file or compatibility path in the MVP.
