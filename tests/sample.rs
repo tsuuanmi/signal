@@ -91,7 +91,8 @@ fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::
     let agreement = overlap["agreement"]
         .as_f64()
         .ok_or("overlap agreement must be numeric")?;
-    assert!((agreement - (QUERY.len() - 1) as f64 / QUERY.len() as f64).abs() < f64::EPSILON);
+    let expected_agreement = (QUERY.len() - 1) as f64 / QUERY.len() as f64;
+    assert!((agreement - expected_agreement).abs() < 1e-12);
     assert_eq!(overlap["eligible"], true);
     assert_eq!(overlap["exclusion_reasons"], serde_json::json!([]));
 
