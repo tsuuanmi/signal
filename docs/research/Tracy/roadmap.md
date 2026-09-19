@@ -112,7 +112,7 @@ read admission
 local coverage denominator          # promoted via ADR-0032
 forward/reverse support topology     # coverage via ADR-0032; differential loci via ADR-0035
 coverage map                         # promoted via ADR-0032
-evidence-weighted consensus         # eligibility via ADR-0039 and unit-mass profile accumulation via ADR-0040; validated quality/artifact weighting remains research
+evidence-weighted consensus         # eligibility via ADR-0039, unit-mass profile accumulation via ADR-0040, and arithmetic mean evidence profiles via ADR-0041; validated quality/artifact weighting remains research
 sample-level candidate variants     # support topology foundation promoted via ADR-0033
 ```
 
