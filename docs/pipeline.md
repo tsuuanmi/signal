@@ -15,11 +15,11 @@ progress and failures without entering the JSON contract.
 
 ```text
 AB1 + TOML ──► decode ──► basecalling ──► signal_processing ──► quality_control
-                                                                     ├─► basecalls/v1
+                                                                     ├─► basecalls/v2
 FASTA reference ─────────────────────────────────────────────────────┴─► alignment ─► variant_calling
                                                                                               │
                                                                                        ReadObservation
-                                                                                         ├─► analysis/v6
+                                                                                         ├─► analysis/v7
                                                                                          └─► sample aggregation
 ```
 
@@ -47,8 +47,9 @@ size, and element count before access. It extracts:
   canonical A/C/G/T order using the `FWO_.1` channel-order string;
 - the `PLOC.2` basecall positions (strictly increasing, within the sample
   range);
-- optional vendor base strings and quality values, each validated to match the
-  number of basecall positions.
+- optional vendor base strings and quality values. Their decoded cardinality may
+  differ from PLOC and is retained as trace-integrity evidence rather than
+  changing the PLOC-defined call series.
 
 The decoded chromatogram records the source file name and SHA-256, the canonical
 four channel arrays, the basecall positions, and optional vendor evidence. ABIF
@@ -109,11 +110,11 @@ primary and ambiguity symbols.
 
 Calculates observation-only signal-quality features from the immutable analyzed channels and basecalling evidence. It uses full-width, stride-one windows of configured size `5..=10` calls. Each base call retains the sample interval used for peak selection, so a rolling call interval maps to one exact channel-sample span.
 
-For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every internal window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison; compact analysis v6 serializes only each merged region's minimum primary SNR.
+For each channel, the local baseline is the median sample and noise sigma is the median absolute deviation of first differences divided by `0.67448975 × sqrt(2)`, with a one-channel-unit floor. Selected peak heights are baseline-corrected and divided by channel noise. Every internal window records its minimum primary SNR, maximum secondary SNR, and whether the minimum is strictly below `minimum_primary_snr`. Values are rounded to six decimal places before comparison; compact analysis v7 serializes only each merged region's minimum primary SNR.
 
 Signal processing also derives one authoritative internal `LocusEvidence` record per PLOC-defined locus. The configured rolling-window width selects a deterministic nearby sample context for baseline/noise estimation. Inside the shared locus window, event refinement selects the sample with maximum total non-negative baseline-corrected A/C/G/T signal, breaking ties by nearest PLOC and then lower sample coordinate. At that event, Signal retains raw A/C/G/T values, corrected amplitudes, SNR, and an optional normalized `EvidenceProfile`. The profile is absent when corrected signal mass is zero and is independent of primary/ambiguity calls, selected basecall peaks, qualifying-channel membership, and `secondary_peak_ratio`.
 
-Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows do not form a noisy interval. Clean gaps are never filled. Windows and per-locus evidence remain internal; compact analysis v6 emits only merged regions. These annotations do not alter calls, candidate-noisy classification, quality, trimming, alignment, warning totals, variant eligibility, or the compact JSON contracts. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
+Overlapping or adjacent candidate-noisy windows are unioned into 0-based half-open call and sample intervals only when a consecutive run contains at least `minimum_noisy_windows` windows (default 2). Isolated candidate windows do not form a noisy interval. Clean gaps are never filled. Windows and per-locus evidence remain internal; compact analysis v7 emits only merged regions. These annotations do not alter calls, candidate-noisy classification, quality, trimming, alignment, warning totals, variant eligibility, or the compact JSON contracts. See [`signal-processing.md`](signal-processing.md) for formulas, evidence, and limitations.
 
 ## Stage 4 — Quality control (`signal.apollo_relative_quality/v1`,
 `signal.apollo_end_trim/v1`)
@@ -194,7 +195,7 @@ Three dynamic-programming matrices track match, insertion, and deletion states. 
 
 The traceback internally decodes the selected path into equal-length gapped query and
 gapped reference strings, an operation-run string (e.g. `5M`, `3M1I1M`), and
-alignment metrics. Compact analysis v6 emits only the selected alignment summary and
+alignment metrics. Compact analysis v7 emits only the selected alignment summary and
 reference segments, not the rows, operation runs, or score. When multiple paths tie, a documented state order
 (match > deletion > insertion) makes the result deterministic. Metrics are:
 
@@ -246,7 +247,7 @@ Reported variants are normalized:
   resulting representation is anchor-independent.
 
 Internally each variant retains its contig, 1-based position, reference/alternate
-alleles, kind, normalization, and direct call mappings. Compact v6 emits only
+alleles, kind, normalization, and direct call mappings. Compact v7 emits only
 `position`, `reference`, `alternate`, `kind`, and `calls`. Every public call
 contains only its supporting/flanking `role`, reference-oriented called `base`,
 co-located reference-oriented A/C/G/T primary-event channel heights in `peaks`,
@@ -289,16 +290,18 @@ The read has already located itself at this boundary. Its orientation and covere
 
 `signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and sorts reads by SHA-256 independently of CLI trace order. The top-level read registry retains reviewer-facing filename stem, stable SHA-256, and the concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state).
 
-Before locus aggregation, Signal builds a deterministic pairwise overlap graph from the SHA-sorted read registry. Every unordered pair is compared only at shared selected-alignment reference coordinates. `shared_positions` counts all shared coordinates, while the agreement denominator includes only positions where both query observations are canonical A/C/G/T. Equal canonical observations are agreements; unequal canonical observations are conflicts. Unresolved symbols and deletions do not enter that nucleotide denominator, so gap/indel evidence remains separate. A pair is eligible for later consensus reconciliation only when the comparable-base count reaches `sample_reconciliation.minimum_comparable_bases` and the agreement fraction reaches `sample_reconciliation.minimum_overlap_agreement`. Non-overlapping reads produce no pair edge and remain valid sample evidence.
+Before pairwise/locus aggregation, Signal derives a run-length reference coverage topology from every selected post-trim read segment. Each maximal interval records total read depth plus forward/reverse orientation depth. This counts all independently placed reads regardless of later pairwise eligibility and does not imply nucleotide agreement or consensus admission.
+
+Signal then builds a deterministic pairwise overlap graph from the SHA-sorted read registry. Every unordered pair is compared only at shared selected-alignment reference coordinates. `shared_positions` counts all shared coordinates, while the agreement denominator includes only positions where both query observations are canonical A/C/G/T. Equal canonical observations are agreements; unequal canonical observations are conflicts. Unresolved symbols and deletions do not enter that nucleotide denominator, so gap/indel evidence remains separate. A pair is eligible for later consensus reconciliation only when the comparable-base count reaches `sample_reconciliation.minimum_comparable_bases` and the agreement fraction reaches `sample_reconciliation.minimum_overlap_agreement`. Non-overlapping reads produce no pair edge and remain valid sample evidence.
 
 Sparse locus aggregation then runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
 
-Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or sample-level conflict verdict is produced in v4; overlap eligibility is pre-consensus evidence only.
+Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v7` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or sample-level conflict verdict is produced in v6; coverage topology and overlap eligibility is pre-consensus evidence only.
 
 ## Output
 
 `analyze` publishes `signal.analysis/v7` at `results/<trace-stem>.json`.
-`sample` publishes `signal.sample_evidence/v5` at
+`sample` publishes `signal.sample_evidence/v6` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
