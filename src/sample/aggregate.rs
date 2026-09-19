@@ -315,11 +315,15 @@ mod tests {
             1
         );
         assert_eq!(
-            evidence.locus_differences[0].support_topology.alternate_reads,
+            evidence.locus_differences[0]
+                .support_topology
+                .alternate_reads,
             2
         );
         assert_eq!(
-            evidence.locus_differences[0].support_topology.reference_reads,
+            evidence.locus_differences[0]
+                .support_topology
+                .reference_reads,
             0
         );
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
@@ -395,11 +399,15 @@ mod tests {
             1
         );
         assert_eq!(
-            evidence.locus_differences[1].support_topology.unresolved_reads,
+            evidence.locus_differences[1]
+                .support_topology
+                .unresolved_reads,
             1
         );
         assert_eq!(
-            evidence.locus_differences[2].support_topology.deletion_reads,
+            evidence.locus_differences[2]
+                .support_topology
+                .deletion_reads,
             1
         );
         assert_eq!(
