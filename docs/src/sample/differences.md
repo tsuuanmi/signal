@@ -15,6 +15,7 @@ Builds sparse reference-coordinate evidence only where at least one read differs
 - Keep insertion columns out of reference-coordinate locus evidence.
 - Reject duplicate contribution from one read to the same reference coordinate.
 - Classify each retained observation as nucleotide `Eligible`, `MissingProfile`, or `DeletionEvent` from the already-projected call signal without introducing quality/noise/SNR thresholds.
+- Build one unweighted eligible-profile support aggregate per retained locus and preserve total plus forward/reverse A/C/G/T sums without normalizing them into a consensus.
 - Derive one internal support topology per retained locus: total reads, forward/reverse reads, reference/alternate/unresolved/deletion reads, and profile-bearing reads split by forward/reverse orientation. Profile availability remains a denominator distinct from contribution eligibility and cannot exceed non-deletion observations.
 
 ## Sparse semantics
