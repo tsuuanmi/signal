@@ -37,7 +37,12 @@ def event_fields(line: str, label: str) -> dict[str, str] | None:
     return fields
 
 
-def required_int(fields: dict[str, str], key: str, label: str) -> int:
+def required_int(
+    fields: dict[str, str],
+    key: str,
+    label: str,
+    minimum: int = 0,
+) -> int:
     raw = fields.get(key)
     if raw is None:
         raise ValueError(f"{label}: missing integer field {key}")
@@ -45,6 +50,8 @@ def required_int(fields: dict[str, str], key: str, label: str) -> int:
         value = int(raw)
     except ValueError as error:
         raise ValueError(f"{label}: invalid integer field {key}={raw!r}") from error
+    if value < minimum:
+        raise ValueError(f"{label}: {key} must be >= {minimum}")
     return value
 
 
@@ -163,6 +170,28 @@ def parse_case_log(
                 f"{active_sha256}"
             )
 
+        calls = required_int(basecalling, "calls", label, 1)
+        profiled_loci = required_int(signal, "profiled_loci", label)
+        noisy_calls = required_int(signal, "noisy_calls", label)
+        retained = required_int(quality, "retained", label, 1)
+        retained_fraction = required_float(quality, "retained_fraction", label)
+        callable_columns = required_int(alignment, "callable_columns", label, 1)
+        callable_identity = required_float(alignment, "callable_identity", label)
+        mismatches = required_int(alignment, "mismatches", label)
+        gap_opens = required_int(alignment, "gap_opens", label)
+        excluded = required_int(warning, "excluded_variant_candidates", label)
+
+        if end > calls or retained != end - start:
+            raise ValueError(f"{label}: trim/retained metrics are inconsistent")
+        if profiled_loci > calls or noisy_calls > calls:
+            raise ValueError(f"{label}: signal metrics exceed call count")
+        if callable_columns > retained or mismatches > callable_columns:
+            raise ValueError(f"{label}: alignment metrics are inconsistent")
+        if not 0.0 <= retained_fraction <= 1.0:
+            raise ValueError(f"{label}: retained_fraction must be within [0, 1]")
+        if not 0.0 <= callable_identity <= 1.0:
+            raise ValueError(f"{label}: callable_identity must be within [0, 1]")
+
         read = expected_reads[active_sha256]
         records.append(
             RawReadAudit(
@@ -172,20 +201,18 @@ def parse_case_log(
                 amplicon_id=read["amplicon_id"],
                 declared_direction=read["declared_direction"],
                 inferred_orientation=inferred_orientation,
-                calls=required_int(basecalling, "calls", label),
-                profiled_loci=required_int(signal, "profiled_loci", label),
-                noisy_calls=required_int(signal, "noisy_calls", label),
+                calls=calls,
+                profiled_loci=profiled_loci,
+                noisy_calls=noisy_calls,
                 trim_start_0based=start,
                 trim_end_0based_exclusive=end,
-                retained=required_int(quality, "retained", label),
-                retained_fraction=required_float(quality, "retained_fraction", label),
-                callable_columns=required_int(alignment, "callable_columns", label),
-                callable_identity=required_float(alignment, "callable_identity", label),
-                mismatches=required_int(alignment, "mismatches", label),
-                gap_opens=required_int(alignment, "gap_opens", label),
-                excluded_variant_candidates=required_int(
-                    warning, "excluded_variant_candidates", label
-                ),
+                retained=retained,
+                retained_fraction=retained_fraction,
+                callable_columns=callable_columns,
+                callable_identity=callable_identity,
+                mismatches=mismatches,
+                gap_opens=gap_opens,
+                excluded_variant_candidates=excluded,
             )
         )
         seen_reads.add(active_sha256)

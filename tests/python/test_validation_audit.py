@@ -294,7 +294,7 @@ class ValidationAuditTests(unittest.TestCase):
                     ),
                     self.log_event(
                         "quality_control_completed",
-                        trim="0..450",
+                        trim=f"0..{retained}",
                         retained=retained,
                         retained_fraction=f"{retained_fraction:.4f}",
                     ),

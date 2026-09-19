@@ -34,7 +34,11 @@ from .audit_logs import load_read_audits
 from .filesystem import file_sha256, sync_directory, validate_new_directory, write_json
 from .model import RESEARCH_SCHEMA_VERSION
 from .research_loader import load_research_corpus, strict_keys
-from .research_model import LOCUS_TABLE_COLUMNS, OBSERVATION_TABLE_COLUMNS
+from .research_model import (
+    LOCUS_TABLE_COLUMNS,
+    OBSERVATION_TABLE_COLUMNS,
+    ResearchCorpus,
+)
 
 RESEARCH_INDEX_FIELDS = (
     "schema_version",
@@ -66,10 +70,9 @@ def load_json_object(path: Path) -> dict[str, Any]:
 
 
 def validate_research_source(
-    corpus_dir: Path,
+    corpus: ResearchCorpus,
     research_dir: Path,
 ) -> tuple[dict[str, Any], Path, Path]:
-    corpus = load_research_corpus(corpus_dir)
     index_path = research_dir / "index.json"
     if not index_path.is_file():
         raise ValueError(f"research index is not a regular file: {index_path}")
@@ -171,7 +174,7 @@ def stratum_index(
 
 
 def audit_index(
-    corpus_dir: Path,
+    corpus: ResearchCorpus,
     research_dir: Path,
     research_index: dict[str, Any],
     boundaries: dict[tuple[str, str], AuditBoundary],
@@ -182,7 +185,6 @@ def audit_index(
     locus_rows: list[dict[str, Any]],
     case_rows: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    corpus = load_research_corpus(corpus_dir)
     return {
         "schema_version": AUDIT_SCHEMA_VERSION,
         "source_corpus_sha256": file_sha256(corpus.index_path),
@@ -244,10 +246,10 @@ def build_staged_audit(
     research_dir: Path,
     stage: Path,
 ) -> None:
-    research_index, loci_path, observations_path = validate_research_source(
-        corpus_dir, research_dir
-    )
     corpus = load_research_corpus(corpus_dir)
+    research_index, loci_path, observations_path = validate_research_source(
+        corpus, research_dir
+    )
     raw_reads = load_read_audits(corpus, corpus_dir)
     boundaries = read_boundaries(raw_reads)
     read_rows = read_audit_rows(raw_reads, boundaries)
@@ -267,7 +269,7 @@ def build_staged_audit(
     write_json(
         stage / "index.json",
         audit_index(
-            corpus_dir,
+            corpus,
             research_dir,
             research_index,
             boundaries,
