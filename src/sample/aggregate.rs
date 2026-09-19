@@ -349,6 +349,13 @@ mod tests {
                 .profile_reverse_reads,
             1
         );
+        let nucleotide_support = evidence.locus_differences[0].nucleotide_support;
+        assert_eq!(nucleotide_support.contributors, 2);
+        assert_eq!(nucleotide_support.forward_contributors, 1);
+        assert_eq!(nucleotide_support.reverse_contributors, 1);
+        assert_eq!(nucleotide_support.support, [0.5, 0.5, 0.5, 0.5]);
+        assert_eq!(nucleotide_support.forward_support, [0.1, 0.2, 0.3, 0.4]);
+        assert_eq!(nucleotide_support.reverse_support, [0.4, 0.3, 0.2, 0.1]);
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         let forward_signal = evidence.locus_differences[0].observations[0]
@@ -486,6 +493,11 @@ mod tests {
             evidence.locus_differences[2].support_topology.profile_reads,
             0
         );
+        assert_eq!(evidence.locus_differences[0].nucleotide_support.contributors, 1);
+        assert_eq!(evidence.locus_differences[1].nucleotide_support.contributors, 0);
+        assert_eq!(evidence.locus_differences[1].nucleotide_support.support, [0.0; 4]);
+        assert_eq!(evidence.locus_differences[2].nucleotide_support.contributors, 0);
+        assert_eq!(evidence.locus_differences[2].nucleotide_support.support, [0.0; 4]);
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
@@ -545,6 +557,11 @@ mod tests {
         assert_eq!(
             evidence.locus_differences[0].observations[0].nucleotide_contribution,
             crate::model::sample_evidence::NucleotideContribution::Eligible
+        );
+        assert_eq!(evidence.locus_differences[0].nucleotide_support.contributors, 1);
+        assert_eq!(
+            evidence.locus_differences[0].nucleotide_support.support,
+            [0.1, 0.2, 0.3, 0.4]
         );
         Ok(())
     }
