@@ -170,10 +170,7 @@ fn reverse_complement(sequence: &str) -> String {
         .collect()
 }
 
-fn assert_object_keys(
-    value: &Value,
-    expected: &[&str],
-) -> Result<(), Box<dyn std::error::Error>> {
+fn assert_object_keys(value: &Value, expected: &[&str]) -> Result<(), Box<dyn std::error::Error>> {
     let object = value.as_object().ok_or("expected object")?;
     let keys = object
         .keys()
