@@ -10,8 +10,7 @@ use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
     SampleCoverageResult, SampleEvidenceResult, SampleLocusDifferenceObservationResult,
     SampleLocusDifferenceResult, SampleOverlapResult, SampleProvenanceResult, SampleReadResult,
-    SampleVariantCallResult,
-    SampleVariantResult, SampleVariantSupportResult,
+    SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
