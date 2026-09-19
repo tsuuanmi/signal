@@ -73,18 +73,23 @@ Reference-aware interpretation cannot rewrite the source evidence.
 
 ## Phase E — generic sample-evidence reconciliation
 
-Implement the generic N-read aggregation model first. Validate it initially with
-the simplest two-read F/R case, but do not encode "pair" as the domain boundary.
+**Production foundation implemented via ADR-0023 through ADR-0025 and ADR-0030.**
+Signal now processes arbitrary reads independently, aggregates them in
+reference-coordinate/normalized-variant space, and exposes a deterministic
+Tracy-derived pairwise overlap/admission graph. The promoted gate uses required
+minimum comparable canonical bases and canonical-base agreement while keeping
+gap/indel evidence separate.
 
-Start validation with one forward and one reverse trace.
+The first validation case remains a simple forward/reverse overlap, but "pair" is
+not the domain boundary and cross-amplicon overlaps are handled by the same
+implementation.
 
-Before consensus:
+Before consensus, remaining research includes:
 
 ```text
-minimum overlap
-minimum agreement/read admission
-orientation confidence
-artifact/quality admission
+artifact/quality-aware local contribution
+factorized support topology
+optional declared assay metadata QC
 ```
 
 At each locus preserve both nucleotide evidence and explicit gap/indel event
@@ -176,8 +181,8 @@ assay-specific LoD/LoQ
 | Promoted | `LocusEvidence` foundation / event geometry | Implemented via ADR-0028 | Medium |
 | Promoted | basecall-independent evidence profile | Implemented via ADR-0028 | Medium |
 | Promoted | evidence-aware Gotoh scorer | Implemented via ADR-0029 / `signal.profile_gotoh/v1` | Medium |
-| P1 | explicit read admission / overlap policy | High | Low-Medium |
-| P1 | generic N-read evidence reconciliation, F/R as first validation case | Very high | Medium-High |
+| Promoted | explicit read admission / overlap policy | Implemented via ADR-0030 / `signal.sample_evidence/v4` | Low-Medium |
+| Promoted | generic N-read evidence reconciliation, F/R as first validation case | Implemented via ADR-0023 through ADR-0025; strengthened by ADR-0030 | Medium-High |
 | P1 | reference-guided multi-read consensus | Very high | Medium-High |
 | P1 | change-point length-mixture detection | High | Medium |
 | P1 | candidate +/-N phase-shift evaluation | High | Medium |
