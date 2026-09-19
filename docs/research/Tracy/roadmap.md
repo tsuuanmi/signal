@@ -19,7 +19,7 @@ single-trace output without requiring profile alignment.
 
 ## Phase A — richer locus evidence
 
-Research and validate:
+**Foundation promoted to production via ADR-0028:** shared PLOC geometry, deterministic channel-derived event refinement, baseline/noise/corrected A/C/G/T evidence, SNR, and normalized basecall-independent `EvidenceProfile` are implemented. Remaining research/validation:
 
 ```text
 baseline/corrected height
@@ -41,18 +41,7 @@ Observed values and derived interpretations remain separate.
 
 ## Phase B — basecall-independent evidence profile
 
-Implement:
-
-```text
-LocusEvidence
-    ->
-EvidenceProfile
-```
-
-The profile must derive from channel evidence directly. It must not be defined
-by which channels already passed the current ambiguity threshold.
-
-Initially keep primary calling unchanged to isolate profile behavior.
+**Promoted to production via ADR-0028.** `LocusEvidence -> EvidenceProfile` now derives directly from corrected A/C/G/T channel evidence and does not use qualifying-channel membership or ambiguity thresholds. Primary calling and current Gotoh behavior remain unchanged so profile behavior is isolated before Phase C.
 
 ## Phase C — profile/reference alignment
 
@@ -197,8 +186,8 @@ assay-specific LoD/LoQ
 |---|---|---:|---:|
 | Promoted | mixed-supporting-call simple-variant gate | Implemented via ADR-0027 / `signal.primary_difference/v4` | Low |
 | P0 | PLOC completeness + artifact validation | Very high | Low-Medium |
-| P0 | richer `LocusEvidence` / peak geometry | Very high | Medium |
-| P0 | basecall-independent evidence profile | Very high | Medium |
+| Promoted | `LocusEvidence` foundation / event geometry | Implemented via ADR-0028 | Medium |
+| Promoted | basecall-independent evidence profile | Implemented via ADR-0028 | Medium |
 | P0 | evidence-aware Gotoh scorer | Very high | Medium |
 | P1 | explicit read admission / overlap policy | High | Low-Medium |
 | P1 | generic N-read evidence reconciliation, F/R as first validation case | Very high | Medium-High |
