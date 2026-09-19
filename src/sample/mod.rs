@@ -16,7 +16,16 @@ use crate::error::Result;
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::SampleLocusEvidence;
 
-pub(crate) fn all_covered_loci(reads: &[ReadObservation]) -> Result<Vec<SampleLocusEvidence>> {
+pub(crate) struct CoveredLoci<'a> {
+    pub(crate) reads: Vec<&'a ReadObservation>,
+    pub(crate) loci: Vec<SampleLocusEvidence>,
+}
+
+pub(crate) fn all_covered_loci(reads: &[ReadObservation]) -> Result<CoveredLoci<'_>> {
     let ordered = aggregate::validated_ordered_reads(reads)?;
-    loci::aggregate(&ordered, loci::LocusSelection::AllCovered)
+    let loci = loci::aggregate(&ordered, loci::LocusSelection::AllCovered)?;
+    Ok(CoveredLoci {
+        reads: ordered,
+        loci,
+    })
 }
