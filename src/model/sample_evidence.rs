@@ -59,6 +59,9 @@ pub(crate) struct LocusSupportTopology {
     pub(crate) alternate_reads: usize,
     pub(crate) unresolved_reads: usize,
     pub(crate) deletion_reads: usize,
+    pub(crate) profile_reads: usize,
+    pub(crate) profile_forward_reads: usize,
+    pub(crate) profile_reverse_reads: usize,
 }
 
 /// Concise evidence supporting one selected read placement.
