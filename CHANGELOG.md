@@ -86,6 +86,8 @@ All notable changes to this project are documented here.
 
 ### Fixed
 
+- Accept ABIF directory entries whose declared allocation is larger than the logical element payload, including real-world oversized `tdir.1` root-directory allocations, while still bounds-checking the full allocation and rejecting undersized/truncated payloads.
+
 - Anchor `LocusEvidence`/`EvidenceProfile` to the positive total-corrected-signal local event nearest PLOC, with deterministic equal-distance tie handling and PLOC fallback, preventing a stronger neighboring chromatogram event elsewhere in the midpoint window from stealing a locus profile while preserving nucleotide/basecall-independent profile composition.
 - Reject batch cleanup roots that overlap inputs or each other, preventing selected cleanup from deleting protected data.
 - Synchronize batch result directories and newly created parent entries after atomic publication, rolling back a new destination when durability cannot be confirmed.
