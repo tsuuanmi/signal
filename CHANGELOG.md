@@ -24,6 +24,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- ADR-0052 records the directional confidence invariant for unstable mtDNA poly-C tracts: evidence after an unstable tract in sequencing order must be treated as lower-confidence than otherwise equivalent evidence that has not crossed the tract. Detection, recovery modeling, thresholds, and production behavior remain deferred for validation.
+
 - Local validation curation now prepares a hash-bound `signal.validation_curation_queue/v1` from completed audit artifacts: one immutable queue containing every mixed locus and flagged read, plus a separate blank decisions template for human review. The queue records recurrence and existing audit context without assigning truth, exclusions, holdout membership, threshold-fit inclusion, or production behavior.
 
 - Local validation audit now publishes hash-bound `signal.validation_audit/v1` read/locus/case review strata from completed corpus, research tables, and SHA-bound validation-log metrics. Corpus-relative low-identity/high-noise/aggressive-trim/short-coverage flags require sufficiently populated amplicon-direction strata; mixed loci retain retained-read edge/orientation context. Audit flags remain observational and do not alter truth, holdout assignment, eligibility, or production thresholds.
