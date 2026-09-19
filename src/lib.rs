@@ -1,4 +1,5 @@
-#![forbid(unsafe_code, deprecated)]
+#![forbid(unsafe_code)]
+#![deny(deprecated)]
 
 //! Library boundary for Signal operations.
 //!
