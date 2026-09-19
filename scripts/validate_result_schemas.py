@@ -16,8 +16,8 @@ ANALYSIS_SCHEMA = ROOT / "docs" / "schemas" / "analysis-v7.schema.json"
 ANALYSIS_EXAMPLE = ROOT / "docs" / "examples" / "analysis-v7.example.json"
 BASECALL_SCHEMA = ROOT / "docs" / "schemas" / "basecalls-v2.schema.json"
 BASECALL_EXAMPLE = ROOT / "docs" / "examples" / "basecalls-v2.example.json"
-SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v5.schema.json"
-SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v5.example.json"
+SAMPLE_SCHEMA = ROOT / "docs" / "schemas" / "sample-evidence-v6.schema.json"
+SAMPLE_EXAMPLE = ROOT / "docs" / "examples" / "sample-evidence-v6.example.json"
 
 
 def load_json(path: Path) -> Any:
@@ -202,7 +202,14 @@ def rejected_sample_shapes(
     zero_comparable_with_agreement["overlaps"][0]["conflicts"] = 0
 
     old_sample_schema = copy.deepcopy(example)
-    old_sample_schema["schema_version"] = "signal.sample_evidence/v4"
+    old_sample_schema["schema_version"] = "signal.sample_evidence/v5"
+
+    missing_coverage = copy.deepcopy(example)
+    missing_coverage.pop("coverage")
+    empty_coverage = copy.deepcopy(example)
+    empty_coverage["coverage"] = []
+    zero_coverage_depth = copy.deepcopy(example)
+    zero_coverage_depth["coverage"][0]["read_depth"] = 0
 
     missing_read_integrity = copy.deepcopy(example)
     missing_read_integrity["reads"][0].pop("integrity")
@@ -270,6 +277,9 @@ def rejected_sample_shapes(
         ("overlap with comparable bases but no agreement", missing_overlap_agreement),
         ("zero-comparable overlap with agreement", zero_comparable_with_agreement),
         ("sample evidence using old schema version", old_sample_schema),
+        ("sample evidence without coverage topology", missing_coverage),
+        ("sample evidence with empty coverage topology", empty_coverage),
+        ("sample coverage with zero read depth", zero_coverage_depth),
         ("sample read without trace integrity", missing_read_integrity),
         ("sample evidence with invalid sample id", invalid_sample_id),
         (
