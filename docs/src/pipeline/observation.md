@@ -6,7 +6,7 @@ Owns the one authoritative reference-guided scientific path from a decoded trace
 
 ## Responsibilities
 
-Run shared read processing, pass post-trim `EvidenceProfile` observations into profile-aware reference alignment, then run configured normalized primary-sequence variant calling, stage logging, exclusion diagnostics, and warning aggregation. Both single-read analysis and sample analysis consume this path.
+Run shared read processing, pass post-trim `EvidenceProfile` observations into profile-aware reference alignment, then run configured normalized primary-sequence variant calling, stage logging, exclusion diagnostics, and warning aggregation including PLOC/vendor mismatch and exact clipping counts. Both single-read analysis and sample analysis consume this path.
 
 ## Non-responsibilities
 
