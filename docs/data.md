@@ -47,8 +47,7 @@ The wrapper performs a clean selected rerun:
 
 1. read and validate the complete selected manifest prefix;
 2. discover every selected trace and reject missing matches, ambiguous ownership,
-   duplicate selected IDs, trace-stem/log collisions, unsafe target types, and
-   symlinks;
+   duplicate selected IDs, unsafe target types, and symlinks;
 3. reject output/log roots that overlap each other or any manifest, trace,
    reference, configuration, or binary path, then preflight every selected cleanup
    target;
