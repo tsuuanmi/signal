@@ -28,6 +28,16 @@ pub(crate) struct ReadOverlapEvidence {
     pub(crate) exclusion_reasons: Vec<OverlapExclusionReason>,
 }
 
+/// One maximal reference interval with constant independently placed read depth.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SampleCoverageEvidence {
+    pub(crate) start_0based: usize,
+    pub(crate) end_0based_exclusive: usize,
+    pub(crate) read_depth: usize,
+    pub(crate) forward_depth: usize,
+    pub(crate) reverse_depth: usize,
+}
+
 /// How one read observes a locus retained because at least one read differs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "snake_case")]
@@ -110,6 +120,7 @@ pub(crate) struct SampleEvidence {
     pub(crate) reference_sha256: String,
     pub(crate) configuration_sha256: String,
     pub(crate) reads: Vec<SampleReadEvidence>,
+    pub(crate) coverage: Vec<SampleCoverageEvidence>,
     pub(crate) overlaps: Vec<ReadOverlapEvidence>,
     pub(crate) locus_differences: Vec<LocusDifferenceEvidence>,
     pub(crate) variants: Vec<VariantEvidence>,
