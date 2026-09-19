@@ -350,12 +350,14 @@ diagnostic. The following limitations are intentional and documented:
 - **Single reference, single orientation.** The query is aligned to one
   reference record in one of two orientations. Multi-contig references,
   alternative references, and reference search/indexing are out of scope.
-- **Primary-sequence variants only.** Variants are derived from the conservative
-  signal-derived primary sequence. A two-channel ambiguity may still contribute
-  its strongest base to a primary-sequence difference, but it is not a genotype or
-  heteroplasmy call. Unresolved N differences, indels longer than
-  `max_indel_length`, out-of-region candidates, and SNV/insertion candidates
-  below configured supporting-signal thresholds are excluded.
+- **Primary-sequence variants only.** Differences are derived from the conservative
+  signal-derived primary sequence. A mixed two- or three-channel call may still
+  produce a normalized strongest-base SNV observation, but it is retained only as
+  evidence and is not eligible for ordinary clean-SNV reporting. Unresolved N
+  differences, indels longer than `max_indel_length`, out-of-region candidates,
+  mixed-supporting SNVs, and SNV/insertion candidates below configured supporting-
+  signal thresholds are excluded from the single-read report. This does not infer
+  genotype or heteroplasmy.
 - **Sanger trace limitations.** Basecalling depends on the quality of the
   four-channel signal and the vendor-defined basecall positions. Poor signal,
   mixed templates, and sequencing artifacts can produce unresolved (`N`) calls
