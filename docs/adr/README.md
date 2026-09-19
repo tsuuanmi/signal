@@ -28,3 +28,4 @@
 | [0024](0024-reference-coordinate-sample-evidence.md) | Aggregate independently placed reads in reference-coordinate/variant space | Superseded in part by ADR-0025 |
 | [0025](0025-compact-sample-evidence.md) | Factor sample evidence into a read registry and sparse differences | Accepted |
 | [0026](0026-reviewer-facing-signal-evidence.md) | Prefer reviewer-facing signal evidence over implementation call coordinates | Accepted |
+| [0027](0027-mixed-supporting-signal-snv-eligibility.md) | Treat mixed supporting signal as observed evidence, not a clean SNV | Accepted |
