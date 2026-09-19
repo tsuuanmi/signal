@@ -120,7 +120,7 @@ def cleanup_targets(
             if result.parent != output_dir:
                 raise ValueError(f"result target escapes output root: {result}")
             result_targets.append(result)
-        sample_log = log_dir / f"{sample}.sample.log"
+        sample_log = log_dir / f"{sample}.log"
         if sample_log.exists() or sample_log.is_symlink():
             log_targets.add(sample_log)
 
