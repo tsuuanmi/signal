@@ -41,7 +41,7 @@ uv run python scripts/analyze_samples.py
 ```
 
 The defaults read `data/MS_010426_001.txt`, search
-`data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write per-trace results under `results/<sample-id>/<trace-stem>.json`. After every trace for a selected sample succeeds, it also writes the compact sample aggregate as `results/<sample-id>/<sample-id>.json`. It sets `SIGNAL_LOG_DIR` so Rust logs remain separate under `logs/`.
+`data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write per-trace results under `results/<sample-id>/<trace-stem>.json`. After every trace for a selected sample succeeds, it also writes the compact sample aggregate as `results/<sample-id>/<sample-id>.json`. The persistent batch log is one `logs/<sample-id>.sample.log` per sample. Per-trace helper `analyze` invocations still produce the reviewer-facing trace JSON files, but their operational logs stay inside temporary workspaces; the subsequent `signal sample` run records the authoritative nested trace-stage events in the sample log.
 
 The wrapper performs a clean selected rerun:
 
