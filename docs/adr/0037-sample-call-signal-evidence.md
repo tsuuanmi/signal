@@ -45,7 +45,7 @@ Differential-locus deletions have no source nucleotide call and therefore retain
 `signal = None`. Variant-associated calls and non-deletion differential-locus
 observations retain one `CallSignalEvidence`.
 
-The current public `signal.sample_evidence/v7` contract remains unchanged.
+The full `CallSignalEvidence` remains internal. ADR-0053 later projects only its optional normalized profile and noisy-region membership at differential loci into `signal.sample_evidence/v8`; corrected amplitudes and per-channel SNR remain internal.
 
 ## Production observability
 

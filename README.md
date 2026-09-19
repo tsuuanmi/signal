@@ -139,7 +139,7 @@ Current public result contracts are:
 
 - `signal.basecalls/v2` — reference-free primary/ambiguity/retained read result;
 - `signal.analysis/v7` — compact reference-guided analysis result with reviewer-facing four-channel peak evidence;
-- `signal.sample_evidence/v7` — compact multi-read coverage, Tracy-derived pairwise overlap/admission evidence, sparse locus differences, normalized-variant evidence, and explicit eligibility reasons.
+- `signal.sample_evidence/v8` — compact multi-read coverage and overlap evidence plus sparse differential loci that preserve factorized support topology, per-read A/C/G/T evidence profiles/noisy context, normalized-variant evidence, and explicit eligibility reasons.
 
 The schemas, examples, coordinate conventions, and human-readable semantics live under [docs/contracts](docs/contracts/README.md).
 

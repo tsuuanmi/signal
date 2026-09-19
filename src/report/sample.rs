@@ -8,9 +8,10 @@ use crate::model::reference::Reference;
 use crate::model::result::{AlignmentResult, IntervalResult, PeakHeightsResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
-    SampleCoverageResult, SampleEvidenceResult, SampleLocusDifferenceObservationResult,
-    SampleLocusDifferenceResult, SampleOverlapResult, SampleProvenanceResult, SampleReadResult,
-    SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
+    SampleCoverageResult, SampleEvidenceProfileResult, SampleEvidenceResult,
+    SampleLocusDifferenceObservationResult, SampleLocusDifferenceResult,
+    SampleLocusSupportTopologyResult, SampleOverlapResult, SampleProvenanceResult,
+    SampleReadResult, SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
     SampleVariantSupportTopologyResult,
 };
 
@@ -21,7 +22,7 @@ pub(crate) struct CompletedSampleEvidence {
     pub(crate) evidence: SampleEvidence,
 }
 
-/// Builds `signal.sample_evidence/v7` without filesystem side effects.
+/// Builds `signal.sample_evidence/v8` without filesystem side effects.
 pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidenceResult> {
     let CompletedSampleEvidence {
         sample_id,
@@ -103,17 +104,40 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                 .observations
                 .into_iter()
                 .map(|observation| {
+                    let signal = observation.signal;
                     Ok(SampleLocusDifferenceObservationResult {
                         read: read_name(&read_names, observation.read_index)?.into(),
                         state: observation.state,
                         base: observation.base,
                         quality: observation.quality,
+                        profile: signal
+                            .as_ref()
+                            .and_then(|signal| signal.profile)
+                            .map(|profile| SampleEvidenceProfileResult {
+                                a: profile.weights[0],
+                                c: profile.weights[1],
+                                g: profile.weights[2],
+                                t: profile.weights[3],
+                            }),
+                        in_noisy_region: signal.map(|signal| signal.in_noisy_region),
                     })
                 })
                 .collect::<Result<Vec<_>>>()?;
             Ok(SampleLocusDifferenceResult {
                 position: difference.position_1based,
                 reference: difference.reference_base,
+                support_topology: SampleLocusSupportTopologyResult {
+                    reads: difference.support_topology.reads,
+                    forward_reads: difference.support_topology.forward_reads,
+                    reverse_reads: difference.support_topology.reverse_reads,
+                    reference_reads: difference.support_topology.reference_reads,
+                    alternate_reads: difference.support_topology.alternate_reads,
+                    unresolved_reads: difference.support_topology.unresolved_reads,
+                    deletion_reads: difference.support_topology.deletion_reads,
+                    profile_reads: difference.support_topology.profile_reads,
+                    profile_forward_reads: difference.support_topology.profile_forward_reads,
+                    profile_reverse_reads: difference.support_topology.profile_reverse_reads,
+                },
                 observations,
             })
         })
@@ -163,7 +187,7 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         .collect::<Result<Vec<_>>>()?;
 
     Ok(SampleEvidenceResult {
-        schema_version: "signal.sample_evidence/v7",
+        schema_version: "signal.sample_evidence/v8",
         sample_id,
         provenance: SampleProvenanceResult {
             reference: ReferenceResult {

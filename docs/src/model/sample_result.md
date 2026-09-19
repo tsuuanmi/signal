@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Defines serializable `signal.sample_evidence/v7` result records.
+Defines serializable `signal.sample_evidence/v8` result records.
 
 ## Responsibilities
 
-Represent sample identity, shared provenance, the read registry with per-read trace-integrity evidence, run-length coverage/orientation topology, pairwise overlap/admission evidence, sparse differential loci, and normalized variant support with factorized read/eligibility/orientation topology.
+Represent sample identity, shared provenance, the read registry with per-read trace-integrity evidence, run-length coverage/orientation topology, pairwise overlap/admission evidence, sparse differential loci with factorized support topology plus concise per-read A/C/G/T profile/noisy context, and normalized variant support with factorized read/eligibility/orientation topology.
 
-Public overlap, locus, and variant records refer to reads by unique human-readable filename stem rather than numeric registry index. Variant call evidence contains only role, reference-oriented base, four-channel peaks, and quality.
+Public overlap, locus, and variant records refer to reads by unique human-readable filename stem rather than numeric registry index. Differential-locus call observations may expose one normalized reference-oriented A/C/G/T profile and existing noisy-region membership; deletions expose neither. Variant call evidence contains only role, reference-oriented base, four-channel peaks, and quality.
 
 ## Coordinates
 

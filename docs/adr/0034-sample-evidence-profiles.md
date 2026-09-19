@@ -71,9 +71,7 @@ The profile is retained in the internal `SampleEvidence` science model for:
 - called `LocusDifferenceObservation` records;
 - `VariantCallEvidence` records.
 
-The current public `signal.sample_evidence/v7` contract remains unchanged and
-does not serialize the profile. The existing reviewer-facing base/quality/peaks
-projection remains compact.
+At the time of this decision the public sample contract remained unchanged. ADR-0053 later promotes each differential-locus observation's normalized profile into `signal.sample_evidence/v8`; corrected amplitudes, SNR, and variant-associated call-signal context remain internal so the reviewer-facing projection stays compact.
 
 ## Consequences
 

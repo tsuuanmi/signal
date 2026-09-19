@@ -6,6 +6,8 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace `signal.sample_evidence/v7` with `signal.sample_evidence/v8`, adding required differential-locus support topology and per-call optional reference-oriented A/C/G/T evidence profiles plus noisy-region context without v7 compatibility output.
+
 - Replace `signal.sample_evidence/v6` with `signal.sample_evidence/v7`, adding required normalized-variant support topology across read eligibility and selected orientation without v6 compatibility output.
 - Replace `signal.sample_evidence/v5` with `signal.sample_evidence/v6`, adding required run-length reference coverage topology with total/forward/reverse read depth and no v5 compatibility output.
 - Replace `signal.analysis/v6`, `signal.basecalls/v1`, and `signal.sample_evidence/v4` with v7/v2/v5 contracts that preserve concise PLOC/vendor cardinality, PLOC-spacing, exact clipping, and event-signal-scale integrity evidence without compatibility aliases.
@@ -23,6 +25,8 @@ All notable changes to this project are documented here.
 - Replace strict configuration schema version 1 with version 2, requiring variant peak, relative-quality, and inclusive-region settings.
 
 ### Added
+
+- Reviewer-facing sample differential loci now preserve the concise Tracy-derived signal shape needed for evidence-aware review: factorized read/state/profile topology plus each call-backed observation's normalized reference-oriented A/C/G/T `EvidenceProfile` and existing candidate-noisy context, while corrected amplitudes/SNR and consensus interpretation remain internal.
 
 - ADR-0052 records the directional confidence invariant for unstable mtDNA poly-C tracts: evidence after an unstable tract in sequencing order must be treated as lower-confidence than otherwise equivalent evidence that has not crossed the tract. Detection, recovery modeling, thresholds, and production behavior remain deferred for validation.
 

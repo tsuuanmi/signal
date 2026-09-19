@@ -1,5 +1,10 @@
 # Deferred or Low-ROI Tracy Features
 
+The Tracy production-learning phase is closed. The items below remain intentionally outside that phase; they require either different product scope or independent scientific validation before promotion.
+
+Additional follow-on research now includes persistent post-homopolymer/indel phase-shift detection and calibrated sample-consensus weighting. ADR-0052 records the directional post-poly-C confidence invariant, but its detector/recovery model is deliberately deferred.
+
+
 ## 56. Features From Tracy That Should Not Be Prioritized
 
 ### 56.1 FM Index / large-reference seed search

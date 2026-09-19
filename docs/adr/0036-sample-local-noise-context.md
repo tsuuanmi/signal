@@ -41,7 +41,7 @@ Membership is computed only from the existing half-open
 `NoisyRegion.call_start_0based..call_end_0based_exclusive` intervals. Sample
 code does not recalculate SNR, merge windows, or introduce a threshold.
 
-The current public `signal.sample_evidence/v7` contract remains unchanged.
+This context was initially internal. ADR-0053 later projects call-backed differential-locus noisy-region membership into `signal.sample_evidence/v8` without changing its observational semantics.
 Production sample logging consumes aggregate noisy locus-observation and
 variant-call counts.
 
@@ -51,8 +51,7 @@ variant-call counts.
   reconstructing upstream signal state.
 - Deletions do not receive fabricated nucleotide-call noise evidence.
 - Existing candidate-noisy semantics remain observation-only.
-- No call, alignment, read admission, variant eligibility, consensus weight, or
-  public result changes.
+- This decision changes no call, alignment, read admission, variant eligibility, consensus weight, or public result; ADR-0053 separately promotes the already-observed locus context to v8.
 
 ## Non-goals
 

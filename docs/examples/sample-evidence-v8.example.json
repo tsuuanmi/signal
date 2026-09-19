@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.sample_evidence/v7",
+  "schema_version": "signal.sample_evidence/v8",
   "sample_id": "sample-001",
   "provenance": {
     "reference": {
@@ -118,15 +118,41 @@
           "read": "read-a",
           "state": "alternate",
           "base": "T",
-          "quality": 56
+          "quality": 56,
+          "profile": {
+            "A": 0.01,
+            "C": 0.04,
+            "G": 0.03,
+            "T": 0.92
+          },
+          "in_noisy_region": false
         },
         {
           "read": "read-b",
           "state": "reference",
           "base": "C",
-          "quality": 52
+          "quality": 52,
+          "profile": {
+            "A": 0.01,
+            "C": 0.95,
+            "G": 0.02,
+            "T": 0.02
+          },
+          "in_noisy_region": false
         }
-      ]
+      ],
+      "support_topology": {
+        "reads": 2,
+        "forward_reads": 1,
+        "reverse_reads": 1,
+        "reference_reads": 1,
+        "alternate_reads": 1,
+        "unresolved_reads": 0,
+        "deletion_reads": 0,
+        "profile_reads": 2,
+        "profile_forward_reads": 1,
+        "profile_reverse_reads": 1
+      }
     },
     {
       "position": 199,
@@ -136,15 +162,41 @@
           "read": "read-a",
           "state": "alternate",
           "base": "C",
-          "quality": 56
+          "quality": 56,
+          "profile": {
+            "A": 0.01,
+            "C": 0.93,
+            "G": 0.04,
+            "T": 0.02
+          },
+          "in_noisy_region": false
         },
         {
           "read": "read-b",
           "state": "alternate",
           "base": "C",
-          "quality": 48
+          "quality": 48,
+          "profile": {
+            "A": 0.02,
+            "C": 0.69,
+            "G": 0.03,
+            "T": 0.26
+          },
+          "in_noisy_region": true
         }
-      ]
+      ],
+      "support_topology": {
+        "reads": 2,
+        "forward_reads": 1,
+        "reverse_reads": 1,
+        "reference_reads": 0,
+        "alternate_reads": 2,
+        "unresolved_reads": 0,
+        "deletion_reads": 0,
+        "profile_reads": 2,
+        "profile_forward_reads": 1,
+        "profile_reverse_reads": 1
+      }
     }
   ],
   "variants": [

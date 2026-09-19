@@ -44,7 +44,7 @@ Unresolved primary calls may still count when their basecall-independent profile
 exists. A valid zero-signal call with no profile does not count. Deletions never
 count as nucleotide-profile observations.
 
-The current public `signal.sample_evidence/v7` contract remains unchanged.
+Profile-availability counts were initially internal. ADR-0053 later includes those same counts in the public differential-locus support topology in `signal.sample_evidence/v8` without changing contributor eligibility.
 
 ## Consequences
 

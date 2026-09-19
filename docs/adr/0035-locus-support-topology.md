@@ -42,9 +42,7 @@ reads = reference_reads + alternate_reads + unresolved_reads + deletion_reads
 Each read can contribute at most one observation to one retained reference
 coordinate, as already enforced by sparse locus aggregation.
 
-The topology is internal in the current `signal.sample_evidence/v7` contract.
-Production sample logging consumes aggregate topology counts so the state is
-operationally observable without expanding public JSON.
+This topology was initially internal and observable through aggregate production logging. ADR-0053 later promotes the same topology into each public `signal.sample_evidence/v8` differential-locus record without changing its semantics.
 
 ## Consequences
 
@@ -60,5 +58,4 @@ operationally observable without expanding public JSON.
 
 ## Non-goals
 
-This decision does not define local contribution eligibility, evidence weights,
-gap quality, consensus state, sample confidence, or public schema changes.
+This decision itself does not define local contribution eligibility, evidence weights, gap quality, consensus state, sample confidence, or a public schema change; ADR-0053 separately defines the later public projection.

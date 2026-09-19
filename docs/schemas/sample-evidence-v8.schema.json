@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:signal:schema:sample-evidence:v7",
-  "title": "Signal sample evidence v7",
+  "$id": "urn:signal:schema:sample-evidence:v8",
+  "title": "Signal sample evidence v8",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -16,7 +16,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": "signal.sample_evidence/v7"
+      "const": "signal.sample_evidence/v8"
     },
     "sample_id": {
       "type": "string",
@@ -209,6 +209,7 @@
       "required": [
         "position",
         "reference",
+        "support_topology",
         "observations"
       ],
       "properties": {
@@ -231,6 +232,9 @@
             "$ref": "#/$defs/nonReferenceObservation"
           },
           "minContains": 1
+        },
+        "support_topology": {
+          "$ref": "#/$defs/locusSupportTopology"
         }
       }
     },
@@ -387,7 +391,8 @@
         "read",
         "state",
         "base",
-        "quality"
+        "quality",
+        "in_noisy_region"
       ],
       "properties": {
         "read": {
@@ -409,6 +414,12 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 255
+        },
+        "profile": {
+          "$ref": "#/$defs/evidenceProfile"
+        },
+        "in_noisy_region": {
+          "type": "boolean"
         }
       }
     },
@@ -766,6 +777,96 @@
           "minimum": 0
         },
         "eligible_reverse_reads": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "evidenceProfile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "C",
+        "G",
+        "T"
+      ],
+      "properties": {
+        "A": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "C": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "G": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "T": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "locusSupportTopology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "reads",
+        "forward_reads",
+        "reverse_reads",
+        "reference_reads",
+        "alternate_reads",
+        "unresolved_reads",
+        "deletion_reads",
+        "profile_reads",
+        "profile_forward_reads",
+        "profile_reverse_reads"
+      ],
+      "properties": {
+        "reads": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "forward_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reverse_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reference_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "alternate_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolved_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "deletion_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "profile_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "profile_forward_reads": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "profile_reverse_reads": {
           "type": "integer",
           "minimum": 0
         }
