@@ -1,4 +1,4 @@
-//! Forward/reverse selection and circular coordinate projection.
+//! Forward/reverse profile alignment selection and circular coordinate projection.
 
 use std::cmp::Ordering;
 
@@ -7,9 +7,11 @@ use crate::alignment::traceback::RawAlignment;
 use crate::config::AlignmentConfig;
 use crate::error::{Error, Result};
 use crate::model::alignment::{Alignment, AlignmentColumn, Orientation, ReferenceSegment};
+use crate::model::locus_evidence::EvidenceProfile;
 use crate::model::nucleotide::reverse_complement;
 use crate::model::quality::QualityControlResult;
 use crate::model::reference::{Reference, ReferenceTopology};
+use crate::model::signal::SignalAnalysis;
 
 struct Candidate {
     orientation: Orientation,
@@ -17,14 +19,21 @@ struct Candidate {
     placements: Vec<RawAlignment>,
 }
 
-/// Aligns both query orientations and returns one unique selected result.
+/// Aligns both evidence-profile orientations and returns one unique selected result.
 pub(crate) fn align_best(
     qc: &QualityControlResult,
+    signal: &SignalAnalysis,
     reference: &Reference,
     config: &AlignmentConfig,
 ) -> Result<Alignment> {
     let forward_query = qc.retained_sequence.clone();
     let reverse_query = reverse_complement(&forward_query);
+    let forward_profiles = retained_profiles(qc, signal)?;
+    let reverse_profiles = forward_profiles
+        .iter()
+        .rev()
+        .map(|profile| profile.map(EvidenceProfile::complemented))
+        .collect::<Vec<_>>();
     let forward_mapping = (qc.trim_start_0based..qc.trim_end_0based_exclusive).collect();
     let reverse_mapping = (qc.trim_start_0based..qc.trim_end_0based_exclusive)
         .rev()
@@ -39,12 +48,24 @@ pub(crate) fn align_best(
     let forward = Candidate {
         orientation: Orientation::Forward,
         mapping: forward_mapping,
-        placements: gotoh::align(&forward_query, &working_reference, config, modulo_length)?,
+        placements: gotoh::align(
+            &forward_query,
+            &forward_profiles,
+            &working_reference,
+            config,
+            modulo_length,
+        )?,
     };
     let reverse = Candidate {
         orientation: Orientation::Reverse,
         mapping: reverse_mapping,
-        placements: gotoh::align(&reverse_query, &working_reference, config, modulo_length)?,
+        placements: gotoh::align(
+            &reverse_query,
+            &reverse_profiles,
+            &working_reference,
+            config,
+            modulo_length,
+        )?,
     };
     let ordering = compare(&forward.placements[0], &reverse.placements[0]);
     let selected = match ordering {
@@ -52,7 +73,7 @@ pub(crate) fn align_best(
         Ordering::Less => &reverse,
         Ordering::Equal => {
             return Err(Error::Alignment(
-                "forward and reverse orientations remain equally supported".into(),
+                "forward and reverse evidence-profile scores are tied".into(),
             ));
         }
     };
@@ -102,12 +123,43 @@ pub(crate) fn align_best(
     })
 }
 
+fn retained_profiles(
+    qc: &QualityControlResult,
+    signal: &SignalAnalysis,
+) -> Result<Vec<Option<EvidenceProfile>>> {
+    if signal.loci.len() != qc.per_call.len() {
+        return Err(Error::Alignment(format!(
+            "signal/quality call count mismatch: {} loci, {} quality records",
+            signal.loci.len(),
+            qc.per_call.len()
+        )));
+    }
+    if qc.trim_start_0based > qc.trim_end_0based_exclusive
+        || qc.trim_end_0based_exclusive > signal.loci.len()
+    {
+        return Err(Error::Alignment(format!(
+            "invalid trim interval {}..{} for {} locus profiles",
+            qc.trim_start_0based,
+            qc.trim_end_0based_exclusive,
+            signal.loci.len()
+        )));
+    }
+    let profiles = signal.loci[qc.trim_start_0based..qc.trim_end_0based_exclusive]
+        .iter()
+        .map(|locus| locus.profile)
+        .collect::<Vec<_>>();
+    if profiles.len() != qc.retained_sequence.len() {
+        return Err(Error::Alignment(format!(
+            "retained sequence/profile length mismatch: {} bases, {} profiles",
+            qc.retained_sequence.len(),
+            profiles.len()
+        )));
+    }
+    Ok(profiles)
+}
+
 fn compare(left: &RawAlignment, right: &RawAlignment) -> Ordering {
-    left.score
-        .cmp(&right.score)
-        .then_with(|| left.metrics.exact_matches.cmp(&right.metrics.exact_matches))
-        .then_with(|| right.metrics.mismatches.cmp(&left.metrics.mismatches))
-        .then_with(|| right.metrics.gap_opens.cmp(&left.metrics.gap_opens))
+    left.score.cmp(&right.score)
 }
 
 fn segments(alignment: &RawAlignment, reference: &Reference) -> (Vec<ReferenceSegment>, bool) {
