@@ -12,7 +12,7 @@ use crate::sample as sample_science;
 /// Runs one sample-evidence operation with one sample-level append-only log.
 pub(crate) fn run(args: &SampleArgs) -> Result<()> {
     input::validate_sample_id(&args.sample_id)?;
-    let mut logger = Logger::open(&format!("{}.sample", args.sample_id))?;
+    let mut logger = Logger::open(&args.sample_id)?;
     let started = Instant::now();
     logger.info(
         module_path!(),
