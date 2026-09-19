@@ -46,7 +46,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<VariantEvidenc
         }
     }
 
-    Ok(variants
+    variants
         .into_iter()
         .map(|(key, support)| {
             let support_topology = support_topology(&support, reads)?;
@@ -59,7 +59,7 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<VariantEvidenc
                 support,
             })
         })
-        .collect::<Result<Vec<_>>>())
+        .collect()
 }
 
 fn support_topology(
