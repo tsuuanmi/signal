@@ -1,4 +1,4 @@
-//! Minimal linear-left and circular-canonical indel representation.
+//! Minimal indel representation preserving canonical alignment placement.
 
 use crate::error::{Error, Result};
 use crate::model::coordinate::reference_one_based;
@@ -44,37 +44,24 @@ pub(crate) fn insertion(
     }
     mapping::validate_insertion(&calls)?;
     let anchor = observed_anchor(reference, previous_reference, next_reference)?;
-    match reference.topology {
-        ReferenceTopology::Linear => {
-            if let Some(anchor) = anchor {
-                let (anchor, inserted) = shift_linear(reference, anchor, inserted)?;
-                build_insertion(reference, anchor, &inserted, calls)
-            } else {
-                let right_anchor = next_reference.ok_or_else(|| {
-                    Error::Variant("leading insertion lacks a right anchor".into())
-                })?;
-                let base = reference_base(reference, right_anchor)?;
-                validated(
-                    reference,
-                    Variant {
-                        contig: reference.name.clone(),
-                        position_1based: reference_one_based(right_anchor)?,
-                        reference: base.to_string(),
-                        alternate: format!("{inserted}{base}"),
-                        kind: VariantKind::Ins,
-                        calls,
-                    },
-                )
-            }
-        }
-        ReferenceTopology::Circular => {
-            let anchor = anchor.ok_or_else(|| {
-                Error::Variant("circular insertion lacks an adjacent reference base".into())
-            })?;
-            let (anchor, inserted) = canonical_circular(reference, anchor, inserted)?;
-            build_insertion(reference, anchor, &inserted, calls)
-        }
+    if let Some(anchor) = anchor {
+        return build_insertion(reference, anchor, &inserted, calls);
     }
+
+    let right_anchor = next_reference
+        .ok_or_else(|| Error::Variant("leading insertion lacks a right anchor".into()))?;
+    let base = reference_base(reference, right_anchor)?;
+    validated(
+        reference,
+        Variant {
+            contig: reference.name.clone(),
+            position_1based: reference_one_based(right_anchor)?,
+            reference: base.to_string(),
+            alternate: format!("{inserted}{base}"),
+            kind: VariantKind::Ins,
+            calls,
+        },
+    )
 }
 
 pub(crate) fn deletion(
@@ -90,37 +77,24 @@ pub(crate) fn deletion(
     }
     mapping::validate_deletion(&calls)?;
     let anchor = observed_anchor(reference, previous_reference, Some(first_deleted_reference))?;
-    match reference.topology {
-        ReferenceTopology::Linear => {
-            if let Some(anchor) = anchor {
-                let (anchor, deleted) = shift_linear(reference, anchor, deleted)?;
-                build_deletion(reference, anchor, &deleted, calls)
-            } else {
-                let right_anchor = next_reference.ok_or_else(|| {
-                    Error::Variant("leading deletion lacks a right anchor".into())
-                })?;
-                let base = reference_base(reference, right_anchor)?;
-                validated(
-                    reference,
-                    Variant {
-                        contig: reference.name.clone(),
-                        position_1based: 1,
-                        reference: format!("{deleted}{base}"),
-                        alternate: base.to_string(),
-                        kind: VariantKind::Del,
-                        calls,
-                    },
-                )
-            }
-        }
-        ReferenceTopology::Circular => {
-            let anchor = anchor.ok_or_else(|| {
-                Error::Variant("circular deletion lacks an adjacent reference base".into())
-            })?;
-            let (anchor, deleted) = canonical_circular(reference, anchor, deleted)?;
-            build_deletion(reference, anchor, &deleted, calls)
-        }
+    if let Some(anchor) = anchor {
+        return build_deletion(reference, anchor, &deleted, calls);
     }
+
+    let right_anchor = next_reference
+        .ok_or_else(|| Error::Variant("leading deletion lacks a right anchor".into()))?;
+    let base = reference_base(reference, right_anchor)?;
+    validated(
+        reference,
+        Variant {
+            contig: reference.name.clone(),
+            position_1based: 1,
+            reference: format!("{deleted}{base}"),
+            alternate: base.to_string(),
+            kind: VariantKind::Del,
+            calls,
+        },
+    )
 }
 
 fn observed_anchor(
@@ -140,53 +114,6 @@ fn observed_anchor(
         ReferenceTopology::Linear => position.checked_sub(1),
         ReferenceTopology::Circular => Some((position + reference.len() - 1) % reference.len()),
     })
-}
-
-fn shift_linear(
-    reference: &Reference,
-    mut anchor: usize,
-    mut allele: String,
-) -> Result<(usize, String)> {
-    while anchor > 0 {
-        let anchor_base = reference_base(reference, anchor)?;
-        let last = allele
-            .pop()
-            .ok_or_else(|| Error::Variant("indel allele became empty".into()))?;
-        if anchor_base != last {
-            allele.push(last);
-            break;
-        }
-        allele.insert(0, last);
-        anchor -= 1;
-    }
-    Ok((anchor, allele))
-}
-
-fn canonical_circular(
-    reference: &Reference,
-    anchor: usize,
-    allele: String,
-) -> Result<(usize, String)> {
-    let mut current_anchor = anchor;
-    let mut current_allele = allele;
-    let mut full_cycle_best = (current_anchor + 1, current_allele.clone());
-    for _ in 0..reference.len() {
-        let anchor_base = reference_base(reference, current_anchor)?;
-        let last = current_allele
-            .pop()
-            .ok_or_else(|| Error::Variant("indel allele became empty".into()))?;
-        if anchor_base != last {
-            current_allele.push(last);
-            return Ok((current_anchor, current_allele));
-        }
-        current_allele.insert(0, last);
-        current_anchor = (current_anchor + reference.len() - 1) % reference.len();
-        let candidate = (current_anchor + 1, current_allele.clone());
-        if candidate < full_cycle_best {
-            full_cycle_best = candidate;
-        }
-    }
-    Ok((full_cycle_best.0 - 1, full_cycle_best.1))
 }
 
 fn build_insertion(
