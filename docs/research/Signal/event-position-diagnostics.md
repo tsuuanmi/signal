@@ -4,7 +4,7 @@
 
 Investigate large disagreements between primary basecalls and continuous nucleotide-profile evidence before any profile-geometry threshold is fitted.
 
-This is a validation protocol, not a conclusion that Signal's event refinement is incorrect.
+The initial local validation study confirmed that the previous global-within-window total-signal maximum could associate a locus with a neighboring event. Extreme profile disagreements were concentrated in observations where the evidence event was displaced by roughly one local peak spacing while the primary call remained coherent at its own event. Exact sample-level measurements remain local validation artifacts.
 
 ## Hypothesis under test
 
