@@ -20,8 +20,7 @@ No scientific logic, file parsing, output writing, or configuration defaults.
 
 ## Invariants and errors
 
-Help/version are owned by Clap. Library failures produce a nonzero exit and are
-never converted into fake success.
+Help/version are owned by Clap. The binary crate forbids unsafe Rust and deprecated API use. Library failures produce a nonzero exit and are never converted into fake success.
 
 ## Dependencies
 
@@ -34,7 +33,7 @@ Corresponds only to the process-boundary portion of `apollo/src/apollo.cpp`.
 
 ## Requirements and decisions
 
-ADR-0002; `SRS-IN-011`, `SRS-IN-012`.
+ADR-0002; `SRS-IN-011`, `SRS-IN-012`, `SRS-NFR-001`, `SRS-NFR-005`.
 
 ## Tests
 
