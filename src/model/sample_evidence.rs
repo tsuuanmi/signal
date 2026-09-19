@@ -49,6 +49,18 @@ pub(crate) enum LocusState {
     Deletion,
 }
 
+/// Factorized topology of reads observing one retained differential locus.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) struct LocusSupportTopology {
+    pub(crate) reads: usize,
+    pub(crate) forward_reads: usize,
+    pub(crate) reverse_reads: usize,
+    pub(crate) reference_reads: usize,
+    pub(crate) alternate_reads: usize,
+    pub(crate) unresolved_reads: usize,
+    pub(crate) deletion_reads: usize,
+}
+
 /// Concise evidence supporting one selected read placement.
 #[derive(Debug, Clone)]
 pub(crate) struct SampleReadAlignmentEvidence {
@@ -85,6 +97,7 @@ pub(crate) struct LocusDifferenceObservation {
 pub(crate) struct LocusDifferenceEvidence {
     pub(crate) position_1based: usize,
     pub(crate) reference_base: char,
+    pub(crate) support_topology: LocusSupportTopology,
     pub(crate) observations: Vec<LocusDifferenceObservation>,
 }
 
