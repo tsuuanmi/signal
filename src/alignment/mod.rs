@@ -1,5 +1,6 @@
 //! Bounded deterministic affine-gap alignment and strand selection.
 
+mod canonical;
 mod gotoh;
 mod orient;
 mod scoring;
