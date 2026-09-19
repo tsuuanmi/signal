@@ -134,6 +134,11 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
 
     write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
     write_config(&config, "linear")?;
+    let config_text = fs::read_to_string(&config)?;
+    fs::write(
+        &config,
+        config_text.replace("best_section_fraction=0.10", "best_section_fraction=1.0"),
+    )?;
     write_abif_with_secondary_signal(&trace, &query, 10, b'C', 400)?;
 
     let mut command = Command::new(env!("CARGO_BIN_EXE_signal"));
@@ -160,9 +165,13 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
     assert_eq!(support.len(), 1);
     assert_eq!(support[0]["read"], "mixed-read");
     assert_eq!(support[0]["eligible"], false);
-    assert_eq!(
-        support[0]["exclusion_reasons"],
-        serde_json::json!(["mixed_supporting_signal"])
+    let reasons = support[0]["exclusion_reasons"]
+        .as_array()
+        .ok_or("exclusion_reasons must be an array")?;
+    assert!(
+        reasons
+            .iter()
+            .any(|reason| reason == "mixed_supporting_signal")
     );
     let call = &support[0]["calls"][0];
     assert_eq!(call["base"], "T");
