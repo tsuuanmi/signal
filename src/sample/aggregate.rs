@@ -357,7 +357,9 @@ mod tests {
         assert_eq!(nucleotide_support.forward_support, [0.1, 0.2, 0.3, 0.4]);
         assert_eq!(nucleotide_support.reverse_support, [0.4, 0.3, 0.2, 0.1]);
         assert_eq!(
-            nucleotide_support.mean_profile.map(|profile| profile.weights),
+            nucleotide_support
+                .mean_profile
+                .map(|profile| profile.weights),
             Some([0.25, 0.25, 0.25, 0.25])
         );
         assert_eq!(
