@@ -46,6 +46,8 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 - **SRS-SIG-005:** Overlapping or adjacent candidate-noisy windows MUST be unioned without bridging clean gaps, and a noisy interval MUST require at least the configured minimum run length.
 - **SRS-SIG-006:** Signal annotations MUST NOT alter quality scores, trim bounds, alignment, warning totals, or variant eligibility. They MUST NOT be described as Phred, error probabilities, genotype, or heteroplasmy evidence.
 - **SRS-SIG-007:** A read shorter than the configured signal window MUST fail with a typed signal-processing error rather than emit partial windows.
+- **SRS-SIG-008:** Signal processing MUST derive one internal `LocusEvidence` record per validated PLOC locus directly from analyzed A/C/G/T channels and shared PLOC-window geometry. Event refinement MUST maximize total non-negative baseline-corrected A/C/G/T amplitude inside the locus window, breaking ties by nearest PLOC and then lower sample coordinate.
+- **SRS-SIG-009:** `EvidenceProfile` MUST normalize positive corrected A/C/G/T amplitudes at the refined event sample and MUST NOT depend on primary/ambiguity calls, selected basecall peaks, qualifying-channel membership, or `secondary_peak_ratio`. A locus with zero total corrected signal MUST have no profile; no uniform or reference-guided fallback is permitted.
 
 ## 6. Quality control
 
