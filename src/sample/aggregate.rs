@@ -111,6 +111,21 @@ mod tests {
                 exclusion_reasons: Vec::new(),
             })
             .collect();
+        let reference_segments = columns
+            .iter()
+            .filter_map(|column| column.reference_index_0based)
+            .fold(None, |bounds, index| {
+                Some(match bounds {
+                    Some((start, end)) => (start.min(index), end.max(index + 1)),
+                    None => (index, index + 1),
+                })
+            })
+            .map_or_else(Vec::new, |(start_0based, end_0based_exclusive)| {
+                vec![ReferenceSegment {
+                    start_0based,
+                    end_0based_exclusive,
+                }]
+            });
         ReadObservation {
             input_name: format!("{input_sha256}.ab1"),
             input_sha256: input_sha256.into(),
@@ -152,10 +167,7 @@ mod tests {
             alignment: Alignment {
                 orientation,
                 score: 1,
-                reference_segments: vec![ReferenceSegment {
-                    start_0based: 0,
-                    end_0based_exclusive: 100,
-                }],
+                reference_segments,
                 wraps_origin: false,
                 metrics: AlignmentMetrics {
                     exact_matches: 0,
