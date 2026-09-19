@@ -360,7 +360,9 @@ def rejected_sample_shapes(
         "in_noisy_region"
     )
     out_of_range_profile = copy.deepcopy(example)
-    out_of_range_profile["locus_differences"][0]["observations"][0]["profile"]["A"] = 1.1
+    out_of_range_profile["locus_differences"][0]["observations"][0]["profile"]["A"] = (
+        1.1
+    )
 
     missing_support_topology = copy.deepcopy(example)
     missing_support_topology["variants"][0].pop("support_topology")
@@ -560,7 +562,9 @@ def main(argv: list[str] | None = None) -> int:
         errors.append("expected invalid sample locus profile mass to be rejected")
 
     inconsistent_locus_topology = copy.deepcopy(sample_example)
-    inconsistent_locus_topology["locus_differences"][0]["support_topology"]["forward_reads"] += 1
+    inconsistent_locus_topology["locus_differences"][0]["support_topology"][
+        "forward_reads"
+    ] += 1
     inconsistent_locus_errors: list[str] = []
     validate_sample_support_topology_document(
         inconsistent_locus_topology,
@@ -568,7 +572,9 @@ def main(argv: list[str] | None = None) -> int:
         inconsistent_locus_errors,
     )
     if not inconsistent_locus_errors:
-        errors.append("expected inconsistent sample locus support topology to be rejected")
+        errors.append(
+            "expected inconsistent sample locus support topology to be rejected"
+        )
 
     inconsistent_topology = copy.deepcopy(sample_example)
     inconsistent_topology["variants"][0]["support_topology"]["forward_reads"] += 1
