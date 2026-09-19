@@ -128,6 +128,20 @@ fn run_logged(
         .flat_map(|support| &support.calls)
         .filter(|call| call.in_noisy_region)
         .count();
+    let nucleotide_eligible_locus_observations = evidence
+        .locus_differences
+        .iter()
+        .map(|difference| difference.support_topology.nucleotide_eligible_reads)
+        .sum::<usize>();
+    let missing_profile_locus_observations = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| &difference.observations)
+        .filter(|observation| {
+            observation.nucleotide_contribution
+                == crate::model::sample_evidence::NucleotideContribution::MissingProfile
+        })
+        .count();
     let locus_forward_reads = evidence
         .locus_differences
         .iter()
@@ -165,7 +179,8 @@ fn run_logged(
             concat!(
                 "event=sample_aggregation_completed elapsed_ms={} reads={} coverage_segments={} ",
                 "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
-                "noisy_locus_observations={} locus_forward_reads={} locus_reverse_reads={} ",
+                "noisy_locus_observations={} nucleotide_eligible_locus_observations={} ",
+                "missing_profile_locus_observations={} locus_forward_reads={} locus_reverse_reads={} ",
                 "locus_reference_reads={} locus_alternate_reads={} locus_unresolved_reads={} ",
                 "locus_deletion_reads={} variants={} profiled_variant_calls={} noisy_variant_calls={}"
             ),
@@ -181,6 +196,8 @@ fn run_logged(
             evidence.locus_differences.len(),
             profiled_locus_observations,
             noisy_locus_observations,
+            nucleotide_eligible_locus_observations,
+            missing_profile_locus_observations,
             locus_forward_reads,
             locus_reverse_reads,
             locus_reference_reads,
