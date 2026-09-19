@@ -14,7 +14,7 @@ Builds sparse reference-coordinate evidence only where at least one read differs
 - Keep deletions free of fabricated base/quality/call-signal evidence.
 - Keep insertion columns out of reference-coordinate locus evidence.
 - Reject duplicate contribution from one read to the same reference coordinate.
-- Derive one internal support topology per retained locus: total reads, forward/reverse reads, and reference/alternate/unresolved/deletion reads, with both partitions required to sum to total reads.
+- Derive one internal support topology per retained locus: total reads, forward/reverse reads, reference/alternate/unresolved/deletion reads, and profile-bearing reads split by forward/reverse orientation. Profile availability is a denominator only and cannot exceed non-deletion observations.
 
 ## Sparse semantics
 
