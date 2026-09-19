@@ -36,27 +36,36 @@ pub(super) struct SampleAggregationMetrics {
 }
 
 pub(super) fn summarize(evidence: &SampleEvidence) -> SampleAggregationMetrics {
-    let geometry = evidence
+    let (profile_geometry_loci, within_profile_impurity_sum, between_profile_dispersion_sum, total_profile_heterogeneity_sum) =
+        evidence
+            .locus_differences
+            .iter()
+            .filter_map(|difference| difference.nucleotide_support.heterogeneity)
+            .fold((0usize, 0.0, 0.0, 0.0), |acc, geometry| {
+                (
+                    acc.0 + 1,
+                    acc.1 + geometry.within_profile_impurity,
+                    acc.2 + geometry.between_profile_dispersion,
+                    acc.3 + geometry.total_profile_heterogeneity,
+                )
+            });
+    let forward_profile_geometry_loci = evidence
         .locus_differences
         .iter()
-        .filter_map(|difference| difference.nucleotide_support.heterogeneity);
-    let forward_geometry = evidence
+        .filter(|difference| difference.nucleotide_support.forward_heterogeneity.is_some())
+        .count();
+    let reverse_profile_geometry_loci = evidence
         .locus_differences
         .iter()
-        .filter_map(|difference| difference.nucleotide_support.forward_heterogeneity);
-    let reverse_geometry = evidence
+        .filter(|difference| difference.nucleotide_support.reverse_heterogeneity.is_some())
+        .count();
+    let (directional_profile_distance_loci, directional_profile_distance_sum) = evidence
         .locus_differences
         .iter()
-        .filter_map(|difference| difference.nucleotide_support.reverse_heterogeneity);
-    let directional_distances = evidence
-        .locus_differences
-        .iter()
-        .filter_map(|difference| difference.nucleotide_support.directional_profile_distance);
-
-    let geometry_values = geometry.collect::<Vec<_>>();
-    let forward_geometry_values = forward_geometry.collect::<Vec<_>>();
-    let reverse_geometry_values = reverse_geometry.collect::<Vec<_>>();
-    let directional_distance_values = directional_distances.collect::<Vec<_>>();
+        .filter_map(|difference| difference.nucleotide_support.directional_profile_distance)
+        .fold((0usize, 0.0), |(count, sum), distance| {
+            (count + 1, sum + distance)
+        });
 
     SampleAggregationMetrics {
         profiled_locus_observations: evidence
@@ -141,23 +150,14 @@ pub(super) fn summarize(evidence: &SampleEvidence) -> SampleAggregationMetrics {
             .iter()
             .flat_map(|difference| difference.nucleotide_support.support)
             .sum(),
-        profile_geometry_loci: geometry_values.len(),
-        within_profile_impurity_sum: geometry_values
-            .iter()
-            .map(|geometry| geometry.within_profile_impurity)
-            .sum(),
-        between_profile_dispersion_sum: geometry_values
-            .iter()
-            .map(|geometry| geometry.between_profile_dispersion)
-            .sum(),
-        total_profile_heterogeneity_sum: geometry_values
-            .iter()
-            .map(|geometry| geometry.total_profile_heterogeneity)
-            .sum(),
-        forward_profile_geometry_loci: forward_geometry_values.len(),
-        reverse_profile_geometry_loci: reverse_geometry_values.len(),
-        directional_profile_distance_loci: directional_distance_values.len(),
-        directional_profile_distance_sum: directional_distance_values.iter().sum(),
+        profile_geometry_loci,
+        within_profile_impurity_sum,
+        between_profile_dispersion_sum,
+        total_profile_heterogeneity_sum,
+        forward_profile_geometry_loci,
+        reverse_profile_geometry_loci,
+        directional_profile_distance_loci,
+        directional_profile_distance_sum,
         locus_positive_corrected_channels: evidence
             .locus_differences
             .iter()
