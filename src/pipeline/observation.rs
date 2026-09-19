@@ -48,7 +48,7 @@ pub(crate) fn build(
         line!(),
         format_args!(
             concat!(
-                "event=alignment_completed elapsed_ms={} orientation={:?} score={} ",
+                "event=alignment_completed elapsed_ms={} orientation={:?} profile_score_units={} ",
                 "exact_matches={} mismatches={} gap_opens={} callable_columns={} ",
                 "callable_identity={:.4} unresolved_query_bases={} segments={} ",
                 "segment_bounds={:?} wraps_origin={}"
