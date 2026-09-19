@@ -2,69 +2,25 @@
 
 ## Purpose
 
-Projects normalized variants and mapped original calls into the compact v5
-variant and supporting-evidence records.
+Projects normalized variants into reviewer-facing call evidence for `signal.analysis/v6`.
 
 ## Responsibilities
 
-- Turn each internal `Variant` into a `VariantResult` containing position,
-  reference/alternate alleles, kind, and projected calls.
-- Join each `VariantCallMapping` to its original `BaseCall` and `CallQuality` by
-  index, validating index consistency.
-- Preserve role, original call index, mapped biological position, PLOC, primary,
-  and ambiguity symbols.
-- For supporting calls only, emit the maximum of the four channel peak heights and
-  the uncalibrated relative quality score.
-- Convert internal 0-based reference positions to checked one-based report
-  positions; inserted supporting calls keep no reference position.
+- Resolve each internal variant call mapping to its original base call and quality record.
+- Reject missing or mismatched call/quality records.
+- Require primary-event evidence for every public variant-associated call.
+- Project trace-strand called base and co-located A/C/G/T channel heights into reference orientation.
+- Emit only `role`, reference-oriented `base`, four-channel `peaks`, and uncalibrated `quality`.
 
 ## Non-responsibilities
 
-No document assembly, serialization, atomic publication, peak-position reporting,
-per-channel peak projection, vendor-quality projection, normalization, or variant
-eligibility decisions.
+No variant extraction, normalization, filtering, genotype inference, or filesystem publication.
 
-## Key types and functions
+## Review semantics
 
-- `project(variants, calls, quality) -> Result<Vec<VariantResult>>`: module entry
-  point called by `report::json::build`.
-- `project_variant`: drops internal-only contig and emits no report-only
-  classification/normalization labels.
-- `project_call`: validates the joined call/quality indexes and constructs the
-  concise mapped-call record.
+For reverse reads the public base and channel labels are reverse-complement projected, so a reviewer can compare the normalized alternate allele directly with the strongest displayed channel.
 
-## Invariants and errors
-
-- Missing call or quality indexes return `Error::Report`.
-- The referenced `BaseCall` and `CallQuality` indexes must equal the mapping index.
-- `position` is absent only for inserted supporting calls and otherwise is a
-  checked one-based reference coordinate.
-- `maximum_peak_height` and `relative_quality` are present exactly for
-  `VariantCallRole::Supporting`; flanking calls omit both.
-- Maximum peak height uses all four selected channel heights and does not expose
-  per-channel values or peak sample positions.
-
-## Dependencies
-
-- `model::basecalls::BaseCalls`.
-- `model::coordinate::reference_one_based`.
-- `model::quality::QualityControlResult`.
-- `model::result::{VariantCallResult, VariantResult}`.
-- `model::variant::{Variant, VariantCallMapping, VariantCallRole}`.
-- `error` for `Error`/`Result`.
-
-## Biological semantics
-
-Variant alleles and reported positions use the reference strand. Projected call
-symbols and PLOC retain the original trace orientation. Supporting SNV and
-inserted-base calls carry the two evidence values used by eligibility filtering;
-indel flanks remain positional context and do not fabricate supporting peak or
-quality evidence.
-
-## Tests
-
-Behavior is exercised through report assembly, schema validation, and end-to-end
-variant tests.
+Original call index, PLOC, mapped call position, trace-strand ambiguity, selected peak positions/sources, and vendor evidence remain internal.
 
 ## Status
 
