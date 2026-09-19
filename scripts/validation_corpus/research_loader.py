@@ -350,7 +350,7 @@ def validate_locus_row(row: dict[str, Any], label: str) -> None:
 def four_values(
     value: Any,
     label: str,
-    expected_type: type[int] | type[str] | type[float],
+    expected_type: type[int | str | float],
 ) -> tuple[Any, Any, Any, Any] | None:
     if value is None:
         return None
