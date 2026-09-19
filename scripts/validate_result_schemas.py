@@ -177,8 +177,7 @@ def validate_sample_support_topology_document(
     document: dict[str, Any], label: str, errors: list[str]
 ) -> None:
     reads = document.get("reads")
-    variants = document.get("variants")
-    if not isinstance(reads, list) or not isinstance(variants, list):
+    if not isinstance(reads, list):
         return
 
     orientations: dict[str, str] = {}
@@ -266,6 +265,10 @@ def validate_sample_support_topology_document(
                 errors.append(
                     f"{label}: locus {index} support_topology does not match observations/read orientation"
                 )
+
+    variants = document.get("variants")
+    if not isinstance(variants, list):
+        return
 
     for index, variant in enumerate(variants):
         if not isinstance(variant, dict):

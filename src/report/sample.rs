@@ -22,7 +22,7 @@ pub(crate) struct CompletedSampleEvidence {
     pub(crate) evidence: SampleEvidence,
 }
 
-/// Builds `signal.sample_evidence/v7` without filesystem side effects.
+/// Builds `signal.sample_evidence/v8` without filesystem side effects.
 pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidenceResult> {
     let CompletedSampleEvidence {
         sample_id,
