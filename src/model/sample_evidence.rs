@@ -88,6 +88,9 @@ pub(crate) struct SampleReadEvidence {
 /// Reference-oriented signal evidence associated with one source call.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct CallSignalEvidence {
+    pub(crate) event_ploc_distance: usize,
+    pub(crate) minimum_adjacent_ploc_spacing: Option<usize>,
+    pub(crate) maximum_adjacent_ploc_spacing: Option<usize>,
     pub(crate) corrected_amplitudes: [f64; 4],
     pub(crate) snrs: [f64; 4],
     pub(crate) profile: Option<EvidenceProfile>,
