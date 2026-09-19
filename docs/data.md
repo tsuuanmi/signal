@@ -41,7 +41,7 @@ uv run python scripts/analyze_samples.py
 ```
 
 The defaults read `data/MS_010426_001.txt`, search
-`data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write per-trace results under `results/<sample-id>/<trace-stem>.json`. After every trace for a selected sample succeeds, it also writes the compact sample aggregate as `results/<sample-id>/<sample-id>.json`. The persistent batch log is one `logs/<sample-id>.sample.log` per sample. Per-trace helper `analyze` invocations still produce the reviewer-facing trace JSON files, but their operational logs stay inside temporary workspaces; the subsequent `signal sample` run records the authoritative nested trace-stage events in the sample log.
+`data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write per-trace results under `results/<sample-id>/<trace-stem>.json`. After every trace for a selected sample succeeds, it also writes the compact sample aggregate as `results/<sample-id>/<sample-id>.json`. The persistent batch log is one `logs/<sample-id>.log` per sample. Per-trace helper `analyze` invocations still produce the reviewer-facing trace JSON files, but their operational logs stay inside temporary workspaces; the subsequent `signal sample` run records the authoritative nested trace-stage events in the sample log.
 
 The wrapper performs a clean selected rerun:
 
@@ -54,7 +54,7 @@ The wrapper performs a clean selected rerun:
 4. build the release binary unless `--no-build` is supplied, then require a
    regular binary;
 5. destructively remove only `results/<selected-sample>/` directories and the
-   matching `logs/<selected-sample>.sample.log` files;
+   matching `logs/<selected-sample>.log` files;
 6. run each selected trace through the one-file CLI and atomically place each new
    result without overwrite, synchronizing both the result directory and every
    parent that gained a newly created directory entry.
