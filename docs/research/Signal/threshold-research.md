@@ -30,6 +30,28 @@ and directional Total Variation in `[0, 1]` when both orientations contribute.
 These metrics are not allele fractions, Phred probabilities, genotype probabilities,
 heteroplasmy percentages, or confidence scores.
 
+## Implemented descriptive dataset step
+
+Before any threshold-selection code is introduced, a completed validation corpus is
+converted into one hash-bound descriptive research dataset:
+
+```bash
+uv run python scripts/analyze_validation_corpus.py \
+  --corpus-dir validation-results/corpus \
+  --output-dir validation-results/research/baseline
+```
+
+The implementation streams the corpus into joined `loci.csv` and
+`observations.csv` tables and publishes `signal.validation_research/v1` provenance.
+It also reports exact empirical nearest-rank p50/p90/p95/p99 summaries for the four
+geometry metrics overall and by holdout/truth/fit grouping.
+
+These percentiles describe observed distributions only. They are **not** candidate
+thresholds. Threshold selection remains blocked until the real corpus, null population,
+false-positive objective, development split, and locked holdout are reviewed and frozen.
+
+See [research-dataset.md](research-dataset.md) for the implemented table boundary.
+
 ## Research order
 
 Research each metric independently before combining them into a multivariate rule.

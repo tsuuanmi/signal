@@ -148,3 +148,5 @@ Synthetic integration tests verify that:
 - the exporter refuses to overwrite an existing measurement file.
 
 This exporter is measurement infrastructure only. Threshold selection remains governed by `validation-corpus.md` and `threshold-research.md`.
+
+Completed corpus exports are joined for analysis by [research-dataset.md](research-dataset.md). That downstream step preserves the measurement identity and diagnostics but still performs no threshold selection.

@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 from .filesystem import sync_directory, validate_new_directory, write_bytes, write_json
-from .measurements import corpus_index, measurement_summary
+from .measurements import corpus_index, load_measurements
 from .model import MeasurementSummary, ValidationCase
 
 
@@ -52,7 +52,10 @@ def run_case(
         raise RuntimeError(
             f"{case_id}: validation succeeded but did not create {generated}"
         )
-    summary = measurement_summary(generated, case)
+    expected_reads = {trace.trace_sha256 for trace in case.traces}
+    summary = load_measurements(
+        generated, case.metadata.validation_case_id, expected_reads
+    ).summary
     cases_dir = publish_root / "cases"
     cases_dir.mkdir(exist_ok=True)
     write_bytes(cases_dir / f"{case_id}.jsonl", generated.read_bytes())

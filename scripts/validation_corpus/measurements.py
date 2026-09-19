@@ -13,18 +13,21 @@ from .model import (
     MANIFEST_SCHEMA_VERSION,
     MEASUREMENT_SCHEMA_VERSION,
     MeasurementSummary,
+    ValidatedMeasurements,
     ValidationCase,
 )
 
 SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
-def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
-    expected_reads = {trace.trace_sha256 for trace in case.traces}
+def load_measurements(
+    path: Path, case_id: str, expected_reads: set[str]
+) -> ValidatedMeasurements:
+    """Parse and validate one deterministic validation-locus JSONL export."""
     seen_reads: set[str] = set()
     identity: tuple[str, str, str, str] | None = None
     previous_position = 0
-    loci = 0
+    rows: list[dict[str, Any]] = []
 
     with path.open("r", encoding="utf-8") as source:
         for line_number, line in enumerate(source, start=1):
@@ -43,7 +46,7 @@ def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
                     f"{path}: line {line_number} has unexpected measurement schema "
                     f"{row.get('schema_version')!r}"
                 )
-            if row.get("sample_id") != case.metadata.validation_case_id:
+            if row.get("sample_id") != case_id:
                 raise ValueError(
                     f"{path}: line {line_number} has sample_id {row.get('sample_id')!r}"
                 )
@@ -122,9 +125,9 @@ def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
                     )
                 row_reads.add(read_sha256)
                 seen_reads.add(read_sha256)
-            loci += 1
+            rows.append(row)
 
-    if loci == 0 or identity is None:
+    if not rows or identity is None:
         raise ValueError(f"{path}: measurement export contains no loci")
     missing_reads = expected_reads - seen_reads
     if missing_reads:
@@ -132,7 +135,10 @@ def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
             f"{path}: measurement export never references "
             f"{len(missing_reads)} manifest trace(s)"
         )
-    return MeasurementSummary(*identity, loci)
+    return ValidatedMeasurements(
+        summary=MeasurementSummary(*identity, len(rows)),
+        rows=rows,
+    )
 
 
 def corpus_index(
