@@ -606,12 +606,8 @@ def case_audit_rows(
                 bool(row["alignment_challenge"]) for row in reads
             ),
             "high_noise_reads": sum(bool(row["high_noise"]) for row in reads),
-            "aggressive_trim_reads": sum(
-                bool(row["aggressive_trim"]) for row in reads
-            ),
-            "short_coverage_reads": sum(
-                bool(row["short_coverage"]) for row in reads
-            ),
+            "aggressive_trim_reads": sum(bool(row["aggressive_trim"]) for row in reads),
+            "short_coverage_reads": sum(bool(row["short_coverage"]) for row in reads),
             "orientation_disagreement_reads": sum(
                 bool(row["orientation_disagreement"]) for row in reads
             ),
