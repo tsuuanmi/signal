@@ -1,5 +1,5 @@
 # Signal scientific configuration. Unknown or missing keys are errors.
-schema_version = 4
+schema_version = 5
 
 [reference]
 # rCRS is a circular mitochondrial reference.
@@ -33,6 +33,11 @@ gap_open_score = -10
 gap_extension_score = -4
 minimum_callable_bases = 20
 minimum_identity = 0.80
+
+[sample_reconciliation]
+# Tracy-derived pre-consensus overlap admission, applied after independent placement.
+minimum_overlap_bases = 25
+minimum_overlap_agreement = 0.50
 
 [variant_calling]
 # Anchor bases do not count toward this changed-length limit.
