@@ -62,10 +62,8 @@ pub(super) fn aggregate(
         result.forward_support[channel] + result.reverse_support[channel]
     });
     result.mean_profile = mean_profile(result.support, result.contributors);
-    result.forward_mean_profile =
-        mean_profile(result.forward_support, result.forward_contributors);
-    result.reverse_mean_profile =
-        mean_profile(result.reverse_support, result.reverse_contributors);
+    result.forward_mean_profile = mean_profile(result.forward_support, result.forward_contributors);
+    result.reverse_mean_profile = mean_profile(result.reverse_support, result.reverse_contributors);
 
     if result.contributors != result.forward_contributors + result.reverse_contributors
         || result.mean_profile.is_some() != (result.contributors > 0)
