@@ -42,7 +42,7 @@ Operational trace-stage records are written to `logs/validation-001.validation.l
 
 ## Row schema
 
-Each line is one `signal.validation_locus/v1` object containing:
+Each line is one `signal.validation_locus/v2` object. v2 replaces the research-only v1 schema and retains the same locus-level aggregates plus one nested `observations[]` diagnostic record per read.
 
 ~~~text
 schema_version
