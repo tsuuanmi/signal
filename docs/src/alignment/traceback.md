@@ -26,8 +26,8 @@ No dynamic-programming scoring, strand selection, or variant extraction.
   gapped-row and operation-run strings are not duplicated.
 - `TracebackInput`: the packed trace, dimensions, endpoint, state, and score.
 - `decode(input) -> Result<RawAlignment>`: performs the traceback walk.
-- `gap_open_count(columns) -> usize`: counts transitions into insertion/deletion
-  runs without serializing an operation string.
+- `metrics(columns) -> AlignmentMetrics`: derives the single authoritative exact/mismatch/gap/callable metric set and is reused after canonical gap shifts.
+- `gap_open_count(columns) -> usize`: counts transitions into insertion/deletion runs without serializing an operation string.
 
 ## Invariants and errors
 
