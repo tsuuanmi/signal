@@ -29,6 +29,10 @@ where those positions stop.
 
 ### Signal lesson
 
+**Production promotion (2026-09-19):** ADR-0031 keeps PLOC as the mandatory
+current-method locus authority while changing optional PBAS/PCON cardinality
+mismatch from a hard decode failure into explicit trace-integrity evidence.
+
 Signal currently also treats PLOC as required canonical input. That is a valid
 MVP constraint, but it should be explicit as a scientific dependency rather than
 an incidental parser detail.
@@ -64,6 +68,11 @@ maintainer explicitly stated in August 2026 that Tracy cannot handle these
 high-amplitude artifacts.
 
 ### Signal lesson
+
+**Production promotion (2026-09-19):** ADR-0031 adds exact signed-16-bit clipping
+counts and an unthresholded maximum-to-median corrected event-signal ratio. It
+deliberately does not claim that these observations are a complete dye-blob or
+artifact classifier.
 
 Signal should keep artifact handling separate from ordinary peak competition.
 A high-amplitude outlier is not evidence that every lower-amplitude event is
