@@ -104,10 +104,7 @@ nomenclature, need a separate explicit method/ADR rather than hidden special cas
 
 The selected alignment columns MUST use the canonical right-aligned topology.
 
-Variant extraction/normalization MUST NOT move an indel back to a contradictory placement
-without explicitly declaring a separate output-representation convention. The current
-generic linear left-normalization behavior therefore requires follow-up review before it can
-be considered authoritative mtDNA nomenclature.
+Variant extraction/representation MUST NOT move an indel back to a contradictory placement without explicitly declaring a separate output-representation convention. Signal's production variant builder therefore preserves the alignment-selected canonical gap anchor and performs no independent repeat shifting or circular rotation.
 
 VCF-style left normalization may be offered only at an explicit serialization/interchange
 boundary in the future; it is not the scientific source of truth for Signal's internal
