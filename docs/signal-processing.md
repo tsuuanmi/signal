@@ -4,7 +4,7 @@
 
 Signal reads the analyzed ABIF `DATA.9`–`DATA.12` arrays in canonical A/C/G/T order. These are instrument-analyzed fluorescence channels, not raw detector channels. The current ABIF boundary does not retain a spectral matrix, mobility model, or raw-channel baseline metadata.
 
-The signal-processing stage is deliberately observational. It retains `signal.windowed_snr/v1` noisy-window behavior and now also derives internal basecall-independent `LocusEvidence` / `EvidenceProfile`. Compact public JSON still emits only merged candidate-noisy regions; signal processing does not smooth channels, re-call bases, trim internal sequence, change an alignment, or remove a variant.
+The signal-processing stage is deliberately observational. It retains `signal.windowed_snr/v1` noisy-window behavior and derives internal basecall-independent `LocusEvidence` / `EvidenceProfile`. Compact public JSON still emits only merged candidate-noisy regions; signal processing itself does not smooth channels, re-call bases, trim internal sequence, mutate an alignment, or remove a variant. Reference alignment may consume the immutable evidence profile under ADR-0029.
 
 ## Coordinate domains
 
@@ -41,7 +41,7 @@ weight[channel] = corrected_amplitude[channel] / sum(corrected_amplitudes)
 
 If the total corrected amplitude is zero, the profile is absent. Signal does not inject a uniform profile, reference base, or caller-derived fallback.
 
-This profile is intentionally independent of primary base, ambiguity/IUPAC code, selected basecall peaks, qualifying-channel membership, and `secondary_peak_ratio`. The current primary caller and Gotoh alignment remain unchanged; the profile is an internal evidence foundation for later evidence-aware alignment and persistent mixed-signal methods.
+This profile is intentionally independent of primary base, ambiguity/IUPAC code, selected basecall peaks, qualifying-channel membership, and `secondary_peak_ratio`. The primary caller remains unchanged. Reference-guided alignment consumes the retained post-trim profile sequence through the fixed-point profile-aware Gotoh method in ADR-0029; persistent mixed-signal interpretation remains a separate downstream method.
 
 ## Interpretation limits
 

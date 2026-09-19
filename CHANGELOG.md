@@ -19,6 +19,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Required Rust source-policy CI gate rejects deprecated compatibility APIs, legacy/backward-compatibility feature/declaration scaffolding, and diagnostic suppressions that could hide dead/unused/deprecated production code.
+- Fixed-point profile-aware semi-global Gotoh placement (`signal.profile_gotoh/v1`) using post-trim basecall-independent A/C/G/T evidence profiles, explicit 1024-unit quantization, reverse profile complementation, and score-only orientation ties without changing public JSON schemas.
 - Internal basecall-independent `LocusEvidence` and normalized `EvidenceProfile` derived directly from analyzed A/C/G/T channel signal at deterministic refined PLOC events; zero-signal loci have no synthetic fallback profile and public JSON contracts are unchanged.
 - Multi-read `signal sample` evidence now preserves filtered normalized-variant observations, reviewer-facing read provenance, reference-oriented four-channel peak/quality evidence, and focused reference-support quality at differential loci while omitting routine all-reference loci.
 
@@ -38,6 +40,7 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- Reference-guided alignment substitution scores now derive from `EvidenceProfile`; affine gap, traceback, circular topology, public primary-sequence callable/identity metrics, and downstream primary-sequence variant extraction remain unchanged. Internal/logged alignment scores are fixed-point units rather than raw configured score totals.
 - PLOC neighboring-midpoint window geometry is shared between basecalling and signal evidence instead of being owned only by the caller; obsolete basecall-dependent `CallSignalMetrics`/`PrimaryEventSignalMetrics` are removed.
 - Candidate-noisy signal annotations are observation-only and do not affect calls, trim bounds, alignments, warning totals, or variant eligibility.
 - MVP output is one compact `results/<trace-stem>.json`; the earlier JSON-plus-VCF plan is superseded.

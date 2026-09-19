@@ -36,7 +36,7 @@ pub(crate) fn build(
 
     *stage = "alignment";
     let stage_started = Instant::now();
-    let alignment = alignment::align_best(&quality, reference, &config.alignment)?;
+    let alignment = alignment::align_best(&quality, &signal, reference, &config.alignment)?;
     let reference_segments = alignment
         .reference_segments
         .iter()
@@ -48,7 +48,7 @@ pub(crate) fn build(
         line!(),
         format_args!(
             concat!(
-                "event=alignment_completed elapsed_ms={} orientation={:?} score={} ",
+                "event=alignment_completed elapsed_ms={} orientation={:?} profile_score_units={} ",
                 "exact_matches={} mismatches={} gap_opens={} callable_columns={} ",
                 "callable_identity={:.4} unresolved_query_bases={} segments={} ",
                 "segment_bounds={:?} wraps_origin={}"

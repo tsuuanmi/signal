@@ -2,65 +2,49 @@
 
 ## Purpose
 
-Runs bounded, semi-global affine-gap Gotoh dynamic programming over a query and
-reference, returning up to two distinct equally scoring placements.
+Runs bounded semi-global affine-gap Gotoh dynamic programming over a retained
+primary sequence plus one aligned evidence-profile record per query row.
 
 ## Responsibilities
 
-- Build the match/insertion/deletion dynamic-programming matrices with affine gap
-  costs (open + k × extension).
-- Enforce the compiled `MAX_ALIGNMENT_CELLS` cap before allocating traceback
-  storage.
-- Rank final-row endpoints and recover up to two distinct, equally scoring
-  placements so downstream strand selection can reject ambiguous results.
-- Support circular references by selecting the best endpoint whose traceback
-  consumes at most `modulo_length`, then deduplicate by wrapped start.
+- Require query/profile cardinality equality before allocating DP state.
+- Build match/insertion/deletion matrices using fixed-point profile substitution scores.
+- Preserve affine gap semantics as `open + k × extension` in the same 1024 score scale.
+- Enforce the compiled `MAX_ALIGNMENT_CELLS` cap.
+- Recover up to two distinct equally scoring placements.
+- Preserve the one-reference-length bound and wrapped-start deduplication for circular references.
 
 ## Non-responsibilities
 
-No strand selection, quality filtering, variant extraction, or output
-formatting. It does not decide between forward and reverse orientation.
+No profile construction, QC trimming, forward/reverse selection, public metric
+policy, variant extraction, or reporting.
 
-## Key types and functions
+## Key function
 
-- `align(query, reference, config, modulo_length) -> Result<Vec<RawAlignment>>`:
-  the DP entry point. Returns one or two placements, or a typed error.
-- `state_priority(state) -> u8`: deterministic tie-break order (Match > Deletion
-  > Insertion) used when diagonal predecessors score equally.
+- `align(query, profiles, reference, config, modulo_length) -> Result<Vec<RawAlignment>>`.
 
-## Invariants and errors
+The query string remains necessary for traceback characters and downstream
+primary-sequence metrics. Substitution scores are driven by the profile at the
+same query row.
 
-- Query and reference must both be non-empty; otherwise `Error::Alignment`.
-- Cell count is checked with `checked_mul` and rejected when it exceeds
-  `MAX_ALIGNMENT_CELLS`.
-- All matrix indices are bounds-checked; overflow yields `Error::Alignment`.
-- If no valid bounded traceback is found, `Error::Alignment` is returned.
-- Placements are deduplicated by wrapped start and aligned query/reference base
-  columns; the function stops early once two distinct placements are found.
+## Invariants
 
-## Dependencies
-
-- `scoring` for `NEGATIVE_INFINITY`, `State`, `add`, and `substitution`.
-- `traceback` for `RawAlignment`, `TracebackInput`, and `decode`.
-- `config` for `AlignmentConfig` and `MAX_ALIGNMENT_CELLS`.
-- `error` for `Error`/`Result`.
-
-## Biological semantics
-
-Affine-gap scoring models the cost of sequencing insertions and deletions as a
-single open penalty plus a per-base extension penalty. Semi-global alignment
-allows the reference flanks to remain unaligned, which is appropriate when the
-query is a read that should be placed within a longer reference.
+- Query and reference are non-empty.
+- `profiles.len() == query.len()`.
+- DP comparisons are integer-only after profile quantization.
+- Existing predecessor tie order remains Match > Deletion > Insertion.
+- Existing gap-extension-vs-open equality behavior is unchanged.
+- Circular traceback may consume at most one original reference length.
 
 ## Tests
 
-- `permits_free_reference_flanks`: verifies a query placed inside a longer
-  reference scores only the matched bases.
-- `accepts_one_full_circular_reference_span`: verifies a one-circle traceback is
-  retained under the circular bound.
-- `scores_one_base_gap_as_open_plus_extension`: verifies a single-base insertion
-  costs open + extension and contributes exactly one gap open.
-- `preserves_scores_beyond_i32_range`: verifies the DP retains an exact 64-bit score.
+Tests cover clean one-hot compatibility, free reference flanks, circular
+one-span placement, affine gap scoring, unresolved primary character with usable
+profile evidence, profile-cardinality rejection, and scores beyond `i32` range.
+
+## Traceability
+
+ADR-0029; `SRS-ALN-001` through `SRS-ALN-004`, and `SRS-ALN-010`.
 
 ## Status
 

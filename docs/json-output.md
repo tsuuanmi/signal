@@ -46,7 +46,7 @@ The selected alignment reports:
 - one or two 0-based half-open `reference_segments`;
 - `wraps_origin`.
 
-Gapped query/reference rows, operation runs, score, exact-match/mismatch redundancy, and traceback columns remain internal. The alignment consumes the retained post-trim sequence, so `reference_segments` describe post-trim mapped coverage.
+Gapped query/reference rows, operation runs, fixed-point profile score, exact-match/mismatch redundancy, and traceback columns remain internal. Placement consumes the retained post-trim `EvidenceProfile` sequence, while the retained primary sequence remains attached to traceback columns for callable/identity metrics and downstream primary-sequence variant extraction. `reference_segments` therefore describe post-trim mapped coverage.
 
 ## Variant calls
 

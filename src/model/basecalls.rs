@@ -42,10 +42,6 @@ pub struct BaseCall {
     pub(crate) window_start_0based: usize,
     pub(crate) window_end_0based_exclusive: usize,
     pub(crate) peaks: [ChannelPeak; 4],
-    #[allow(
-        dead_code,
-        reason = "retained for later internal scientific stages without public projection"
-    )]
     pub(crate) primary_peak_evidence: Option<PrimaryPeakEvidence>,
     pub(crate) primary: char,
     pub(crate) ambiguity: char,

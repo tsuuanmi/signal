@@ -18,14 +18,14 @@
 - midpoint windows, plateau peaks, PLOC fallback, ties, ambiguity ratios/IUPAC;
 - shared PLOC locus geometry; basecall-independent event refinement; zero-signal profile absence; threshold-independent A/C/G/T profile mass; signal baseline/first-difference MAD, noise floor, full rolling windows, thresholds, and merged regions;
 - penalty windows, zero-penalty scoring, trim bounds/minimum length;
-- Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
+- fixed-point profile substitution quantization, one-hot compatibility with the prior score ordering, missing-profile ambiguous scoring, unresolved primary characters with usable profile evidence, reverse profile complementation, Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
 - forward/reverse mapping, circular origin, ambiguous placement/orientation;
 - SNV, insertion, deletion, N exclusion, mixed-supporting-signal SNV eligibility, length caps, linear/circular normalization, evidence;
 - deterministic sample read ordering, sparse differential-locus retention, named-read variant support, mixed-SNV eligibility retention, deterministic serialization, and atomic no-overwrite publication.
 
 ### Integration tests
 
-Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v1 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v6 JSON, internal rolling-window behavior and merged noisy-region projection, observation-only variant behavior, forward/reverse reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular segments, and public call quality, strict config v4, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v3 schema rejection cases plus batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
+Tests construct a canonical synthetic ABIF with known `PLOC(i) = 2 + 4i`. They verify deterministic reference-free basecalls-v1 JSON without FASTA I/O, sequence/trim invariants, command coexistence, logs and no-overwrite behavior, plus deterministic compact analysis-v6 JSON, internal rolling-window behavior and merged noisy-region projection, profile-aware forward/reverse placement, reference-oriented SNV peak evidence, insertion/deletion call evidence without fabricated deleted-base signal, indel-normalization preservation, circular profile alignment segments, and public primary-sequence alignment metrics/call quality, strict config v4, malformed input, core CLI no-overwrite publication, and absence of compatibility output. Focused Python tests cover sample-v3 schema rejection cases plus batch preflight, ambiguity/collision/symlink rejection, selected-only destructive cleanup, sample aggregate publication, unselected-artifact preservation, and partial-output behavior after a later failure.
 
 ### Differential and real-trace validation
 
@@ -41,4 +41,4 @@ Run a release build with a named 500–1,000 base approved or synthetic trace ag
 
 ## Release gate
 
-All normative requirements and automated checks must pass, and at least one approved real AB1 must have complete end-to-end evidence before describing a scientific release as real-trace validated.
+All normative requirements and automated checks must pass, including the Rust source-policy gate that rejects explicit obsolete/compatibility scaffolding and hidden dead/unused/deprecated production paths. At least one approved real AB1 must have complete end-to-end evidence before describing a scientific release as real-trace validated.

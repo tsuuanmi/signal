@@ -2,23 +2,37 @@
 
 ## Purpose
 
-Selects the uniquely best forward or reverse-complement alignment and projects circular reference coordinates.
+Builds post-trim forward/reverse evidence-profile queries, selects one uniquely
+best orientation, and projects circular reference coordinates.
 
 ## Responsibilities
 
-- Align both orientations of the QC-retained sequence.
+- Validate signal-locus and QC call cardinality before alignment.
+- Slice profiles by the QC trim interval.
+- Build the reverse candidate by reversing profile order and complementing A/T and C/G weights.
 - Map oriented query indexes back to original call indexes.
-- Reject orientation or placement ties and configured alignment-quality failures.
-- Derive reference segments from the selected alignment.
-- Split circular coverage into two segments and set `wraps_origin` when the alignment crosses the reference origin.
+- Compare forward/reverse candidates by fixed-point profile score only.
+- Reject exact orientation-score ties and modulo-distinct placement ties.
+- Apply the existing primary-sequence callable-base and identity admission gates.
+- Derive linear/circular reference segments and origin-wrap state.
 
-## Post-trim coverage
+## Important semantic separation
 
-Alignment consumes `QualityControlResult.retained_sequence`. Therefore emitted reference segments describe mapped coverage **after end trimming**, not the untrimmed decoded call span.
+Profile evidence determines placement score. The retained primary sequence remains
+attached to traceback columns and still defines `callable_columns`,
+`callable_identity`, exact/mismatch counts, and unresolved-query counts.
+
+Primary-sequence metrics do not break an exact forward/reverse profile-score tie.
 
 ## Circular origin
 
-For a circular reference, `wraps_origin=true` means the selected alignment passes from the end of the reference back to position 1. The public result then contains two 0-based half-open reference segments.
+Circular references still align to a doubled working sequence. Selected
+coordinates are projected modulo the original reference and split into two
+segments when crossing the origin.
+
+## Traceability
+
+ADR-0029; `SRS-ALN-005`, `SRS-ALN-006`, `SRS-ALN-010`, and `SRS-ALN-011`.
 
 ## Status
 

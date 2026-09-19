@@ -9,6 +9,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-EVID-003:** Vendor PBAS/PCON are vendor evidence, not authoritative Signal output.
 - **INV-EVID-004:** `LocusEvidence` and `EvidenceProfile` are derived directly from immutable analyzed A/C/G/T channel values and PLOC-defined geometry; primary/ambiguity calls, selected basecall peaks, and qualifying-channel thresholds MUST NOT determine profile membership or weights.
 - **INV-EVID-005:** A zero-positive-signal locus has no evidence profile; the system MUST NOT synthesize a uniform or reference-guided profile as a fallback.
+- **INV-EVID-006:** Reference placement MAY consume `EvidenceProfile`, but reference context MUST NOT mutate or rewrite upstream locus evidence or base calls.
 
 ## Coordinates and identity
 
@@ -56,6 +57,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 
 ## Rust implementation
 
-- **INV-RUST-001:** First-party production code forbids unsafe Rust.
+- **INV-RUST-001:** First-party production code forbids unsafe Rust and denies deprecated API use; first-party source cannot suppress that diagnostic under the source-policy gate.
 - **INV-RUST-002:** Production paths do not use `unwrap` or `expect` for recoverable external conditions.
 - **INV-RUST-003:** Types and module boundaries should encode coordinate, topology, strand, and validated-state distinctions when doing so removes a concrete failure mode.
+- **INV-RUST-004:** Production source must not hide obsolete code behind deprecated declarations, legacy/backward-compatibility feature paths, compatibility-named declarations, or warning suppressions for deprecated/dead/unreachable/unused code; CI enforces this explicit-source policy in addition to compiler and Clippy diagnostics.
