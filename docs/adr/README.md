@@ -53,3 +53,4 @@
 | [0049](0049-validation-research-dataset.md) | Separate descriptive validation datasets from threshold selection | Accepted |
 | [0050](0050-validation-audit-strata.md) | Keep validation audit strata observational and separate from truth | Accepted |
 | [0051](0051-validation-curation-queue.md) | Separate immutable curation evidence from editable review decisions | Accepted |
+| [0052](0052-post-polyc-directional-confidence.md) | Treat post-poly-C evidence as directionally lower-confidence when read phase is unstable | Accepted |
