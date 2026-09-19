@@ -9,6 +9,8 @@ use crate::pipeline::{input, observation};
 use crate::report::{self, CompletedSampleEvidence};
 use crate::sample as sample_science;
 
+use super::sample_metrics;
+
 /// Runs one sample-evidence operation with one sample-level append-only log.
 pub(crate) fn run(args: &SampleArgs) -> Result<()> {
     input::validate_sample_id(&args.sample_id)?;
@@ -102,153 +104,7 @@ fn run_logged(
     *stage = "sample_aggregation";
     let stage_started = Instant::now();
     let evidence = sample_science::aggregate(&reads, &inputs.config.sample_reconciliation)?;
-    let profiled_locus_observations = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.profile_reads)
-        .sum::<usize>();
-    let profiled_locus_forward_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.profile_forward_reads)
-        .sum::<usize>();
-    let profiled_locus_reverse_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.profile_reverse_reads)
-        .sum::<usize>();
-    let profiled_variant_calls = evidence
-        .variants
-        .iter()
-        .flat_map(|variant| &variant.support)
-        .flat_map(|support| &support.calls)
-        .filter(|call| call.signal.profile.is_some())
-        .count();
-    let noisy_locus_observations = evidence
-        .locus_differences
-        .iter()
-        .flat_map(|difference| &difference.observations)
-        .filter(|observation| {
-            observation
-                .signal
-                .as_ref()
-                .is_some_and(|signal| signal.in_noisy_region)
-        })
-        .count();
-    let noisy_variant_calls = evidence
-        .variants
-        .iter()
-        .flat_map(|variant| &variant.support)
-        .flat_map(|support| &support.calls)
-        .filter(|call| call.signal.in_noisy_region)
-        .count();
-    let eligible_nucleotide_locus_observations = evidence
-        .locus_differences
-        .iter()
-        .flat_map(|difference| &difference.observations)
-        .filter(|observation| {
-            observation.nucleotide_contribution
-                == crate::model::sample_evidence::NucleotideContribution::Eligible
-        })
-        .count();
-    let missing_profile_locus_observations = evidence
-        .locus_differences
-        .iter()
-        .flat_map(|difference| &difference.observations)
-        .filter(|observation| {
-            observation.nucleotide_contribution
-                == crate::model::sample_evidence::NucleotideContribution::MissingProfile
-        })
-        .count();
-    let deletion_event_locus_observations = evidence
-        .locus_differences
-        .iter()
-        .flat_map(|difference| &difference.observations)
-        .filter(|observation| {
-            observation.nucleotide_contribution
-                == crate::model::sample_evidence::NucleotideContribution::DeletionEvent
-        })
-        .count();
-    let nucleotide_support_loci = evidence
-        .locus_differences
-        .iter()
-        .filter(|difference| difference.nucleotide_support.mean_profile.is_some())
-        .count();
-    let bidirectional_nucleotide_support_loci = evidence
-        .locus_differences
-        .iter()
-        .filter(|difference| {
-            difference.nucleotide_support.forward_mean_profile.is_some()
-                && difference.nucleotide_support.reverse_mean_profile.is_some()
-        })
-        .count();
-    let unweighted_nucleotide_profile_mass = evidence
-        .locus_differences
-        .iter()
-        .flat_map(|difference| difference.nucleotide_support.support)
-        .sum::<f64>();
-    let locus_positive_corrected_channels = evidence
-        .locus_differences
-        .iter()
-        .flat_map(|difference| &difference.observations)
-        .filter_map(|observation| observation.signal.as_ref())
-        .flat_map(|signal| signal.corrected_amplitudes)
-        .filter(|value| *value > 0.0)
-        .count();
-    let locus_positive_snr_channels = evidence
-        .locus_differences
-        .iter()
-        .flat_map(|difference| &difference.observations)
-        .filter_map(|observation| observation.signal.as_ref())
-        .flat_map(|signal| signal.snrs)
-        .filter(|value| *value > 0.0)
-        .count();
-    let variant_positive_corrected_channels = evidence
-        .variants
-        .iter()
-        .flat_map(|variant| &variant.support)
-        .flat_map(|support| &support.calls)
-        .flat_map(|call| call.signal.corrected_amplitudes)
-        .filter(|value| *value > 0.0)
-        .count();
-    let variant_positive_snr_channels = evidence
-        .variants
-        .iter()
-        .flat_map(|variant| &variant.support)
-        .flat_map(|support| &support.calls)
-        .flat_map(|call| call.signal.snrs)
-        .filter(|value| *value > 0.0)
-        .count();
-    let locus_forward_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.forward_reads)
-        .sum::<usize>();
-    let locus_reverse_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.reverse_reads)
-        .sum::<usize>();
-    let locus_reference_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.reference_reads)
-        .sum::<usize>();
-    let locus_alternate_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.alternate_reads)
-        .sum::<usize>();
-    let locus_unresolved_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.unresolved_reads)
-        .sum::<usize>();
-    let locus_deletion_reads = evidence
-        .locus_differences
-        .iter()
-        .map(|difference| difference.support_topology.deletion_reads)
-        .sum::<usize>();
+    let metrics = sample_metrics::summarize(&evidence);
     logger.info(
         module_path!(),
         line!(),
@@ -260,6 +116,10 @@ fn run_logged(
                 "eligible_nucleotide_locus_observations={} missing_profile_locus_observations={} ",
                 "deletion_event_locus_observations={} nucleotide_support_loci={} ",
                 "bidirectional_nucleotide_support_loci={} unweighted_nucleotide_profile_mass={:.6} ",
+                "profile_geometry_loci={} within_profile_impurity_sum={:.6} ",
+                "between_profile_dispersion_sum={:.6} total_profile_heterogeneity_sum={:.6} ",
+                "forward_profile_geometry_loci={} reverse_profile_geometry_loci={} ",
+                "directional_profile_distance_loci={} directional_profile_distance_sum={:.6} ",
                 "locus_positive_corrected_channels={} locus_positive_snr_channels={} ",
                 "locus_forward_reads={} locus_reverse_reads={} locus_reference_reads={} ",
                 "locus_alternate_reads={} locus_unresolved_reads={} locus_deletion_reads={} variants={} ",
@@ -276,29 +136,37 @@ fn run_logged(
                 .filter(|overlap| overlap.eligible)
                 .count(),
             evidence.locus_differences.len(),
-            profiled_locus_observations,
-            profiled_locus_forward_reads,
-            profiled_locus_reverse_reads,
-            noisy_locus_observations,
-            eligible_nucleotide_locus_observations,
-            missing_profile_locus_observations,
-            deletion_event_locus_observations,
-            nucleotide_support_loci,
-            bidirectional_nucleotide_support_loci,
-            unweighted_nucleotide_profile_mass,
-            locus_positive_corrected_channels,
-            locus_positive_snr_channels,
-            locus_forward_reads,
-            locus_reverse_reads,
-            locus_reference_reads,
-            locus_alternate_reads,
-            locus_unresolved_reads,
-            locus_deletion_reads,
+            metrics.profiled_locus_observations,
+            metrics.profiled_locus_forward_reads,
+            metrics.profiled_locus_reverse_reads,
+            metrics.noisy_locus_observations,
+            metrics.eligible_nucleotide_locus_observations,
+            metrics.missing_profile_locus_observations,
+            metrics.deletion_event_locus_observations,
+            metrics.nucleotide_support_loci,
+            metrics.bidirectional_nucleotide_support_loci,
+            metrics.unweighted_nucleotide_profile_mass,
+            metrics.profile_geometry_loci,
+            metrics.within_profile_impurity_sum,
+            metrics.between_profile_dispersion_sum,
+            metrics.total_profile_heterogeneity_sum,
+            metrics.forward_profile_geometry_loci,
+            metrics.reverse_profile_geometry_loci,
+            metrics.directional_profile_distance_loci,
+            metrics.directional_profile_distance_sum,
+            metrics.locus_positive_corrected_channels,
+            metrics.locus_positive_snr_channels,
+            metrics.locus_forward_reads,
+            metrics.locus_reverse_reads,
+            metrics.locus_reference_reads,
+            metrics.locus_alternate_reads,
+            metrics.locus_unresolved_reads,
+            metrics.locus_deletion_reads,
             evidence.variants.len(),
-            profiled_variant_calls,
-            noisy_variant_calls,
-            variant_positive_corrected_channels,
-            variant_positive_snr_channels
+            metrics.profiled_variant_calls,
+            metrics.noisy_variant_calls,
+            metrics.variant_positive_corrected_channels,
+            metrics.variant_positive_snr_channels
         ),
     )?;
 
