@@ -481,6 +481,36 @@ mod tests {
     }
 
     #[test]
+    #[test]
+    fn diagnostic_channel_projection_and_offsets_are_reference_oriented() -> Result<()> {
+        assert_eq!(
+            reference_usize_values(Orientation::Reverse, [1, 2, 3, 4]),
+            [4, 3, 2, 1]
+        );
+        assert_eq!(
+            reference_peak_sources(
+                Orientation::Reverse,
+                [
+                    PeakSource::LocalMaximum,
+                    PeakSource::PlocFallback,
+                    PeakSource::LocalMaximum,
+                    PeakSource::PlocFallback,
+                ],
+            ),
+            [
+                PeakSource::PlocFallback,
+                PeakSource::LocalMaximum,
+                PeakSource::PlocFallback,
+                PeakSource::LocalMaximum,
+            ]
+        );
+        assert_eq!(signed_offset(12, 10)?, 2);
+        assert_eq!(signed_offset(8, 10)?, -2);
+        assert_eq!(signed_offset(10, 10)?, 0);
+        Ok(())
+    }
+
+    #[test]
     fn profile_and_geometry_channels_preserve_values() {
         let profile = EvidenceProfile {
             weights: [0.1, 0.2, 0.3, 0.4],
