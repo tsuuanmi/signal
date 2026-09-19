@@ -102,9 +102,9 @@ pub(crate) struct CallSignalEvidence {
     pub(crate) in_noisy_region: bool,
 }
 
-/// One observation at a covered locus retained because the sample differs there.
+/// One read observation at one retained sample reference locus.
 #[derive(Debug, Clone)]
-pub(crate) struct LocusDifferenceObservation {
+pub(crate) struct SampleLocusObservation {
     pub(crate) read_index: usize,
     pub(crate) state: LocusState,
     pub(crate) base: Option<char>,
@@ -139,14 +139,14 @@ pub(crate) struct LocusNucleotideSupport {
     pub(crate) directional_profile_distance: Option<f64>,
 }
 
-/// All covering-read observations retained at one differential reference locus.
+/// All covering-read observations retained at one sample reference locus.
 #[derive(Debug, Clone)]
-pub(crate) struct LocusDifferenceEvidence {
+pub(crate) struct SampleLocusEvidence {
     pub(crate) position_1based: usize,
     pub(crate) reference_base: char,
     pub(crate) support_topology: LocusSupportTopology,
     pub(crate) nucleotide_support: LocusNucleotideSupport,
-    pub(crate) observations: Vec<LocusDifferenceObservation>,
+    pub(crate) observations: Vec<SampleLocusObservation>,
 }
 
 /// One trace call directly supporting or flanking a normalized variant.
@@ -198,6 +198,6 @@ pub(crate) struct SampleEvidence {
     pub(crate) reads: Vec<SampleReadEvidence>,
     pub(crate) coverage: Vec<SampleCoverageEvidence>,
     pub(crate) overlaps: Vec<ReadOverlapEvidence>,
-    pub(crate) locus_differences: Vec<LocusDifferenceEvidence>,
+    pub(crate) locus_differences: Vec<SampleLocusEvidence>,
     pub(crate) variants: Vec<VariantEvidence>,
 }
