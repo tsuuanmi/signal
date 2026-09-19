@@ -169,6 +169,24 @@ fn run_logged(
                 == crate::model::sample_evidence::NucleotideContribution::DeletionEvent
         })
         .count();
+    let nucleotide_support_loci = evidence
+        .locus_differences
+        .iter()
+        .filter(|difference| difference.nucleotide_support.contributors > 0)
+        .count();
+    let bidirectional_nucleotide_support_loci = evidence
+        .locus_differences
+        .iter()
+        .filter(|difference| {
+            difference.nucleotide_support.forward_contributors > 0
+                && difference.nucleotide_support.reverse_contributors > 0
+        })
+        .count();
+    let unweighted_nucleotide_profile_mass = evidence
+        .locus_differences
+        .iter()
+        .flat_map(|difference| difference.nucleotide_support.support)
+        .sum::<f64>();
     let locus_positive_corrected_channels = evidence
         .locus_differences
         .iter()
@@ -240,7 +258,9 @@ fn run_logged(
                 "overlaps={} eligible_overlaps={} locus_differences={} profiled_locus_observations={} ",
                 "profiled_locus_forward_reads={} profiled_locus_reverse_reads={} noisy_locus_observations={} ",
                 "eligible_nucleotide_locus_observations={} missing_profile_locus_observations={} ",
-                "deletion_event_locus_observations={} locus_positive_corrected_channels={} locus_positive_snr_channels={} ",
+                "deletion_event_locus_observations={} nucleotide_support_loci={} ",
+                "bidirectional_nucleotide_support_loci={} unweighted_nucleotide_profile_mass={:.6} ",
+                "locus_positive_corrected_channels={} locus_positive_snr_channels={} ",
                 "locus_forward_reads={} locus_reverse_reads={} locus_reference_reads={} ",
                 "locus_alternate_reads={} locus_unresolved_reads={} locus_deletion_reads={} variants={} ",
                 "profiled_variant_calls={} noisy_variant_calls={} variant_positive_corrected_channels={} ",
@@ -263,6 +283,9 @@ fn run_logged(
             eligible_nucleotide_locus_observations,
             missing_profile_locus_observations,
             deletion_event_locus_observations,
+            nucleotide_support_loci,
+            bidirectional_nucleotide_support_loci,
+            unweighted_nucleotide_profile_mass,
             locus_positive_corrected_channels,
             locus_positive_snr_channels,
             locus_forward_reads,
