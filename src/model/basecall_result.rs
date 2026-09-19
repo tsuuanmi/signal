@@ -1,4 +1,4 @@
-//! Serializable `signal.basecalls/v1` reference-free result contract.
+//! Serializable `signal.basecalls/v2` reference-free result contract.
 
 use serde::Serialize;
 
