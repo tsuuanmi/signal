@@ -6,7 +6,7 @@ Derives one basecall-independent `LocusEvidence` record for every validated PLOC
 
 ## Responsibilities
 
-- Reuse shared PLOC-window geometry and deterministic rolling signal context.
+- Derive both the locus window and fixed-width local-statistics context from shared PLOC geometry, without consuming basecall records or rolling noisy-window records.
 - Estimate per-channel local baseline and noise.
 - Refine the event sample by maximizing total baseline-corrected A/C/G/T signal inside the locus window.
 - Resolve event-score ties by nearest PLOC and then lower sample coordinate.
