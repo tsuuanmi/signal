@@ -7,7 +7,7 @@ Aligns the retained basecall-independent evidence-profile sequence to the refere
 ## Responsibilities
 
 - Re-export `align_best` as the module boundary.
-- Coordinate fixed-point profile scoring, traceback, and forward/reverse orientation selection.
+- Coordinate fixed-point profile scoring, traceback, score-preserving canonical right-gap placement, and forward/reverse orientation selection.
 - Return the selected internal orientation, score, reference segments, metrics,
   and per-column coordinates without duplicate gapped-row strings.
 
