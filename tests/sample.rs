@@ -79,8 +79,12 @@ fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::
     assert_eq!(overlaps.len(), 1);
     let overlap = &overlaps[0];
     let pair = [
-        overlap["left"].as_str().ok_or("overlap left must be a string")?,
-        overlap["right"].as_str().ok_or("overlap right must be a string")?,
+        overlap["left"]
+            .as_str()
+            .ok_or("overlap left must be a string")?,
+        overlap["right"]
+            .as_str()
+            .ok_or("overlap right must be a string")?,
     ];
     assert!(pair.contains(&"read-forward"));
     assert!(pair.contains(&"read-reverse"));
