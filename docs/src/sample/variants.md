@@ -10,9 +10,9 @@ Aggregates normalized read-level variant observations into deterministic sample 
 - Preserve internal deterministic read index, eligibility, and exclusion reasons.
 - Derive exact observed/eligible and forward/reverse/eligible-forward/eligible-reverse read counts from support records plus selected read orientation.
 - Reject duplicate biological variant identity from one read.
-- Resolve each associated call to the original call/quality records.
-- Require primary-event evidence and project base plus co-located A/C/G/T channel heights to reference orientation.
-- Retain reviewer-facing call evidence as role/base/peaks/quality only.
+- Resolve each associated call to the original call/quality records and matching basecall-independent locus profile.
+- Require primary-event evidence and project base, co-located A/C/G/T channel heights, and optional `EvidenceProfile` to reference orientation.
+- Retain the profile in the internal science model while the reviewer-facing v7 projection remains role/base/peaks/quality only.
 
 ## Non-responsibilities
 
