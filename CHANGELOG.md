@@ -19,6 +19,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Internal basecall-independent `LocusEvidence` and normalized `EvidenceProfile` derived directly from analyzed A/C/G/T channel signal at deterministic refined PLOC events; zero-signal loci have no synthetic fallback profile and public JSON contracts are unchanged.
 - Multi-read `signal sample` evidence now preserves filtered normalized-variant observations, reviewer-facing read provenance, reference-oriented four-channel peak/quality evidence, and focused reference-support quality at differential loci while omitting routine all-reference loci.
 
 - Reference-free `signal basecall <trace.ab1>` with one atomic no-overwrite `signal.basecalls/v1` JSON result containing full primary/ambiguity/retained sequences, trim bounds, merged noisy regions, provenance, and warning counts through the same validated read-processing stages as reference analysis.
@@ -37,6 +38,7 @@ All notable changes to this project are documented here.
 
 ### Changed
 
+- PLOC neighboring-midpoint window geometry is shared between basecalling and signal evidence instead of being owned only by the caller; obsolete basecall-dependent `CallSignalMetrics`/`PrimaryEventSignalMetrics` are removed.
 - Candidate-noisy signal annotations are observation-only and do not affect calls, trim bounds, alignments, warning totals, or variant eligibility.
 - MVP output is one compact `results/<trace-stem>.json`; the earlier JSON-plus-VCF plan is superseded.
 - Quality is explicitly uncalibrated relative score; vendor PCON remains separate.
