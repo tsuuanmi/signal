@@ -1,13 +1,15 @@
 //! Bounded semi-global Gotoh dynamic programming.
 
-use crate::alignment::scoring::{NEGATIVE_INFINITY, State, add, substitution};
+use crate::alignment::scoring::{NEGATIVE_INFINITY, State, add, scaled, substitution};
 use crate::alignment::traceback::{RawAlignment, TracebackInput, decode};
 use crate::config::{AlignmentConfig, MAX_ALIGNMENT_CELLS};
 use crate::error::{Error, Result};
+use crate::model::locus_evidence::EvidenceProfile;
 
 /// Returns up to two distinct equally scoring placements.
 pub(crate) fn align(
     query: &str,
+    profiles: &[Option<EvidenceProfile>],
     reference: &str,
     config: &AlignmentConfig,
     modulo_length: Option<usize>,
@@ -18,6 +20,13 @@ pub(crate) fn align(
         ));
     }
     let query_bytes = query.as_bytes();
+    if profiles.len() != query_bytes.len() {
+        return Err(Error::Alignment(format!(
+            "query/profile length mismatch: {} query bases, {} profiles",
+            query_bytes.len(),
+            profiles.len()
+        )));
+    }
     let reference_bytes = reference.as_bytes();
     let rows = query_bytes
         .len()
@@ -42,8 +51,8 @@ pub(crate) fn align(
     let mut current_match = vec![NEGATIVE_INFINITY; width];
     let mut current_insertion = vec![NEGATIVE_INFINITY; width];
     let mut current_deletion = vec![NEGATIVE_INFINITY; width];
-    let gap_extension = i64::from(config.gap_extension_score);
-    let open_and_extend = i64::from(config.gap_open_score) + gap_extension;
+    let gap_extension = scaled(config.gap_extension_score);
+    let open_and_extend = scaled(config.gap_open_score) + gap_extension;
 
     for row in 1..rows {
         current_match.fill(NEGATIVE_INFINITY);
@@ -70,7 +79,7 @@ pub(crate) fn align(
                 .ok_or_else(|| Error::Alignment("missing diagonal state".into()))?;
             current_match[column] = add(
                 best_diagonal,
-                substitution(query_bytes[row - 1], reference_bytes[column - 1], config),
+                substitution(profiles[row - 1], reference_bytes[column - 1], config),
             );
             trace[row * width + column] |= predecessor as u8;
 
@@ -176,6 +185,8 @@ const fn state_priority(state: State) -> u8 {
 
 #[cfg(test)]
 mod tests {
+    use crate::alignment::scoring::SCORE_SCALE;
+
     use super::*;
 
     fn config() -> AlignmentConfig {
@@ -190,10 +201,27 @@ mod tests {
         }
     }
 
+    fn profiles(query: &str) -> Vec<Option<EvidenceProfile>> {
+        query
+            .bytes()
+            .map(|base| {
+                let weights = match base {
+                    b'A' => [1.0, 0.0, 0.0, 0.0],
+                    b'C' => [0.0, 1.0, 0.0, 0.0],
+                    b'G' => [0.0, 0.0, 1.0, 0.0],
+                    b'T' => [0.0, 0.0, 0.0, 1.0],
+                    _ => return None,
+                };
+                Some(EvidenceProfile { weights })
+            })
+            .collect()
+    }
+
     #[test]
     fn permits_free_reference_flanks() -> Result<()> {
-        let alignments = align("ACGT", "TTACGTGG", &config(), None)?;
-        assert_eq!(alignments[0].score, 12);
+        let query = "ACGT";
+        let alignments = align(query, &profiles(query), "TTACGTGG", &config(), None)?;
+        assert_eq!(alignments[0].score, 12 * SCORE_SCALE);
         assert_eq!(alignments[0].start_reference, 2);
         assert_eq!(alignments[0].end_reference, 6);
         Ok(())
@@ -204,8 +232,14 @@ mod tests {
         let reference = "ACGTCAGTACGATCGTACCTGAGTACGA";
         let query = format!("{}{}", &reference[18..], &reference[..18]);
         let working_reference = format!("{reference}{reference}");
-        let alignments = align(&query, &working_reference, &config(), Some(reference.len()))?;
-        assert_eq!(alignments[0].score, 84);
+        let alignments = align(
+            &query,
+            &profiles(&query),
+            &working_reference,
+            &config(),
+            Some(reference.len()),
+        )?;
+        assert_eq!(alignments[0].score, 84 * SCORE_SCALE);
         assert_eq!(
             alignments[0].end_reference - alignments[0].start_reference,
             reference.len()
@@ -215,18 +249,39 @@ mod tests {
 
     #[test]
     fn scores_one_base_gap_as_open_plus_extension() -> Result<()> {
-        let alignments = align("ACGTT", "ACGT", &config(), None)?;
+        let query = "ACGTT";
+        let alignments = align(query, &profiles(query), "ACGT", &config(), None)?;
         assert_eq!(alignments[0].metrics.gap_opens, 1);
-        assert_eq!(alignments[0].score, -2);
+        assert_eq!(alignments[0].score, -2 * SCORE_SCALE);
         Ok(())
+    }
+
+    #[test]
+    fn profile_can_score_unresolved_query_character() -> Result<()> {
+        let profile = EvidenceProfile {
+            weights: [1.0, 0.0, 0.0, 0.0],
+        };
+        let alignments = align("N", &[Some(profile)], "A", &config(), None)?;
+        assert_eq!(alignments[0].score, 3 * SCORE_SCALE);
+        assert_eq!(alignments[0].metrics.unresolved_query_bases, 1);
+        Ok(())
+    }
+
+    #[test]
+    fn rejects_query_profile_length_mismatch() {
+        assert!(align("AC", &[None], "AC", &config(), None).is_err());
     }
 
     #[test]
     fn preserves_scores_beyond_i32_range() -> Result<()> {
         let mut scoring = config();
         scoring.match_score = i32::MAX;
-        let alignments = align("AA", "AA", &scoring, None)?;
-        assert_eq!(alignments[0].score, 2 * i64::from(i32::MAX));
+        let query = "AA";
+        let alignments = align(query, &profiles(query), "AA", &scoring, None)?;
+        assert_eq!(
+            alignments[0].score,
+            2 * i64::from(i32::MAX) * SCORE_SCALE
+        );
         Ok(())
     }
 }
