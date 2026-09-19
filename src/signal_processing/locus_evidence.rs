@@ -174,7 +174,11 @@ fn select_event_position(
     ploc: usize,
     baselines: [f64; 4],
 ) -> Result<usize> {
-    if window.start >= window.end || window.end > trace.sample_count() || !window.contains(ploc) {
+    if window.start >= window.end
+        || window.end > trace.sample_count()
+        || ploc < window.start
+        || ploc >= window.end
+    {
         return Err(Error::SignalProcessing(format!(
             "invalid locus event window {}..{} at PLOC {ploc}",
             window.start, window.end
