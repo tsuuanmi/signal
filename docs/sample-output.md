@@ -2,10 +2,10 @@
 
 `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>`
 writes one deterministic `results/<sample-id>.sample.json` document identified as
-`signal.sample_evidence/v5`. The authoritative schema is
-[`schemas/sample-evidence-v5.schema.json`](schemas/sample-evidence-v5.schema.json)
+`signal.sample_evidence/v6`. The authoritative schema is
+[`schemas/sample-evidence-v6.schema.json`](schemas/sample-evidence-v6.schema.json)
 and the example is
-[`examples/sample-evidence-v5.example.json`](examples/sample-evidence-v5.example.json).
+[`examples/sample-evidence-v6.example.json`](examples/sample-evidence-v6.example.json).
 
 The sample identifier and read names are reviewer-facing provenance. They never
 constrain scientific placement, orientation, overlap discovery, or variant
@@ -47,6 +47,31 @@ Read names are unique within one emitted sample document because they are used a
 human-readable references from overlap, locus, and variant evidence. SHA-256 remains the
 scientific content identity. Filename semantics are never used as placement or
 merge keys.
+
+## Coverage topology
+
+`coverage[]` is a run-length encoded summary of selected post-trim reference
+coverage. Each item contains a 0-based half-open `reference` interval plus:
+
+- `read_depth`: number of independently placed reads covering every coordinate
+  in the interval;
+- `forward_depth`: covering reads whose selected orientation is forward;
+- `reverse_depth`: covering reads whose selected orientation is reverse.
+
+For every item, `read_depth = forward_depth + reverse_depth`. Adjacent intervals
+with identical depth tuples are merged even when the identity of the covering
+read changes at the boundary; exact read identities and segments remain in
+`reads[]`.
+
+Coverage counts all independently placed reads. It does **not** remove a read
+because a pairwise overlap is ineligible, and it does not mean canonical-base
+agreement, nucleotide comparability, consensus confidence, or biological strand
+independence. Deletion columns remain reference-coordinate coverage; insertions
+do not create extra reference coordinates.
+
+Circular origin-spanning reads contribute through their two explicit
+`reference_segments`, so the linearized JSON coverage map can contain runs near
+both reference ends without an implicit wrapped interval.
 
 ## Pairwise overlap admission
 
@@ -178,12 +203,14 @@ normalized observation remains evidence, but it is not presented as a clean SNV.
 the configured gate still operates on the internal relative-quality method even
 though the public numeric field is simply `quality`.
 
-## Why overlaps, locus_differences, and variants are separate
+## Why coverage, overlaps, locus_differences, and variants are separate
 
-The three arrays intentionally preserve different evidence layers:
+The four arrays intentionally preserve different evidence layers:
 
 ```text
 selected per-read alignments
+      ↓
+coverage[]              local mapped-read denominator/orientation topology
       ↓
 overlaps[]              which mapped read pairs are eligible for later reconciliation
       ↓
@@ -203,18 +230,18 @@ None of these arrays is a consensus result.
 
 ## Contract boundary
 
-v5 remains compact and difference-focused. It does not serialize per-base
+v6 remains compact and difference-focused. It does not serialize per-base
 evidence for loci where every covering read agrees with the reference. Pairwise
 overlap records summarize only admission-relevant counts rather than dense
 per-coordinate comparisons. The scientific pipeline still processes each read
 independently before sample aggregation.
 
-The current implementation emits v5 only. Earlier sample-evidence contracts are
+The current implementation emits v6 only. Earlier sample-evidence contracts are
 not emitted as aliases or compatibility output.
 
 ## Non-goals
 
-The v5 contract contains no consensus sequence, sample-level adjudicated variant
+The v6 contract contains no consensus sequence, sample-level adjudicated variant
 verdict, majority-vote result, genotype, heteroplasmy estimate, haplogroup
 interpretation, F/R pair object, primer/HV placement rule, or filename-derived
 placement. `overlaps[]` is an evidence/admission graph, not a pair-first merge
