@@ -351,14 +351,10 @@ mod tests {
 
     #[test]
     fn event_refinement_falls_back_to_ploc_without_positive_local_maximum() -> Result<()> {
-        let mut channels = std::array::from_fn(|_| vec![0; 12]);
-        channels[0][4] = 1;
-        channels[0][5] = 2;
-        channels[0][6] = 3;
         let trace = Chromatogram {
             source_name: "synthetic.ab1".into(),
             source_sha256: String::new(),
-            channels,
+            channels: std::array::from_fn(|_| vec![0; 12]),
             base_locations: vec![1, 3, 5, 7, 9],
             vendor: VendorEvidence::default(),
         };
