@@ -227,8 +227,9 @@
       "additionalProperties": false,
       "required": [
         "role",
-        "index",
-        "ploc"
+        "base",
+        "peaks",
+        "quality"
       ],
       "properties": {
         "role": {
@@ -237,17 +238,17 @@
             "flanking"
           ]
         },
-        "index": {
-          "type": "integer",
-          "minimum": 0
+        "base": {
+          "type": "string",
+          "pattern": "^[ACGT]$"
         },
-        "position": {
-          "type": "integer",
-          "minimum": 1
+        "peaks": {
+          "$ref": "#/$defs/peakHeights"
         },
-        "ploc": {
+        "quality": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 255
         }
       }
     },
@@ -262,8 +263,8 @@
       ],
       "properties": {
         "read": {
-          "type": "integer",
-          "minimum": 0
+          "type": "string",
+          "minLength": 1
         },
         "eligible": {
           "type": "boolean"
@@ -360,13 +361,12 @@
         "read",
         "state",
         "base",
-        "index",
-        "relative_quality"
+        "quality"
       ],
       "properties": {
         "read": {
-          "type": "integer",
-          "minimum": 0
+          "type": "string",
+          "minLength": 1
         },
         "state": {
           "enum": [
@@ -379,11 +379,7 @@
           "type": "string",
           "pattern": "^[ACGTN]$"
         },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "relative_quality": {
+        "quality": {
           "type": "integer",
           "minimum": 0,
           "maximum": 255
@@ -399,8 +395,8 @@
       ],
       "properties": {
         "read": {
-          "type": "integer",
-          "minimum": 0
+          "type": "string",
+          "minLength": 1
         },
         "state": {
           "const": "deletion"
@@ -440,6 +436,30 @@
           "$ref": "#/$defs/deletionObservation"
         }
       ]
+    },
+    "peakHeights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "C",
+        "G",
+        "T"
+      ],
+      "properties": {
+        "A": {
+          "type": "integer"
+        },
+        "C": {
+          "type": "integer"
+        },
+        "G": {
+          "type": "integer"
+        },
+        "T": {
+          "type": "integer"
+        }
+      }
     }
   }
 }
