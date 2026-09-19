@@ -94,6 +94,13 @@ and redistribution policy as its AB1 sources.
 
 Validation JSONL under `validation-results/` contains per-locus profile geometry and reference coordinates. It is a derived biological artifact with the same approval, storage, retention, and redistribution constraints as the source AB1 and must not be committed.
 
+Manifest-driven validation corpus runs use `scripts/run_validation_corpus.py`. Real
+manifests should remain under ignored local data such as `data/validation/`, and the
+runner publishes only under ignored `validation-results/`. The corpus index deliberately
+omits local trace paths, but it retains trace hashes, truth/grouping metadata, and
+biological measurement references, so it remains sensitive derived data and must follow
+the same approval and redistribution policy.
+
 Repository examples MUST use synthetic sample/read names and synthetic input hashes.
 Do not commit a local sample result merely because v7 is compact. Real local outputs
 may inform exploratory development, but release/compatibility evidence requires the

@@ -212,6 +212,7 @@ pcr_replicate_id
 sequencing_run_id
 instrument_id
 amplicon_id
+trace_path                    # local runner input; may be relative to manifest
 trace_sha256
 declared_direction            # validation metadata only; never placement input
 truth_class
@@ -296,6 +297,49 @@ Repository documentation may contain only:
 - synthetic examples;
 - aggregate study-design counts;
 - hashes/provenance identifiers that have been explicitly approved for publication.
+
+## Implemented local orchestration
+
+The repository provides a strict external runner for reproducible local corpus execution
+without changing the production CLI:
+
+```bash
+uv run python scripts/run_validation_corpus.py \
+  --manifest data/validation/manifest.csv
+```
+
+The CSV manifest uses one row per AB1 trace and the metadata fields defined above.
+Relative `trace_path` values are resolved from the manifest directory. Before execution,
+the runner verifies every trace SHA-256, case-level metadata consistency, unique trace
+ownership, and source-group development/holdout consistency. `declared_direction`
+remains metadata only; it is never passed as a placement hint.
+
+Each selected case runs through the authoritative `signal-validation` binary in an
+isolated working directory. Generated `signal.validation_locus/v2` rows are accepted
+only when schema/sample identity, monotonically increasing reference positions,
+Signal/reference/configuration identity, observation cardinality, and manifest read
+SHA-256 membership are internally consistent.
+
+The default output is:
+
+```text
+validation-results/corpus/
+├── index.json
+├── cases/
+│   └── <validation_case_id>.jsonl
+└── logs/
+    └── <validation_case_id>.validation.log
+```
+
+All selected cases must execute and validate before the final corpus directory is
+published. Existing output directories are rejected rather than replaced. The
+`signal.validation_corpus/v1` index records manifest, Signal, reference, configuration,
+case, grouping, truth, and read-hash provenance while deliberately omitting local AB1
+filesystem paths.
+
+The manifest and all generated corpus artifacts remain ignored/local validation data.
+The runner performs no threshold fitting, truth inference, artifact classification,
+heteroplasmy interpretation, or production-schema mutation.
 
 ## Promotion gate
 

@@ -49,3 +49,4 @@
 | [0045](0045-validation-event-placement-diagnostics.md) | Export validation event-placement diagnostics | Accepted |
 | [0046](0046-nearest-locus-event.md) | Anchor nucleotide evidence to the nearest locus event | Accepted |
 | [0047](0047-canonical-right-aligned-mtdna-gaps.md) | Canonical right-aligned mtDNA gap placement | Accepted |
+| [0048](0048-validation-corpus-orchestration.md) | Provenance-first local validation corpus orchestration | Accepted |

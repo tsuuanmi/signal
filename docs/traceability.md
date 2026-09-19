@@ -15,7 +15,7 @@ This map helps developers and agents move from intent to implementation without 
 | `SRS-OUT-*` | output docs, architecture | `src/report/`, `src/pipeline/` | schema/example + publication tests | JSON schemas |
 | `SRS-BAT-*` | data/batch docs | `scripts/analyze_samples.py` | Python batch tests | external orchestration behavior |
 | `SRS-NFR-*` | architecture/invariants, validation | cross-cutting | CI, fuzz/property/release evidence as adopted | release evidence |
-| `SRS-VAL-*` | `validation.md`, ADR-0044/0045, Signal validation research | `src/validation/`, `src/pipeline/validation.rs`, `src/pipeline/sample_reads.rs`, `src/sample/loci.rs` | `tests/validation.rs`, synthetic ABIF, CI, grouped local corpus studies | ignored `signal.validation_locus/v2` research JSONL with event-placement diagnostics; no production schema change |
+| `SRS-VAL-*` | `validation.md`, ADR-0044/0045/0048, Signal validation research | `src/validation/`, `src/pipeline/validation.rs`, `src/pipeline/sample_reads.rs`, `src/sample/loci.rs`, `scripts/run_validation_corpus.py`, `scripts/validation_corpus/` | `tests/validation.rs`, `tests/python/test_validation_corpus.py`, synthetic ABIF, CI, grouped local corpus studies | ignored `signal.validation_locus/v2` research JSONL plus local corpus provenance index; no production schema change |
 
 ## Navigation rule
 
