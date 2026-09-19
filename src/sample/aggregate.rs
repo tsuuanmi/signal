@@ -395,7 +395,9 @@ mod tests {
         assert_eq!(evidence.locus_differences[0].position_1based, 12);
         assert_eq!(evidence.locus_differences[0].support_topology.reads, 1);
         assert_eq!(
-            evidence.locus_differences[0].support_topology.alternate_reads,
+            evidence.locus_differences[0]
+                .support_topology
+                .alternate_reads,
             1
         );
         assert_eq!(
