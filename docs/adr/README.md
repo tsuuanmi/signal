@@ -48,3 +48,4 @@
 | [0044](0044-validation-measurement-export.md) | Separate validation measurements from public sample evidence | Accepted |
 | [0045](0045-validation-event-placement-diagnostics.md) | Export validation event-placement diagnostics | Accepted |
 | [0046](0046-nearest-locus-event.md) | Anchor nucleotide evidence to the nearest locus event | Accepted |
+| [0047](0047-canonical-right-aligned-mtdna-gaps.md) | Canonical right-aligned mtDNA gap placement | Accepted |
