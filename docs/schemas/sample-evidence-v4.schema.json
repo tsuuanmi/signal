@@ -556,6 +556,30 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "comparable_bases": {
+                "minimum": 1
+              }
+            },
+            "required": [
+              "comparable_bases"
+            ]
+          },
+          "then": {
+            "required": [
+              "agreement"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "agreement"
+              ]
+            }
+          }
         }
       ]
     }
