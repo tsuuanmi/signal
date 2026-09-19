@@ -172,14 +172,20 @@ fn run_logged(
     let nucleotide_support_loci = evidence
         .locus_differences
         .iter()
-        .filter(|difference| difference.nucleotide_support.contributors > 0)
+        .filter(|difference| difference.nucleotide_support.mean_profile.is_some())
         .count();
     let bidirectional_nucleotide_support_loci = evidence
         .locus_differences
         .iter()
         .filter(|difference| {
-            difference.nucleotide_support.forward_contributors > 0
-                && difference.nucleotide_support.reverse_contributors > 0
+            difference
+                .nucleotide_support
+                .forward_mean_profile
+                .is_some()
+                && difference
+                    .nucleotide_support
+                    .reverse_mean_profile
+                    .is_some()
         })
         .count();
     let unweighted_nucleotide_profile_mass = evidence
