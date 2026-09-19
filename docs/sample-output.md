@@ -2,10 +2,10 @@
 
 `signal sample <sample-id> <trace.ab1>... --reference <reference.fasta>`
 writes one deterministic `results/<sample-id>.sample.json` document identified as
-`signal.sample_evidence/v6`. The authoritative schema is
-[`schemas/sample-evidence-v6.schema.json`](schemas/sample-evidence-v6.schema.json)
+`signal.sample_evidence/v7`. The authoritative schema is
+[`schemas/sample-evidence-v7.schema.json`](schemas/sample-evidence-v7.schema.json)
 and the example is
-[`examples/sample-evidence-v6.example.json`](examples/sample-evidence-v6.example.json).
+[`examples/sample-evidence-v7.example.json`](examples/sample-evidence-v7.example.json).
 
 The sample identifier and read names are reviewer-facing provenance. They never
 constrain scientific placement, orientation, overlap discovery, or variant
@@ -166,7 +166,29 @@ For example:
 - a normalized variant remains in sample evidence even if a read-level reporting
   filter marks that read's support ineligible.
 
-Variants aggregate by `(position, reference, alternate, kind)`. Each support
+Variants aggregate by `(position, reference, alternate, kind)`. Each variant also contains `support_topology`, a deterministic summary of
+the existing per-read support records:
+
+- `reads`: reads that observed this exact normalized variant, including
+  ineligible observations;
+- `eligible_reads`: the subset passing existing single-read variant
+  eligibility;
+- `forward_reads` / `reverse_reads`: observing reads grouped by selected
+  evidence-derived orientation;
+- `eligible_forward_reads` / `eligible_reverse_reads`: the eligible subset
+  within each selected orientation.
+
+The counts are recomputed from `support[]` and the read registry by contract
+validation. They do not include covering reads that support the reference, are
+unresolved, or observe another event. Those local denominator/opposition states
+remain in `coverage[]` and `locus_differences[]`.
+
+Orientation support is not a claim of assay independence, and eligible-read
+count is not a probability, confidence score, vote weight, genotype, or
+heteroplasmy fraction. Signal has no authoritative amplicon/replicate input
+contract yet, so those dimensions are not inferred from filenames.
+
+Each support
 record contains:
 
 - `read`: the human-readable read name;
@@ -230,18 +252,18 @@ None of these arrays is a consensus result.
 
 ## Contract boundary
 
-v6 remains compact and difference-focused. It does not serialize per-base
+v7 remains compact and difference-focused. It does not serialize per-base
 evidence for loci where every covering read agrees with the reference. Pairwise
 overlap records summarize only admission-relevant counts rather than dense
 per-coordinate comparisons. The scientific pipeline still processes each read
 independently before sample aggregation.
 
-The current implementation emits v6 only. Earlier sample-evidence contracts are
+The current implementation emits v7 only. Earlier sample-evidence contracts are
 not emitted as aliases or compatibility output.
 
 ## Non-goals
 
-The v6 contract contains no consensus sequence, sample-level adjudicated variant
+The v7 contract contains no consensus sequence, sample-level adjudicated variant
 verdict, majority-vote result, genotype, heteroplasmy estimate, haplogroup
 interpretation, F/R pair object, primer/HV placement rule, or filename-derived
 placement. `overlaps[]` is an evidence/admission graph, not a pair-first merge
