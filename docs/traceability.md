@@ -10,8 +10,8 @@ This map helps developers and agents move from intent to implementation without 
 | `SRS-SIG-*` | `signal-processing.md` | `src/signal_processing/` | signal feature boundary tests | noisy-region projections |
 | `SRS-QC-*` | `pipeline.md` Stage 4 | `src/quality_control/` | quality/trim unit + real-read review | trim + reviewer-facing `quality` |
 | `SRS-ALN-*` | `pipeline.md` Stage 5 + read-observation boundary | `src/alignment/`, `src/model/alignment.rs`, `src/model/read_observation.rs` | orientation/traceback/circular tests | analysis alignment summary |
-| `SRS-SAMPLE-*` | ADR-0023, architecture invariants | `src/sample/`, `src/model/sample_evidence.rs`, `src/pipeline/sample.rs` | sparse sample evidence unit tests, end-to-end CLI/schema validation, local non-committed multi-read review | `signal.sample_evidence/v2` |
-| `SRS-VAR-*` | `pipeline.md` Stage 6 | `src/variant_calling/`, `src/model/variant.rs` | SNV/indel/normalization mapping tests + real truth | analysis variants |
+| `SRS-SAMPLE-*` | ADR-0023, architecture invariants | `src/sample/`, `src/model/sample_evidence.rs`, `src/pipeline/sample.rs` | sparse sample evidence unit tests, end-to-end CLI/schema validation, local non-committed multi-read review | `signal.sample_evidence/v3` |
+| `SRS-VAR-*` | `pipeline.md` Stage 6 | `src/variant_calling/`, `src/model/variant.rs` | SNV/indel/normalization mapping tests + mixed-supporting-signal eligibility + real truth | analysis variants |
 | `SRS-OUT-*` | output docs, architecture | `src/report/`, `src/pipeline/` | schema/example + publication tests | JSON schemas |
 | `SRS-BAT-*` | data/batch docs | `scripts/analyze_samples.py` | Python batch tests | external orchestration behavior |
 | `SRS-NFR-*`, `SRS-VAL-*` | architecture/invariants, validation | cross-cutting | CI, fuzz/property/release evidence as adopted | release evidence |
