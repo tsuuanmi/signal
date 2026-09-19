@@ -43,7 +43,7 @@ Tests cover clean one-hot compatibility, free reference flanks, circular one-spa
 
 ## Traceability
 
-ADR-0029; `SRS-ALN-001` through `SRS-ALN-004`, and `SRS-ALN-010`.
+ADR-0029 and ADR-0047; `SRS-ALN-001` through `SRS-ALN-004`, `SRS-ALN-006`, `SRS-ALN-010`, and `SRS-ALN-012`.
 
 ## Status
 
