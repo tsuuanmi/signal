@@ -41,9 +41,7 @@ uv run python scripts/analyze_samples.py
 ```
 
 The defaults read `data/MS_010426_001.txt`, search
-`data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write
-`results/<sample-id>/<trace-stem>.json`. It sets `SIGNAL_LOG_DIR` so the Rust
-logger writes directly to `logs/<trace-stem>.log`.
+`data/raw/MS_010426_001/`, use the bundled rCRS/configuration, and write per-trace results under `results/<sample-id>/<trace-stem>.json`. After every trace for a selected sample succeeds, it also writes the compact sample aggregate as `results/<sample-id>/<sample-id>.json`. It sets `SIGNAL_LOG_DIR` so Rust logs remain separate under `logs/`.
 
 The wrapper performs a clean selected rerun:
 
@@ -85,6 +83,20 @@ and redistribution policy as its AB1 source. Append-only logs can contain trace/
 names, filesystem paths, hashes, aggregate metrics, thresholds, stage errors, and
 removed-variant kinds/coordinates/reasons. They omit alleles and raw scientific
 payloads but still follow the same policy; `logs/` is ignored.
+
+## Sample evidence output privacy
+
+`signal.sample_evidence/v2` intentionally contains the sample identifier plus each
+contributing AB1 basename for reviewer traceability, along with input SHA-256,
+alignment/coverage summaries, sparse differential loci, normalized variants, and
+concise call mappings. Filenames, hashes, and biological differences can be
+identifying, so sample-evidence JSON follows the same approval, storage, retention,
+and redistribution policy as its AB1 sources.
+
+Repository examples MUST use synthetic sample/read names and synthetic input hashes.
+Do not commit a local sample result merely because v2 is compact. Real local outputs
+may inform exploratory development, but release/compatibility evidence requires the
+approval record described below.
 
 ## Reference-free basecall output privacy
 

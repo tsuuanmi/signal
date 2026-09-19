@@ -111,6 +111,7 @@ The repository already contains or explores functionality beyond this baseline, 
 - circular-reference handling;
 - insertion/deletion extraction and normalization;
 - batch orchestration;
+- independently placed multi-read sample evidence with sparse differential loci and normalized variant support;
 - richer per-call evidence.
 
 These capabilities are not treated as disposable experiments merely because they are beyond the simplest validation path. Where their current behavior is coherent and tested, future work builds on them.
@@ -132,7 +133,6 @@ The following are intentionally deferred:
 1. new or more complex indel models beyond the current supported behavior;
 2. homopolymer and mtDNA poly-C special handling beyond current generic behavior;
 3. sample-level multi-read consensus;
-4. bidirectional sample evidence aggregation;
 5. quantitative heteroplasmy;
 6. mixed-template or length-mixture decomposition;
 7. haplogroup-based QC or inference;

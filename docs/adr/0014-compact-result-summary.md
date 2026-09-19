@@ -1,6 +1,6 @@
 # ADR-0014: Project a Compact Analysis Result Summary
 
-- **Status:** Accepted
+- **Status:** Superseded by ADR-0026
 - **Date:** 2026-08-25
 
 ## Context
@@ -56,3 +56,7 @@ Rolling windows, complete sequences, full peaks, vendor evidence, and traceback 
 ## Relationship to prior decisions
 
 This ADR supersedes only the output projection selected by ADR-0013. ADR-0013 remains accepted for the observation-only `signal.windowed_snr/v1` method, merged-region semantics, configuration schema version 4, and prohibition on noise-driven scientific behavior without validation. ADR-0012's concise mapped-call principle remains in force, with v5 reducing the mapped evidence to supporting maximum peak height and relative quality.
+
+## Follow-up
+
+ADR-0026 replaces the v5 public call-pointer shape with analysis v6 reference-oriented base/peak/quality evidence. The v5 decision remains historical context for the compact top-level summary.

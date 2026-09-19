@@ -4,8 +4,8 @@ Signal uses several coordinate domains. They are deliberately distinct.
 
 | Domain | Base | Interval style | Example |
 |---|---:|---|---|
-| original call index | 0-based | scalar | `index = 0` |
-| ABIF PLOC / trace sample | 0-based | scalar | `ploc = 312` |
+| original call index | 0-based | internal implementation coordinate |
+| ABIF PLOC / trace sample | 0-based | internal implementation coordinate |
 | call/sample windows | 0-based | half-open | `[start, end)` |
 | trim interval | 0-based | half-open | `[trim.start, trim.end)` |
 | reference segments | 0-based | half-open | `[start, end)` |
@@ -21,3 +21,5 @@ Signal uses several coordinate domains. They are deliberately distinct.
 6. Circular projection uses the reference modulo length; wrapped alignments may be represented by two 0-based half-open reference segments.
 
 See also [system invariants](../architecture/invariants.md) and the versioned output contracts.
+
+Reviewer-facing analysis v6 and sample-evidence v2 variant calls intentionally do not serialize original call index or PLOC. Those coordinates remain internal for mapping and tests; public variant evidence uses normalized biological position plus reference-oriented base/peaks/quality.

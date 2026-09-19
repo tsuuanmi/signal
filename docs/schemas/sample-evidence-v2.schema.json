@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:signal:schema:sample-evidence:v1",
-  "title": "Signal sample evidence v1",
+  "$id": "urn:signal:schema:sample-evidence:v2",
+  "title": "Signal sample evidence v2",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -9,12 +9,12 @@
     "sample_id",
     "provenance",
     "reads",
-    "loci",
+    "locus_differences",
     "variants"
   ],
   "properties": {
     "schema_version": {
-      "const": "signal.sample_evidence/v1"
+      "const": "signal.sample_evidence/v2"
     },
     "sample_id": {
       "type": "string",
@@ -31,14 +31,16 @@
         "$ref": "#/$defs/read"
       }
     },
-    "loci": {
+    "locus_differences": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
-        "$ref": "#/$defs/locus"
+        "$ref": "#/$defs/locusDifference"
       }
     },
     "variants": {
       "type": "array",
+      "uniqueItems": true,
       "items": {
         "$ref": "#/$defs/variant"
       }
@@ -134,121 +136,6 @@
         }
       }
     },
-    "calledObservation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "read_name",
-        "read_sha256",
-        "orientation",
-        "state",
-        "base",
-        "index",
-        "relative_quality"
-      ],
-      "properties": {
-        "read_name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "read_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "orientation": {
-          "$ref": "#/$defs/orientation"
-        },
-        "state": {
-          "enum": [
-            "reference",
-            "alternate",
-            "unresolved"
-          ]
-        },
-        "base": {
-          "type": "string",
-          "pattern": "^[ACGTN]$"
-        },
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "relative_quality": {
-          "type": "integer",
-          "minimum": 0,
-          "maximum": 255
-        }
-      }
-    },
-    "deletionObservation": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "read_name",
-        "read_sha256",
-        "orientation",
-        "state"
-      ],
-      "properties": {
-        "read_name": {
-          "type": "string",
-          "minLength": 1
-        },
-        "read_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "orientation": {
-          "$ref": "#/$defs/orientation"
-        },
-        "state": {
-          "const": "deletion"
-        }
-      }
-    },
-    "observation": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/calledObservation"
-        },
-        {
-          "$ref": "#/$defs/deletionObservation"
-        }
-      ]
-    },
-    "locus": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "position",
-        "reference",
-        "observations"
-      ],
-      "properties": {
-        "position": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "reference": {
-          "type": "string",
-          "pattern": "^[ACGTN]$"
-        },
-        "observations": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "$ref": "#/$defs/observation"
-          }
-        }
-      }
-    },
-    "exclusionReason": {
-      "enum": [
-        "non_canonical_allele",
-        "indel_length_exceeded",
-        "outside_configured_region",
-        "peak_below_minimum",
-        "relative_quality_not_above_threshold"
-      ]
-    },
     "readAlignment": {
       "type": "object",
       "additionalProperties": false,
@@ -295,13 +182,54 @@
         }
       }
     },
+    "locusDifference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "position",
+        "reference",
+        "observations"
+      ],
+      "properties": {
+        "position": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reference": {
+          "type": "string",
+          "pattern": "^[ACGTN]$"
+        },
+        "observations": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/locusObservation"
+          },
+          "contains": {
+            "$ref": "#/$defs/nonReferenceObservation"
+          },
+          "minContains": 1
+        }
+      }
+    },
+    "exclusionReason": {
+      "enum": [
+        "non_canonical_allele",
+        "indel_length_exceeded",
+        "outside_configured_region",
+        "peak_below_minimum",
+        "relative_quality_not_above_threshold"
+      ]
+    },
     "variantCall": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "role",
-        "index",
-        "ploc"
+        "base",
+        "peaks",
+        "quality"
       ],
       "properties": {
         "role": {
@@ -310,17 +238,17 @@
             "flanking"
           ]
         },
-        "index": {
-          "type": "integer",
-          "minimum": 0
+        "base": {
+          "type": "string",
+          "pattern": "^[ACGT]$"
         },
-        "position": {
-          "type": "integer",
-          "minimum": 1
+        "peaks": {
+          "$ref": "#/$defs/peakHeights"
         },
-        "ploc": {
+        "quality": {
           "type": "integer",
-          "minimum": 0
+          "minimum": 0,
+          "maximum": 255
         }
       }
     },
@@ -328,23 +256,15 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "read_name",
-        "read_sha256",
-        "orientation",
+        "read",
         "eligible",
         "exclusion_reasons",
         "calls"
       ],
       "properties": {
-        "read_name": {
+        "read": {
           "type": "string",
           "minLength": 1
-        },
-        "read_sha256": {
-          "$ref": "#/$defs/sha256"
-        },
-        "orientation": {
-          "$ref": "#/$defs/orientation"
         },
         "eligible": {
           "type": "boolean"
@@ -358,11 +278,11 @@
         },
         "calls": {
           "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
           "items": {
             "$ref": "#/$defs/variantCall"
-          },
-          "minItems": 1,
-          "uniqueItems": true
+          }
         }
       },
       "allOf": [
@@ -431,6 +351,113 @@
           "items": {
             "$ref": "#/$defs/variantSupport"
           }
+        }
+      }
+    },
+    "calledObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "state",
+        "base",
+        "quality"
+      ],
+      "properties": {
+        "read": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "enum": [
+            "reference",
+            "alternate",
+            "unresolved"
+          ]
+        },
+        "base": {
+          "type": "string",
+          "pattern": "^[ACGTN]$"
+        },
+        "quality": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "deletionObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "read",
+        "state"
+      ],
+      "properties": {
+        "read": {
+          "type": "string",
+          "minLength": 1
+        },
+        "state": {
+          "const": "deletion"
+        }
+      }
+    },
+    "locusObservation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/calledObservation"
+        },
+        {
+          "$ref": "#/$defs/deletionObservation"
+        }
+      ]
+    },
+    "nonReferenceCalledObservation": {
+      "type": "object",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "state": {
+          "enum": [
+            "alternate",
+            "unresolved"
+          ]
+        }
+      }
+    },
+    "nonReferenceObservation": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/nonReferenceCalledObservation"
+        },
+        {
+          "$ref": "#/$defs/deletionObservation"
+        }
+      ]
+    },
+    "peakHeights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "A",
+        "C",
+        "G",
+        "T"
+      ],
+      "properties": {
+        "A": {
+          "type": "integer"
+        },
+        "C": {
+          "type": "integer"
+        },
+        "G": {
+          "type": "integer"
+        },
+        "T": {
+          "type": "integer"
         }
       }
     }

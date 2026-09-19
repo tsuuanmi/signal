@@ -1,0 +1,22 @@
+# `src/sample/variants.rs`
+
+## Purpose
+
+Aggregates normalized read-level variant observations into deterministic sample variant evidence.
+
+## Responsibilities
+
+- Group normalized observed variants by `(position, reference, alternate, kind)`.
+- Preserve internal deterministic read index, eligibility, and exclusion reasons.
+- Reject duplicate biological variant identity from one read.
+- Resolve each associated call to the original call/quality records.
+- Require primary-event evidence and project base plus co-located A/C/G/T channel heights to reference orientation.
+- Retain reviewer-facing call evidence as role/base/peaks/quality only.
+
+## Non-responsibilities
+
+No read placement, locus classification, JSON read-name projection, consensus, or genotype inference.
+
+## Status
+
+Implemented.

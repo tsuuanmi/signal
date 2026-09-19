@@ -2,15 +2,21 @@
 
 ## Purpose
 
-Projects internal `SampleEvidence` into `signal.sample_evidence/v1`.
+Projects internal `SampleEvidence` into `signal.sample_evidence/v2`.
 
 ## Responsibilities
 
-Validate the evidence/reference identity and map domain records into compact, deterministic public result records, including read provenance, selected-alignment summaries, and per-read variant eligibility, exclusion reasons, and call pointers.
+- Validate evidence/reference identity.
+- Convert each source basename to a reviewer-facing filename stem.
+- Require those stems to be unique within one sample result.
+- Keep SHA-256 as the stable scientific content identity.
+- Resolve internal read indexes to human-readable read names in sparse locus and variant evidence.
+- Project post-trim alignment summaries, locus state/base/quality, and variant role/base/peaks/quality.
+- Reuse shared `AlignmentResult` and `PeakHeightsResult` types.
 
 ## Non-responsibilities
 
-No scientific aggregation, evidence classification, consensus, serialization, logging, or filesystem publication.
+No scientific placement, aggregation, consensus, or filesystem publication.
 
 ## Status
 

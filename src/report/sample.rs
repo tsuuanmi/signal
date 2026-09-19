@@ -1,12 +1,16 @@
-//! Projection of sample scientific evidence into the public JSON contract.
+//! Projection of compact sample scientific evidence into the public JSON contract.
+
+use std::collections::BTreeSet;
+use std::path::Path;
 
 use crate::error::{Error, Result};
 use crate::model::reference::Reference;
-use crate::model::result::{AlignmentResult, IntervalResult, ReferenceResult};
+use crate::model::result::{AlignmentResult, IntervalResult, PeakHeightsResult, ReferenceResult};
 use crate::model::sample_evidence::SampleEvidence;
 use crate::model::sample_result::{
-    SampleEvidenceResult, SampleLocusObservationResult, SampleLocusResult, SampleProvenanceResult,
-    SampleReadResult, SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
+    SampleEvidenceResult, SampleLocusDifferenceObservationResult, SampleLocusDifferenceResult,
+    SampleProvenanceResult, SampleReadResult, SampleVariantCallResult, SampleVariantResult,
+    SampleVariantSupportResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
@@ -16,7 +20,7 @@ pub(crate) struct CompletedSampleEvidence {
     pub(crate) evidence: SampleEvidence,
 }
 
-/// Builds `signal.sample_evidence/v1` without filesystem side effects.
+/// Builds `signal.sample_evidence/v2` without filesystem side effects.
 pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidenceResult> {
     let CompletedSampleEvidence {
         sample_id,
@@ -29,11 +33,13 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         ));
     }
 
+    let read_names = reviewer_read_names(&evidence)?;
     let reads = evidence
         .reads
         .into_iter()
-        .map(|read| SampleReadResult {
-            name: read.input_name,
+        .zip(read_names.iter())
+        .map(|(read, name)| SampleReadResult {
+            name: name.clone(),
             sha256: read.input_sha256,
             alignment: AlignmentResult {
                 orientation: read.alignment.orientation,
@@ -55,62 +61,67 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
         })
         .collect();
 
-    let loci = evidence
-        .loci
+    let locus_differences = evidence
+        .locus_differences
         .into_iter()
-        .map(|locus| SampleLocusResult {
-            position: locus.position_1based,
-            reference: locus.reference_base,
-            observations: locus
+        .map(|difference| {
+            let observations = difference
                 .observations
                 .into_iter()
-                .map(|observation| SampleLocusObservationResult {
-                    read_name: observation.input_name,
-                    read_sha256: observation.input_sha256,
-                    orientation: observation.orientation,
-                    state: observation.state,
-                    base: observation.base,
-                    index: observation.call_index_0based,
-                    relative_quality: observation.relative_quality,
+                .map(|observation| {
+                    Ok(SampleLocusDifferenceObservationResult {
+                        read: read_name(&read_names, observation.read_index)?.into(),
+                        state: observation.state,
+                        base: observation.base,
+                        quality: observation.quality,
+                    })
                 })
-                .collect(),
+                .collect::<Result<Vec<_>>>()?;
+            Ok(SampleLocusDifferenceResult {
+                position: difference.position_1based,
+                reference: difference.reference_base,
+                observations,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>>>()?;
 
     let variants = evidence
         .variants
         .into_iter()
-        .map(|variant| SampleVariantResult {
-            position: variant.position_1based,
-            reference: variant.reference,
-            alternate: variant.alternate,
-            kind: variant.kind,
-            support: variant
+        .map(|variant| {
+            let support = variant
                 .support
                 .into_iter()
-                .map(|support| SampleVariantSupportResult {
-                    read_name: support.input_name,
-                    read_sha256: support.input_sha256,
-                    orientation: support.orientation,
-                    eligible: support.eligible,
-                    exclusion_reasons: support.exclusion_reasons,
-                    calls: support
-                        .calls
-                        .into_iter()
-                        .map(|call| SampleVariantCallResult {
-                            role: call.role,
-                            index: call.call_index_0based,
-                            position: call.reference_position_1based,
-                            ploc: call.ploc_0based,
-                        })
-                        .collect(),
+                .map(|support| {
+                    Ok(SampleVariantSupportResult {
+                        read: read_name(&read_names, support.read_index)?.into(),
+                        eligible: support.eligible,
+                        exclusion_reasons: support.exclusion_reasons,
+                        calls: support
+                            .calls
+                            .into_iter()
+                            .map(|call| SampleVariantCallResult {
+                                role: call.role,
+                                base: call.base,
+                                peaks: PeakHeightsResult::from(call.peak_heights),
+                                quality: call.quality,
+                            })
+                            .collect(),
+                    })
                 })
-                .collect(),
+                .collect::<Result<Vec<_>>>()?;
+            Ok(SampleVariantResult {
+                position: variant.position_1based,
+                reference: variant.reference,
+                alternate: variant.alternate,
+                kind: variant.kind,
+                support,
+            })
         })
-        .collect();
+        .collect::<Result<Vec<_>>>()?;
 
     Ok(SampleEvidenceResult {
-        schema_version: "signal.sample_evidence/v1",
+        schema_version: "signal.sample_evidence/v2",
         sample_id,
         provenance: SampleProvenanceResult {
             reference: ReferenceResult {
@@ -121,7 +132,34 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
             configuration_sha256: evidence.configuration_sha256,
         },
         reads,
-        loci,
+        locus_differences,
         variants,
     })
+}
+
+fn reviewer_read_names(evidence: &SampleEvidence) -> Result<Vec<String>> {
+    let mut names = Vec::with_capacity(evidence.reads.len());
+    let mut unique = BTreeSet::new();
+    for read in &evidence.reads {
+        let name = Path::new(&read.input_name)
+            .file_stem()
+            .and_then(|value| value.to_str())
+            .filter(|value| !value.is_empty())
+            .ok_or_else(|| Error::Report("sample read has no valid UTF-8 filename stem".into()))?
+            .to_owned();
+        if !unique.insert(name.clone()) {
+            return Err(Error::Report(format!(
+                "sample read name {name:?} is not unique"
+            )));
+        }
+        names.push(name);
+    }
+    Ok(names)
+}
+
+fn read_name(read_names: &[String], index: usize) -> Result<&str> {
+    read_names
+        .get(index)
+        .map(String::as_str)
+        .ok_or_else(|| Error::Report(format!("sample evidence references missing read {index}")))
 }

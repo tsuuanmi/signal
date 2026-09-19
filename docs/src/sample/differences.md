@@ -1,0 +1,22 @@
+# `src/sample/differences.rs`
+
+## Purpose
+
+Builds sparse reference-coordinate evidence only where at least one read differs from the reference.
+
+## Responsibilities
+
+- First identify positions with at least one `alternate`, `unresolved`, or `deletion` state.
+- Then retain every covering read at those positions, including `reference` observations.
+- Preserve reference-oriented observed base and uncalibrated quality for called observations.
+- Keep deletions free of fabricated base/quality evidence.
+- Keep insertion columns out of reference-coordinate locus evidence.
+- Reject duplicate contribution from one read to the same reference coordinate.
+
+## Sparse semantics
+
+Inside mapped post-trim coverage, absence from `locus_differences[]` means canonical reference match. Outside mapped segments means uncovered.
+
+## Status
+
+Implemented.

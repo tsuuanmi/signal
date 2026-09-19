@@ -1,4 +1,4 @@
-//! Compact serializable `signal.analysis/v5` contract.
+//! Compact serializable `signal.analysis/v6` contract.
 
 use serde::Serialize;
 
@@ -90,23 +90,38 @@ pub struct VariantResult {
     pub(crate) calls: Vec<VariantCallResult>,
 }
 
-/// One supporting or flanking trace call associated with a variant.
+/// Co-located reference-oriented A/C/G/T channel heights.
+#[derive(Debug, Clone, Copy, Serialize)]
+pub struct PeakHeightsResult {
+    #[serde(rename = "A")]
+    pub(crate) a: i32,
+    #[serde(rename = "C")]
+    pub(crate) c: i32,
+    #[serde(rename = "G")]
+    pub(crate) g: i32,
+    #[serde(rename = "T")]
+    pub(crate) t: i32,
+}
+
+impl From<[i32; 4]> for PeakHeightsResult {
+    fn from(value: [i32; 4]) -> Self {
+        Self {
+            a: value[0],
+            c: value[1],
+            g: value[2],
+            t: value[3],
+        }
+    }
+}
+
+/// Reviewer-facing signal evidence for one variant-associated call.
 #[derive(Debug, Serialize)]
 pub struct VariantCallResult {
     pub(crate) role: VariantCallRole,
-    pub(crate) index: usize,
-    /// One-based aligned reference position; absent for inserted supporting calls.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) position: Option<usize>,
-    pub(crate) ploc: usize,
-    pub(crate) primary: char,
-    pub(crate) ambiguity: char,
-    /// Maximum A/C/G/T peak height; present only for supporting calls.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) maximum_peak_height: Option<i32>,
-    /// Uncalibrated relative quality; present only for supporting calls.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) relative_quality: Option<u8>,
+    pub(crate) base: char,
+    pub(crate) peaks: PeakHeightsResult,
+    /// Uncalibrated relative score exposed under the concise public name.
+    pub(crate) quality: u8,
 }
 
 /// Public non-fatal analysis counts.

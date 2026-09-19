@@ -2,19 +2,17 @@
 
 ## Purpose
 
-Defines the serializable `signal.sample_evidence/v1` result records.
+Defines serializable `signal.sample_evidence/v2` result records.
 
 ## Responsibilities
 
-Represent sample identity, shared reference/configuration provenance, reads with shared compact selected-alignment summaries, covered-locus observations, and normalized variant support with read names/SHA identities, eligibility/exclusion reasons, and concise call pointers, without raw trace data or consensus sequence.
+Represent sample identity, shared provenance, the read registry, sparse differential loci, and normalized variant support.
 
-## Non-responsibilities
-
-No scientific aggregation, filtering, interpretation, filesystem access, or JSON serialization logic.
+Public locus and variant records refer to reads by unique human-readable filename stem rather than numeric registry index. Variant call evidence contains only role, reference-oriented base, four-channel peaks, and quality.
 
 ## Coordinates
 
-Locus/variant `position` is 1-based. Read reference segments are 0-based half-open. Original call `index` and `ploc` values are 0-based; mapped call `position` values are 1-based.
+Locus/variant `position` is 1-based. Read reference segments are 0-based half-open. Internal call/PLOC coordinates are not part of this public contract.
 
 ## Status
 

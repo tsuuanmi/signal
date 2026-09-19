@@ -1,5 +1,5 @@
 {
-  "schema_version": "signal.analysis/v5",
+  "schema_version": "signal.analysis/v6",
   "provenance": {
     "input": {
       "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
@@ -56,13 +56,14 @@
       "calls": [
         {
           "role": "supporting",
-          "index": 13,
-          "position": 112,
-          "ploc": 132,
-          "primary": "G",
-          "ambiguity": "R",
-          "maximum_peak_height": 842,
-          "relative_quality": 37
+          "base": "G",
+          "peaks": {
+            "A": 84,
+            "C": 36,
+            "G": 842,
+            "T": 21
+          },
+          "quality": 37
         }
       ]
     }

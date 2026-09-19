@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Defines the sample-level scientific reconciliation boundary.
+Defines the sample-level scientific evidence aggregation boundary.
 
 ## Responsibilities
 
-Expose deterministic aggregation of independently produced `ReadObservation[]` into `SampleEvidence`.
+Expose deterministic aggregation of independently produced `ReadObservation[]` into compact `SampleEvidence` while keeping validation/order, locus-difference extraction, and variant aggregation in focused child modules.
 
 ## Non-responsibilities
 
