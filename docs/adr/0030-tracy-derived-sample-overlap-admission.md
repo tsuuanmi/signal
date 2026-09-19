@@ -31,11 +31,11 @@ Strict configuration schema version 5 adds:
 
 ~~~toml
 [sample_reconciliation]
-minimum_overlap_bases = 25
+minimum_comparable_bases = 25
 minimum_overlap_agreement = 0.50
 ~~~
 
-Both settings are required. `minimum_overlap_bases` must be positive and
+Both settings are required. `minimum_comparable_bases` must be positive and
 `minimum_overlap_agreement` must be finite in `(0, 1]`.
 
 ### Pair discovery
@@ -80,7 +80,7 @@ separate evidence type, and future consensus must remain explicitly gap-aware.
 A pair is eligible for later consensus reconciliation exactly when:
 
 ~~~text
-comparable_bases >= minimum_overlap_bases
+comparable_bases >= minimum_comparable_bases
 and
 agreement >= minimum_overlap_agreement
 ~~~
@@ -88,7 +88,7 @@ agreement >= minimum_overlap_agreement
 Failed rules are retained in deterministic order as:
 
 ~~~text
-overlap_below_minimum
+comparable_bases_below_minimum
 agreement_below_minimum
 ~~~
 
