@@ -16,7 +16,7 @@
 - FWO permutation, channel cardinality, PLOC ordering/bounds, non-fatal vendor/PLOC cardinality mismatch evidence, PLOC spacing summaries, exact signed-16-bit clipping counts, and event-signal ratio summaries;
 - FASTA records/symbols/length;
 - midpoint windows, plateau peaks, PLOC fallback, ties, ambiguity ratios/IUPAC;
-- shared PLOC locus geometry; basecall-independent event refinement; zero-signal profile absence; threshold-independent A/C/G/T profile mass; signal baseline/first-difference MAD, noise floor, full rolling windows, thresholds, and merged regions;
+- shared PLOC locus geometry; basecall-independent nearest-total-event refinement with stronger-neighbor rejection, equal-distance deterministic ties, and PLOC fallback; zero-signal profile absence; threshold-independent A/C/G/T profile mass; signal baseline/first-difference MAD, noise floor, full rolling windows, thresholds, and merged regions;
 - penalty windows, zero-penalty scoring, trim bounds/minimum length;
 - fixed-point profile substitution quantization, one-hot compatibility with the prior score ordering, missing-profile ambiguous scoring, unresolved primary characters with usable profile evidence, reverse profile complementation, Gotoh initialization, free flanks, affine convention, state ties, memory cap, traceback;
 - forward/reverse mapping, circular origin, ambiguous placement/orientation;
