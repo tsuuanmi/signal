@@ -62,35 +62,31 @@ fn variant_calls(
     mappings
         .iter()
         .map(|mapping| {
-            let call = read
-                .calls
-                .calls
-                .get(mapping.call_index_0based)
-                .ok_or_else(|| {
-                    Error::Sample(format!(
-                        "variant references missing call index {}",
-                        mapping.call_index_0based
-                    ))
-                })?;
-            if call.index_0based != mapping.call_index_0based {
+            let index = mapping.call_index_0based;
+            let call = read.calls.calls.get(index).ok_or_else(|| {
+                Error::Sample(format!("variant references missing call index {index}"))
+            })?;
+            let quality = read.quality.per_call.get(index).ok_or_else(|| {
+                Error::Sample(format!("variant references missing quality index {index}"))
+            })?;
+            if call.index_0based != index || quality.index_0based != index {
                 return Err(Error::Sample(format!(
-                    "variant call index {} does not match base-call record",
-                    mapping.call_index_0based
+                    "variant call index {index} does not match call/quality records"
                 )));
             }
-            let reference_position_1based = mapping
-                .reference_position_0based
-                .map(|position| {
-                    position
-                        .checked_add(1)
-                        .ok_or_else(|| Error::Sample("reference coordinate overflow".into()))
-                })
-                .transpose()?;
+            let primary = call.primary_peak_evidence.as_ref().ok_or_else(|| {
+                Error::Sample(format!(
+                    "variant call index {index} lacks primary-event peak evidence"
+                ))
+            })?;
             Ok(VariantCallEvidence {
                 role: mapping.role,
-                call_index_0based: mapping.call_index_0based,
-                reference_position_1based,
-                ploc_0based: call.ploc_0based,
+                base: read.alignment.orientation.reference_base(call.primary),
+                peak_heights: read
+                    .alignment
+                    .orientation
+                    .reference_peak_heights(primary.channel_heights),
+                quality: quality.relative_quality_score,
             })
         })
         .collect()
