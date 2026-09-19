@@ -6,6 +6,7 @@ mod input;
 mod observation;
 mod read;
 mod sample;
+mod sample_metrics;
 
 use std::time::Instant;
 

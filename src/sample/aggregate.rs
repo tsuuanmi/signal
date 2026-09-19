@@ -374,6 +374,32 @@ mod tests {
                 .map(|profile| profile.weights),
             Some([0.4, 0.3, 0.2, 0.1])
         );
+        let heterogeneity = nucleotide_support
+            .heterogeneity
+            .ok_or_else(|| Error::Sample("total profile heterogeneity is missing".into()))?;
+        assert!((heterogeneity.within_profile_impurity - 0.7).abs() < 1e-12);
+        assert!((heterogeneity.between_profile_dispersion - 0.05).abs() < 1e-12);
+        assert!((heterogeneity.total_profile_heterogeneity - 0.75).abs() < 1e-12);
+        assert_eq!(
+            nucleotide_support
+                .forward_heterogeneity
+                .map(|geometry| geometry.between_profile_dispersion),
+            Some(0.0)
+        );
+        assert_eq!(
+            nucleotide_support
+                .reverse_heterogeneity
+                .map(|geometry| geometry.between_profile_dispersion),
+            Some(0.0)
+        );
+        assert!(
+            (nucleotide_support
+                .directional_profile_distance
+                .ok_or_else(|| Error::Sample("directional profile distance is missing".into()))?
+                - 0.4)
+                .abs()
+                < 1e-12
+        );
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         let forward_signal = evidence.locus_differences[0].observations[0]
@@ -549,6 +575,30 @@ mod tests {
                 .mean_profile
                 .is_none()
         );
+        assert!(
+            evidence.locus_differences[1]
+                .nucleotide_support
+                .heterogeneity
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[2]
+                .nucleotide_support
+                .heterogeneity
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[1]
+                .nucleotide_support
+                .directional_profile_distance
+                .is_none()
+        );
+        assert!(
+            evidence.locus_differences[2]
+                .nucleotide_support
+                .directional_profile_distance
+                .is_none()
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
@@ -625,6 +675,19 @@ mod tests {
                 .mean_profile
                 .map(|profile| profile.weights),
             Some([0.1, 0.2, 0.3, 0.4])
+        );
+        let heterogeneity = evidence.locus_differences[0]
+            .nucleotide_support
+            .heterogeneity
+            .ok_or_else(|| Error::Sample("single-read profile heterogeneity is missing".into()))?;
+        assert!((heterogeneity.within_profile_impurity - 0.7).abs() < 1e-12);
+        assert_eq!(heterogeneity.between_profile_dispersion, 0.0);
+        assert!((heterogeneity.total_profile_heterogeneity - 0.7).abs() < 1e-12);
+        assert!(
+            evidence.locus_differences[0]
+                .nucleotide_support
+                .directional_profile_distance
+                .is_none()
         );
         Ok(())
     }

@@ -14,6 +14,7 @@ differential locus without making a consensus decision.
   contributor counts.
 - Derive total support from the forward/reverse partitions.
 - Derive an arithmetic mean `EvidenceProfile` for each non-empty total/forward/reverse partition by dividing support by contributor count.
+- Accumulate per-read profile impurity and delegate threshold-free heterogeneity decomposition plus forward/reverse Total Variation to `profile_geometry`.
 
 ## Non-responsibilities
 

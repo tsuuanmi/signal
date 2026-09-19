@@ -113,6 +113,14 @@ pub(crate) struct LocusDifferenceObservation {
     pub(crate) nucleotide_contribution: NucleotideContribution,
 }
 
+/// Threshold-free heterogeneity geometry for one non-empty nucleotide-profile partition.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct ProfileHeterogeneity {
+    pub(crate) within_profile_impurity: f64,
+    pub(crate) between_profile_dispersion: f64,
+    pub(crate) total_profile_heterogeneity: f64,
+}
+
 /// Unweighted eligible nucleotide-profile support retained at one differential locus.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct LocusNucleotideSupport {
@@ -125,6 +133,10 @@ pub(crate) struct LocusNucleotideSupport {
     pub(crate) mean_profile: Option<EvidenceProfile>,
     pub(crate) forward_mean_profile: Option<EvidenceProfile>,
     pub(crate) reverse_mean_profile: Option<EvidenceProfile>,
+    pub(crate) heterogeneity: Option<ProfileHeterogeneity>,
+    pub(crate) forward_heterogeneity: Option<ProfileHeterogeneity>,
+    pub(crate) reverse_heterogeneity: Option<ProfileHeterogeneity>,
+    pub(crate) directional_profile_distance: Option<f64>,
 }
 
 /// All covering-read observations retained at one differential reference locus.
