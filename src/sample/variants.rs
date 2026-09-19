@@ -75,14 +75,12 @@ fn support_topology(
         eligible_reverse_reads: 0,
     };
     for item in support {
-        let read = reads
-            .get(item.read_index)
-            .ok_or_else(|| {
-                Error::Sample(format!(
-                    "variant support references missing read {}",
-                    item.read_index
-                ))
-            })?;
+        let read = reads.get(item.read_index).ok_or_else(|| {
+            Error::Sample(format!(
+                "variant support references missing read {}",
+                item.read_index
+            ))
+        })?;
         match read.alignment.orientation {
             Orientation::Forward => {
                 topology.forward_reads += 1;
