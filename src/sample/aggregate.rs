@@ -112,6 +112,9 @@ mod tests {
             context_sample_start_0based: index_0based * 10,
             context_sample_end_0based_exclusive: index_0based * 10 + 1,
             event_position_0based: index_0based * 10,
+            event_ploc_distance: 0,
+            minimum_adjacent_ploc_spacing: Some(10),
+            maximum_adjacent_ploc_spacing: Some(10),
             channel_heights: [10, 20, 30, 40],
             channel_baselines: [0.0; 4],
             channel_noise_sigmas: [1.0; 4],
@@ -359,6 +362,9 @@ mod tests {
             forward_signal.profile.map(|profile| profile.weights),
             Some([0.1, 0.2, 0.3, 0.4])
         );
+        assert_eq!(forward_signal.event_ploc_distance, 0);
+        assert_eq!(forward_signal.minimum_adjacent_ploc_spacing, Some(10));
+        assert_eq!(forward_signal.maximum_adjacent_ploc_spacing, Some(10));
         assert_eq!(forward_signal.corrected_amplitudes, [1.0, 2.0, 3.0, 4.0]);
         assert_eq!(forward_signal.snrs, [1.0, 2.0, 3.0, 4.0]);
         assert!(forward_signal.in_noisy_region);
