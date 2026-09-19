@@ -208,16 +208,10 @@ def audit_index(
             "edge_distance_calls": EDGE_DISTANCE_CALLS,
             "geometry_case_p95_boundary": geometry_boundary,
             "rules": {
-                "alignment_challenge": (
-                    "callable_identity <= stratum empirical p05"
-                ),
+                "alignment_challenge": ("callable_identity <= stratum empirical p05"),
                 "high_noise": "noise_rate >= stratum empirical p95",
-                "aggressive_trim": (
-                    "retained_fraction <= stratum empirical p05"
-                ),
-                "short_coverage": (
-                    "callable_columns <= stratum empirical p05"
-                ),
+                "aggressive_trim": ("retained_fraction <= stratum empirical p05"),
+                "short_coverage": ("callable_columns <= stratum empirical p05"),
                 "short_coverage_cluster": (
                     "at least two short_coverage reads in one case"
                 ),
@@ -249,9 +243,7 @@ def audit_index(
         "locus_audit_rows": len(locus_rows),
         "locus_audit_columns": list(LOCUS_AUDIT_COLUMNS),
         "locus_flag_counts": {
-            "edge_discordance": sum(
-                bool(row["edge_discordance"]) for row in locus_rows
-            )
+            "edge_discordance": sum(bool(row["edge_discordance"]) for row in locus_rows)
         },
         "case_audit_file": "case-audit.csv",
         "case_audit_sha256": file_sha256(case_path),
@@ -280,9 +272,7 @@ def build_staged_audit(
     case_geometry, mixed = load_locus_context(loci_path)
     audit_mixed_observations(observations_path, mixed, reads_by_sha256)
     locus_rows = locus_audit_rows(mixed)
-    case_rows, geometry_boundary = case_audit_rows(
-        case_geometry, read_rows, locus_rows
-    )
+    case_rows, geometry_boundary = case_audit_rows(case_geometry, read_rows, locus_rows)
 
     read_path = stage / "read-audit.csv"
     locus_path = stage / "locus-audit.csv"

@@ -65,12 +65,8 @@ def boundary_for(records: list[RawReadAudit]) -> AuditBoundary:
         n=len(records),
         identity_p05=nearest_rank(identities, LOWER_AUDIT_QUANTILE),
         noise_p95=nearest_rank(noise_rates, UPPER_AUDIT_QUANTILE),
-        retained_fraction_p05=nearest_rank(
-            retained_fractions, LOWER_AUDIT_QUANTILE
-        ),
-        callable_columns_p05=nearest_rank(
-            callable_columns, LOWER_AUDIT_QUANTILE
-        ),
+        retained_fraction_p05=nearest_rank(retained_fractions, LOWER_AUDIT_QUANTILE),
+        callable_columns_p05=nearest_rank(callable_columns, LOWER_AUDIT_QUANTILE),
     )
 
 
@@ -273,9 +269,7 @@ def load_locus_context(
                 reads=reads,
                 reference_reads=reference_reads,
                 alternate_reads=alternate_reads,
-                contributors=csv_int(
-                    row["contributors"], f"{label}.contributors"
-                ),
+                contributors=csv_int(row["contributors"], f"{label}.contributors"),
                 forward_contributors=forward_contributors,
                 reverse_contributors=reverse_contributors,
                 within_profile_impurity=csv_float(
@@ -332,9 +326,7 @@ def audit_mixed_observations(
                 f"{observations_path}:{line_number}.call_index_0based",
             )
             if not (
-                read.trim_start_0based
-                <= call_index
-                < read.trim_end_0based_exclusive
+                read.trim_start_0based <= call_index < read.trim_end_0based_exclusive
             ):
                 raise ValueError(
                     f"{observations_path}:{line_number}: alternate call index "
@@ -388,8 +380,7 @@ def locus_audit_rows(
             and locus.alternate_reverse_observations > 0
         )
         edge_discordance = (
-            locus.alternate_near_read_edge_observations > 0
-            and not cross_orientation
+            locus.alternate_near_read_edge_observations > 0 and not cross_orientation
         )
         flags = {"edge_discordance": edge_discordance}
         rows.append(
@@ -452,9 +443,7 @@ def case_audit_rows(
         if (value := p95(geometry.total)) is not None
     ]
     geometry_boundary = (
-        nearest_rank(case_total_p95, UPPER_AUDIT_QUANTILE)
-        if case_total_p95
-        else None
+        nearest_rank(case_total_p95, UPPER_AUDIT_QUANTILE) if case_total_p95 else None
     )
 
     rows: list[dict[str, Any]] = []
@@ -468,12 +457,8 @@ def case_audit_rows(
                 bool(row["alignment_challenge"]) for row in reads
             ),
             "high_noise_reads": sum(bool(row["high_noise"]) for row in reads),
-            "aggressive_trim_reads": sum(
-                bool(row["aggressive_trim"]) for row in reads
-            ),
-            "short_coverage_reads": sum(
-                bool(row["short_coverage"]) for row in reads
-            ),
+            "aggressive_trim_reads": sum(bool(row["aggressive_trim"]) for row in reads),
+            "short_coverage_reads": sum(bool(row["short_coverage"]) for row in reads),
             "orientation_disagreement_reads": sum(
                 bool(row["orientation_disagreement"]) for row in reads
             ),
@@ -494,9 +479,7 @@ def case_audit_rows(
             "short_coverage_cluster": short_cluster,
             "geometry_challenge": geometry_challenge,
             "edge_discordance": edge_by_case[case_id] > 0,
-            "orientation_disagreement": (
-                counts["orientation_disagreement_reads"] > 0
-            ),
+            "orientation_disagreement": (counts["orientation_disagreement_reads"] > 0),
             "unbenchmarked_stratum": counts["unbenchmarked_reads"] > 0,
         }
         rows.append(
@@ -539,6 +522,5 @@ def flag_counts(
     flag_names: tuple[str, ...],
 ) -> dict[str, int]:
     return {
-        flag: sum(bool(row.get(flag, False)) for row in rows)
-        for flag in flag_names
+        flag: sum(bool(row.get(flag, False)) for row in rows) for flag in flag_names
     }

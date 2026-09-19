@@ -95,7 +95,9 @@ def parse_case_log(
     active_sha256: str | None = None
     active_fields: dict[str, dict[str, str]] = {}
 
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), 1
+    ):
         label = f"{path}:{line_number}"
         fields = event_fields(line, label)
         if fields is None:
@@ -132,7 +134,11 @@ def parse_case_log(
                 f"{label}: completed read {completed_sha256!r} does not match "
                 f"active read {active_sha256!r}"
             )
-        missing = [event_name for event_name in REQUIRED_READ_EVENTS if event_name not in active_fields]
+        missing = [
+            event_name
+            for event_name in REQUIRED_READ_EVENTS
+            if event_name not in active_fields
+        ]
         if missing:
             raise ValueError(
                 f"{label}: incomplete read log for {active_sha256}: "
@@ -172,15 +178,9 @@ def parse_case_log(
                 trim_start_0based=start,
                 trim_end_0based_exclusive=end,
                 retained=required_int(quality, "retained", label),
-                retained_fraction=required_float(
-                    quality, "retained_fraction", label
-                ),
-                callable_columns=required_int(
-                    alignment, "callable_columns", label
-                ),
-                callable_identity=required_float(
-                    alignment, "callable_identity", label
-                ),
+                retained_fraction=required_float(quality, "retained_fraction", label),
+                callable_columns=required_int(alignment, "callable_columns", label),
+                callable_identity=required_float(alignment, "callable_identity", label),
                 mismatches=required_int(alignment, "mismatches", label),
                 gap_opens=required_int(alignment, "gap_opens", label),
                 excluded_variant_candidates=required_int(

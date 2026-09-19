@@ -126,7 +126,7 @@ class ValidationAuditTests(unittest.TestCase):
         log.write_text(
             "\n".join(
                 [
-                    f'2026 | INFO | x - event=sample_read_started '
+                    f"2026 | INFO | x - event=sample_read_started "
                     f'trace_name="trace.ab1" trace_sha256={read_sha256}',
                     "2026 | INFO | x - event=basecalling_completed calls=500",
                     "2026 | INFO | x - event=signal_processing_completed "
@@ -205,9 +205,7 @@ class ValidationAuditTests(unittest.TestCase):
         call_index: int,
         noisy: bool,
     ) -> dict[str, object]:
-        row: dict[str, object] = {
-            column: "" for column in OBSERVATION_TABLE_COLUMNS
-        }
+        row: dict[str, object] = {column: "" for column in OBSERVATION_TABLE_COLUMNS}
         row.update(
             {
                 "validation_case_id": "case-1",
