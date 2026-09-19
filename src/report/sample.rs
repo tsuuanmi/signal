@@ -11,6 +11,7 @@ use crate::model::sample_result::{
     SampleCoverageResult, SampleEvidenceResult, SampleLocusDifferenceObservationResult,
     SampleLocusDifferenceResult, SampleOverlapResult, SampleProvenanceResult, SampleReadResult,
     SampleVariantCallResult, SampleVariantResult, SampleVariantSupportResult,
+    SampleVariantSupportTopologyResult,
 };
 
 /// Inputs consumed to build one immutable sample-evidence document.
@@ -20,7 +21,7 @@ pub(crate) struct CompletedSampleEvidence {
     pub(crate) evidence: SampleEvidence,
 }
 
-/// Builds `signal.sample_evidence/v6` without filesystem side effects.
+/// Builds `signal.sample_evidence/v7` without filesystem side effects.
 pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidenceResult> {
     let CompletedSampleEvidence {
         sample_id,
@@ -148,13 +149,21 @@ pub(crate) fn build(completed: CompletedSampleEvidence) -> Result<SampleEvidence
                 reference: variant.reference,
                 alternate: variant.alternate,
                 kind: variant.kind,
+                support_topology: SampleVariantSupportTopologyResult {
+                    reads: variant.support_topology.reads,
+                    eligible_reads: variant.support_topology.eligible_reads,
+                    forward_reads: variant.support_topology.forward_reads,
+                    reverse_reads: variant.support_topology.reverse_reads,
+                    eligible_forward_reads: variant.support_topology.eligible_forward_reads,
+                    eligible_reverse_reads: variant.support_topology.eligible_reverse_reads,
+                },
                 support,
             })
         })
         .collect::<Result<Vec<_>>>()?;
 
     Ok(SampleEvidenceResult {
-        schema_version: "signal.sample_evidence/v6",
+        schema_version: "signal.sample_evidence/v7",
         sample_id,
         provenance: SampleProvenanceResult {
             reference: ReferenceResult {
