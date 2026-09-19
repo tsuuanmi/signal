@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Defines compact serializable `signal.analysis/v6` records and shared public result types.
+Defines compact serializable `signal.analysis/v7` records and shared public result types.
 
 ## Responsibilities
 
-- Represent provenance, read/trim summary, signal-quality summary, alignment summary, normalized variants, and warnings.
+- Represent provenance, read/trim summary, signal-quality summary, trace-integrity evidence, alignment summary, normalized variants, and warnings.
 - Represent reviewer-facing variant-call evidence as `role + base + peaks + quality`.
 - Represent co-located A/C/G/T primary-event heights with stable `A/C/G/T` JSON keys.
 
