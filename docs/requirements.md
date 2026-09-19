@@ -127,7 +127,7 @@ Signal is a deterministic Rust CLI for reference-free base re-calling and resear
 ## 10. External clean batch orchestration
 
 - **SRS-BAT-001:** The external batch runner MUST validate the selected manifest prefix, trace directory, reference, configuration, selected trace workload, identities, destinations, and cleanup targets before deleting any artifact.
-- **SRS-BAT-002:** Batch preflight MUST reject invalid or duplicate selected IDs, missing selected traces, traces matching multiple selected samples, trace-stem/log collisions, unsafe target types, path escapes, and symlinked traces or cleanup targets.
+- **SRS-BAT-002:** Batch preflight MUST reject invalid or duplicate selected IDs, missing selected traces, traces matching multiple selected samples, unsafe target types, path escapes, and symlinked traces or cleanup targets.
 - **SRS-BAT-003:** Unless `--no-build` is selected, the release build MUST complete successfully before cleanup. In all modes the selected binary MUST be a regular file before cleanup.
 - **SRS-BAT-004:** Cleanup MUST destructively remove only selected `results/<sample-id>/` directories and logs matching selected trace stems or selected sample identities. It MUST preserve every unselected result directory and unrelated log.
 - **SRS-BAT-005:** After cleanup, each selected trace MUST run through an isolated one-file core CLI invocation and each generated JSON MUST be placed without overwrite. When every trace for a selected sample succeeds, the wrapper MUST run the sample command over the complete trace set and atomically publish the aggregate as `results/<sample-id>/<sample-id>.json`. The wrapper MUST NOT weaken the core CLI's no-overwrite semantics.
