@@ -1,9 +1,9 @@
-//! Serializable `signal.sample_evidence/v3` contract.
+//! Serializable `signal.sample_evidence/v4` contract.
 
 use serde::Serialize;
 
 use crate::model::result::{AlignmentResult, PeakHeightsResult, ReferenceResult};
-use crate::model::sample_evidence::LocusState;
+use crate::model::sample_evidence::{LocusState, OverlapExclusionReason};
 use crate::model::variant::{VariantCallRole, VariantExclusionReason, VariantKind};
 
 /// Successful compact sample-evidence document.
@@ -13,6 +13,7 @@ pub(crate) struct SampleEvidenceResult {
     pub(crate) sample_id: String,
     pub(crate) provenance: SampleProvenanceResult,
     pub(crate) reads: Vec<SampleReadResult>,
+    pub(crate) overlaps: Vec<SampleOverlapResult>,
     pub(crate) locus_differences: Vec<SampleLocusDifferenceResult>,
     pub(crate) variants: Vec<SampleVariantResult>,
 }
@@ -30,6 +31,21 @@ pub(crate) struct SampleReadResult {
     pub(crate) name: String,
     pub(crate) sha256: String,
     pub(crate) alignment: AlignmentResult,
+}
+
+/// Pairwise overlap evidence discovered from independently placed reads.
+#[derive(Debug, Serialize)]
+pub(crate) struct SampleOverlapResult {
+    pub(crate) left: String,
+    pub(crate) right: String,
+    pub(crate) shared_positions: usize,
+    pub(crate) comparable_bases: usize,
+    pub(crate) agreements: usize,
+    pub(crate) conflicts: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) agreement: Option<f64>,
+    pub(crate) eligible: bool,
+    pub(crate) exclusion_reasons: Vec<OverlapExclusionReason>,
 }
 
 /// Evidence at one locus retained because at least one covering read differs.
