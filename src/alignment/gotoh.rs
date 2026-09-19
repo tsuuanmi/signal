@@ -276,15 +276,15 @@ mod tests {
 
     #[test]
     fn canonicalizes_homopolymer_deletion_to_rightmost_reference_base() -> Result<()> {
-        let query = "CAAAG";
-        let alignments = align(query, &profiles(query), "CAAAAG", &config(), None)?;
+        let query = "GCCAAAGTT";
+        let alignments = align(query, &profiles(query), "GCCAAAAGTT", &config(), None)?;
         assert_eq!(alignments.len(), 1);
         let deletion = alignments[0]
             .columns
             .iter()
             .find(|column| column.query_base == '-')
             .ok_or_else(|| Error::Alignment("expected canonical deletion".into()))?;
-        assert_eq!(deletion.reference_index, Some(4));
+        assert_eq!(deletion.reference_index, Some(6));
         assert_eq!(deletion.reference_base, 'A');
         Ok(())
     }
