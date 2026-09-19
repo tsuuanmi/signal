@@ -341,6 +341,31 @@ mod tests {
     }
 
     #[test]
+    fn right_shifts_tandem_repeat_deletion_by_whole_motif() -> Result<()> {
+        let profiles = one_hot("CATG");
+        let columns = vec![
+            column('C', 'C', Some(0), Some(0)),
+            column('-', 'A', None, Some(1)),
+            column('-', 'T', None, Some(2)),
+            column('A', 'A', Some(1), Some(3)),
+            column('T', 'T', Some(2), Some(4)),
+            column('G', 'G', Some(3), Some(5)),
+        ];
+        let expected = score(&columns, &profiles, &config())?;
+        let mut alignment = raw(columns, expected);
+        right_align(&mut alignment, &profiles, &config(), None)?;
+
+        let deleted = alignment
+            .columns
+            .iter()
+            .filter(|column| column.query_base == '-')
+            .filter_map(|column| column.reference_index)
+            .collect::<Vec<_>>();
+        assert_eq!(deleted, vec![3, 4]);
+        Ok(())
+    }
+
+    #[test]
     fn does_not_shift_non_repeat_deletion() -> Result<()> {
         let profiles = one_hot("CAG");
         let columns = vec![
