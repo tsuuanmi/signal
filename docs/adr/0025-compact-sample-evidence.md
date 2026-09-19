@@ -35,8 +35,7 @@ by input SHA-256. Each entry owns reviewer-facing basename provenance, stable
 SHA-256 identity, derived orientation, alignment summary, and mapped reference
 segments.
 
-All locus and variant evidence refers to a read by its 0-based index in this
-registry. Read name, SHA-256, and orientation are not duplicated downstream.
+Internal aggregation may use deterministic indexes into the SHA-sorted registry, but the public contract refers to reads by unique reviewer-facing filename stem. Numeric indexes are not exposed as reviewer identifiers. SHA-256 remains the scientific content identity and filename semantics never become placement or merge keys.
 
 ### Sparse differential loci
 
@@ -44,8 +43,7 @@ The dense `loci[]` table is replaced by `locus_differences[]`.
 
 A locus is retained only when at least one covering read is alternate, unresolved,
 or deletion. Once a locus is retained, every read covering that position is
-included, including canonical reference observations with original call index and
-relative quality.
+included, including canonical reference observations with observed base and quality.
 
 Aggregation uses two passes:
 
@@ -64,9 +62,7 @@ without materializing routine all-reference positions.
 
 ### Normalized variants
 
-`variants[]` remains the normalized variant layer. Per-read support keeps
-configured eligibility, exclusion reasons, and original-call mappings, but the read
-is represented only by the registry index.
+`variants[]` remains the normalized variant layer. Per-read support keeps configured eligibility and exclusion reasons, refers to the read by unique reviewer-facing name, and exposes reference-oriented called base plus co-located A/C/G/T peak heights and quality. Original call index, PLOC, and mapped call coordinate remain internal.
 
 Read-level filtering changes eligibility, not whether the normalized observation
 exists in sample evidence.
@@ -88,8 +84,7 @@ than a mutation of the accepted v1 schema. The v1 schema/example and implementat
   document. Full one-read evidence still exists upstream before sample aggregation;
   future interpretation needing additional focused evidence should derive it there
   rather than restore a dense whole-coverage table.
-- Variant support becomes more concise because read identity and orientation are
-  factored to the read registry.
+- Variant support becomes more reviewable because scientific identity/orientation are factored to the read registry while each support uses the human-readable read name and direct peak/quality evidence.
 - The internal sample implementation is split into validation/read ordering,
   differential-locus aggregation, and normalized-variant aggregation modules.
 
