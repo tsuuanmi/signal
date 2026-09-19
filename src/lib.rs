@@ -13,6 +13,7 @@ mod checksum;
 pub mod cli;
 pub mod config;
 pub mod error;
+mod locus;
 mod logger;
 pub mod model;
 mod pipeline;
