@@ -39,9 +39,7 @@ same query row.
 
 ## Tests
 
-Tests cover clean one-hot compatibility, free reference flanks, circular
-one-span placement, affine gap scoring, unresolved primary character with usable
-profile evidence, profile-cardinality rejection, and scores beyond `i32` range.
+Tests cover clean one-hot compatibility, free reference flanks, circular one-span placement, affine gap scoring, unresolved primary character with usable profile evidence, profile-cardinality rejection, right-most homopolymer insertion/deletion integration, preserved genuine repeated-placement ambiguity, and scores beyond `i32` range.
 
 ## Traceability
 
