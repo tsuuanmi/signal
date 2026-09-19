@@ -15,7 +15,7 @@
 | [0011](0011-compact-variant-focused-json.md) | Compact variant-focused JSON | Superseded in part by ADR-0012 |
 | [0012](0012-concise-mapped-variant-calls.md) | Concise mapped variant calls | Superseded in part by ADR-0013 |
 | [0013](0013-observational-signal-quality.md) | Observational rolling signal quality | Accepted |
-| [0014](0014-compact-result-summary.md) | Compact v5 result summary | Accepted |
+| [0014](0014-compact-result-summary.md) | Compact v5 result summary | Superseded by ADR-0026 |
 | [0015](0015-reference-free-basecalling.md) | Reference-free basecall JSON | Accepted |
 | [0016](0016-defer-ml-feature-boundary.md) | Defer ML feature boundary to separate training contract | Accepted |
 | [0017](0017-primary-sample-peak-colocalization.md) | Gate secondary calls at the primary peak sample | Accepted |
@@ -27,3 +27,4 @@
 | [0023](0023-evidence-derived-read-placement-and-sample-boundary.md) | Derive read placement from evidence and reconcile samples from read observations | Accepted |
 | [0024](0024-reference-coordinate-sample-evidence.md) | Aggregate independently placed reads in reference-coordinate/variant space | Superseded in part by ADR-0025 |
 | [0025](0025-compact-sample-evidence.md) | Factor sample evidence into a read registry and sparse differences | Accepted |
+| [0026](0026-reviewer-facing-signal-evidence.md) | Prefer reviewer-facing signal evidence over implementation call coordinates | Accepted |
