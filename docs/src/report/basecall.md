@@ -2,14 +2,14 @@
 
 ## Purpose
 
-Builds the typed `signal.basecalls/v1` document without filesystem effects.
+Builds the typed `signal.basecalls/v2` document without filesystem effects.
 
 ## Responsibilities
 
 - Consume one completed config, trace, base-call, signal, and quality-control set.
 - Derive the ambiguity sequence from ordered call records.
 - Validate sequence lengths, trim bounds, and retained-primary slice consistency.
-- Project provenance, read sequences, merged noisy regions, and public warnings.
+- Project provenance, read sequences, trace-integrity evidence, merged noisy regions, and public warnings.
 
 ## Non-responsibilities
 
