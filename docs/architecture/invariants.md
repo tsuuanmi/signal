@@ -53,6 +53,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-SAMPLE-014:** Local sample noise context is a projection of upstream merged candidate-noisy call regions only. A covered call is not automatically weak, erroneous, ineligible, or down-weighted, and deletion evidence cannot receive fabricated call-specific noise state.
 - **INV-SAMPLE-015:** A call-backed sample observation has one authoritative reference-oriented signal projection resolved from matching `LocusEvidence`. Corrected amplitudes, per-channel SNR, profile weights, and noisy-region membership cannot be independently re-derived through competing sample-layer paths; reverse orientation must project every A/C/G/T channel array consistently, and deletions have no call signal object.
 - **INV-SAMPLE-016:** Differential-locus profile availability is derived only from retained call signal objects with a present `EvidenceProfile`. Its forward/reverse partition must sum exactly to total profile-bearing reads, it cannot include deletions or missing profiles, and it cannot become contributor eligibility, agreement, weight, or confidence.
+- **INV-SAMPLE-017:** Call-backed sample geometry is copied from authoritative `LocusEvidence` without reference-orientation transformation. Event/PLOC distance and adjacent spacing remain trace-sample observations; deletions have no call geometry and the sample layer cannot reinterpret geometry as eligibility, weight, confidence, or an artifact label.
 
 ## Pipeline
 
