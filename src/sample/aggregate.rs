@@ -305,6 +305,23 @@ mod tests {
         assert_eq!(evidence.overlaps[0].comparable_bases, 1);
         assert!(evidence.overlaps[0].eligible);
         assert_eq!(evidence.locus_differences.len(), 1);
+        assert_eq!(evidence.locus_differences[0].support_topology.reads, 2);
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.forward_reads,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.reverse_reads,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.alternate_reads,
+            2
+        );
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.reference_reads,
+            0
+        );
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         assert_eq!(
@@ -372,6 +389,19 @@ mod tests {
 
         assert_eq!(evidence.locus_differences.len(), 3);
         assert_eq!(evidence.locus_differences[0].position_1based, 12);
+        assert_eq!(evidence.locus_differences[0].support_topology.reads, 1);
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.alternate_reads,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[1].support_topology.unresolved_reads,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[2].support_topology.deletion_reads,
+            1
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
@@ -419,6 +449,14 @@ mod tests {
         let evidence = aggregate(&[reference, alternate], &sample_config())?;
 
         assert_eq!(evidence.locus_differences.len(), 1);
+        let topology = evidence.locus_differences[0].support_topology;
+        assert_eq!(topology.reads, 2);
+        assert_eq!(topology.forward_reads, 1);
+        assert_eq!(topology.reverse_reads, 1);
+        assert_eq!(topology.reference_reads, 1);
+        assert_eq!(topology.alternate_reads, 1);
+        assert_eq!(topology.unresolved_reads, 0);
+        assert_eq!(topology.deletion_reads, 0);
         let observations = &evidence.locus_differences[0].observations;
         assert_eq!(observations.len(), 2);
         assert_eq!(observations[0].read_index, 0);
