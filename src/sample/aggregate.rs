@@ -493,11 +493,32 @@ mod tests {
             evidence.locus_differences[2].support_topology.profile_reads,
             0
         );
-        assert_eq!(evidence.locus_differences[0].nucleotide_support.contributors, 1);
-        assert_eq!(evidence.locus_differences[1].nucleotide_support.contributors, 0);
-        assert_eq!(evidence.locus_differences[1].nucleotide_support.support, [0.0; 4]);
-        assert_eq!(evidence.locus_differences[2].nucleotide_support.contributors, 0);
-        assert_eq!(evidence.locus_differences[2].nucleotide_support.support, [0.0; 4]);
+        assert_eq!(
+            evidence.locus_differences[0]
+                .nucleotide_support
+                .contributors,
+            1
+        );
+        assert_eq!(
+            evidence.locus_differences[1]
+                .nucleotide_support
+                .contributors,
+            0
+        );
+        assert_eq!(
+            evidence.locus_differences[1].nucleotide_support.support,
+            [0.0; 4]
+        );
+        assert_eq!(
+            evidence.locus_differences[2]
+                .nucleotide_support
+                .contributors,
+            0
+        );
+        assert_eq!(
+            evidence.locus_differences[2].nucleotide_support.support,
+            [0.0; 4]
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Alternate
@@ -558,7 +579,12 @@ mod tests {
             evidence.locus_differences[0].observations[0].nucleotide_contribution,
             crate::model::sample_evidence::NucleotideContribution::Eligible
         );
-        assert_eq!(evidence.locus_differences[0].nucleotide_support.contributors, 1);
+        assert_eq!(
+            evidence.locus_differences[0]
+                .nucleotide_support
+                .contributors,
+            1
+        );
         assert_eq!(
             evidence.locus_differences[0].nucleotide_support.support,
             [0.1, 0.2, 0.3, 0.4]
