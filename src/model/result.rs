@@ -54,9 +54,29 @@ pub struct IntervalResult {
     pub(crate) end: usize,
 }
 
-/// Shared merged observation-only signal-quality regions.
+/// Compact observation-only integrity evidence shared by read result contracts.
+#[derive(Debug, Clone, Serialize)]
+pub struct TraceIntegrityResult {
+    pub(crate) ploc_count: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) vendor_primary_count: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) vendor_quality_count: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) minimum_ploc_spacing: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) median_ploc_spacing: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) maximum_ploc_spacing: Option<usize>,
+    pub(crate) clipped_channel_samples: usize,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub(crate) maximum_to_median_event_signal_ratio: Option<f64>,
+}
+
+/// Shared merged observation-only signal-quality and trace-integrity evidence.
 #[derive(Debug, Serialize)]
 pub struct SignalQualityResult {
+    pub(crate) integrity: TraceIntegrityResult,
     pub(crate) noisy_regions: Vec<NoisyRegionResult>,
 }
 
@@ -129,5 +149,7 @@ pub struct VariantCallResult {
 pub struct WarningSummaryResult {
     pub(crate) unresolved_primary_calls: usize,
     pub(crate) multi_channel_unresolved_calls: usize,
+    pub(crate) ploc_vendor_length_mismatches: usize,
+    pub(crate) clipped_channel_samples: usize,
     pub(crate) excluded_variant_candidates: usize,
 }
