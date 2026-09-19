@@ -26,10 +26,29 @@ pub(crate) fn align_best(
     reference: &Reference,
     config: &AlignmentConfig,
 ) -> Result<Alignment> {
+    let forward_profiles = retained_profiles(qc, signal)?;
+    align_with_profiles(qc, &forward_profiles, reference, config)
+}
+
+/// Validation-only counterfactual using one-hot retained primary bases.
+pub(crate) fn align_primary_counterfactual(
+    qc: &QualityControlResult,
+    reference: &Reference,
+    config: &AlignmentConfig,
+) -> Result<Alignment> {
+    let forward_profiles = primary_profiles(&qc.retained_sequence);
+    align_with_profiles(qc, &forward_profiles, reference, config)
+}
+
+fn align_with_profiles(
+    qc: &QualityControlResult,
+    forward_profiles: &[Option<EvidenceProfile>],
+    reference: &Reference,
+    config: &AlignmentConfig,
+) -> Result<Alignment> {
     let forward_query = qc.retained_sequence.clone();
     let reverse_query = reverse_complement(&forward_query);
-    let forward_profiles = retained_profiles(qc, signal)?;
-    let reverse_profiles = reverse_profiles(&forward_profiles);
+    let reverse_profiles = reverse_profiles(forward_profiles);
     let forward_mapping = (qc.trim_start_0based..qc.trim_end_0based_exclusive).collect();
     let reverse_mapping = (qc.trim_start_0based..qc.trim_end_0based_exclusive)
         .rev()
@@ -46,7 +65,7 @@ pub(crate) fn align_best(
         mapping: forward_mapping,
         placements: gotoh::align(
             &forward_query,
-            &forward_profiles,
+            forward_profiles,
             &working_reference,
             config,
             modulo_length,
@@ -154,6 +173,22 @@ fn retained_profiles(
     Ok(profiles)
 }
 
+fn primary_profiles(sequence: &str) -> Vec<Option<EvidenceProfile>> {
+    sequence
+        .bytes()
+        .map(|base| {
+            let weights = match base {
+                b'A' => [1.0, 0.0, 0.0, 0.0],
+                b'C' => [0.0, 1.0, 0.0, 0.0],
+                b'G' => [0.0, 0.0, 1.0, 0.0],
+                b'T' => [0.0, 0.0, 0.0, 1.0],
+                _ => return None,
+            };
+            Some(EvidenceProfile { weights })
+        })
+        .collect()
+}
+
 fn reverse_profiles(profiles: &[Option<EvidenceProfile>]) -> Vec<Option<EvidenceProfile>> {
     profiles
         .iter()
@@ -228,6 +263,24 @@ mod tests {
                 unresolved_query_bases: 0,
             },
         }
+    }
+
+    #[test]
+    fn primary_profiles_are_one_hot_and_leave_unresolved_calls_missing() {
+        let profiles = primary_profiles("ACGTN");
+        assert_eq!(
+            profiles
+                .iter()
+                .map(|profile| profile.map(|profile| profile.weights))
+                .collect::<Vec<_>>(),
+            vec![
+                Some([1.0, 0.0, 0.0, 0.0]),
+                Some([0.0, 1.0, 0.0, 0.0]),
+                Some([0.0, 0.0, 1.0, 0.0]),
+                Some([0.0, 0.0, 0.0, 1.0]),
+                None,
+            ]
+        );
     }
 
     #[test]
