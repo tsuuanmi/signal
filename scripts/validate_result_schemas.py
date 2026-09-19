@@ -187,7 +187,9 @@ def validate_sample_support_topology_document(
             continue
         name = read.get("name")
         alignment = read.get("alignment")
-        orientation = alignment.get("orientation") if isinstance(alignment, dict) else None
+        orientation = (
+            alignment.get("orientation") if isinstance(alignment, dict) else None
+        )
         if isinstance(name, str) and orientation in {"forward", "reverse"}:
             if name in orientations:
                 errors.append(f"{label}: duplicate read name {name!r}")
