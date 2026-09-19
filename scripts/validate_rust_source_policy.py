@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import argparse
 import re
 import sys
 from dataclasses import dataclass
@@ -124,8 +125,20 @@ def validate(root: Path = SOURCE_ROOT) -> list[Violation]:
     return violations
 
 
-def main() -> int:
-    violations = validate()
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--root",
+        type=Path,
+        default=SOURCE_ROOT,
+        help="Rust source root to validate (default: repository src/)",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    violations = validate(args.root)
     for violation in violations:
         print(f"FAIL: {violation.render()}", file=sys.stderr)
     if violations:
