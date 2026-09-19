@@ -114,8 +114,7 @@ fn assess_pair(
         return Ok(None);
     }
 
-    let agreement = (comparable_bases > 0)
-        .then(|| agreements as f64 / comparable_bases as f64);
+    let agreement = (comparable_bases > 0).then(|| agreements as f64 / comparable_bases as f64);
     let mut exclusion_reasons = Vec::new();
     if comparable_bases < config.minimum_overlap_bases {
         exclusion_reasons.push(OverlapExclusionReason::OverlapBelowMinimum);
@@ -145,7 +144,10 @@ const fn is_canonical(base: char) -> bool {
 mod tests {
     use super::*;
 
-    fn config(minimum_overlap_bases: usize, minimum_overlap_agreement: f64) -> SampleReconciliationConfig {
+    fn config(
+        minimum_overlap_bases: usize,
+        minimum_overlap_agreement: f64,
+    ) -> SampleReconciliationConfig {
         SampleReconciliationConfig {
             minimum_overlap_bases,
             minimum_overlap_agreement,
@@ -159,12 +161,12 @@ mod tests {
         }
     }
 
-    fn coordinates(values: &[(usize, char, Option<char>)]) -> BTreeMap<usize, CoordinateObservation> {
+    fn coordinates(
+        values: &[(usize, char, Option<char>)],
+    ) -> BTreeMap<usize, CoordinateObservation> {
         values
             .iter()
-            .map(|(position, reference, query)| {
-                (*position, observation(*reference, *query))
-            })
+            .map(|(position, reference, query)| (*position, observation(*reference, *query)))
             .collect()
     }
 
@@ -206,16 +208,8 @@ mod tests {
 
     #[test]
     fn excludes_gaps_and_unresolved_calls_from_nucleotide_agreement() -> Result<()> {
-        let left = coordinates(&[
-            (1, 'A', Some('A')),
-            (2, 'C', None),
-            (3, 'G', Some('G')),
-        ]);
-        let right = coordinates(&[
-            (1, 'A', Some('A')),
-            (2, 'C', Some('C')),
-            (3, 'G', None),
-        ]);
+        let left = coordinates(&[(1, 'A', Some('A')), (2, 'C', None), (3, 'G', Some('G'))]);
+        let right = coordinates(&[(1, 'A', Some('A')), (2, 'C', Some('C')), (3, 'G', None)]);
 
         let overlap = assess_pair(0, 1, &left, &right, &config(2, 0.5))?
             .ok_or_else(|| Error::Sample("expected overlap".into()))?;
