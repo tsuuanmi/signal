@@ -231,6 +231,26 @@ mod tests {
     }
 
     #[test]
+    fn keeps_zero_comparable_overlap_explicit_without_synthetic_agreement() -> Result<()> {
+        let left = coordinates(&[(1, 'A', None), (2, 'C', None)]);
+        let right = coordinates(&[(1, 'A', Some('A')), (2, 'C', Some('C'))]);
+
+        let overlap = assess_pair(0, 1, &left, &right, &config(1, 0.5))?
+            .ok_or_else(|| Error::Sample("expected overlap".into()))?;
+        assert_eq!(overlap.shared_positions, 2);
+        assert_eq!(overlap.comparable_bases, 0);
+        assert_eq!(overlap.agreements, 0);
+        assert_eq!(overlap.conflicts, 0);
+        assert_eq!(overlap.agreement, None);
+        assert!(!overlap.eligible);
+        assert_eq!(
+            overlap.exclusion_reasons,
+            vec![OverlapExclusionReason::OverlapBelowMinimum]
+        );
+        Ok(())
+    }
+
+    #[test]
     fn reports_both_failed_overlap_rules_in_stable_order() -> Result<()> {
         let left = coordinates(&[(1, 'A', Some('A')), (2, 'C', Some('C'))]);
         let right = coordinates(&[(1, 'A', Some('G')), (2, 'C', Some('T'))]);
