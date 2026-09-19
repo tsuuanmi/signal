@@ -101,8 +101,7 @@ fn observation(
             read_index,
             state,
             base: None,
-            call_index_0based: None,
-            relative_quality: None,
+            quality: None,
         });
     }
 
@@ -120,8 +119,7 @@ fn observation(
         read_index,
         state,
         base: Some(column.query_base),
-        call_index_0based: Some(call_index_0based),
-        relative_quality: Some(quality.relative_quality_score),
+        quality: Some(quality.relative_quality_score),
     })
 }
 
