@@ -234,10 +234,13 @@ class ValidationCorpusTests(unittest.TestCase):
         cases = load_manifest(self.manifest)
         output = self.root / "validation-results" / "corpus"
 
-        with patch(
-            "scripts.validation_corpus.runner.subprocess.run",
-            return_value=SimpleNamespace(returncode=1, stderr="boom"),
-        ), self.assertRaisesRegex(RuntimeError, "boom"):
+        with (
+            patch(
+                "scripts.validation_corpus.runner.subprocess.run",
+                return_value=SimpleNamespace(returncode=1, stderr="boom"),
+            ),
+            self.assertRaisesRegex(RuntimeError, "boom"),
+        ):
             run_corpus(
                 self.manifest.resolve(),
                 cases,
