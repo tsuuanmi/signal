@@ -96,7 +96,6 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
         .collect()
 }
 
-
 fn support_topology(
     observations: &[LocusDifferenceObservation],
     reads: &[&ReadObservation],
