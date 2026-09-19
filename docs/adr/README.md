@@ -37,3 +37,4 @@
 | [0033](0033-variant-support-topology.md) | Factor normalized-variant support by eligibility and orientation | Accepted |
 | [0034](0034-sample-evidence-profiles.md) | Preserve reference-oriented evidence profiles in sample evidence | Accepted |
 | [0035](0035-locus-support-topology.md) | Factor differential-locus support topology before consensus | Accepted |
+| [0036](0036-sample-local-noise-context.md) | Preserve local noisy-region context in sample evidence | Accepted |
