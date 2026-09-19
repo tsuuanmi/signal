@@ -18,7 +18,7 @@ The authoritative contract is [`schemas/analysis-v6.schema.json`](schemas/analys
 | `variants` | Normalized primary-sequence differences with concise mapped calls. |
 | `warnings` | Counts of unresolved primary calls, multi-channel unresolved calls, and excluded variant candidates. |
 
-All objects are closed by the schema. Compact v6 deliberately omits trace filenames, full primary/ambiguity/retained sequences, individual rolling windows, gapped alignment rows, operation runs, alignment score and redundant match counts, method constants, complete A/C/G/T peak objects, vendor PBAS/PCON data, variant contig/classification/normalization labels, warning totals, and duplicated origin-wrap or vendor-disagreement fields.
+All objects are closed by the schema. Compact v6 deliberately omits trace filenames, full primary/ambiguity/retained sequences, individual rolling windows, gapped alignment rows, operation runs, alignment score and redundant match counts, method constants, selected per-channel peak position/source objects, vendor PBAS/PCON data, variant contig/classification/normalization labels, warning totals, and duplicated origin-wrap or vendor-disagreement fields.
 
 ## Provenance
 
@@ -98,7 +98,7 @@ representation away from the observed alignment gap. The normalized
 
 | Field | Coordinate system |
 |---|---|
-| variant/call `position` | 1-based biological reference coordinate |
+| variant `position` | 1-based biological reference coordinate |
 | trim, segment, noisy-region `start`/`end` | 0-based half-open interval `[start, end)` |
 
 Variant alleles, call `base`, and peak labels are written on the supplied reference strand. `quality` remains an uncalibrated relative score; neither channel height nor quality implies genotype, zygosity, allele fraction, heteroplasmy, or clinical significance.
