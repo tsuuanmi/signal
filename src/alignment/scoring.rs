@@ -51,7 +51,7 @@ pub(crate) fn substitution(
 }
 
 pub(crate) const fn scaled(delta: i32) -> i64 {
-    i64::from(delta) * SCORE_SCALE
+    delta as i64 * SCORE_SCALE
 }
 
 pub(crate) const fn is_canonical(base: u8) -> bool {
