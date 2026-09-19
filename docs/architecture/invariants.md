@@ -54,6 +54,7 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-SAMPLE-016:** Differential-locus profile availability is derived only from retained call signal objects with a present `EvidenceProfile`. Its forward/reverse partition must sum exactly to total profile-bearing reads, it cannot include deletions or missing profiles, and it cannot become contributor eligibility, agreement, weight, or confidence.
 - **INV-SAMPLE-017:** Nucleotide contribution eligibility is a separate policy over preserved evidence. The current structural policy admits every call-backed observation with a real profile, rejects missing-profile calls from nucleotide aggregation, and routes deletions to event evidence. Unresolved symbols, relative quality, SNR, and candidate-noisy membership cannot independently erase available profile evidence.
 - **INV-SAMPLE-018:** Eligible nucleotide profiles are accumulated with unit read mass only. Total A/C/G/T support is the channel-wise sum of separately retained forward/reverse support, and contributor counts partition by selected orientation. This evidence sum cannot become a consensus call, confidence value, or implicit quality/amplitude/SNR weight.
+- **INV-SAMPLE-019:** Mean nucleotide profiles are derived only by dividing an existing unit-mass support partition by its contributor count. Empty partitions have no mean profile. Arithmetic normalization cannot erase contributor counts or become a consensus, confidence, discordance class, or hidden weighting policy.
 
 ## Pipeline
 
