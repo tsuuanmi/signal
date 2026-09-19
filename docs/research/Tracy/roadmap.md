@@ -163,6 +163,8 @@ correctness. Circular topology and ambiguous placements remain explicit.
 
 ## Phase I — calibration
 
+Profile-geometry validation infrastructure is now available via ADR-0044 and `signal-validation`; corpus and threshold-study design live under `docs/research/Signal/validation-corpus.md` and `threshold-research.md`. No threshold is promoted by that tooling.
+
 Only after sufficient truth data:
 
 ```text
