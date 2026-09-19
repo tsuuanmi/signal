@@ -213,7 +213,10 @@ def rejected_sample_shapes(
         ),
         ("sample variant call without peaks", missing_call_peaks),
         ("sample variant support without mapped calls", empty_variant_calls),
-        ("sample variant support with unknown exclusion reason", unknown_exclusion_reason),
+        (
+            "sample variant support with unknown exclusion reason",
+            unknown_exclusion_reason,
+        ),
     ]
 
 
