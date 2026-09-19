@@ -385,6 +385,23 @@ mod tests {
     }
 
     #[test]
+    fn rejects_duplicate_reference_coordinate_within_one_read() {
+        let read = observation(
+            "a",
+            "reference",
+            "config",
+            Orientation::Forward,
+            vec![
+                column('G', 'A', Some(0), 72),
+                column('A', 'A', Some(1), 72),
+            ],
+            Vec::new(),
+        );
+
+        assert!(aggregate(&[read]).is_err());
+    }
+
+    #[test]
     fn rejects_duplicate_normalized_variant_identity_within_one_read() {
         let variant = snv(73, "A", "G");
         let read = observation(
