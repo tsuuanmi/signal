@@ -118,7 +118,7 @@ analyze  -> results/<trace-stem>.json
 sample   -> results/<sample-id>.sample.json
 ```
 
-Operational logs are separate append-only sidecars under `logs/` by default. Standalone `basecall`/`analyze` operations use `<trace-stem>.log`; `sample` uses one `<sample-id>.sample.log` containing the nested processing events for all traces in that sample. The batch runner persists only the sample log while keeping per-trace JSON results.
+Operational logs are separate append-only sidecars under `logs/` by default. Standalone `basecall`/`analyze` operations use `<trace-stem>.log`; `sample` uses one `<sample-id>.log` containing the nested processing events for all traces in that sample. The batch runner persists only the sample log while keeping per-trace JSON results.
 
 The external batch runner `scripts/analyze_samples.py` keeps per-trace results and
 the aggregate together:
