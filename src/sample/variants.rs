@@ -10,6 +10,8 @@ use crate::model::sample_evidence::{
 };
 use crate::model::variant::{VariantCallMapping, VariantKind};
 
+use super::profile;
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
 struct VariantKey {
     position_1based: usize,
@@ -142,6 +144,7 @@ fn variant_calls(
                     .orientation
                     .reference_peak_heights(primary.channel_heights),
                 quality: quality.relative_quality_score,
+                profile: profile::for_call(read, index)?,
             })
         })
         .collect()
