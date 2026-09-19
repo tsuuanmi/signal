@@ -24,7 +24,7 @@ Internal indexes are deterministic implementation references only. Public review
 
 ## Tests
 
-Unit tests cover deterministic ordering, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention, duplicate locus/variant support rejection, incompatible identities, and renamed duplicate content.
+Unit tests cover deterministic SHA ordering with overlap indexes bound to that registry, sparse all-reference overlap, explicit reference support at differential loci, filtered variant retention, duplicate locus/variant support rejection, incompatible identities, and renamed duplicate content.
 
 ## Status
 
