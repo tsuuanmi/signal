@@ -91,7 +91,7 @@ mod tests {
 
     fn sample_config() -> SampleReconciliationConfig {
         SampleReconciliationConfig {
-            minimum_overlap_bases: 1,
+            minimum_comparable_bases: 1,
             minimum_overlap_agreement: 0.5,
         }
     }
