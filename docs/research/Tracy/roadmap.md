@@ -8,9 +8,9 @@ Before changing alignment semantics:
 
 ```text
 mixed-supporting-call gate for simple variants  # promoted to ADR-0027 / primary_difference v4
-PLOC completeness/suspicion diagnostics
+PLOC completeness/suspicion diagnostics       # foundation promoted via ADR-0031
 artifact test corpus
-saturation/high-amplitude-outlier observations
+exact clipping + event-signal-scale observations # promoted via ADR-0031
 baseline-shift and neighbor-interference cases
 ```
 
@@ -177,7 +177,7 @@ assay-specific LoD/LoQ
 | Priority | Improvement | Expected ROI | Effort |
 |---|---|---:|---:|
 | Promoted | mixed-supporting-call simple-variant gate | Implemented via ADR-0027 / `signal.primary_difference/v4` | Low |
-| P0 | PLOC completeness + artifact validation | Very high | Low-Medium |
+| Promoted/P0 | PLOC completeness + artifact validation | Cardinality/spacing/clipping/event-scale foundation implemented via ADR-0031; richer artifact classification remains P0 | Low-Medium |
 | Promoted | `LocusEvidence` foundation / event geometry | Implemented via ADR-0028 | Medium |
 | Promoted | basecall-independent evidence profile | Implemented via ADR-0028 | Medium |
 | Promoted | evidence-aware Gotoh scorer | Implemented via ADR-0029 / `signal.profile_gotoh/v1` | Medium |
