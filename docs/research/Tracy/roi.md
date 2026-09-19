@@ -17,7 +17,7 @@ ROI combines expected biological correctness/review value, reuse of existing Sig
 | 3 | Evidence profile independent of thresholded basecall membership | Very high | Promoted via ADR-0028: preserve measured A/C/G/T evidence rather than rebuilding a profile only from channels already admitted by the caller. |
 | 4 | Trace-profile-aware alignment | Very high | Promoted via ADR-0029: reuse the existing Gotoh engine with fixed-point evidence-aware substitution scoring and explicit numeric/tie semantics. |
 | 5 | Forward/reverse trace reconciliation | High | Promoted as generic N-read reference-coordinate evidence plus ADR-0030 overlap admission; F/R remains a validation case rather than a pair-only domain. |
-| 6 | Reference-guided multi-trace consensus | High, post-MVP | Coverage/orientation topology promoted via ADR-0032; consensus contributor and allele/gap decision policy still must avoid quality-blind majority vote. |
+| 6 | Reference-guided multi-trace consensus | High, post-MVP | Coverage/orientation topology promoted via ADR-0032 and differential-locus state/orientation topology via ADR-0035; consensus contributor and allele/gap decision policy still must avoid quality-blind majority vote. |
 | 7 | Explicit review/evidence artifact | Medium-high | Preserve trace/call/reference provenance for manual review without bloating compact production JSON. |
 | 8 | Persistent mixed-signal/post-indel shift detection | Medium-high research | Detect a transition in signal phase/cleanliness without immediately assigning genotype or heteroplasmy. |
 | 9 | Wild-type AB1 profile comparison | Medium | Useful for assay/control workflows, but less central than FASTA/rCRS comparison for mtDNA. |
