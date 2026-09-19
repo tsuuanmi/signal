@@ -22,7 +22,7 @@ FASTA -----------------------------------------> alignment -> variant_calling
                                                        ReadObservation
                                                          /          \
                                                         v            v
-                                               analysis report v5   SampleEvidence
+                                               analysis report v6   SampleEvidence
                                                                         |
                                                                         v
                                                          sample_evidence/v3
