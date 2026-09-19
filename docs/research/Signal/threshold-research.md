@@ -54,6 +54,8 @@ See [research-dataset.md](research-dataset.md) for the implemented table boundar
 
 Before freezing development/holdout membership, use [audit-strata.md](audit-strata.md) to review corpus-relative technical challenge strata. Audit flags are review context only and must not be copied into truth labels or used as an automatic exclusion rule.
 
+Use [curation-queue.md](curation-queue.md) to turn those audit-supported mixed loci and flagged reads into an immutable human-review workload. Reviewer decisions remain separate from generated evidence and must be independently reconciled before any development/holdout split is frozen.
+
 ## Research order
 
 Research each metric independently before combining them into a multivariate rule.

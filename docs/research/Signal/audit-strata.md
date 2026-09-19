@@ -147,6 +147,20 @@ They do **not** answer:
 The manifest remains the only source for truth provenance, threshold-fit inclusion, and
 development/holdout grouping.
 
+## Downstream curation queue
+
+Audit artifacts can be converted into one immutable review queue without reopening corpus
+or research inputs:
+
+```bash
+uv run python scripts/prepare_validation_curation.py \
+  --audit-dir validation-results/audit/full-20260919 \
+  --output-dir validation-results/curation/full-20260919
+```
+
+The queue contains every mixed locus and every flagged read exactly once, plus a separate
+blank reviewer-decisions template. See [curation-queue.md](curation-queue.md).
+
 ## Recommended curation workflow
 
 1. Generate the completed corpus.

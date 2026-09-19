@@ -73,6 +73,18 @@ The audit publishes read/locus/case review strata only. Corpus-relative outlier 
 retained-edge discordance context MUST NOT be treated as truth, automatic exclusion, or a
 production QC gate.
 
+A completed audit can then be converted into an immutable human-review queue with:
+
+```bash
+uv run python scripts/prepare_validation_curation.py \
+  --audit-dir validation-results/audit/full-20260919 \
+  --output-dir validation-results/curation/full-20260919
+```
+
+The generated queue contains mixed loci and flagged reads only. Reviewer decisions are
+kept in a separate editable template and are not written back into generated evidence or
+the validation manifest automatically.
+
 Threshold development must follow `docs/research/Signal/validation-corpus.md` and `docs/research/Signal/threshold-research.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Unexpected extreme basecall/profile disagreements must first be characterized with the v2 event-placement diagnostics described in `docs/research/Signal/event-position-diagnostics.md` rather than absorbed into a fitted threshold. Point-mixture and length/indel studies remain separate.
 
 ## Performance
