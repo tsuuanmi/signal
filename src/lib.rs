@@ -24,8 +24,8 @@ mod report;
 mod sample;
 mod signal_processing;
 mod trace;
-mod variant_calling;
 pub mod validation;
+mod variant_calling;
 
 use cli::{Cli, Command};
 use error::Result;
