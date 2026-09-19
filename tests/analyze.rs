@@ -223,8 +223,8 @@ fn rejects_out_of_range_ploc_without_output() -> Result<(), Box<dyn std::error::
 }
 
 #[test]
-fn preserves_vendor_length_mismatch_as_integrity_evidence()
--> Result<(), Box<dyn std::error::Error>> {
+fn preserves_vendor_length_mismatch_as_integrity_evidence() -> Result<(), Box<dyn std::error::Error>>
+{
     let directory = tempdir()?;
     let trace = directory.path().join("trace.ab1");
     let reference = directory.path().join("reference.fa");
