@@ -538,7 +538,10 @@ mod tests {
             evidence.locus_differences[0].observations[0].state,
             crate::model::sample_evidence::LocusState::Unresolved
         );
-        assert_eq!(evidence.locus_differences[0].support_topology.profile_reads, 1);
+        assert_eq!(
+            evidence.locus_differences[0].support_topology.profile_reads,
+            1
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[0].nucleotide_contribution,
             crate::model::sample_evidence::NucleotideContribution::Eligible
