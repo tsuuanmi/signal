@@ -12,9 +12,7 @@ Deliver one auditable AB1-to-primary-difference vertical slice in Rust. The impl
 4. Bounded affine-gap semi-global alignment, deterministic traceback, strand selection, and circular reference projection.
 5. Primary SNV/small-indel extraction, linear/circular normalization, typed JSON assembly, and atomic no-overwrite output.
 6. Observation-only rolling signal analysis and merged candidate-noisy regions.
-7. Compact `signal.analysis/v5` projection retaining provenance, read/trim,
-   merged noisy-region, alignment, normalized-variant, and warning summaries
-   without raw or redundant payloads.
+7. Compact `signal.analysis/v6` projection retaining provenance, read/trim, merged noisy-region, alignment, normalized variants, and reference-oriented base/peak/quality evidence without implementation-coordinate noise.
 8. Reference-free `signal basecall` using the same validated decode/re-calling/signal/QC path and publishing one typed `signal.basecalls/v1` JSON result without reference, alignment, or variants.
 9. Clean external batch reruns with complete preflight/build before selected-only
    destructive cleanup.
