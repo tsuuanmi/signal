@@ -2,43 +2,64 @@
 
 ## Purpose
 
-Define the data boundary required for empirical threshold research without changing the
-public `signal.sample_evidence/v7` contract.
+Define the data boundary used for empirical threshold research without changing the public `signal.sample_evidence/v7` contract.
 
-## Problem
+## Why a separate export exists
 
-Current production JSON intentionally omits internal per-locus nucleotide-profile geometry.
-Aggregate operational logs consume geometry, but aggregate sums are insufficient for
-threshold fitting.
+Production sample JSON intentionally keeps sparse differential-locus evidence and omits internal nucleotide-profile geometry. Aggregate operational logs consume geometry but cannot support per-locus null distributions or threshold fitting.
 
-Threshold research therefore needs a dedicated local measurement export before any
-empirical threshold can be estimated.
+Clean reference-matching loci are essential negative controls. Exporting only `locus_differences` would bias threshold research by excluding those loci.
 
-## Design constraints
+## Implemented boundary
 
-The exporter must:
+`signal-validation` is a separate validation binary. It:
 
-- be explicitly validation/research tooling, not a public scientific result contract;
-- reuse authoritative internal `SampleEvidence` rather than recomputing signal features;
-- emit one row per retained differential locus;
-- preserve contributor topology and threshold-free geometry;
-- keep real outputs under ignored local paths;
-- never mutate the production sample schema;
-- never invent missing profiles or gap evidence;
-- never apply a candidate threshold while exporting measurements.
+- reuses authoritative trace decoding, basecalling, signal processing, QC, alignment, variant calling, sample validation, and profile-geometry code;
+- uses the same generic sample-locus builder as production;
+- selects every covered reference locus rather than only differential loci;
+- emits deterministic JSONL ordered by reference position;
+- publishes atomically without overwrite;
+- writes only under ignored `validation-results/`;
+- never applies truth labels, candidate thresholds, or biological interpretation;
+- never changes the production sample result schema.
 
-## Proposed row
+Example:
+
+```bash
+SIGNAL_CONFIG=config/signal.toml \
+  cargo run --release --bin signal-validation -- \
+  validation-001 trace-a.ab1 trace-b.ab1 \
+  --reference references/rCRS.fasta
+```
+
+Output:
+
+```text
+validation-results/validation-001.jsonl
+```
+
+Operational trace-stage records are written to `logs/validation-001.validation.log` unless `SIGNAL_LOG_DIR` is overridden.
+
+## Row schema
+
+Each line is one `signal.validation_locus/v1` object containing:
 
 ~~~text
-run_id
-sample_research_id
+schema_version
+signal_version
+sample_id
 reference_sha256
 configuration_sha256
 position_1based
+reference_base
 
 reads
 forward_reads
 reverse_reads
+reference_reads
+alternate_reads
+unresolved_reads
+deletion_reads
 profile_reads
 profile_forward_reads
 profile_reverse_reads
@@ -71,32 +92,27 @@ missing_profile_observations
 deletion_observations
 ~~~
 
-Truth labels and prepared mixture fractions should be joined from the local validation
-manifest after export. The measurement tool should not infer biological truth.
+Optional profile/geometry values are JSON `null` when the required evidence partition does not exist.
+
+Truth labels, prepared mixture fractions, PCR replicate IDs, run IDs, artifact tags, and holdout grouping remain external validation-manifest metadata. They are joined after export; Signal does not infer them.
+
+## Determinism and publication
+
+For identical traces, reference, configuration, and Signal version, row content and ordering are deterministic. Operational timestamps remain confined to logs.
+
+The exporter follows the same no-overwrite publication rule as production results. A repeated export must use a clean validation output target rather than silently replacing prior measurements.
 
 ## Privacy
 
-Per-locus measurements can reveal biological differences and therefore inherit the source
-AB1 privacy policy.
+Per-locus measurements can reveal biological differences and therefore inherit the source AB1 privacy policy. Real JSONL, local truth manifests, and joined analysis tables must remain ignored/local unless explicit redistribution approval exists.
 
-Default destination should be an ignored local tree such as:
+## Validation status
 
-~~~text
-validation-results/
-~~~
+Synthetic integration tests verify that:
 
-No real measurement table belongs in Git.
+- all-reference covered loci appear in validation output;
+- production `results/` is not created by the validation binary;
+- profile geometry is exported on clean covered loci;
+- the exporter refuses to overwrite an existing measurement file.
 
-## Next implementation gate
-
-Before implementing the exporter:
-
-1. freeze the row schema above;
-2. decide CSV versus JSONL based on analysis workflow;
-3. define deterministic ordering;
-4. add synthetic fixture tests;
-5. ensure the tool cannot silently publish into production `results/`;
-6. document exact command and provenance fields.
-
-The exporter is the next code-enabling step for threshold research. It should be a single
-authoritative path, not an environment-variable debug mode or hidden compatibility output.
+This exporter is measurement infrastructure only. Threshold selection remains governed by `validation-corpus.md` and `threshold-research.md`.
