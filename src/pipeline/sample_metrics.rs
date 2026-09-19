@@ -36,28 +36,42 @@ pub(super) struct SampleAggregationMetrics {
 }
 
 pub(super) fn summarize(evidence: &SampleEvidence) -> SampleAggregationMetrics {
-    let (profile_geometry_loci, within_profile_impurity_sum, between_profile_dispersion_sum, total_profile_heterogeneity_sum) =
-        evidence
-            .locus_differences
-            .iter()
-            .filter_map(|difference| difference.nucleotide_support.heterogeneity)
-            .fold((0usize, 0.0, 0.0, 0.0), |acc, geometry| {
-                (
-                    acc.0 + 1,
-                    acc.1 + geometry.within_profile_impurity,
-                    acc.2 + geometry.between_profile_dispersion,
-                    acc.3 + geometry.total_profile_heterogeneity,
-                )
-            });
+    let (
+        profile_geometry_loci,
+        within_profile_impurity_sum,
+        between_profile_dispersion_sum,
+        total_profile_heterogeneity_sum,
+    ) = evidence
+        .locus_differences
+        .iter()
+        .filter_map(|difference| difference.nucleotide_support.heterogeneity)
+        .fold((0usize, 0.0, 0.0, 0.0), |acc, geometry| {
+            (
+                acc.0 + 1,
+                acc.1 + geometry.within_profile_impurity,
+                acc.2 + geometry.between_profile_dispersion,
+                acc.3 + geometry.total_profile_heterogeneity,
+            )
+        });
     let forward_profile_geometry_loci = evidence
         .locus_differences
         .iter()
-        .filter(|difference| difference.nucleotide_support.forward_heterogeneity.is_some())
+        .filter(|difference| {
+            difference
+                .nucleotide_support
+                .forward_heterogeneity
+                .is_some()
+        })
         .count();
     let reverse_profile_geometry_loci = evidence
         .locus_differences
         .iter()
-        .filter(|difference| difference.nucleotide_support.reverse_heterogeneity.is_some())
+        .filter(|difference| {
+            difference
+                .nucleotide_support
+                .reverse_heterogeneity
+                .is_some()
+        })
         .count();
     let (directional_profile_distance_loci, directional_profile_distance_sum) = evidence
         .locus_differences
