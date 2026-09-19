@@ -288,19 +288,36 @@ def read_audit_rows(
     for record in records:
         key = record.stratum_key
         boundary = boundaries.get(key) if key is not None else None
-        benchmarked = boundary is not None and boundary.n >= MINIMUM_STRATUM_READS
-        flags = {
-            "alignment_challenge": benchmarked
-            and record.callable_identity <= boundary.identity_p05,
-            "high_noise": benchmarked and record.noise_rate >= boundary.noise_p95,
-            "aggressive_trim": benchmarked
-            and record.retained_fraction <= boundary.retained_fraction_p05,
-            "short_coverage": benchmarked
-            and record.callable_columns <= boundary.callable_columns_p05,
-            "orientation_disagreement": record.declared_direction is not None
-            and record.declared_direction != record.inferred_orientation,
-            "unbenchmarked_stratum": not benchmarked,
-        }
+        orientation_disagreement = (
+            record.declared_direction is not None
+            and record.declared_direction != record.inferred_orientation
+        )
+        if boundary is not None and boundary.n >= MINIMUM_STRATUM_READS:
+            identity_p05 = boundary.identity_p05
+            noise_p95 = boundary.noise_p95
+            retained_fraction_p05 = boundary.retained_fraction_p05
+            callable_columns_p05 = boundary.callable_columns_p05
+            flags = {
+                "alignment_challenge": record.callable_identity <= identity_p05,
+                "high_noise": record.noise_rate >= noise_p95,
+                "aggressive_trim": record.retained_fraction <= retained_fraction_p05,
+                "short_coverage": record.callable_columns <= callable_columns_p05,
+                "orientation_disagreement": orientation_disagreement,
+                "unbenchmarked_stratum": False,
+            }
+        else:
+            identity_p05 = None
+            noise_p95 = None
+            retained_fraction_p05 = None
+            callable_columns_p05 = None
+            flags = {
+                "alignment_challenge": False,
+                "high_noise": False,
+                "aggressive_trim": False,
+                "short_coverage": False,
+                "orientation_disagreement": orientation_disagreement,
+                "unbenchmarked_stratum": True,
+            }
         rows.append(
             {
                 "validation_case_id": record.validation_case_id,
@@ -326,14 +343,10 @@ def read_audit_rows(
                     f"{key[0]}|{key[1]}" if key is not None else "unassigned"
                 ),
                 "stratum_n": boundary.n if boundary is not None else 0,
-                "identity_p05": boundary.identity_p05 if benchmarked else None,
-                "noise_p95": boundary.noise_p95 if benchmarked else None,
-                "retained_fraction_p05": (
-                    boundary.retained_fraction_p05 if benchmarked else None
-                ),
-                "callable_columns_p05": (
-                    boundary.callable_columns_p05 if benchmarked else None
-                ),
+                "identity_p05": identity_p05,
+                "noise_p95": noise_p95,
+                "retained_fraction_p05": retained_fraction_p05,
+                "callable_columns_p05": callable_columns_p05,
                 **flags,
                 "audit_flags": flags_text(flags, READ_FLAG_ORDER),
             }
