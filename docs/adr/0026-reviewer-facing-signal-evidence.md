@@ -78,4 +78,4 @@ scientific keys.
 
 ## Follow-up
 
-ADR-0027 advances sample evidence to v3 for mixed-SNV eligibility while retaining the same reviewer-facing `role/base/peaks/quality` call-evidence shape.
+ADR-0027 advanced sample evidence to v3 for mixed-SNV eligibility while retaining the same reviewer-facing `role/base/peaks/quality` call-evidence shape. ADR-0030 advances the current sample contract to v4 with pairwise overlap/admission evidence and leaves this call-evidence shape unchanged.
