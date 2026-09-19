@@ -242,6 +242,12 @@ first seed hit.
 
 ## Phase 4: generic read reconciliation (F/R is the first validation case)
 
+**Production status (2026-09-19):** the core phase is implemented by
+ADR-0023 through ADR-0025, with ADR-0030 adding Tracy-derived pairwise
+overlap/agreement admission. Remaining work in this phase is richer local
+artifact/quality contribution policy and optional support-topology metadata, not
+a second ReadObservation or pair-first reconciliation implementation.
+
 ### Goal
 
 Combine independently processed traces from the same sample without breaking the
