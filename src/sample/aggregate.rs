@@ -9,7 +9,7 @@ use crate::model::sample_evidence::{
     SampleEvidence, SampleReadAlignmentEvidence, SampleReadEvidence,
 };
 
-use super::{coverage, differences, overlap, variants};
+use super::{coverage, loci, overlap, variants};
 
 /// Aggregates independently processed reads without using filenames or pair labels as merge keys.
 pub(crate) fn aggregate(
@@ -70,7 +70,7 @@ pub(crate) fn aggregate(
         reads: read_evidence,
         coverage,
         overlaps: overlap::assess(&ordered, config)?,
-        locus_differences: differences::aggregate(&ordered)?,
+        locus_differences: loci::aggregate(&ordered, loci::LocusSelection::Differential)?,
         variants: variants::aggregate(&ordered)?,
     })
 }
