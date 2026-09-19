@@ -78,6 +78,7 @@ pub(crate) struct LocusDifferenceObservation {
     pub(crate) base: Option<char>,
     pub(crate) quality: Option<u8>,
     pub(crate) profile: Option<EvidenceProfile>,
+    pub(crate) within_candidate_noisy_region: Option<bool>,
 }
 
 /// All covering-read observations retained at one differential reference locus.
@@ -96,6 +97,7 @@ pub(crate) struct VariantCallEvidence {
     pub(crate) peak_heights: [i32; 4],
     pub(crate) quality: u8,
     pub(crate) profile: Option<EvidenceProfile>,
+    pub(crate) within_candidate_noisy_region: bool,
 }
 
 /// One read observing a normalized variant, with configured eligibility retained.
