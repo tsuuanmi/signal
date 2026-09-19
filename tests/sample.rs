@@ -62,7 +62,7 @@ fn writes_deterministic_compact_sample_evidence_v2() -> Result<(), Box<dyn std::
             "locus_differences",
             "variants",
         ],
-    );
+    )?;
     assert!(value.get("loci").is_none());
 
     let reads = value["reads"].as_array().ok_or("reads must be an array")?;
@@ -146,10 +146,10 @@ fn read_index(reads: &[Value], name: &str) -> Result<usize, Box<dyn std::error::
         .ok_or_else(|| format!("missing read {name}").into())
 }
 
-fn observation_for_read<'a>(
-    observations: &'a [Value],
+fn observation_for_read(
+    observations: &[Value],
     read: usize,
-) -> Result<&'a Value, Box<dyn std::error::Error>> {
+) -> Result<&Value, Box<dyn std::error::Error>> {
     observations
         .iter()
         .find(|observation| observation["read"] == read)
@@ -170,13 +170,16 @@ fn reverse_complement(sequence: &str) -> String {
         .collect()
 }
 
-fn assert_object_keys(value: &Value, expected: &[&str]) {
-    let keys = value
-        .as_object()
-        .expect("expected object")
+fn assert_object_keys(
+    value: &Value,
+    expected: &[&str],
+) -> Result<(), Box<dyn std::error::Error>> {
+    let object = value.as_object().ok_or("expected object")?;
+    let keys = object
         .keys()
         .map(String::as_str)
         .collect::<std::collections::BTreeSet<_>>();
     let expected = expected.iter().copied().collect();
     assert_eq!(keys, expected);
+    Ok(())
 }
