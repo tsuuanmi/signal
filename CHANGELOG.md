@@ -52,7 +52,7 @@ All notable changes to this project are documented here.
 - Shared SHA-256 identity helper in `src/checksum.rs`, used by config, trace, and reference loading.
 - Locked uv environment and typed schema validator for reproducible JSON contract checks in development and CI.
 - External `scripts/analyze_samples.py` wrapper for safe per-sample local-corpus orchestration without changing the one-file CLI.
-- Rust-native append-only per-trace operational logging under `logs/`, with `SIGNAL_LOG_DIR` for isolated orchestration and run-correlated, single-line records.
+- Rust-native append-only per-operation logging under `logs/`, with standalone trace logs, sample-scoped logs containing nested trace-stage records, `SIGNAL_LOG_DIR` isolation, and run-correlated single-line records.
 
 ### Changed
 
