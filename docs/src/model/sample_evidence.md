@@ -6,7 +6,7 @@ Defines compact internal sample-level evidence after independent read analysis.
 
 ## Responsibilities
 
-- Retain each contributing read once with source basename, stable SHA-256, and concise evidence-derived post-trim alignment summary.
+- Retain each contributing read once with source basename, stable SHA-256, trace-integrity evidence, and concise evidence-derived post-trim alignment summary.
 - Represent pairwise reference-coordinate overlap/admission evidence without pair-first merging.
 - Represent only differential reference loci while preserving every covering read at those retained positions.
 - Keep called locus observations as state/base/quality without public implementation coordinates.
