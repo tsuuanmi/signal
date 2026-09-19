@@ -10,7 +10,7 @@ Defines compact internal sample-level evidence after independent read analysis.
 - Represent maximal reference intervals with constant total/forward/reverse read depth.
 - Represent pairwise reference-coordinate overlap/admission evidence without pair-first merging.
 - Represent only differential reference loci while preserving every covering read at those retained positions and factor their support by total reads, selected orientation, reference/alternate/unresolved/deletion state, and basecall-independent profile availability.
-- Keep called locus observations as state/base/quality plus one optional reference-oriented `CallSignalEvidence` containing corrected A/C/G/T amplitudes, per-channel SNR, optional basecall-independent `EvidenceProfile`, and existing merged noisy-region membership.
+- Keep called locus observations as state/base/quality plus one optional reference-oriented `CallSignalEvidence` containing corrected A/C/G/T amplitudes, per-channel SNR, optional basecall-independent `EvidenceProfile`, existing merged noisy-region membership, and one explicit structural nucleotide-contribution state.
 - Represent normalized variant observations with internal deterministic read indexes, eligibility/exclusion reasons, factorized read/eligibility/orientation support topology, and call evidence retaining role, reference-oriented base, co-located four-channel heights, quality, and one required reference-oriented `CallSignalEvidence`; the public report omits the internal quantitative signal context.
 - Bind sample evidence to one reference and one scientific configuration identity.
 
