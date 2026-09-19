@@ -19,7 +19,7 @@ AB1 + TOML ──► decode ──► basecalling ──► signal_processing �
 FASTA reference ─────────────────────────────────────────────────────┴─► alignment ─► variant_calling
                                                                                               │
                                                                                        ReadObservation
-                                                                                         ├─► analysis/v5
+                                                                                         ├─► analysis/v6
                                                                                          └─► sample aggregation
 ```
 
@@ -259,15 +259,16 @@ Reported variants are normalized:
   resulting representation is anchor-independent.
 
 Internally each variant retains its contig, 1-based position, reference/alternate
-alleles, kind, normalization, and direct call mappings. Compact v5 emits only
-`position`, `reference`, `alternate`, `kind`, and `calls`. Every mapped call keeps
-its original 0-based `index`, ABIF `ploc`, trace-strand `primary`/`ambiguity`, and
-optional aligned 1-based biological `position`. Supporting calls additionally
-emit only `maximum_peak_height` and uncalibrated `relative_quality`; full channel
-peaks, penalties, and vendor evidence are omitted. Inserted supporting calls omit
-biological position; deletions carry aligned flanks only. The emitted reference
-allele is validated against the supplied reference. Normalization may move the
-allele representation without changing the observed call mappings.
+alleles, kind, normalization, and direct call mappings. Compact v6 emits only
+`position`, `reference`, `alternate`, `kind`, and `calls`. Every public call
+contains only its supporting/flanking `role`, reference-oriented called `base`,
+co-located reference-oriented A/C/G/T primary-event channel heights in `peaks`,
+and uncalibrated `quality`. Original call index, PLOC, mapped call position,
+trace-strand symbols, selected-peak positions/sources, penalties, and vendor
+evidence remain internal. Deletions carry real aligned flanks only and never
+fabricate deleted-base signal. The emitted reference allele is validated against
+the supplied reference. Normalization may move the allele representation without
+changing the underlying observed evidence.
 
 ### Substep 6.3 — Configured eligibility
 
@@ -299,27 +300,27 @@ The read has already located itself at this boundary. Its orientation and covere
 
 ## Sample evidence aggregation
 
-`signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and sorts reads by SHA-256 independently of CLI trace order. The top-level read registry retains reviewer-facing basename, stable SHA-256, and the concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state).
+`signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and sorts reads by SHA-256 independently of CLI trace order. The top-level read registry retains reviewer-facing filename stem, stable SHA-256, and the concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state).
 
-Sparse locus aggregation runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with call index and relative quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
+Sparse locus aggregation runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
 
-Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support stores only the deterministic read index plus configured eligibility, exclusion reasons, and concise original-call mappings because read identity/orientation are already defined once at top level. A read-level filter can remove a candidate from `analysis/v5` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v2.
+Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v2.
 
 ## Output
 
-`analyze` publishes `signal.analysis/v5` at `results/<trace-stem>.json`.
+`analyze` publishes `signal.analysis/v6` at `results/<trace-stem>.json`.
 `sample` publishes `signal.sample_evidence/v2` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
 
-The completed `signal.analysis/v5` result contains compact provenance
-hashes/software, read count and trim bounds, merged candidate-noisy regions, the
-selected alignment summary, normalized variants with concise call mappings and
-supporting peak/relative-quality scalars, and warning counts. It omits filenames,
+The completed `signal.analysis/v6` result contains compact provenance, read count
+and trim bounds, merged candidate-noisy regions, the selected post-trim alignment
+summary, normalized variants, and reviewer-facing reference-oriented call evidence
+(`base`, four co-located A/C/G/T `peaks`, and `quality`). It omits filenames,
 full sequences, individual rolling windows, gapped rows, operation runs, method
-constants, full peaks, vendor data, and redundant fields. The strict configuration
-remains schema version 4. No compatibility result is emitted. The document is
+constants, call indexes/PLOC coordinates, selected-peak positions/sources, vendor
+data, and redundant fields. The strict configuration remains schema version 4. No compatibility result is emitted. The document is
 published atomically to `results/<trace-stem>.json` without overwriting. Operational records are appended
 separately to `$SIGNAL_LOG_DIR/<trace-stem>.log` (default `logs/`) and are not part
 of deterministic JSON. One run-correlated record summarizes input/decode,
@@ -330,8 +331,8 @@ categories; ERROR records identify the active failed stage. Records omit complet
 sequences, alleles, region contents, per-call peaks, alignment strings, and JSON
 bodies. The JSON shape is defined in
 [`json-output.md`](json-output.md), validated by
-[`schemas/analysis-v5.schema.json`](schemas/analysis-v5.schema.json), and shown in
-[`examples/analysis-v5.example.json`](examples/analysis-v5.example.json).
+[`schemas/analysis-v6.schema.json`](schemas/analysis-v6.schema.json), and shown in
+[`examples/analysis-v6.example.json`](examples/analysis-v6.example.json).
 
 ## Biological limitations
 
