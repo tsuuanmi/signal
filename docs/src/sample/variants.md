@@ -8,6 +8,7 @@ Aggregates normalized read-level variant observations into deterministic sample 
 
 - Group normalized observed variants by `(position, reference, alternate, kind)`.
 - Preserve internal deterministic read index, eligibility, and exclusion reasons.
+- Derive exact observed/eligible and forward/reverse/eligible-forward/eligible-reverse read counts from support records plus selected read orientation.
 - Reject duplicate biological variant identity from one read.
 - Resolve each associated call to the original call/quality records.
 - Require primary-event evidence and project base plus co-located A/C/G/T channel heights to reference orientation.
@@ -15,7 +16,7 @@ Aggregates normalized read-level variant observations into deterministic sample 
 
 ## Non-responsibilities
 
-No read placement, locus classification, JSON read-name projection, consensus, or genotype inference.
+No read placement, locus classification, coverage/reference-opposition inference, JSON read-name projection, confidence scoring, consensus, or genotype inference.
 
 ## Status
 
