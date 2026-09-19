@@ -481,7 +481,6 @@ mod tests {
     }
 
     #[test]
-    #[test]
     fn diagnostic_channel_projection_and_offsets_are_reference_oriented() -> Result<()> {
         assert_eq!(
             reference_usize_values(Orientation::Reverse, [1, 2, 3, 4]),
