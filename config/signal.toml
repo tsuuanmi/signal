@@ -36,7 +36,7 @@ minimum_identity = 0.80
 
 [sample_reconciliation]
 # Tracy-derived pre-consensus overlap admission, applied after independent placement.
-minimum_overlap_bases = 25
+minimum_comparable_bases = 25
 minimum_overlap_agreement = 0.50
 
 [variant_calling]
