@@ -65,6 +65,11 @@ pub(crate) fn build(completed: CompletedBasecall) -> Result<BasecallResult> {
         .iter()
         .filter(|call| call.vendor_agrees == Some(false))
         .count();
+    let ploc_vendor_length_mismatches = signal_analysis
+        .integrity
+        .vendor_length_mismatch_count();
+    let clipped_channel_samples = signal_analysis.integrity.clipped_channel_samples;
+    let signal_quality = signal::project(signal_analysis);
 
     Ok(BasecallResult {
         schema_version: "signal.basecalls/v2",
@@ -84,15 +89,13 @@ pub(crate) fn build(completed: CompletedBasecall) -> Result<BasecallResult> {
                 end: quality.trim_end_0based_exclusive,
             },
         },
-        signal_quality: signal::project(signal_analysis),
+        signal_quality,
         warnings: BasecallWarningSummaryResult {
             unresolved_primary_calls,
             multi_channel_unresolved_calls,
             vendor_disagreements,
-            ploc_vendor_length_mismatches: signal_analysis
-                .integrity
-                .vendor_length_mismatch_count(),
-            clipped_channel_samples: signal_analysis.integrity.clipped_channel_samples,
+            ploc_vendor_length_mismatches,
+            clipped_channel_samples,
         },
     })
 }
