@@ -2,13 +2,14 @@
 
 ## Purpose
 
-Owns the single projection from internal signal analysis to compact merged-region
-result records.
+Owns shared projection from internal signal analysis to compact trace-integrity
+and merged-region result records.
 
 ## Responsibilities
 
-Consume `SignalAnalysis`, omit rolling windows, and map merged call/sample
-intervals plus minimum primary SNR into `SignalQualityResult`.
+Consume `SignalAnalysis`, project immutable `TraceIntegrity`, omit rolling
+windows, and map merged call/sample intervals plus minimum primary SNR into
+`SignalQualityResult`. `project_integrity` is reused by sample read summaries.
 
 ## Non-responsibilities
 
