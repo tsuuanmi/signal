@@ -68,6 +68,9 @@ pub(super) fn aggregate(
         mean_profile(result.reverse_support, result.reverse_contributors);
 
     if result.contributors != result.forward_contributors + result.reverse_contributors
+        || result.mean_profile.is_some() != (result.contributors > 0)
+        || result.forward_mean_profile.is_some() != (result.forward_contributors > 0)
+        || result.reverse_mean_profile.is_some() != (result.reverse_contributors > 0)
         || !result
             .support
             .iter()
