@@ -7,9 +7,9 @@ This directory indexes machine-visible and user-visible contracts. Existing cont
 - [Configuration](../configuration.md): strict TOML and environment behavior.
 - [Basecall result](../basecall-output.md): `signal.basecalls/v1`.
 - [Sample evidence result](../sample-output.md): `signal.sample_evidence/v2`.
-- [Analysis result](../json-output.md): `signal.analysis/v5`.
+- [Analysis result](../json-output.md): `signal.analysis/v6`.
 - [Coordinate conventions](coordinates.md): shared coordinate domains and interval semantics.
-- [Analysis JSON Schema](../schemas/analysis-v5.schema.json).
+- [Analysis JSON Schema](../schemas/analysis-v6.schema.json).
 - [Basecall JSON Schema](../schemas/basecalls-v1.schema.json).
 - [Sample evidence JSON Schema](../schemas/sample-evidence-v2.schema.json).
 - [Synthetic examples](../examples/).
