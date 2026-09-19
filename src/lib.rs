@@ -25,6 +25,7 @@ mod sample;
 mod signal_processing;
 mod trace;
 mod variant_calling;
+pub mod validation;
 
 use cli::{Cli, Command};
 use error::Result;
