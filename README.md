@@ -33,7 +33,7 @@ Current supported behavior includes:
 - forward/reverse semi-global alignment to one short reference;
 - linear and circular reference handling;
 - primary-sequence SNVs and supported small insertions/deletions;
-- direct mappings from reported variants back to trace calls;
+- reviewer-facing reference-oriented A/C/G/T peak and quality evidence for reported variants;
 - closed versioned JSON schemas;
 - atomic no-overwrite result publication;
 - typed failures and bounded resource use.
