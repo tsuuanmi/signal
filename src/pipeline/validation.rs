@@ -170,12 +170,7 @@ fn serialize_rows(
 ) -> Result<Vec<u8>> {
     let mut bytes = Vec::new();
     for locus in loci {
-        let row = row(
-            sample_id,
-            reference_sha256,
-            configuration_sha256,
-            locus,
-        );
+        let row = row(sample_id, reference_sha256, configuration_sha256, locus);
         serde_json::to_writer(&mut bytes, &row)?;
         bytes.push(b'\n');
     }
