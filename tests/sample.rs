@@ -14,7 +14,7 @@ const QUERY: &str = "ACGTCAGTACGATCGTACCTGAGTACGA";
 const SAMPLE_ID: &str = "sample-1";
 
 #[test]
-fn writes_deterministic_compact_sample_evidence_v3() -> Result<(), Box<dyn std::error::Error>> {
+fn writes_deterministic_compact_sample_evidence_v4() -> Result<(), Box<dyn std::error::Error>> {
     let first = tempdir()?;
     let second = tempdir()?;
 
@@ -50,7 +50,7 @@ fn writes_deterministic_compact_sample_evidence_v3() -> Result<(), Box<dyn std::
     assert_eq!(first_bytes, second_bytes);
 
     let value: Value = serde_json::from_slice(&first_bytes)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v3");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v4");
     assert_eq!(value["sample_id"], SAMPLE_ID);
     assert_object_keys(
         &value,
@@ -59,6 +59,7 @@ fn writes_deterministic_compact_sample_evidence_v3() -> Result<(), Box<dyn std::
             "sample_id",
             "provenance",
             "reads",
+            "overlaps",
             "locus_differences",
             "variants",
         ],
@@ -71,6 +72,28 @@ fn writes_deterministic_compact_sample_evidence_v3() -> Result<(), Box<dyn std::
     let reverse_read = read_by_name(reads, "read-reverse")?;
     assert_eq!(forward_read["alignment"]["orientation"], "forward");
     assert_eq!(reverse_read["alignment"]["orientation"], "reverse");
+
+    let overlaps = value["overlaps"]
+        .as_array()
+        .ok_or("overlaps must be an array")?;
+    assert_eq!(overlaps.len(), 1);
+    let overlap = &overlaps[0];
+    let pair = [
+        overlap["left"].as_str().ok_or("overlap left must be a string")?,
+        overlap["right"].as_str().ok_or("overlap right must be a string")?,
+    ];
+    assert!(pair.contains(&"read-forward"));
+    assert!(pair.contains(&"read-reverse"));
+    assert_eq!(overlap["shared_positions"], QUERY.len());
+    assert_eq!(overlap["comparable_bases"], QUERY.len());
+    assert_eq!(overlap["agreements"], QUERY.len() - 1);
+    assert_eq!(overlap["conflicts"], 1);
+    let agreement = overlap["agreement"]
+        .as_f64()
+        .ok_or("overlap agreement must be numeric")?;
+    assert!((agreement - (QUERY.len() - 1) as f64 / QUERY.len() as f64).abs() < f64::EPSILON);
+    assert_eq!(overlap["eligible"], true);
+    assert_eq!(overlap["exclusion_reasons"], serde_json::json!([]));
 
     let differences = value["locus_differences"]
         .as_array()
@@ -154,7 +177,8 @@ fn preserves_mixed_snv_as_ineligible_sample_evidence() -> Result<(), Box<dyn std
         .success();
 
     let value: Value = serde_json::from_slice(&fs::read(sample_output_path(directory.path()))?)?;
-    assert_eq!(value["schema_version"], "signal.sample_evidence/v3");
+    assert_eq!(value["schema_version"], "signal.sample_evidence/v4");
+    assert_eq!(value["overlaps"], serde_json::json!([]));
     let variants = value["variants"]
         .as_array()
         .ok_or("variants must be an array")?;
