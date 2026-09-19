@@ -67,10 +67,10 @@ fn writes_deterministic_compact_sample_evidence_v2() -> Result<(), Box<dyn std::
 
     let reads = value["reads"].as_array().ok_or("reads must be an array")?;
     assert_eq!(reads.len(), 2);
-    let forward_index = read_index(reads, "read-forward.ab1")?;
-    let reverse_index = read_index(reads, "read-reverse.ab1")?;
-    assert_eq!(reads[forward_index]["alignment"]["orientation"], "forward");
-    assert_eq!(reads[reverse_index]["alignment"]["orientation"], "reverse");
+    let forward_read = read_by_name(reads, "read-forward")?;
+    let reverse_read = read_by_name(reads, "read-reverse")?;
+    assert_eq!(forward_read["alignment"]["orientation"], "forward");
+    assert_eq!(reverse_read["alignment"]["orientation"], "reverse");
 
     let differences = value["locus_differences"]
         .as_array()
@@ -83,8 +83,8 @@ fn writes_deterministic_compact_sample_evidence_v2() -> Result<(), Box<dyn std::
         .as_array()
         .ok_or("observations must be an array")?;
     assert_eq!(observations.len(), 2);
-    let forward_observation = observation_for_read(observations, forward_index)?;
-    let reverse_observation = observation_for_read(observations, reverse_index)?;
+    let forward_observation = observation_for_read(observations, "read-forward")?;
+    let reverse_observation = observation_for_read(observations, "read-reverse")?;
     assert_eq!(forward_observation["state"], "reference");
     assert_eq!(forward_observation["base"], "G");
     assert_eq!(reverse_observation["state"], "alternate");
@@ -103,9 +103,17 @@ fn writes_deterministic_compact_sample_evidence_v2() -> Result<(), Box<dyn std::
         .as_array()
         .ok_or("variant support must be an array")?;
     assert_eq!(support.len(), 1);
-    assert_eq!(support[0]["read"], reverse_index);
+    assert_eq!(support[0]["read"], "read-reverse");
     assert_eq!(support[0]["eligible"], true);
     assert_eq!(support[0]["exclusion_reasons"], serde_json::json!([]));
+    let call = &support[0]["calls"][0];
+    assert_eq!(call["role"], "supporting");
+    assert_eq!(call["base"], "A");
+    assert_eq!(call["peaks"]["A"], 1000);
+    assert!(call["quality"].is_number());
+    assert!(call.get("index").is_none());
+    assert!(call.get("position").is_none());
+    assert!(call.get("ploc").is_none());
 
     let text = std::str::from_utf8(&first_bytes)?;
     for repeated in ["read_name", "read_sha256", "\"loci\""] {
@@ -139,17 +147,20 @@ fn sample_output_path(workdir: &Path) -> PathBuf {
         .join(format!("{SAMPLE_ID}.sample.json"))
 }
 
-fn read_index(reads: &[Value], name: &str) -> Result<usize, Box<dyn std::error::Error>> {
+fn read_by_name<'a>(
+    reads: &'a [Value],
+    name: &str,
+) -> Result<&'a Value, Box<dyn std::error::Error>> {
     reads
         .iter()
-        .position(|read| read["name"] == name)
+        .find(|read| read["name"] == name)
         .ok_or_else(|| format!("missing read {name}").into())
 }
 
-fn observation_for_read(
-    observations: &[Value],
-    read: usize,
-) -> Result<&Value, Box<dyn std::error::Error>> {
+fn observation_for_read<'a>(
+    observations: &'a [Value],
+    read: &str,
+) -> Result<&'a Value, Box<dyn std::error::Error>> {
     observations
         .iter()
         .find(|observation| observation["read"] == read)
