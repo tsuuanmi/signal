@@ -228,7 +228,7 @@ For a circular reference, the aligned span is projected back onto the reference;
 if it crosses the origin it is split into two segments and `wraps_origin` is
 `true`.
 
-## Stage 6 — Variant calling (`signal.primary_difference/v3`)
+## Stage 6 — Variant calling (`signal.primary_difference/v4`)
 
 Extracts normalized primary-sequence differences from the selected alignment.
 Only differences in the primary sequence are considered; no allele-frequency,
@@ -279,7 +279,7 @@ or equal to `minimum_peak_height` and an uncalibrated relative score strictly
 greater than `relative_quality_threshold`. Insertion flanks are not evaluated.
 Deletions have no supporting trace base, so their flanks are not subjected to
 peak or quality thresholds; their normalized anchor must still be in a region.
-Vendor PCON is not used by this filter.
+Vendor PCON is not used by this filter. For SNVs, a supporting call with more than one co-localized qualifying channel is retained as a normalized observation but is ineligible for clean-SNV reporting with `mixed_supporting_signal`. Insertions and deletions are not subjected to this point-mixed-signal gate; persistent mixed-length evidence is a separate method boundary.
 
 Each removed candidate increments `excluded_variant_candidates` once, even when
 it fails more than one eligibility condition. The pure variant stage also returns
@@ -304,12 +304,12 @@ The read has already located itself at this boundary. Its orientation and covere
 
 Sparse locus aggregation runs in two passes. The first pass identifies reference positions where at least one covering read is alternate, unresolved, or deleted. The second pass retains every covering read only at those positions, including canonical reference support with observed base and quality. Positions inside a read's mapped segments but absent from `locus_differences[]` are therefore canonical reference matches; positions outside the mapped segments are uncovered. Routine all-reference loci are never materialized in sample evidence.
 
-Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v2.
+Canonical normalized variant observations are separately grouped by `(position, reference, alternate, kind)`. Each support publishes the unique reviewer-facing read name plus configured eligibility, exclusion reasons, and reference-oriented base/peak/quality evidence. Internal aggregation remains SHA-ordered and index-based, but numeric indexes do not leak into the reviewer contract. A read-level filter can remove a candidate from `analysis/v6` reporting without erasing the observation from `SampleEvidence`. Insertions are normalized variant evidence rather than fabricated reference-locus observations. No consensus or conflict verdict is produced in v3.
 
 ## Output
 
 `analyze` publishes `signal.analysis/v6` at `results/<trace-stem>.json`.
-`sample` publishes `signal.sample_evidence/v2` at
+`sample` publishes `signal.sample_evidence/v3` at
 `results/<sample-id>.sample.json`; its detailed semantics are defined in
 [`sample-output.md`](sample-output.md). Both use the same atomic no-overwrite
 publisher and keep operational logs outside deterministic JSON.
