@@ -269,8 +269,18 @@ fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>
     assert_eq!(call["role"], "supporting");
     assert_eq!(call["base"], variant["alternate"]);
     assert!(call["quality"].is_number());
-    assert!(!call.as_object().ok_or("call is not an object")?.contains_key("index"));
-    assert!(!call.as_object().ok_or("call is not an object")?.contains_key("ploc"));
+    assert!(
+        !call
+            .as_object()
+            .ok_or("call is not an object")?
+            .contains_key("index")
+    );
+    assert!(
+        !call
+            .as_object()
+            .ok_or("call is not an object")?
+            .contains_key("ploc")
+    );
     Ok(())
 }
 
