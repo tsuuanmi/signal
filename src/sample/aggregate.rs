@@ -86,7 +86,7 @@ mod tests {
     use crate::model::locus_evidence::{EvidenceProfile, LocusEvidence};
     use crate::model::nucleotide::Nucleotide;
     use crate::model::quality::{CallQuality, QualityControlResult};
-    use crate::model::signal::SignalAnalysis;
+    use crate::model::signal::{NoisyRegion, SignalAnalysis};
     use crate::model::variant::{
         ObservedVariant, Variant, VariantCallMapping, VariantCallRole, VariantCallingResult,
         VariantExclusionReason, VariantKind,
@@ -121,6 +121,16 @@ mod tests {
                 weights: [0.1, 0.2, 0.3, 0.4],
             }),
         }
+    }
+
+    fn mark_noisy(read: &mut ReadObservation, start: usize, end: usize) {
+        read.signal.noisy_regions.push(NoisyRegion {
+            call_start_0based: start,
+            call_end_0based_exclusive: end,
+            sample_start_0based: start * 10,
+            sample_end_0based_exclusive: end * 10,
+            minimum_primary_snr: 1.0,
+        });
     }
 
     fn observation(
@@ -272,7 +282,7 @@ mod tests {
 
     #[test]
     fn orders_reads_once_and_factors_read_identity_from_evidence() -> Result<()> {
-        let forward = observation(
+        let mut forward = observation(
             "a",
             "reference",
             "config",
@@ -280,6 +290,7 @@ mod tests {
             vec![column('G', 'A', Some(0), 72)],
             vec![snv(73, "A", "G")],
         );
+        mark_noisy(&mut forward, 0, 1);
         let reverse = observation(
             "b",
             "reference",
@@ -308,12 +319,20 @@ mod tests {
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
         assert_eq!(
+            evidence.locus_differences[0].observations[0].within_candidate_noisy_region,
+            Some(true)
+        );
+        assert_eq!(
             evidence.locus_differences[0].observations[0]
                 .profile
                 .map(|profile| profile.weights),
             Some([0.1, 0.2, 0.3, 0.4])
         );
         assert_eq!(evidence.locus_differences[0].observations[1].read_index, 1);
+        assert_eq!(
+            evidence.locus_differences[0].observations[1].within_candidate_noisy_region,
+            Some(false)
+        );
         assert_eq!(
             evidence.locus_differences[0].observations[1]
                 .profile
@@ -334,6 +353,7 @@ mod tests {
             1
         );
         assert_eq!(evidence.variants[0].support[0].read_index, 0);
+        assert!(evidence.variants[0].support[0].calls[0].within_candidate_noisy_region);
         assert_eq!(
             evidence.variants[0].support[0].calls[0]
                 .profile
@@ -341,6 +361,7 @@ mod tests {
             Some([0.1, 0.2, 0.3, 0.4])
         );
         assert_eq!(evidence.variants[0].support[1].read_index, 1);
+        assert!(!evidence.variants[0].support[1].calls[0].within_candidate_noisy_region);
         assert_eq!(
             evidence.variants[0].support[1].calls[0]
                 .profile
@@ -367,6 +388,7 @@ mod tests {
             Vec::new(),
         );
         read.signal.loci[2].profile = None;
+        mark_noisy(&mut read, 1, 3);
 
         let evidence = aggregate(&[read], &sample_config())?;
 
@@ -379,6 +401,10 @@ mod tests {
         assert_eq!(
             evidence.locus_differences[1].observations[0].state,
             crate::model::sample_evidence::LocusState::Unresolved
+        );
+        assert_eq!(
+            evidence.locus_differences[1].observations[0].within_candidate_noisy_region,
+            Some(true)
         );
         assert!(
             evidence.locus_differences[1].observations[0]
@@ -393,6 +419,10 @@ mod tests {
             evidence.locus_differences[2].observations[0]
                 .profile
                 .is_none()
+        );
+        assert_eq!(
+            evidence.locus_differences[2].observations[0].within_candidate_noisy_region,
+            None
         );
         Ok(())
     }
@@ -511,6 +541,21 @@ mod tests {
         );
         assert_eq!(evidence.variants[0].support[0].calls[0].quality, 50);
         Ok(())
+    }
+
+    #[test]
+    fn rejects_out_of_bounds_candidate_noisy_region() {
+        let mut read = observation(
+            "a",
+            "reference",
+            "config",
+            Orientation::Forward,
+            vec![column('G', 'A', Some(0), 72)],
+            Vec::new(),
+        );
+        mark_noisy(&mut read, 0, 2);
+
+        assert!(aggregate(&[read], &sample_config()).is_err());
     }
 
     #[test]
