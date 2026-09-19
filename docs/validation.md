@@ -41,4 +41,4 @@ Run a release build with a named 500–1,000 base approved or synthetic trace ag
 
 ## Release gate
 
-All normative requirements and automated checks must pass, and at least one approved real AB1 must have complete end-to-end evidence before describing a scientific release as real-trace validated.
+All normative requirements and automated checks must pass, including the Rust source-policy gate that rejects explicit obsolete/compatibility scaffolding and hidden dead/unused/deprecated production paths. At least one approved real AB1 must have complete end-to-end evidence before describing a scientific release as real-trace validated.
