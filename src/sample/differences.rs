@@ -156,8 +156,7 @@ fn support_topology(
                 + topology.alternate_reads
                 + topology.unresolved_reads
                 + topology.deletion_reads
-        || topology.profile_reads
-            != topology.profile_forward_reads + topology.profile_reverse_reads
+        || topology.profile_reads != topology.profile_forward_reads + topology.profile_reverse_reads
         || topology.profile_reads > topology.reads - topology.deletion_reads
     {
         return Err(Error::Sample(
