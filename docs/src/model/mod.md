@@ -6,9 +6,7 @@ Owns the validated domain types shared across scientific stages.
 
 ## Responsibilities
 
-- Declare the model submodules: `alignment`, `basecall_result`, `basecalls`,
-  `coordinate`, `nucleotide`, `quality`, `read_observation`, `reference`,
-  `result`, `sample_evidence`, `sample_result`, `signal`, `trace`, and `variant`.
+- Declare the model submodules: `alignment`, `basecall_result`, `basecalls`, `coordinate`, `locus_evidence`, `nucleotide`, `quality`, `read_observation`, `reference`, `result`, `sample_evidence`, `sample_result`, `signal`, `trace`, and `variant`.
 - Provide validated domain vocabulary with no I/O, CLI, configuration loading, or
   algorithm dependencies.
 
@@ -22,7 +20,8 @@ No filesystem access, argument parsing, logging, or algorithm execution.
 - `nucleotide`: canonical bases and reverse complement.
 - `trace`: four-channel `Chromatogram` plus vendor evidence.
 - `basecalls`: primary/ambiguous calls with trace positions.
-- `signal`: rolling SNR windows and merged candidate-noisy regions.
+- `locus_evidence`: basecall-independent per-locus A/C/G/T evidence and normalized profile.
+- `signal`: ordered locus evidence, rolling SNR windows, and merged candidate-noisy regions.
 - `quality`: quality vector, trim bounds, and QC result.
 - `read_observation`: complete one-read scientific products after
   evidence-derived placement.
@@ -56,7 +55,7 @@ arrays, and `Variant` structs with validated Rust types.
 
 ## Requirements and decisions
 
-ADR-0002; `SRS-IN-003`, `SRS-CFG-005`, `SRS-BC-005`, `SRS-ALN-005`,
+ADR-0002, ADR-0028; `SRS-IN-003`, `SRS-CFG-005`, `SRS-BC-005`, `SRS-SIG-008`, `SRS-SIG-009`, `SRS-ALN-005`,
 `SRS-VAR-005`, and `SRS-OUT-002`.
 
 ## Tests
