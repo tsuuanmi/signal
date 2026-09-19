@@ -23,8 +23,7 @@ PLOC remains the current locus anchor. Shared neighboring-midpoint geometry defi
 the bounded locus window. Within that window, signal processing refines one event
 sample directly from the analyzed A/C/G/T channels:
 
-1. estimate the existing per-channel local baseline and noise from the deterministic
-   rolling context;
+1. derive a deterministic fixed-width local context directly from neighboring PLOC windows and estimate the existing per-channel baseline and noise there;
 2. for every sample in the locus window, sum the non-negative baseline-corrected
    A/C/G/T amplitudes;
 3. select the sample with the greatest total corrected signal;
@@ -37,7 +36,7 @@ baseline/noise, corrected amplitudes, and SNR.
 positive corrected signal. If the total is zero, the profile is absent. Signal does
 not substitute a uniform vector or another synthetic fallback.
 
-The profile calculation does not consume:
+The locus-evidence calculation does not consume `BaseCalls` or rolling `SignalWindow` records. The profile calculation also does not consume:
 
 - primary base;
 - ambiguity/IUPAC code;
