@@ -9,7 +9,7 @@ use crate::model::sample_evidence::{
     LocusDifferenceEvidence, LocusDifferenceObservation, LocusState, LocusSupportTopology,
 };
 
-use super::{call_evidence, contribution};
+use super::{call_evidence, contribution, nucleotide_support};
 
 struct DifferenceBuilder {
     reference_base: char,
@@ -86,10 +86,12 @@ pub(super) fn aggregate(reads: &[&ReadObservation]) -> Result<Vec<LocusDifferenc
         .into_iter()
         .map(|(position_1based, built)| {
             let support_topology = support_topology(&built.observations, reads)?;
+            let nucleotide_support = nucleotide_support::aggregate(&built.observations, reads)?;
             Ok(LocusDifferenceEvidence {
                 position_1based,
                 reference_base: built.reference_base,
                 support_topology,
+                nucleotide_support,
                 observations: built.observations,
             })
         })

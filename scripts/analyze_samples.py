@@ -63,7 +63,6 @@ def discover_workload(trace_dir: Path, selected: list[str]) -> Workload:
     """Discover every selected trace and reject ambiguous batch identities."""
     workload: Workload = {}
     owners: dict[Path, str] = {}
-    stems: dict[str, Path] = {}
     for sample in selected:
         candidates = sorted(trace_dir.glob(f"*_{sample}_*.ab1"))
         symlink = next((trace for trace in candidates if trace.is_symlink()), None)
@@ -78,11 +77,6 @@ def discover_workload(trace_dir: Path, selected: list[str]) -> Workload:
                     f"trace {trace.name} matches multiple samples: {owner} and {sample}"
                 )
             owners[trace] = sample
-            if previous := stems.get(trace.stem):
-                raise ValueError(
-                    f"trace stem collision for logs: {previous.name} and {trace.name}"
-                )
-            stems[trace.stem] = trace
         workload[sample] = traces
     return workload
 
@@ -116,7 +110,7 @@ def cleanup_targets(
     validate_cleanup_roots(output_dir, log_dir, protected)
     result_targets: list[Path] = []
     log_targets: set[Path] = set()
-    for sample, traces in workload.items():
+    for sample in workload:
         result = output_dir / sample
         if result.is_symlink():
             raise ValueError(f"refusing symlinked result directory: {result}")
@@ -126,15 +120,9 @@ def cleanup_targets(
             if result.parent != output_dir:
                 raise ValueError(f"result target escapes output root: {result}")
             result_targets.append(result)
-        for trace in traces:
-            candidate = log_dir / f"{trace.stem}.log"
-            if candidate.exists() or candidate.is_symlink():
-                log_targets.add(candidate)
-        sample_log = log_dir / f"{sample}.sample.log"
+        sample_log = log_dir / f"{sample}.log"
         if sample_log.exists() or sample_log.is_symlink():
             log_targets.add(sample_log)
-        for candidate in log_dir.glob(f"*_{sample}_*.log"):
-            log_targets.add(candidate)
 
     for log in log_targets:
         if log.parent != log_dir:
@@ -302,7 +290,6 @@ def run_analysis(
     trace: Path,
     reference: Path,
     config: Path,
-    log_dir: Path,
     destination: Path,
 ) -> tuple[bool, str]:
     """Run one analysis in isolation and publish its JSON without overwrite."""
@@ -310,7 +297,7 @@ def run_analysis(
         work = Path(temporary)
         environment = os.environ.copy()
         environment["SIGNAL_CONFIG"] = str(config)
-        environment["SIGNAL_LOG_DIR"] = str(log_dir)
+        environment["SIGNAL_LOG_DIR"] = str(work / "logs")
         completed = subprocess.run(
             [str(binary), "analyze", str(trace), "--reference", str(reference)],
             cwd=work,
@@ -414,7 +401,7 @@ def main(argv: list[str] | None = None) -> int:
             trace_count += 1
             destination = output_dir / sample / f"{trace.stem}.json"
             succeeded, detail = run_analysis(
-                binary, trace, reference, config, log_dir, destination
+                binary, trace, reference, config, destination
             )
             if succeeded:
                 print(f"OK   {displayed(destination)}")

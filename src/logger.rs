@@ -1,4 +1,4 @@
-//! Append-only, per-trace operational logging with Apollo-style records.
+//! Append-only, per-operation operational logging with Apollo-style records.
 
 use std::env;
 use std::fmt;
@@ -31,7 +31,7 @@ impl LogLevel {
     }
 }
 
-/// One append-only log file for an analyzed trace stem.
+/// One append-only log file for a command operation.
 pub(crate) struct Logger {
     path: PathBuf,
     file: File,
@@ -39,8 +39,8 @@ pub(crate) struct Logger {
 }
 
 impl Logger {
-    /// Opens `logs/<trace-stem>.log`, honoring `SIGNAL_LOG_DIR` when set.
-    pub(crate) fn open(trace_stem: &str) -> Result<Self> {
+    /// Opens `logs/<operation-stem>.log`, honoring `SIGNAL_LOG_DIR` when set.
+    pub(crate) fn open(operation_stem: &str) -> Result<Self> {
         let directory = env::var_os("SIGNAL_LOG_DIR")
             .map(PathBuf::from)
             .unwrap_or_else(|| PathBuf::from(DEFAULT_LOG_DIRECTORY));
@@ -51,15 +51,15 @@ impl Logger {
                 reason: "path must be non-empty".into(),
             });
         }
-        Self::open_in(&directory, trace_stem)
+        Self::open_in(&directory, operation_stem)
     }
 
-    fn open_in(directory: &Path, trace_stem: &str) -> Result<Self> {
+    fn open_in(directory: &Path, operation_stem: &str) -> Result<Self> {
         fs::create_dir_all(directory).map_err(|source| Error::Log {
             path: directory.to_path_buf(),
             source,
         })?;
-        let path = directory.join(format!("{trace_stem}.log"));
+        let path = directory.join(format!("{operation_stem}.log"));
         let file = OpenOptions::new()
             .create(true)
             .append(true)

@@ -43,6 +43,17 @@ fn writes_deterministic_compact_sample_evidence_v7() -> Result<(), Box<dyn std::
             .success()
             .stdout(predicate::str::is_empty())
             .stderr(predicate::str::is_empty());
+
+        let log_dir = directory.join("logs");
+        let sample_log = log_dir.join(format!("{SAMPLE_ID}.log"));
+        let log = fs::read_to_string(&sample_log)?;
+        assert!(log.contains("event=sample_read_started"));
+        assert!(log.contains("event=basecalling_completed"));
+        assert!(log.contains("event=alignment_completed"));
+        assert!(log.contains("event=variant_calling_completed"));
+        assert!(log.contains("event=sample_read_completed"));
+        assert!(!log_dir.join("read-forward.log").exists());
+        assert!(!log_dir.join("read-reverse.log").exists());
     }
 
     let first_bytes = fs::read(sample_output_path(first.path()))?;

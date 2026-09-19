@@ -24,6 +24,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Internal differential loci now retain unweighted eligible-profile A/C/G/T support with total and forward/reverse partitions, using unit read mass only and production logging of contributor topology/profile mass without exposing nucleotide composition or selecting a consensus.
 - Internal differential-locus observations now carry structural nucleotide-contribution eligibility after profile availability: profile-bearing calls are eligible even when unresolved or in candidate-noisy context, missing-profile calls are excluded from nucleotide aggregation, and deletions remain separate events; production logging consumes all three states without adding consensus weights.
 - Internal differential-locus support topology now records the number of observations with an available basecall-independent `EvidenceProfile` plus forward/reverse profile availability, establishing a pre-consensus nucleotide-profile denominator without voting or weighting.
 - Internal sample reconciliation now retains one unified reference-oriented `CallSignalEvidence` per source call, carrying corrected A/C/G/T amplitudes, per-channel SNR, optional `EvidenceProfile`, and existing noisy-region membership; obsolete split profile/noise lookup paths are removed, production logs consume quantitative channel summaries, and `signal.sample_evidence/v7` remains unchanged.
@@ -51,7 +52,7 @@ All notable changes to this project are documented here.
 - Shared SHA-256 identity helper in `src/checksum.rs`, used by config, trace, and reference loading.
 - Locked uv environment and typed schema validator for reproducible JSON contract checks in development and CI.
 - External `scripts/analyze_samples.py` wrapper for safe per-sample local-corpus orchestration without changing the one-file CLI.
-- Rust-native append-only per-trace operational logging under `logs/`, with `SIGNAL_LOG_DIR` for isolated orchestration and run-correlated, single-line records.
+- Rust-native append-only per-operation logging under `logs/`, with standalone trace logs, sample-scoped logs containing nested trace-stage records, `SIGNAL_LOG_DIR` isolation, and run-correlated single-line records.
 
 ### Changed
 
@@ -69,7 +70,7 @@ All notable changes to this project are documented here.
 - Relative quality scores manually clamp the score fraction to `[0, 1]` so results stay in `[0, max_relative_quality_score]`.
 - Operational logs now record concise aggregate metrics and timings for every processing stage, exact warning categories, stage-aware failures, and each removed variant's kind/position/reasons without alleles or raw scientific payloads.
 - The bundled `variant_calling.minimum_peak_height` is raised from 100 to 150.
-- The external batch runner now preflights and builds before destructive cleanup, removes only selected sample result directories and matching selected logs, rejects ambiguous identities, collisions, and symlinked cleanup targets, preserves unselected artifacts, and reruns the selected workload from a clean state. A later analysis failure may leave partial new outputs.
+- The external batch runner now preflights and builds before destructive cleanup, removes only selected sample result directories and selected sample logs, rejects ambiguous identities and symlinked cleanup targets, preserves unselected artifacts, writes helper trace-operation logs only to temporary workspaces, and persists one nested trace-aware sample log per sample. A later analysis failure may leave partial new outputs.
 - Rename the stale documentation names to `docs/delivery-record.md` and `docs/requirements.md`.
 
 ### Fixed

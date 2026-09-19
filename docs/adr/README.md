@@ -41,3 +41,4 @@
 | [0037](0037-sample-call-signal-evidence.md) | Unify reference-oriented call signal evidence at sample scope | Accepted |
 | [0038](0038-locus-profile-availability.md) | Expose differential-locus profile availability before consensus | Accepted |
 | [0039](0039-nucleotide-contribution-eligibility.md) | Define structural nucleotide contribution eligibility | Accepted |
+| [0040](0040-unweighted-nucleotide-profile-support.md) | Accumulate eligible profiles with unit read mass | Accepted |

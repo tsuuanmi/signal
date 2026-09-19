@@ -113,12 +113,24 @@ pub(crate) struct LocusDifferenceObservation {
     pub(crate) nucleotide_contribution: NucleotideContribution,
 }
 
+/// Unweighted eligible nucleotide-profile support retained at one differential locus.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct LocusNucleotideSupport {
+    pub(crate) contributors: usize,
+    pub(crate) forward_contributors: usize,
+    pub(crate) reverse_contributors: usize,
+    pub(crate) support: [f64; 4],
+    pub(crate) forward_support: [f64; 4],
+    pub(crate) reverse_support: [f64; 4],
+}
+
 /// All covering-read observations retained at one differential reference locus.
 #[derive(Debug, Clone)]
 pub(crate) struct LocusDifferenceEvidence {
     pub(crate) position_1based: usize,
     pub(crate) reference_base: char,
     pub(crate) support_topology: LocusSupportTopology,
+    pub(crate) nucleotide_support: LocusNucleotideSupport,
     pub(crate) observations: Vec<LocusDifferenceObservation>,
 }
 
