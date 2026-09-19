@@ -58,24 +58,30 @@ fn exports_all_covered_loci_without_production_result() -> Result<(), Box<dyn st
             && row["alternate_reads"] == 0
             && row["deletion_reads"] == 0
     }));
-    assert!(rows.iter().all(|row| row["within_profile_impurity"].is_number()));
-    assert!(rows
-        .iter()
-        .all(|row| row["directional_profile_distance"].is_number()));
+    assert!(
+        rows.iter()
+            .all(|row| row["within_profile_impurity"].is_number())
+    );
+    assert!(
+        rows.iter()
+            .all(|row| row["directional_profile_distance"].is_number())
+    );
 
     assert!(!directory.path().join("results").exists());
-    assert!(directory
-        .path()
-        .join("logs")
-        .join(format!("{SAMPLE_ID}.validation.log"))
-        .is_file());
+    assert!(
+        directory
+            .path()
+            .join("logs")
+            .join(format!("{SAMPLE_ID}.validation.log"))
+            .is_file()
+    );
 
     Ok(())
 }
 
 #[test]
-fn validation_export_does_not_overwrite_existing_measurements(
-) -> Result<(), Box<dyn std::error::Error>> {
+fn validation_export_does_not_overwrite_existing_measurements()
+-> Result<(), Box<dyn std::error::Error>> {
     let directory = tempdir()?;
     let reference = directory.path().join("reference.fa");
     let config = directory.path().join("signal.toml");
