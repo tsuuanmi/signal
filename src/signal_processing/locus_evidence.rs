@@ -55,11 +55,16 @@ pub(super) fn calculate(
                 "missing rolling context {context_start} for locus {locus_index}"
             ))
         })?;
-        validate_context(context, context_start, locus_index, trace.sample_count(), config)?;
+        validate_context(
+            context,
+            context_start,
+            locus_index,
+            trace.sample_count(),
+            config,
+        )?;
 
         let (channel_baselines, channel_noise_sigmas) = local_statistics(trace, context)?;
-        let event_position =
-            select_event_position(trace, locus_window, ploc, channel_baselines)?;
+        let event_position = select_event_position(trace, locus_window, ploc, channel_baselines)?;
         let channel_heights =
             std::array::from_fn(|channel| trace.channels[channel][event_position]);
         let corrected_amplitudes = std::array::from_fn(|channel| {
@@ -112,15 +117,12 @@ fn validate_context(
     Ok(())
 }
 
-fn local_statistics(
-    trace: &Chromatogram,
-    context: &SignalWindow,
-) -> Result<([f64; 4], [f64; 4])> {
+fn local_statistics(trace: &Chromatogram, context: &SignalWindow) -> Result<([f64; 4], [f64; 4])> {
     let mut baselines = [0.0; 4];
     let mut noise_sigmas = [0.0; 4];
     for channel in 0..4 {
-        let samples =
-            &trace.channels[channel][context.sample_start_0based..context.sample_end_0based_exclusive];
+        let samples = &trace.channels[channel]
+            [context.sample_start_0based..context.sample_end_0based_exclusive];
         let local = statistics::estimate(samples)?;
         baselines[channel] = local.baseline;
         noise_sigmas[channel] = local.noise_sigma;
@@ -143,7 +145,10 @@ fn select_event_position(
     for position in window.start..window.end {
         let total = (0..4)
             .map(|channel| {
-                statistics::corrected_amplitude(trace.channels[channel][position], baselines[channel])
+                statistics::corrected_amplitude(
+                    trace.channels[channel][position],
+                    baselines[channel],
+                )
             })
             .sum::<f64>();
         let replace = best.is_none_or(|(best_position, best_total)| {
