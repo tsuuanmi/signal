@@ -14,11 +14,18 @@ pub(super) fn heterogeneity(
     impurity_sum: f64,
     contributors: usize,
 ) -> Option<ProfileHeterogeneity> {
-    let mean_profile = mean_profile?;
+    const FLOAT_TOLERANCE: f64 = 1e-12;
+
+    let mean_profile = mean_profile.filter(|_| contributors > 0)?;
     let within_profile_impurity = impurity_sum / contributors as f64;
     let total_profile_heterogeneity = impurity(mean_profile);
+    let raw_between = total_profile_heterogeneity - within_profile_impurity;
     let between_profile_dispersion =
-        (total_profile_heterogeneity - within_profile_impurity).max(0.0);
+        if raw_between < 0.0 && raw_between.abs() <= FLOAT_TOLERANCE {
+            0.0
+        } else {
+            raw_between
+        };
 
     Some(ProfileHeterogeneity {
         within_profile_impurity,
