@@ -48,8 +48,11 @@ mod tests {
 
     #[test]
     fn normalizes_positive_corrected_signal() {
-        let profile = EvidenceProfile::from_corrected_amplitudes([0.0, 40.0, 100.0, 0.0])
-            .expect("positive signal should produce a profile");
+        let Some(profile) =
+            EvidenceProfile::from_corrected_amplitudes([0.0, 40.0, 100.0, 0.0])
+        else {
+            panic!("positive signal should produce a profile");
+        };
         assert_eq!(profile.weights, [0.0, 2.0 / 7.0, 5.0 / 7.0, 0.0]);
     }
 
