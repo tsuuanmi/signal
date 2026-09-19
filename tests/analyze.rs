@@ -278,6 +278,38 @@ fn reports_exact_signal_clipping_without_reclassifying_the_read()
 }
 
 #[test]
+fn processes_only_valid_ploc_loci_when_vendor_series_are_longer()
+-> Result<(), Box<dyn std::error::Error>> {
+    let directory = tempdir()?;
+    let trace = directory.path().join("trace.ab1");
+    let reference = directory.path().join("reference.fa");
+    let config = directory.path().join("signal.toml");
+    let mut ploc: Vec<usize> = (0..QUERY.len()).map(|index| 2 + 4 * index).collect();
+    ploc.pop();
+    write_abif_with_ploc(&trace, QUERY, ploc)?;
+    write_reference(&reference, &format!("TTTT{QUERY}CCCC"))?;
+    write_config(&config, "linear")?;
+
+    run(&trace, &reference, &config, directory.path())?.success();
+    let value = read_result(directory.path(), &trace)?;
+    assert_eq!(value["read"]["call_count"], QUERY.len() - 1);
+    assert_eq!(
+        value["signal_quality"]["integrity"]["ploc_count"],
+        QUERY.len() - 1
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_primary_count"],
+        QUERY.len()
+    );
+    assert_eq!(
+        value["signal_quality"]["integrity"]["vendor_quality_count"],
+        QUERY.len()
+    );
+    assert_eq!(value["warnings"]["ploc_vendor_length_mismatches"], 2);
+    Ok(())
+}
+
+#[test]
 fn reports_snv_with_peaks_and_quality() -> Result<(), Box<dyn std::error::Error>> {
     let directory = tempdir()?;
     let trace = directory.path().join("trace.ab1");
