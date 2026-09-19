@@ -131,7 +131,7 @@ class ValidationCorpusInvariantTests(unittest.TestCase):
             Path(env["SIGNAL_LOG_DIR"]).mkdir(parents=True, exist_ok=True)
             return SimpleNamespace(returncode=0, stderr="")
 
-        import scripts.validation_corpus.runner as runner
+        from scripts.validation_corpus import runner
 
         real_rename = runner.os.rename
 
@@ -149,16 +149,16 @@ class ValidationCorpusInvariantTests(unittest.TestCase):
                 "scripts.validation_corpus.runner.os.rename",
                 side_effect=rename,
             ),
+            self.assertRaisesRegex(OSError, "publication failed"),
         ):
-            with self.assertRaisesRegex(OSError, "publication failed"):
-                run_corpus(
-                    self.manifest.resolve(),
-                    cases,
-                    self.reference.resolve(),
-                    self.config.resolve(),
-                    self.binary.resolve(),
-                    output.resolve(),
-                )
+            run_corpus(
+                self.manifest.resolve(),
+                cases,
+                self.reference.resolve(),
+                self.config.resolve(),
+                self.binary.resolve(),
+                output.resolve(),
+            )
 
         self.assertFalse(output.exists())
 

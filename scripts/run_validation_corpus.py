@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """Run a provenanced local Signal validation corpus."""
 
 from __future__ import annotations
@@ -109,7 +108,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         run_corpus(manifest, cases, reference, config, binary, output_dir)
-    except (OSError, RuntimeError, ValueError) as error:
+    except (OSError, RuntimeError, TypeError, ValueError) as error:
         print(f"error: {error}", file=sys.stderr)
         return 1
 

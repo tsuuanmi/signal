@@ -237,16 +237,15 @@ class ValidationCorpusTests(unittest.TestCase):
         with patch(
             "scripts.validation_corpus.runner.subprocess.run",
             return_value=SimpleNamespace(returncode=1, stderr="boom"),
-        ):
-            with self.assertRaisesRegex(RuntimeError, "boom"):
-                run_corpus(
-                    self.manifest.resolve(),
-                    cases,
-                    self.reference.resolve(),
-                    self.config.resolve(),
-                    self.binary.resolve(),
-                    output.resolve(),
-                )
+        ), self.assertRaisesRegex(RuntimeError, "boom"):
+            run_corpus(
+                self.manifest.resolve(),
+                cases,
+                self.reference.resolve(),
+                self.config.resolve(),
+                self.binary.resolve(),
+                output.resolve(),
+            )
 
         self.assertFalse(output.exists())
 

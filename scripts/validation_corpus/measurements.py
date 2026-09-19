@@ -37,7 +37,7 @@ def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
                     f"{path}: invalid JSON at line {line_number}: {error.msg}"
                 ) from error
             if not isinstance(row, dict):
-                raise ValueError(f"{path}: line {line_number} is not a JSON object")
+                raise TypeError(f"{path}: line {line_number} is not a JSON object")
             if row.get("schema_version") != MEASUREMENT_SCHEMA_VERSION:
                 raise ValueError(
                     f"{path}: line {line_number} has unexpected measurement schema "
@@ -83,7 +83,7 @@ def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
 
             observations = row.get("observations")
             if not isinstance(observations, list):
-                raise ValueError(f"{path}: line {line_number} lacks observations[]")
+                raise TypeError(f"{path}: line {line_number} lacks observations[]")
             reads = row.get("reads")
             if (
                 not isinstance(reads, int)
@@ -97,7 +97,7 @@ def measurement_summary(path: Path, case: ValidationCase) -> MeasurementSummary:
             row_reads: set[str] = set()
             for observation in observations:
                 if not isinstance(observation, dict):
-                    raise ValueError(
+                    raise TypeError(
                         f"{path}: line {line_number} has a non-object observation"
                     )
                 read_sha256 = observation.get("read_sha256")
