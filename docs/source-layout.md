@@ -10,12 +10,13 @@ src/
 ├── error/mod.rs
 ├── logger.rs
 ├── checksum.rs
+├── locus.rs
 ├── config/{mod,defaults,types,load}.rs
-├── model/{mod,coordinate,nucleotide,trace,basecalls,signal,quality,reference,alignment,variant,result,basecall_result,read_observation,sample_evidence,sample_result}.rs
+├── model/{mod,coordinate,nucleotide,trace,basecalls,locus_evidence,signal,quality,reference,alignment,variant,result,basecall_result,read_observation,sample_evidence,sample_result}.rs
 ├── trace/{mod,reader,abif,decode}.rs
 ├── reference/{mod,fasta}.rs
 ├── basecalling/{mod,iupac,peak,call}.rs
-├── signal_processing/{mod,features,regions}.rs
+├── signal_processing/{mod,features,locus_evidence,regions,statistics}.rs
 ├── quality_control/{mod,penalty,quality,trim}.rs
 ├── alignment/{mod,scoring,gotoh,traceback,orient}.rs
 ├── variant_calling/{mod,mapping,extract,normalize,filter}.rs
@@ -40,8 +41,9 @@ report -> completed models; no scientific computation
 
 - `reader`/`abif` parse generic binary structure; `decode` knows required scientific tags.
 - `checksum` provides the shared stable SHA-256 identity used by config, trace, and reference loading.
-- `peak` selects evidence; `call` classifies it; `iupac` maps ambiguity.
-- `features` estimates rolling sample-domain SNR; `regions` merges candidate-noisy intervals without changing calls.
+- `locus` owns the shared PLOC-defined sample-window geometry used by evidence stages.
+- `peak` selects basecalling peaks inside shared locus windows; `call` classifies them; `iupac` maps ambiguity.
+- `features` estimates rolling sample-domain SNR; `locus_evidence` derives basecall-independent per-locus A/C/G/T evidence profiles; `statistics` owns shared robust local statistics; `regions` merges candidate-noisy intervals without changing calls.
 - `penalty`, `quality`, and `trim` keep distinct QC responsibilities.
 - `gotoh` computes DP; `traceback` reconstructs rows; `orient` applies strand/topology policy; `scoring` centralizes arithmetic.
 - `extract` finds primary-sequence differences; `mapping` binds original calls to aligned reference positions; `normalize` defines canonical alleles/positions; `filter` applies configured region and supporting-signal eligibility.
