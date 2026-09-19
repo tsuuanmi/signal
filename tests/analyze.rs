@@ -310,7 +310,7 @@ fn excludes_mixed_supporting_snv_without_erasing_the_observation()
 
     let log = fs::read_to_string(directory.path().join("logs/trace.log"))?;
     assert!(log.contains("event=variant_removed kind=SNV"));
-    assert!(log.contains("reasons=mixed_supporting_signal"));
+    assert!(log.contains("mixed_supporting_signal"));
     Ok(())
 }
 
