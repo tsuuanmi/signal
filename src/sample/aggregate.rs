@@ -256,6 +256,11 @@ mod tests {
 
         assert_eq!(evidence.reads[0].input_name, "a.ab1");
         assert_eq!(evidence.reads[1].input_name, "b.ab1");
+        assert_eq!(evidence.overlaps.len(), 1);
+        assert_eq!(evidence.overlaps[0].left_read_index, 0);
+        assert_eq!(evidence.overlaps[0].right_read_index, 1);
+        assert_eq!(evidence.overlaps[0].comparable_bases, 1);
+        assert!(evidence.overlaps[0].eligible);
         assert_eq!(evidence.locus_differences.len(), 1);
         assert_eq!(evidence.locus_differences[0].observations.len(), 2);
         assert_eq!(evidence.locus_differences[0].observations[0].read_index, 0);
