@@ -45,3 +45,4 @@
 | [0041](0041-mean-nucleotide-evidence-profiles.md) | Derive mean nucleotide evidence profiles | Accepted |
 | [0042](0042-profile-heterogeneity-decomposition.md) | Decompose nucleotide profile heterogeneity | Accepted |
 | [0043](0043-directional-profile-distance.md) | Measure directional nucleotide-profile distance | Accepted |
+| [0044](0044-validation-measurement-export.md) | Separate validation measurements from public sample evidence | Accepted |
