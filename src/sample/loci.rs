@@ -45,12 +45,10 @@ pub(crate) fn aggregate(
             let position_1based = reference_index_0based
                 .checked_add(1)
                 .ok_or_else(|| Error::Sample("reference coordinate overflow".into()))?;
-            let entry = loci
-                .entry(position_1based)
-                .or_insert_with(|| LocusBuilder {
-                    reference_base: column.reference_base,
-                    observations: Vec::new(),
-                });
+            let entry = loci.entry(position_1based).or_insert_with(|| LocusBuilder {
+                reference_base: column.reference_base,
+                observations: Vec::new(),
+            });
             if entry.reference_base != column.reference_base {
                 return Err(Error::Sample(format!(
                     "reference base disagrees at position {position_1based}"
@@ -86,7 +84,9 @@ pub(crate) fn aggregate(
                     "reference base disagrees at position {position_1based}"
                 )));
             }
-            entry.observations.push(observation(read_index, read, column)?);
+            entry
+                .observations
+                .push(observation(read_index, read, column)?);
         }
     }
 
