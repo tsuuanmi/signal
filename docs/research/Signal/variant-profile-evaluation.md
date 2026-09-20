@@ -16,7 +16,7 @@ public result schemas.
 The baseline consumes:
 
 1. one local ignored `signal.reviewer_variant_ground_truth/v1` artifact;
-2. current `signal.sample_evidence/v8` sample outputs under `results/<case>/<case>.json`;
+2. current `signal.sample_evidence/v8` sample outputs under `results/<sample-id>/<sample-id>.json`;
 3. the exact reference FASTA used by those sample outputs.
 
 Every evaluated sample result is SHA-256 bound into `samples.csv`, and every result must
@@ -25,6 +25,18 @@ silently pooled. The output index records that shared configuration identity plu
 reference and reviewer-artifact identities.
 
 The reviewer artifact is proxy ground truth, not independent biological truth.
+
+The two reviewer identities have distinct roles:
+
+```text
+sample_id            production sample/result identity, e.g. LN_26_AB0442
+validation_case_id   validation-corpus join identity, e.g. AB0442
+```
+
+The evaluator locates and validates the Signal result strictly by `sample_id`. It does not
+guess paths from `validation_case_id`, scan filenames, or retain a legacy fallback.
+`validation_case_id` remains in evaluation rows so later phase/corpus joins are explicit.
+
 
 ## Reviewer notation
 
