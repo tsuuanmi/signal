@@ -26,6 +26,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Local poly-C phase-instability research now publishes hash-bound `signal.validation_polyc_phase/v1` observations and descriptive summaries for reads that actually span validated rCRS HV2/HV1 C tracts, preserving sequencing-direction path region, genomic/call-order distance, profile impurity, previous/current/next reference-base mass, and read-local T310/T16189 evidence without defining a phase score, recovery cutoff, genotype, artifact verdict, or production confidence change.
+
 - Reviewer-facing sample differential loci now preserve the concise Tracy-derived signal shape needed for evidence-aware review: factorized read/state/profile topology plus each call-backed observation's normalized reference-oriented A/C/G/T `EvidenceProfile` and existing candidate-noisy context, while corrected amplitudes/SNR and consensus interpretation remain internal.
 
 - ADR-0052 records the directional confidence invariant for unstable mtDNA poly-C tracts: evidence after an unstable tract in sequencing order must be treated as lower-confidence than otherwise equivalent evidence that has not crossed the tract. Detection, recovery modeling, thresholds, and production behavior remain deferred for validation.
