@@ -13,7 +13,8 @@ from typing import Any, TextIO
 
 from .filesystem import file_sha256, sync_directory, validate_new_directory, write_json
 from .model import PHASE_SENSITIVITY_SCHEMA_VERSION
-from .phase_characterization import aggregate_rows, generated_records
+from .phase_artifact import generated_records
+from .phase_characterization import aggregate_rows
 from .phase_hypotheses import (
     load_after_observations,
     nonnegative_int,
