@@ -12,6 +12,7 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 - [curation-queue.md](curation-queue.md): immutable audit-supported human-review queue plus separate editable decisions template before manifest reconciliation.
 - [polyc-phase-instability.md](polyc-phase-instability.md): directional rCRS HV1/HV2 poly-C crossing dataset for descriptive phase-instability and recovery research without production confidence changes.
 - [polyc-phase-hypotheses.md](polyc-phase-hypotheses.md): Tracy-inspired downstream candidate-offset curves that separate shifted-reference explainability from unexplained profile residual without selecting a winning phase.
+- [polyc-phase-characterization.md](polyc-phase-characterization.md): descriptive adjacent-window persistence, exact-distance trajectories, and observed-interrupt strata over complete phase-hypothesis curves without candidate selection or thresholds.
 - [event-position-diagnostics.md](event-position-diagnostics.md): validation study for explaining primary-basecall versus continuous-profile event placement before threshold fitting.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.

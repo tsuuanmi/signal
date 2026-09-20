@@ -14,6 +14,7 @@ AUDIT_SCHEMA_VERSION = "signal.validation_audit/v1"
 CURATION_QUEUE_SCHEMA_VERSION = "signal.validation_curation_queue/v1"
 POLYC_PHASE_SCHEMA_VERSION = "signal.validation_polyc_phase/v1"
 PHASE_HYPOTHESIS_SCHEMA_VERSION = "signal.validation_phase_hypotheses/v1"
+PHASE_CHARACTERIZATION_SCHEMA_VERSION = "signal.validation_phase_characterization/v1"
 
 MANIFEST_COLUMNS = (
     "validation_case_id",
