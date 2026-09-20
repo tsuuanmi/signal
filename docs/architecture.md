@@ -60,8 +60,9 @@ Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. 
 
 ## Promoted read-local phase boundary
 
-ADR-0055 defines a future production boundary for read-local rCRS HV1/HV2 poly-C phase
-evidence. The boundary is **accepted but not implemented**.
+ADR-0055 defines the production boundary for read-local rCRS HV1/HV2 poly-C phase
+evidence, and ADR-0056 implements that boundary as continuous internal
+`signal.polyc_phase/v1` measurement.
 
 If implemented, phase measurement belongs after selected reference placement because it
 depends on selected sequencing orientation/path and local reference context. It remains a
@@ -75,10 +76,11 @@ selected alignment ───┤
                            ReadObservation
 ```
 
-The current executable pipeline does not yet contain a `phase` module or phase field.
-Future measurement cannot feed back into alignment, require an F/R partner, infer stability
-from insufficient evidence, or alter structural contribution eligibility/unit-mass sample
-support without a separate validated policy decision.
+The executable pipeline now contains `src/phase/` and retains internal
+`ReadObservation.phase`. Measurement cannot feed back into alignment, require an F/R
+partner, infer stability from insufficient evidence, or alter structural contribution
+eligibility/unit-mass sample support without a separate validated policy decision. Public
+analysis/sample schemas remain unchanged.
 
 ## Coordinates and strand
 
