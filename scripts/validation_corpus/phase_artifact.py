@@ -44,6 +44,8 @@ class WindowRecord:
     interrupt_aligned_base: str
     start_distance: int
     end_distance: int
+    start_call_index: int
+    end_call_index: int
     profile_observations: int
     noisy_observations: int
     mean_profile_impurity: float
@@ -214,6 +216,18 @@ def parse_window(row: dict[str, str], line: int) -> WindowRecord:
     )
     if end < start:
         raise ValueError(f"{label}: window end precedes start")
+    start_call_index = csv_int(
+        row["start_call_index_0based"],
+        f"{label}.start_call_index_0based",
+        0,
+    )
+    end_call_index = csv_int(
+        row["end_call_index_0based"],
+        f"{label}.end_call_index_0based",
+        0,
+    )
+    if end_call_index < start_call_index:
+        raise ValueError(f"{label}: window call-index end precedes start")
     profile_count = csv_int(
         row["profile_observations"],
         f"{label}.profile_observations",
@@ -237,6 +251,8 @@ def parse_window(row: dict[str, str], line: int) -> WindowRecord:
         interrupt_aligned_base=interrupt,
         start_distance=start,
         end_distance=end,
+        start_call_index=start_call_index,
+        end_call_index=end_call_index,
         profile_observations=profile_count,
         noisy_observations=noisy_count,
         mean_profile_impurity=unit_float(
