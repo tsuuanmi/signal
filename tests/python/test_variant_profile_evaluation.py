@@ -272,7 +272,9 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
 
-    def test_repeat_shifted_insertion_is_representation_disagreement_not_error(\n        self,\n    ) -> None:
+    def test_repeat_shifted_insertion_is_representation_disagreement_not_error(
+        self,
+    ) -> None:
         reviewer = parse_reviewer_variants(["3.1A"], self.reference_sequence)
         sample_path = self.write_sample(
             [self.signal_variant(4, "A", "AA", "INS")]
