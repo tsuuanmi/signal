@@ -178,9 +178,13 @@ def validate_runtime_index(runtime_dir: Path) -> dict[str, Any]:
     index = json_object(index_path)
     strict_keys(index, RUNTIME_INDEX_FIELDS, "runtime phase index")
     if index["schema_version"] != RUNTIME_SCHEMA_VERSION:
-        raise ValueError(f"unsupported runtime phase schema: {index['schema_version']!r}")
+        raise ValueError(
+            f"unsupported runtime phase schema: {index['schema_version']!r}"
+        )
     if index["source_method"] != RUNTIME_SOURCE_METHOD:
-        raise ValueError(f"unsupported runtime phase source method: {index['source_method']!r}")
+        raise ValueError(
+            f"unsupported runtime phase source method: {index['source_method']!r}"
+        )
     if not isinstance(index["sample_id"], str) or not index["sample_id"]:
         raise ValueError("runtime phase sample_id must be a non-empty string")
 
@@ -231,9 +235,13 @@ def load_runtime(
     for runtime_dir in sorted((path.resolve() for path in runtime_dirs), key=str):
         index = validate_runtime_index(runtime_dir)
         if index["signal_version"] != signal_version:
-            raise ValueError(f"{runtime_dir}: Signal version differs from research artifact")
+            raise ValueError(
+                f"{runtime_dir}: Signal version differs from research artifact"
+            )
         if index["reference_sha256"] != reference_sha256:
-            raise ValueError(f"{runtime_dir}: reference SHA-256 differs from research artifact")
+            raise ValueError(
+                f"{runtime_dir}: reference SHA-256 differs from research artifact"
+            )
         if index["configuration_sha256"] != configuration_sha256:
             raise ValueError(
                 f"{runtime_dir}: configuration SHA-256 differs from research artifact"
@@ -246,7 +254,10 @@ def load_runtime(
         window_path = runtime_dir / "windows.csv"
         with window_path.open("r", encoding="utf-8", newline="") as source:
             reader = csv.DictReader(source)
-            if reader.fieldnames is None or tuple(reader.fieldnames) != RUNTIME_WINDOW_COLUMNS:
+            if (
+                reader.fieldnames is None
+                or tuple(reader.fieldnames) != RUNTIME_WINDOW_COLUMNS
+            ):
                 raise ValueError(f"{window_path}: unexpected columns")
             rows = 0
             for line, row in enumerate(reader, 2):
@@ -328,7 +339,9 @@ def load_runtime(
                     -128,
                 )
                 if offset == 0:
-                    raise ValueError(f"{label}.reference_offset_in_read_order must be non-zero")
+                    raise ValueError(
+                        f"{label}.reference_offset_in_read_order must be non-zero"
+                    )
                 key = (
                     row["read_sha256"],
                     row["tract_id"],
@@ -337,7 +350,9 @@ def load_runtime(
                     offset,
                 )
                 if key[:-1] not in windows:
-                    raise ValueError(f"{label}: candidate references unknown runtime window")
+                    raise ValueError(
+                        f"{label}: candidate references unknown runtime window"
+                    )
                 if key in candidates:
                     raise ValueError(f"duplicate runtime phase candidate {key}")
                 informative = csv_int(
@@ -362,7 +377,9 @@ def load_runtime(
                             f"{label}: zero-informative candidate must have empty masses"
                         )
                 elif zero is None or shifted is None or residual is None:
-                    raise ValueError(f"{label}: informative candidate requires all masses")
+                    raise ValueError(
+                        f"{label}: informative candidate requires all masses"
+                    )
                 candidates[key] = RuntimeCandidate(
                     key=key,
                     informative_positions=informative,
