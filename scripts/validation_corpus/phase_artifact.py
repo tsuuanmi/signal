@@ -447,11 +447,11 @@ def load_source(
 
 
 __all__ = [
+    "PRODUCTION_V1_PARAMETERS",
     "CandidateRecord",
     "PhaseHypothesisParameters",
     "WindowRecord",
     "generated_records",
-    "PRODUCTION_V1_PARAMETERS",
     "load_source",
     "production_v1_parameters",
     "source_offsets",
