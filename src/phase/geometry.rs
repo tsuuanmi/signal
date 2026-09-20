@@ -89,3 +89,35 @@ pub(super) fn distance_after(
 pub(super) fn contains(tract: Tract, reference_index_0based: usize) -> bool {
     (tract.start_0based..=tract.end_0based_inclusive).contains(&reference_index_0based)
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn forward_hv1_distance_wraps_across_rcrs_origin() {
+        let hv1 = TRACTS[1];
+        assert_eq!(
+            distance_after(hv1, Orientation::Forward, 16_193),
+            1
+        );
+        assert_eq!(
+            distance_after(hv1, Orientation::Forward, 16_568),
+            376
+        );
+        assert_eq!(distance_after(hv1, Orientation::Forward, 0), 377);
+        assert_eq!(distance_after(hv1, Orientation::Forward, 252), 629);
+    }
+
+    #[test]
+    fn reverse_hv2_distance_follows_selected_sequencing_order() {
+        let hv2 = TRACTS[0];
+        assert_eq!(distance_after(hv2, Orientation::Reverse, 301), 1);
+        assert_eq!(distance_after(hv2, Orientation::Reverse, 0), 302);
+        assert_eq!(
+            distance_after(hv2, Orientation::Reverse, 16_568),
+            303
+        );
+    }
+}
