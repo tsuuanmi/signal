@@ -28,7 +28,9 @@ All notable changes to this project are documented here.
 
 ### Added
 
-- Local reviewer variant-profile validation now extracts provenance-bound `signal.reviewer_variant_ground_truth/v1` from Sequencher review tables and publishes deterministic `signal.validation_variant_profile_evaluation/v1` baseline comparisons against eligible sample-v8 variants. The evaluator reports reviewer-proxy matched/extra/missing variants, exact profiles, precision/recall, and representation disagreements without fabricating true negatives, embedding phase-locus heuristics, or changing production behavior.
+- ADR-0057 establishes haplotype-first variant correctness: exact reconstructed sequence/haplotype equivalence is the biological comparison criterion when variant descriptions differ, while Signal retains one deterministic internal canonical representation and future nomenclature conversions remain an explicit versioned reporting layer.
+
+- Local reviewer variant-profile validation now extracts provenance-bound `signal.reviewer_variant_ground_truth/v1` from Sequencher review tables and publishes deterministic `signal.validation_variant_profile_evaluation/v2` baseline comparisons against eligible sample-v8 variants. v2 preserves raw reviewer/Signal source-event counts, then compares canonical groups through exact identity, single-event sequence equivalence, and conservative unambiguous minimal multi-event haplotype equivalence. Representation-only N↔M decompositions remain explicit instead of inflating FP/FN; no true-negative denominator, phase-locus heuristic, or production behavior is introduced.
 
 - Phase-interpretation research preparation now publishes hash-bound `signal.validation_phase_interpretation_dataset/v1`, joining the validated corpus to production-v1 phase hypotheses with explicit development/holdout/excluded/unassigned group declarations. Only `include_in_threshold_fit=true` development window/candidate evidence is exported; other partitions contribute aggregate readiness counts without continuous phase features, and no state, threshold, recovery rule, weight, or production behavior is introduced.
 
@@ -125,6 +127,8 @@ All notable changes to this project are documented here.
 - Rename the stale documentation names to `docs/delivery-record.md` and `docs/requirements.md`.
 
 ### Fixed
+
+- Reviewer variant-profile evaluation now recognizes conservative multi-event representation equivalence, so repeat-region descriptions that produce the exact same haplotype (for example reviewer SNV+repeat-end deletion versus one canonical right-aligned Signal deletion) are reported as representation groups rather than artificial FP/FN. Ambiguous or non-minimal groupings remain unmatched.
 
 - Reviewer variant-profile evaluation now resolves canonical batch outputs by reviewer `sample_id` (`results/<sample-id>/<sample-id>.json`) while retaining `validation_case_id` only as the corpus/research join identity; it no longer incorrectly substitutes the shorter case ID for the production sample identity.
 

@@ -58,3 +58,4 @@
 | [0054](0054-structured-phase-explainability.md) | Separate structured phase explainability from unstructured signal degradation | Accepted |
 | [0055](0055-read-local-polyc-phase-evidence.md) | Define the read-local poly-C phase evidence promotion boundary | Accepted |
 | [0056](0056-read-local-polyc-phase-measurement-v1.md) | Implement continuous read-local poly-C phase measurement v1 | Accepted |
+| [0057](0057-haplotype-correctness-and-variant-nomenclature.md) | Separate haplotype correctness from variant nomenclature | Accepted |

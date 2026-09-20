@@ -100,6 +100,11 @@ indel across the canonical origin solely to obtain a numerically larger coordina
 Region-specific phylogenetic exceptions, if required for full EMPOP-compatible mtDNA
 nomenclature, need a separate explicit method/ADR rather than hidden special cases.
 
+ADR-0057 defines the complementary comparison/reporting boundary: different event
+representations that reconstruct the same resolved haplotype are biologically equivalent
+for validation, while Signal's deterministic right-aligned internal representation remains
+unchanged.
+
 ### 7. Canonical alignment and variant representation are separate contracts
 
 The selected alignment columns MUST use the canonical right-aligned topology.

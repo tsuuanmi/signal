@@ -20,7 +20,11 @@ from scripts.validation_corpus.reviewer_variants import (
     read_reference,
 )
 from scripts.validation_corpus.variant_profile_evaluation import (
+    MutationGroup,
+    SignalVariant,
+    VariantMatch,
     compare_variants,
+    contiguous_groups,
     load_signal_variants,
     publish_evaluation,
 )
@@ -294,7 +298,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             self.reference_sequence,
         )
 
-        self.assertEqual(matches, [(0, 0, False)])
+        self.assertEqual(matches, [VariantMatch((0,), (0,), False)])
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
 
@@ -316,9 +320,94 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             self.reference_sequence,
         )
 
-        self.assertEqual(matches, [(0, 0, True)])
+        self.assertEqual(matches, [VariantMatch((0,), (0,), True)])
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
+
+    def test_grouping_does_not_cross_an_already_matched_source_event(self) -> None:
+        groups = contiguous_groups(
+            {0, 2},
+            lambda indices: MutationGroup(indices, "mutation"),
+        )
+
+        self.assertEqual(
+            [group.indices for group in groups],
+            [(0,), (2,)],
+        )
+
+    def test_multi_event_haplotype_equivalence_is_one_representation_group(
+        self,
+    ) -> None:
+        reference = "AGCACACACACAC"
+        reviewer = parse_reviewer_variants(
+            ["2A", "12DEL", "13DEL"],
+            reference,
+        )
+        signal = [SignalVariant(1, "AGC", "A", "DEL")]
+
+        matches, missing, extra = compare_variants(reviewer, signal, reference)
+
+        self.assertEqual(matches, [VariantMatch((0, 1), (0,), True)])
+        self.assertEqual(missing, [])
+        self.assertEqual(extra, [])
+
+    def test_ambiguous_reviewer_multi_event_group_is_not_collapsed(self) -> None:
+        reference = "AGCACACACACAC"
+        reviewer = parse_reviewer_variants(
+            ["2N", "12DEL", "13DEL"],
+            reference,
+        )
+        signal = [SignalVariant(1, "AGC", "A", "DEL")]
+
+        matches, missing, extra = compare_variants(reviewer, signal, reference)
+
+        self.assertEqual(matches, [])
+        self.assertEqual(missing, [0, 1])
+        self.assertEqual(extra, [0])
+
+    def test_multi_event_representation_collapses_to_one_canonical_group(
+        self,
+    ) -> None:
+        self.reference_sequence = "AGCACACACACAC"
+        self.reference.write_text(
+            f">rCRS\n{self.reference_sequence}\n",
+            encoding="utf-8",
+        )
+        truth = self.write_ground_truth("2A 12DEL 13DEL")
+        self.write_sample([self.signal_variant(1, "AGC", "A", "DEL")])
+        output = self.root / "evaluation"
+
+        publish_evaluation(
+            truth,
+            self.root / "results",
+            self.reference,
+            output,
+        )
+
+        index = json.loads((output / "index.json").read_text(encoding="utf-8"))
+        summary = index["summary"]
+        self.assertEqual(summary["reviewer_source_events"], 2)
+        self.assertEqual(summary["signal_source_events"], 1)
+        self.assertEqual(summary["canonical_reviewer_groups"], 1)
+        self.assertEqual(summary["canonical_signal_groups"], 1)
+        self.assertEqual(summary["matched_groups"], 1)
+        self.assertEqual(summary["representation_groups"], 1)
+        self.assertEqual(summary["collapsed_reviewer_events"], 1)
+        self.assertEqual(summary["collapsed_signal_events"], 0)
+        self.assertEqual(summary["proxy_false_positive_groups"], 0)
+        self.assertEqual(summary["proxy_false_negative_groups"], 0)
+
+        with (output / "differences.csv").open(
+            newline="",
+            encoding="utf-8",
+        ) as source:
+            differences = list(csv.DictReader(source))
+        self.assertEqual(len(differences), 1)
+        self.assertEqual(differences[0]["difference"], "representation")
+        self.assertEqual(differences[0]["reviewer_tokens"], "2A|12DEL;13DEL")
+        self.assertEqual(differences[0]["reviewer_event_count"], "2")
+        self.assertEqual(differences[0]["signal_event_count"], "1")
+        self.assertEqual(differences[0]["signal_events"], "DEL:1:AGC>A")
 
     def test_representation_equivalence_is_matched_but_not_exact_profile(self) -> None:
         truth = self.write_ground_truth("3.1A")
@@ -334,10 +423,10 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
 
         index = json.loads((output / "index.json").read_text(encoding="utf-8"))
         summary = index["summary"]
-        self.assertEqual(summary["proxy_true_positive_variants"], 1)
-        self.assertEqual(summary["proxy_false_positive_variants"], 0)
-        self.assertEqual(summary["proxy_false_negative_variants"], 0)
-        self.assertEqual(summary["representation_disagreements"], 1)
+        self.assertEqual(summary["matched_groups"], 1)
+        self.assertEqual(summary["proxy_false_positive_groups"], 0)
+        self.assertEqual(summary["proxy_false_negative_groups"], 0)
+        self.assertEqual(summary["representation_groups"], 1)
         self.assertEqual(summary["exact_profiles"], 0)
 
     def test_reports_false_positive_and_false_negative_proxy_counts(self) -> None:
@@ -376,9 +465,9 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         )
 
         summary = index["summary"]
-        self.assertEqual(summary["proxy_true_positive_variants"], 1)
-        self.assertEqual(summary["proxy_false_positive_variants"], 1)
-        self.assertEqual(summary["proxy_false_negative_variants"], 1)
+        self.assertEqual(summary["matched_groups"], 1)
+        self.assertEqual(summary["proxy_false_positive_groups"], 1)
+        self.assertEqual(summary["proxy_false_negative_groups"], 1)
         self.assertEqual(summary["exact_profiles"], 0)
         self.assertEqual(summary["proxy_precision"], 0.5)
         self.assertEqual(summary["proxy_recall"], 0.5)

@@ -173,10 +173,9 @@ The evaluator interprets the current reviewer notation explicitly:
 310A    SNV at 310 to A
 ```
 
-It compares only current sample variants with at least one eligible supporting read, requires one shared configuration SHA-256, hash-binds every evaluated sample-result JSON, matches exact normalized identities first, and then may recognize sequence-equivalent single-indel representations while recording representation disagreements separately.
+It compares only current sample variants with at least one eligible supporting read, requires one shared configuration SHA-256, hash-binds every evaluated sample-result JSON, matches exact normalized identities first, then single-event sequence equivalence, and finally unambiguous minimal contiguous multi-event groups when applying each complete group to rCRS produces exactly the same haplotype. Ambiguous competing groupings remain unmatched; no locus list, repeat annotation, poly-C coordinate, or distance cutoff is used.
 
-The baseline reports reviewer-proxy matched variants, extra variants (proxy false
-positives), missing variants (proxy false negatives), exact profiles, precision, and recall.
+The v2 baseline reports source-event counts separately from canonical comparison groups. Proxy precision/recall use matched, extra, and missing canonical groups so representation-only N↔M decompositions do not inflate FP/FN. Representation groups remain explicit and strict exact-profile status remains representation-sensitive.
 A variant-only truth file has no complete reference-negative denominator, so true negatives
 and specificity remain absent until a reviewed callable/reference domain is explicitly
 frozen.

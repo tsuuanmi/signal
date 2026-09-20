@@ -26,7 +26,7 @@ PHASE_INTERPRETATION_DATASET_SCHEMA_VERSION = (
 )
 REVIEWER_VARIANT_GROUND_TRUTH_SCHEMA_VERSION = "signal.reviewer_variant_ground_truth/v1"
 VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION = (
-    "signal.validation_variant_profile_evaluation/v1"
+    "signal.validation_variant_profile_evaluation/v2"
 )
 
 MANIFEST_COLUMNS = (
