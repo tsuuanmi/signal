@@ -19,6 +19,11 @@ The baseline consumes:
 2. current `signal.sample_evidence/v8` sample outputs under `results/<case>/<case>.json`;
 3. the exact reference FASTA used by those sample outputs.
 
+Every evaluated sample result is SHA-256 bound into `samples.csv`, and every result must
+declare the same `configuration_sha256`. Mixed configurations fail rather than being
+silently pooled. The output index records that shared configuration identity plus the
+reference and reviewer-artifact identities.
+
 The reviewer artifact is proxy ground truth, not independent biological truth.
 
 ## Reviewer notation
