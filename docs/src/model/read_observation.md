@@ -7,7 +7,7 @@ processed read after reference placement.
 
 ## Responsibilities
 
-- Group input, reference, and configuration identities with signal-derived calls, basecall-independent locus/signal observations, quality-control result, selected alignment, and read-level variants for one read.
+- Group input, reference, and configuration identities with signal-derived calls, basecall-independent locus/signal observations, quality-control result, selected alignment, internal read-local phase evidence, and read-level variants for one read.
 - Establish the explicit boundary between one-read processing and sample-level reconciliation.
 - Preserve evidence-derived orientation and mapped reference segments from the
   selected alignment.
@@ -34,11 +34,11 @@ policy.
 ## Dependencies
 
 Validated model types only: base calls, signal analysis, quality control,
-alignment, and variant-calling result.
+alignment, read-local phase evidence, and variant-calling result.
 
 ## Traceability
 
-ADR-0023, ADR-0028, and ADR-0029; `INV-EVID-004` through `INV-EVID-006`; `INV-READ-001` through `INV-READ-004`; `SRS-ALN-007` through `SRS-ALN-011`.
+ADR-0023, ADR-0028, ADR-0029, ADR-0055, and ADR-0056; `INV-EVID-004` through `INV-EVID-006`; `INV-READ-001` through `INV-READ-004`; `SRS-ALN-007` through `SRS-ALN-011`.
 
 ## Status
 
