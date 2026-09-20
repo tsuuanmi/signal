@@ -116,6 +116,14 @@ class PhaseHypothesisParameters:
     offsets: tuple[int, ...]
 
 
+PRODUCTION_V1_PARAMETERS = PhaseHypothesisParameters(
+    window_size=25,
+    window_step=5,
+    max_offset=5,
+    offsets=tuple(range(-5, 0)) + tuple(range(1, 6)),
+)
+
+
 def method_positive_int(method: dict[str, Any], key: str) -> int:
     value = method.get(key)
     if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
@@ -144,6 +152,15 @@ def source_parameters(method: Any) -> PhaseHypothesisParameters:
         max_offset=max_offset,
         offsets=offsets,
     )
+
+
+def production_v1_parameters(method: Any) -> PhaseHypothesisParameters:
+    parameters = source_parameters(method)
+    if parameters != PRODUCTION_V1_PARAMETERS:
+        raise ValueError(
+            "phase-hypothesis method does not match signal.polyc_phase/v1 constants"
+        )
+    return parameters
 
 
 def validate_source(source_dir: Path) -> tuple[dict[str, Any], tuple[int, ...]]:
@@ -434,7 +451,9 @@ __all__ = [
     "PhaseHypothesisParameters",
     "WindowRecord",
     "generated_records",
+    "PRODUCTION_V1_PARAMETERS",
     "load_source",
+    "production_v1_parameters",
     "source_offsets",
     "source_parameters",
     "validate_source",
