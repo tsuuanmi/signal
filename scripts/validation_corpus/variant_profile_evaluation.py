@@ -100,7 +100,7 @@ def load_signal_variants(
 
     provenance = value.get("provenance")
     if not isinstance(provenance, dict):
-        raise ValueError(f"{path}: missing provenance")
+        raise TypeError(f"{path}: provenance must be an object")
     configuration_sha256 = provenance.get("configuration_sha256")
     if (
         not isinstance(configuration_sha256, str)
@@ -113,7 +113,7 @@ def load_signal_variants(
 
     source_reference = provenance.get("reference")
     if not isinstance(source_reference, dict):
-        raise ValueError(f"{path}: missing reference provenance")
+        raise TypeError(f"{path}: reference provenance must be an object")
     if source_reference.get("name") != reference_name:
         raise ValueError(f"{path}: reference name mismatch")
     if source_reference.get("sha256") != sequence_sha256(reference):
@@ -121,7 +121,7 @@ def load_signal_variants(
 
     rows = value.get("variants")
     if not isinstance(rows, list):
-        raise ValueError(f"{path}: variants must be an array")
+        raise TypeError(f"{path}: variants must be an array")
 
     variants: list[SignalVariant] = []
     seen: set[tuple[int, str, str, str]] = set()
@@ -130,7 +130,7 @@ def load_signal_variants(
             raise TypeError(f"{path}: variant {index} must be an object")
         topology = row.get("support_topology")
         if not isinstance(topology, dict):
-            raise ValueError(f"{path}: variant {index} lacks support_topology")
+            raise TypeError(f"{path}: variant {index} support_topology must be an object")
         eligible_reads = topology.get("eligible_reads")
         if not isinstance(eligible_reads, int) or eligible_reads < 0:
             raise ValueError(f"{path}: variant {index} has invalid eligible_reads")
