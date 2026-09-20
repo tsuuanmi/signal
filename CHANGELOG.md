@@ -126,6 +126,8 @@ All notable changes to this project are documented here.
 
 ### Fixed
 
+- Reviewer variant-profile validation now reads FASTA references with the same normalized `A/C/G/T/N`, header-identifier, and whitespace semantics as the production reference loader, so the repository rCRS reference (including its position-3107 `N`) is accepted without weakening reference identity checks.
+
 - Poly-C validation research now derives before/after state from actual call order across the complete tract and computes reference distances/neighbors on circular rCRS, so origin-wrapping reads remain on the correct post-tract path; outside-tract observations without call indexes remain explicitly unresolved instead of falling back to linear coordinates.
 
 - Accept ABIF directory entries whose declared allocation is larger than the logical element payload, including real-world oversized `tdir.1` root-directory allocations, while still bounds-checking the full allocation and rejecting undersized/truncated payloads.
