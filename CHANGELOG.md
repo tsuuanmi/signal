@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Phase-interpretation research preparation now publishes hash-bound `signal.validation_phase_interpretation_dataset/v1`, joining the validated corpus to production-v1 phase hypotheses with explicit development/holdout/excluded/unassigned group declarations. Only `include_in_threshold_fit=true` development window/candidate evidence is exported; other partitions contribute aggregate readiness counts without continuous phase features, and no state, threshold, recovery rule, weight, or production behavior is introduced.
+
 - The completed 89-case Rust/Python phase-runtime parity study is now recorded as research validation evidence: 11,231 windows and 112,310 candidates matched exactly on structure/counts, with maximum numeric delta `5.5511151231257827e-16` at `1e-12` tolerance. The record explicitly does not promote phase states, thresholds, weighting, or no-call behavior.
 
 - Direct Rust/Python phase parity checking now compares completed `signal.validation_phase_runtime/v1` artifacts against completed `signal.validation_phase_hypotheses/v1` evidence with exact structural/count checks and an explicit numeric tolerance, without regenerating phase geometry or changing production behavior.

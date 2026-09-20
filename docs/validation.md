@@ -119,7 +119,21 @@ The generated queue contains mixed loci and flagged reads only. Reviewer decisio
 kept in a separate editable template and are not written back into generated evidence or
 the validation manifest automatically.
 
-Phase interpretation/weighting promotion must additionally follow `docs/validation/polyc-phase-promotion.md`. Threshold development must follow `docs/research/Signal/validation-corpus.md` and `docs/research/Signal/threshold-research.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Unexpected extreme basecall/profile disagreements must first be characterized with the v2 event-placement diagnostics described in `docs/research/Signal/event-position-diagnostics.md` rather than absorbed into a fitted threshold. Point-mixture and length/indel studies remain separate.
+A completed production-v1 phase-hypothesis artifact can be joined to the validation corpus for development-only interpretation research with explicit partition names:
+
+```bash
+uv run python scripts/prepare_phase_interpretation_dataset.py \
+  --corpus-dir validation-results/corpus \
+  --hypotheses-dir validation-results/research/polyc-phase-hypotheses/rust-v1 \
+  --output-dir validation-results/research/phase-interpretation-dataset/rust-v1 \
+  --development-group development \
+  --holdout-group holdout \
+  --unassigned-group unassigned
+```
+
+`signal.validation_phase_interpretation_dataset/v1` revalidates corpus/phase provenance, selected read orientation, and amplicon metadata; exports only `include_in_threshold_fit=true` development windows plus their complete candidate curves; and exposes other partitions only through aggregate readiness counts. It performs no classifier fitting and does not copy continuous holdout phase measurements into the development tables.
+
+Phase interpretation/weighting promotion must additionally follow `docs/validation/polyc-phase-promotion.md`. Threshold development must follow `docs/research/Signal/validation-corpus.md`, `docs/research/Signal/threshold-research.md`, and `docs/research/Signal/polyc-phase-interpretation-study.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Unexpected extreme basecall/profile disagreements must first be characterized with the v2 event-placement diagnostics described in `docs/research/Signal/event-position-diagnostics.md` rather than absorbed into a fitted threshold. Point-mixture and length/indel studies remain separate.
 
 ## Performance
 
