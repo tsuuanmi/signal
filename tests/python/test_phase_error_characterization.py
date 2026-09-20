@@ -135,7 +135,13 @@ class PhaseErrorCharacterizationTests(unittest.TestCase):
             link("d-extra", "w1", 16210),
         ]
 
-        features = build_features(windows, candidates, differences, links)
+        features = build_features(
+            windows,
+            candidates,
+            differences,
+            links,
+            {"AB0001"},
+        )
 
         self.assertEqual(len(features), 2)
         first, second = features
@@ -187,6 +193,7 @@ class PhaseErrorCharacterizationTests(unittest.TestCase):
             ],
             [difference("d-extra", "extra")],
             [link("d-extra", "w1", 16209)],
+            {"AB0001"},
         )
         windows = [window_row(item) for item in features]
 
@@ -209,6 +216,23 @@ class PhaseErrorCharacterizationTests(unittest.TestCase):
         self.assertEqual(by_context["extra"]["biological_differences"], 1)
         self.assertEqual(by_context["none"]["biological_differences"], 0)
 
+    def test_unevaluated_window_is_not_none_context(self) -> None:
+        features = build_features(
+            [development_window(window_id="w1", start=1, zero=0.99, impurity=0.01)],
+            [
+                candidate("w1", -1, 20, 0.99, 0.005, 0.005),
+                candidate("w1", 1, 20, 0.99, 0.005, 0.005),
+            ],
+            [],
+            [],
+            set(),
+        )
+
+        self.assertEqual(features[0].overlap_context, "not_evaluated")
+        row = window_row(features[0])
+        self.assertEqual(row["overlap_context"], "not_evaluated")
+        self.assertEqual(row["overlapping_biological_differences"], 0)
+
     def test_context_window_must_exist_in_development_dataset(self) -> None:
         with self.assertRaisesRegex(ValueError, "absent from development dataset"):
             build_features(
@@ -219,6 +243,7 @@ class PhaseErrorCharacterizationTests(unittest.TestCase):
                 ],
                 [difference("d-extra", "extra")],
                 [link("d-extra", "unknown-window", 16209)],
+                {"AB0001"},
             )
 
 
