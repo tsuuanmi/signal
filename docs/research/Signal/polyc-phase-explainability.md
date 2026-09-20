@@ -6,7 +6,7 @@ Summarize how much of each post-poly-C window's non-zero-reference profile mass 
 described by the complete candidate-offset curve without choosing a winning offset.
 
 This layer consumes one immutable `signal.validation_phase_hypotheses/v1` artifact and
-publishes threshold-free window, read, and stratum summaries. It exists to expose reads
+publishes threshold-free window and read summaries. It exists to expose reads
 where profile impurity remains poorly described by every tested candidate without
 declaring those reads degraded, artifactual, or biologically mixed.
 
@@ -64,8 +64,7 @@ The output directory must not already exist.
 validation-results/research/polyc-phase-explainability/circular-v1/
 ├── index.json
 ├── windows.csv
-├── reads.csv
-└── strata.csv
+└── reads.csv
 ```
 
 The index is SHA-256 bound to the complete source phase-hypothesis index and preserves
@@ -108,18 +107,6 @@ retains the stable case/read metadata plus descriptive window aggregation:
 
 These fields make reads with high impurity and persistently large residual envelopes easy
 to inspect without defining a review threshold in the artifact.
-
-### `strata.csv`
-
-Window-weighted descriptive summaries are grouped by:
-
-```text
-tract × amplicon × orientation × observed interrupt base
-```
-
-The table reports unique read count, window coverage, missing-envelope counts, and mean
-window/envelope metrics. It is intended for contextual C-versus-T and directional
-comparison, not for ranking reads or choosing a threshold.
 
 ## Interpretation
 
