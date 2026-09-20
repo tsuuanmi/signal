@@ -172,7 +172,12 @@ fn run_logged(
     let insufficient_phase_tracts = reads
         .iter()
         .flat_map(|read| &read.phase.tracts)
-        .filter(|tract| matches!(tract.availability, PhaseEvidenceAvailability::Insufficient(_)))
+        .filter(|tract| {
+            matches!(
+                tract.availability,
+                PhaseEvidenceAvailability::Insufficient(_)
+            )
+        })
         .count();
     let phase_windows = reads
         .iter()
