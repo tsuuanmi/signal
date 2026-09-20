@@ -7,6 +7,7 @@ import math
 import os
 import shutil
 import tempfile
+from collections.abc import Iterator
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TextIO
@@ -213,12 +214,12 @@ def classify_observation(
     return ClassifiedObservation(source, context, span, region)
 
 
-def matched_groups(
+def iter_matched_groups(
     corpus: ResearchCorpus,
     contexts: dict[str, ReadContext],
     active_tracts: tuple[PolyCTract, ...],
     spans: dict[tuple[str, str], TractCallSpan],
-) -> list[
+) -> Iterator[
     tuple[
         str,
         PolyCTract,
@@ -228,17 +229,6 @@ def matched_groups(
         list[ClassifiedObservation],
     ]
 ]:
-    groups: list[
-        tuple[
-            str,
-            PolyCTract,
-            int,
-            str,
-            list[ClassifiedObservation],
-            list[ClassifiedObservation],
-        ]
-    ] = []
-
     for locus_row, observation_rows in iter_research_rows(corpus):
         case_id = str(locus_row["validation_case_id"])
         position = int(locus_row["position_1based"])
@@ -282,18 +272,14 @@ def matched_groups(
                     key=lambda item: item.context.read_sha256,
                 )
                 if posts and controls:
-                    groups.append(
-                        (
-                            case_id,
-                            tract,
-                            position,
-                            post_orientation,
-                            posts,
-                            controls,
-                        )
+                    yield (
+                        case_id,
+                        tract,
+                        position,
+                        post_orientation,
+                        posts,
+                        controls,
                     )
-
-    return groups
 
 
 def observation_row(
@@ -485,10 +471,6 @@ def build_staged_orientation_controls(corpus: ResearchCorpus, stage: Path) -> No
     if not spans:
         raise ValueError("no validation read spans a supported rCRS poly-C tract")
 
-    groups = matched_groups(corpus, contexts, active_tracts, spans)
-    if not groups:
-        raise ValueError("no matched opposite-orientation poly-C control loci")
-
     observations_path = stage / "observations.csv"
     loci_path = stage / "loci.csv"
     observation_count = 0
@@ -508,7 +490,7 @@ def build_staged_orientation_controls(corpus: ResearchCorpus, stage: Path) -> No
             post_orientation,
             posts,
             controls,
-        ) in groups:
+        ) in iter_matched_groups(corpus, contexts, active_tracts, spans):
             reference_base = reference_bases.get(position)
             if reference_base is None:
                 raise ValueError(f"missing reference base at matched locus {position}")
@@ -555,6 +537,9 @@ def build_staged_orientation_controls(corpus: ResearchCorpus, stage: Path) -> No
                 f"orientation-control locus {locus_count}",
             )
             locus_count += 1
+
+        if locus_count == 0:
+            raise ValueError("no matched opposite-orientation poly-C control loci")
 
         observations_file.flush()
         os.fsync(observations_file.fileno())
