@@ -35,7 +35,6 @@ struct PhaseRuntimeArtifact {
     index: Vec<u8>,
     windows: Vec<u8>,
     candidates: Vec<u8>,
-    window_count: usize,
 }
 
 #[derive(Debug, Serialize)]
