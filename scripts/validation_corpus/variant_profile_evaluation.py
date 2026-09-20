@@ -84,8 +84,6 @@ class MutationGroup:
 
     indices: tuple[int, ...]
     mutation: str
-    start: int
-    end: int
 
 
 def sequence_sha256(sequence: str) -> str:
@@ -284,22 +282,17 @@ def reviewer_group(
 ) -> MutationGroup | None:
     """Build one unambiguous reviewer group for exact haplotype comparison."""
     events: list[tuple[int, str, str]] = []
-    starts: list[int] = []
-    ends: list[int] = []
     for index in indices:
         variant = reviewer[index]
         if len(variant.alternates) != 1:
             return None
         alternate = next(iter(variant.alternates))
         events.append((variant.position, variant.reference, alternate))
-        start, end = event_span(variant.position, variant.reference)
-        starts.append(start)
-        ends.append(end)
 
     mutation = apply_event_group(reference, tuple(events))
     if mutation is None:
         return None
-    return MutationGroup(indices, mutation, min(starts), max(ends))
+    return MutationGroup(indices, mutation)
 
 
 def signal_group(
@@ -315,15 +308,7 @@ def signal_group(
     mutation = apply_event_group(reference, events)
     if mutation is None:
         return None
-    spans = [
-        event_span(signal[index].position, signal[index].reference) for index in indices
-    ]
-    return MutationGroup(
-        indices,
-        mutation,
-        min(start for start, _ in spans),
-        max(end for _, end in spans),
-    )
+    return MutationGroup(indices, mutation)
 
 
 def contiguous_groups(
@@ -348,7 +333,7 @@ def representation_group_matches(
     unmatched_reviewer: set[int],
     unmatched_signal: set[int],
 ) -> list[VariantMatch]:
-    """Match remaining local event groups by exact resulting haplotype."""
+    """Match only unambiguous minimal event groups with the same exact haplotype."""
     reviewer_groups = contiguous_groups(
         unmatched_reviewer,
         lambda indices: reviewer_group(reviewer, indices, reference),
@@ -362,30 +347,53 @@ def representation_group_matches(
     for group in signal_groups:
         signal_by_mutation.setdefault(group.mutation, []).append(group)
 
-    candidates: list[tuple[int, int, tuple[int, ...], tuple[int, ...]]] = []
+    candidates: list[tuple[tuple[int, ...], tuple[int, ...]]] = []
     for expected in reviewer_groups:
         for observed in signal_by_mutation.get(expected.mutation, ()):
             if len(expected.indices) == 1 and len(observed.indices) == 1:
                 continue
-            span = max(expected.end, observed.end) - min(expected.start, observed.start)
-            explained = len(expected.indices) + len(observed.indices)
-            candidates.append(
-                (span, -explained, expected.indices, observed.indices)
+            candidates.append((expected.indices, observed.indices))
+
+    minimal: list[tuple[tuple[int, ...], tuple[int, ...]]] = []
+    for candidate in candidates:
+        reviewer_indices, signal_indices = candidate
+        reviewer_set = set(reviewer_indices)
+        signal_set = set(signal_indices)
+        has_proper_equivalent_subgroup = any(
+            other != candidate
+            and set(other[0]).issubset(reviewer_set)
+            and set(other[1]).issubset(signal_set)
+            and (
+                len(other[0]) < len(reviewer_indices)
+                or len(other[1]) < len(signal_indices)
             )
+            for other in candidates
+        )
+        if not has_proper_equivalent_subgroup:
+            minimal.append(candidate)
+
+    reviewer_membership: dict[int, int] = {}
+    signal_membership: dict[int, int] = {}
+    for reviewer_indices, signal_indices in minimal:
+        for index in reviewer_indices:
+            reviewer_membership[index] = reviewer_membership.get(index, 0) + 1
+        for index in signal_indices:
+            signal_membership[index] = signal_membership.get(index, 0) + 1
 
     matches: list[VariantMatch] = []
-    for _, _, reviewer_indices, signal_indices in sorted(candidates):
+    for reviewer_indices, signal_indices in sorted(minimal):
+        if any(reviewer_membership[index] != 1 for index in reviewer_indices):
+            continue
+        if any(signal_membership[index] != 1 for index in signal_indices):
+            continue
         if not all(index in unmatched_reviewer for index in reviewer_indices):
             continue
         if not all(index in unmatched_signal for index in signal_indices):
             continue
         unmatched_reviewer.difference_update(reviewer_indices)
         unmatched_signal.difference_update(signal_indices)
-        matches.append(
-            VariantMatch(reviewer_indices, signal_indices, True)
-        )
+        matches.append(VariantMatch(reviewer_indices, signal_indices, True))
     return matches
-
 
 def compare_variants(
     reviewer: list[ReviewerVariant],
