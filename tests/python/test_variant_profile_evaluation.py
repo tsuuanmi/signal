@@ -338,6 +338,50 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
 
+    def test_multi_event_representation_collapses_to_one_canonical_group(
+        self,
+    ) -> None:
+        self.reference_sequence = "AGCACACACACAC"
+        self.reference.write_text(
+            f">rCRS\n{self.reference_sequence}\n",
+            encoding="utf-8",
+        )
+        truth = self.write_ground_truth("2A 12DEL 13DEL")
+        self.write_sample([self.signal_variant(1, "AGC", "A", "DEL")])
+        output = self.root / "evaluation"
+
+        publish_evaluation(
+            truth,
+            self.root / "results",
+            self.reference,
+            output,
+        )
+
+        index = json.loads((output / "index.json").read_text(encoding="utf-8"))
+        summary = index["summary"]
+        self.assertEqual(summary["reviewer_source_events"], 2)
+        self.assertEqual(summary["signal_source_events"], 1)
+        self.assertEqual(summary["canonical_reviewer_groups"], 1)
+        self.assertEqual(summary["canonical_signal_groups"], 1)
+        self.assertEqual(summary["matched_groups"], 1)
+        self.assertEqual(summary["representation_groups"], 1)
+        self.assertEqual(summary["collapsed_reviewer_events"], 1)
+        self.assertEqual(summary["collapsed_signal_events"], 0)
+        self.assertEqual(summary["proxy_false_positive_groups"], 0)
+        self.assertEqual(summary["proxy_false_negative_groups"], 0)
+
+        with (output / "differences.csv").open(
+            newline="",
+            encoding="utf-8",
+        ) as source:
+            differences = list(csv.DictReader(source))
+        self.assertEqual(len(differences), 1)
+        self.assertEqual(differences[0]["difference"], "representation")
+        self.assertEqual(differences[0]["reviewer_tokens"], "2A|12DEL;13DEL")
+        self.assertEqual(differences[0]["reviewer_event_count"], "2")
+        self.assertEqual(differences[0]["signal_event_count"], "1")
+        self.assertEqual(differences[0]["signal_events"], "DEL:1:AGC>A")
+
     def test_representation_equivalence_is_matched_but_not_exact_profile(self) -> None:
         truth = self.write_ground_truth("3.1A")
         self.write_sample([self.signal_variant(4, "A", "AA", "INS")])
