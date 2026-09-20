@@ -135,6 +135,24 @@ analysis v7 and follows the same approval, storage, retention, and redistributio
 policy as its source AB1. Its operational log records counts and stage metrics but
 never sequence strings or JSON bodies.
 
+## Reviewer-derived variant truth
+
+Reviewer comparison tables and extracted sample variant profiles are sensitive biological
+validation data. Keep the source table and generated
+`signal.reviewer_variant_ground_truth/v1` artifact under ignored local storage such as:
+
+```text
+data/validation/ground-truth/
+```
+
+The artifact may retain local sample/case identity, reviewer variant strings, analyzed-range
+context, batch identity, and source SHA-256 so the validation join is auditable. It MUST NOT
+be committed merely because raw AB1 signal is absent.
+
+`validation-results/variant-profile/` evaluations inherit the same policy because their
+extra/missing/representation rows disclose biological differences. Repository tests use
+synthetic reviewer notation and synthetic identities only.
+
 ## Privacy and repository policy
 
 - `data/`, `results`, `logs/`, and `validation-results/` remain listed in `.gitignore`.
