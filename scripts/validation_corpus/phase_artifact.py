@@ -106,6 +106,45 @@ def source_offsets(method: Any) -> tuple[int, ...]:
     return tuple(offsets)
 
 
+
+
+@dataclass(frozen=True)
+class PhaseHypothesisParameters:
+    window_size: int
+    window_step: int
+    max_offset: int
+    offsets: tuple[int, ...]
+
+
+def method_positive_int(method: dict[str, Any], key: str) -> int:
+    value = method.get(key)
+    if not isinstance(value, int) or isinstance(value, bool) or value <= 0:
+        raise ValueError(f"phase-hypothesis {key} must be a positive integer")
+    return value
+
+
+def source_parameters(method: Any) -> PhaseHypothesisParameters:
+    if not isinstance(method, dict):
+        raise TypeError("phase-hypothesis method must be an object")
+    window_size = method_positive_int(method, "window_size_profile_observations")
+    window_step = method_positive_int(method, "window_step_profile_observations")
+    max_offset = method_positive_int(
+        method,
+        "max_reference_offset_in_read_order",
+    )
+    offsets = source_offsets(method)
+    expected = tuple(range(-max_offset, 0)) + tuple(range(1, max_offset + 1))
+    if offsets != expected:
+        raise ValueError(
+            "phase-hypothesis candidate_offsets differ from max reference offset"
+        )
+    return PhaseHypothesisParameters(
+        window_size=window_size,
+        window_step=window_step,
+        max_offset=max_offset,
+        offsets=offsets,
+    )
+
 def validate_source(source_dir: Path) -> tuple[dict[str, Any], tuple[int, ...]]:
     index_path = source_dir / "index.json"
     if not index_path.is_file():
@@ -376,9 +415,11 @@ def load_source(
 
 __all__ = [
     "CandidateRecord",
+    "PhaseHypothesisParameters",
     "WindowRecord",
     "generated_records",
     "load_source",
     "source_offsets",
+    "source_parameters",
     "validate_source",
 ]
