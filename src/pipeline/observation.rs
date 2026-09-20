@@ -6,10 +6,12 @@ use crate::alignment;
 use crate::config::Config;
 use crate::error::Result;
 use crate::logger::Logger;
+use crate::model::phase::{PhaseApplicability, PhaseEvidenceAvailability};
 use crate::model::read_observation::ReadObservation;
 use crate::model::reference::Reference;
 use crate::model::trace::Chromatogram;
 use crate::model::variant::VariantKind;
+use crate::phase;
 use crate::pipeline::read::{self, ProcessedRead};
 use crate::variant_calling;
 
@@ -65,6 +67,42 @@ pub(crate) fn build(
             alignment.reference_segments.len(),
             reference_segments,
             alignment.wraps_origin
+        ),
+    )?;
+
+    *stage = "phase_measurement";
+    let stage_started = Instant::now();
+    let phase = phase::measure(&alignment, &signal, reference)?;
+    let applicable = phase.applicability == PhaseApplicability::Applicable;
+    let measured_tracts = phase
+        .tracts
+        .iter()
+        .filter(|tract| tract.availability == PhaseEvidenceAvailability::Measured)
+        .count();
+    let insufficient_tracts = phase.tracts.len().saturating_sub(measured_tracts);
+    let phase_windows = phase
+        .tracts
+        .iter()
+        .map(|tract| tract.windows.len())
+        .sum::<usize>();
+    logger.info(
+        module_path!(),
+        line!(),
+        format_args!(
+            concat!(
+                "event=phase_measurement_completed elapsed_ms={} applicable={} ",
+                "measured_tracts={} insufficient_tracts={} windows={} ",
+                "window_profile_observations={} window_step_profile_observations={} ",
+                "max_reference_offset_in_read_order={}"
+            ),
+            stage_started.elapsed().as_millis(),
+            applicable,
+            measured_tracts,
+            insufficient_tracts,
+            phase_windows,
+            phase::WINDOW_PROFILE_OBSERVATIONS,
+            phase::WINDOW_STEP_PROFILE_OBSERVATIONS,
+            phase::MAX_REFERENCE_OFFSET_IN_READ_ORDER
         ),
     )?;
 
@@ -178,6 +216,7 @@ pub(crate) fn build(
             signal,
             quality,
             alignment,
+            phase,
             variants,
         },
         warning_total,
