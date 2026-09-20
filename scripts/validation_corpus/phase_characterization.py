@@ -7,8 +7,8 @@ import math
 import os
 import shutil
 import tempfile
-from itertools import pairwise
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path
 from typing import Any, TextIO
 
