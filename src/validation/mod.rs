@@ -1,8 +1,10 @@
-//! Explicit validation tooling boundary for local threshold research.
+//! Explicit validation tooling boundary for local research exports.
 
 use std::path::PathBuf;
 
 use crate::error::Result;
+
+pub(crate) mod phase_runtime;
 
 #[derive(Debug)]
 pub struct ValidationExportRequest {
