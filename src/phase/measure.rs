@@ -171,11 +171,11 @@ fn tract_evidence(
         ));
     }
 
-    let call_indices = covered
+    let Some(last_tract_call) = covered
         .iter()
         .filter_map(|observation| observation.call_index_0based)
-        .collect::<Vec<_>>();
-    let Some(last_tract_call) = call_indices.iter().copied().max() else {
+        .max()
+    else {
         return Ok(insufficient(
             tract,
             PhaseInsufficiency::NoCallBackedTractSpan,
@@ -377,27 +377,31 @@ fn candidate_evidence(
         });
     }
 
+    let count = contributions.len() as f64;
     Ok(PhaseCandidateEvidence {
         reference_offset_in_read_order: offset,
         informative_positions: contributions.len(),
-        mean_zero_reference_mass: Some(mean(
-            &contributions
+        mean_zero_reference_mass: Some(
+            contributions
                 .iter()
                 .map(|contribution| contribution.zero_mass)
-                .collect::<Vec<_>>(),
-        )),
-        mean_shifted_reference_mass: Some(mean(
-            &contributions
+                .sum::<f64>()
+                / count,
+        ),
+        mean_shifted_reference_mass: Some(
+            contributions
                 .iter()
                 .map(|contribution| contribution.shifted_mass)
-                .collect::<Vec<_>>(),
-        )),
-        mean_residual_mass: Some(mean(
-            &contributions
+                .sum::<f64>()
+                / count,
+        ),
+        mean_residual_mass: Some(
+            contributions
                 .iter()
                 .map(|contribution| contribution.residual_mass)
-                .collect::<Vec<_>>(),
-        )),
+                .sum::<f64>()
+                / count,
+        ),
     })
 }
 
