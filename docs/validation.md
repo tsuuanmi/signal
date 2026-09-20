@@ -135,6 +135,55 @@ uv run python scripts/prepare_phase_interpretation_dataset.py \
 
 Phase interpretation/weighting promotion must additionally follow `docs/validation/polyc-phase-promotion.md`. Threshold development must follow `docs/research/Signal/validation-corpus.md`, `docs/research/Signal/threshold-research.md`, and `docs/research/Signal/polyc-phase-interpretation-study.md`: truth provenance, grouped development/holdout separation, repeatability/reproducibility, artifact challenges, false-positive objectives, and operating-domain limitations are required before promotion. Unexpected extreme basecall/profile disagreements must first be characterized with the v2 event-placement diagnostics described in `docs/research/Signal/event-position-diagnostics.md` rather than absorbed into a fitted threshold. Point-mixture and length/indel studies remain separate.
 
+## Reviewer variant-profile baseline
+
+Reviewer-produced Sequencher profiles may seed a local proxy-ground-truth baseline without
+becoming production input.
+
+Create the ignored local artifact from the reviewer TSV:
+
+```bash
+uv run python scripts/extract_reviewer_variant_ground_truth.py \
+  "path/to/reviewer-comparison.tsv"
+```
+
+This preserves `Variants (Sequencher)` verbatim and records the source SHA-256. Tokenization
+is convenience only; interpretation occurs later in the evaluator.
+
+Evaluate current sample outputs with:
+
+```bash
+uv run python scripts/evaluate_variant_profiles.py
+```
+
+The default no-overwrite artifact is
+`validation-results/variant-profile/baseline/` with `index.json`, `samples.csv`, and
+`differences.csv`.
+
+The evaluator interprets the current reviewer notation explicitly:
+
+```text
+310.1C  insertion C after 310
+310DEL  deletion of reference base 310
+310A    SNV at 310 to A
+```
+
+It compares only current sample variants with at least one eligible supporting read, matches
+exact normalized identities first, and then may recognize sequence-equivalent single-indel
+representations while recording representation disagreements separately.
+
+The baseline reports reviewer-proxy matched variants, extra variants (proxy false
+positives), missing variants (proxy false negatives), exact profiles, precision, and recall.
+A variant-only truth file has no complete reference-negative denominator, so true negatives
+and specificity remain absent until a reviewed callable/reference domain is explicitly
+frozen.
+
+This evaluator contains no recurrent-locus or poly-C position logic. Its purpose is to
+freeze the current end-to-end calling baseline so future phase-aware behavior can be judged
+by final sample-profile correctness. Unaffected/pre-poly-C performance is a non-regression
+surface; post-tract gains must reduce calling errors without trading false positives for an
+unacceptable increase in false negatives, or vice versa.
+
 ## Performance
 
 Run a release build with a named 500–1,000 base approved or synthetic trace against rCRS. Record host/toolchain, checksums, elapsed time, and peak memory. Target: ≤30 seconds and ≤512 MiB. Resource-cap failures must occur before large allocation.
