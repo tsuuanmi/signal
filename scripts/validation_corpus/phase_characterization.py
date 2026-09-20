@@ -352,7 +352,7 @@ def generated_records(
             index,
         )
         if parsed.window_id not in windows:
-            raise ValueError(f"generated candidate references unknown window_id")
+            raise ValueError("generated candidate references unknown window_id")
         key = (parsed.window_id, parsed.offset)
         if key in candidates:
             raise ValueError(f"duplicate generated window/offset candidate {key}")
