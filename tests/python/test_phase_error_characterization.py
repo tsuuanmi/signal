@@ -168,8 +168,7 @@ class PhaseErrorCharacterizationTests(unittest.TestCase):
         high_ratio = next(
             row
             for row in candidate_output
-            if row["window_id"] == "w2"
-            and row["reference_offset_in_read_order"] == -1
+            if row["window_id"] == "w2" and row["reference_offset_in_read_order"] == -1
         )
         self.assertAlmostEqual(float(high_ratio["nonzero_mass"]), 0.10)
         self.assertAlmostEqual(float(high_ratio["structured_fraction"]), 0.90)
