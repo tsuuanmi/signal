@@ -242,23 +242,13 @@ fn run_logged(
 
     *stage = "validation_publication";
     report::publish(&output, &bytes)?;
-    let phase = phase_runtime::publish(
+    phase_runtime::publish(
         &request.sample_id,
         &evidence.reference_sha256,
         &evidence.configuration_sha256,
         &reads,
     )?;
-    logger.info(
-        module_path!(),
-        line!(),
-        format_args!(
-            "event=validation_phase_runtime_published output_path={:?} windows={} candidates={}",
-            phase.output.display().to_string(),
-            phase.windows,
-            phase.candidates
-        ),
-    )?;
-    logger.sync()
+    Ok(())
 }
 
 fn output_path(sample_id: &str) -> PathBuf {
