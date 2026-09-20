@@ -14,6 +14,7 @@ from .filesystem import file_sha256, sync_directory, validate_new_directory, wri
 from .model import PHASE_CHARACTERIZATION_SCHEMA_VERSION
 from .phase_artifact import CandidateRecord, WindowRecord, load_source, validate_source
 
+
 def mean(values: list[float]) -> float:
     return sum(values) / len(values)
 
