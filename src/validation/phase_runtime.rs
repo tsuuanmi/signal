@@ -89,12 +89,7 @@ pub(crate) fn publish(
     configuration_sha256: &str,
     reads: &[ReadObservation],
 ) -> Result<()> {
-    let artifact = serialize(
-        sample_id,
-        reference_sha256,
-        configuration_sha256,
-        reads,
-    )?;
+    let artifact = serialize(sample_id, reference_sha256, configuration_sha256, reads)?;
     let output = output_path(sample_id);
     publish_artifact(&output, &artifact)
 }
