@@ -395,6 +395,7 @@ def representation_group_matches(
         matches.append(VariantMatch(reviewer_indices, signal_indices, True))
     return matches
 
+
 def compare_variants(
     reviewer: list[ReviewerVariant],
     signal: list[SignalVariant],
@@ -494,6 +495,7 @@ def signal_events_text(
 def positions_text(positions: list[int]) -> str:
     """Serialize deterministic unique one-based positions."""
     return ";".join(str(position) for position in sorted(set(positions)))
+
 
 def difference_row(
     sample_id: str,
