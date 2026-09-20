@@ -18,8 +18,8 @@ from scripts.validation_corpus.phase_explainability import (
     WINDOW_COLUMNS,
     publish_phase_explainability,
 )
+from scripts.validation_corpus.phase_hypotheses import HYPOTHESIS_COLUMNS
 from scripts.validation_corpus.phase_hypotheses import (
-    HYPOTHESIS_COLUMNS,
     WINDOW_COLUMNS as SOURCE_WINDOW_COLUMNS,
 )
 
