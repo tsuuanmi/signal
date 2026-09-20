@@ -25,7 +25,7 @@ class PolyCGeometryTests(unittest.TestCase):
         positions.remove(310)
         self.assertFalse(covers_complete_tract(positions, hv2))
 
-        call_indices = {
+        call_indices: dict[int, int | None] = {
             position: position - hv2.start_1based + 20
             for position in range(hv2.start_1based, hv2.end_1based + 1)
         }
@@ -42,11 +42,14 @@ class PolyCGeometryTests(unittest.TestCase):
         for position, call_index in ((16194, 110), (16569, 485), (1, 486), (253, 738)):
             region = path_region(hv1, position, call_index, span)
             self.assertEqual(region, "after")
-            self.assertGreater(
-                read_order_distance(hv1, "forward", position, region),
-                0,
+            reference_distance = read_order_distance(
+                hv1, "forward", position, region
             )
-            self.assertGreater(call_distance(span, call_index, region), 0)
+            call_index_distance = call_distance(span, call_index, region)
+            if reference_distance is None or call_index_distance is None:
+                self.fail("call-backed post-tract distances must be present")
+            self.assertGreater(reference_distance, 0)
+            self.assertGreater(call_index_distance, 0)
 
         self.assertEqual(
             read_order_distance(hv1, "forward", 1, "after"),
@@ -64,11 +67,14 @@ class PolyCGeometryTests(unittest.TestCase):
         for position, call_index in ((302, 213), (1, 514), (16569, 515), (16197, 887)):
             region = path_region(hv2, position, call_index, span)
             self.assertEqual(region, "after")
-            self.assertGreater(
-                read_order_distance(hv2, "reverse", position, region),
-                0,
+            reference_distance = read_order_distance(
+                hv2, "reverse", position, region
             )
-            self.assertGreater(call_distance(span, call_index, region), 0)
+            call_index_distance = call_distance(span, call_index, region)
+            if reference_distance is None or call_index_distance is None:
+                self.fail("call-backed post-tract distances must be present")
+            self.assertGreater(reference_distance, 0)
+            self.assertGreater(call_index_distance, 0)
 
     def test_before_and_after_are_call_order_properties(self) -> None:
         hv2 = TRACTS[0]
