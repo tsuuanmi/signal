@@ -74,7 +74,9 @@ class PolyCPhaseResearchTests(unittest.TestCase):
             if previous_position in HV2_POSITIONS
             else None
         )
-        profile = self.reference_profile(base, previous if position in {302, 316} else None)
+        profile = self.reference_profile(
+            base, previous if position in {302, 316} else None
+        )
         return {
             "read_sha256": read_sha256,
             "orientation": orientation,
@@ -101,9 +103,7 @@ class PolyCPhaseResearchTests(unittest.TestCase):
                 "local_maximum",
             ],
             "primary_peak_heights_acgt_reference": [100, 100, 100, 100],
-            "corrected_amplitudes_acgt_reference": [
-                value * 100.0 for value in profile
-            ],
+            "corrected_amplitudes_acgt_reference": [value * 100.0 for value in profile],
             "snrs_acgt_reference": [10.0, 10.0, 10.0, 10.0],
             "profile_acgt_reference": profile,
             "in_noisy_region": position == 302 and orientation == "reverse",

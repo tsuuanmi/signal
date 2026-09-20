@@ -305,7 +305,9 @@ def validate_reference_tracts(
             )
         active.append(tract)
     if not active:
-        raise ValueError("validation corpus contains no complete supported rCRS poly-C tract")
+        raise ValueError(
+            "validation corpus contains no complete supported rCRS poly-C tract"
+        )
     return tuple(active)
 
 
@@ -351,7 +353,9 @@ def scan_context(
                     ),
                     read_sha256=read_sha256,
                     amplicon_id=(
-                        str(row["amplicon_id"]) if row["amplicon_id"] is not None else None
+                        str(row["amplicon_id"])
+                        if row["amplicon_id"] is not None
+                        else None
                     ),
                     declared_direction=(
                         str(row["declared_direction"])
@@ -365,9 +369,13 @@ def scan_context(
                 contexts[read_sha256] = context
             else:
                 if context.validation_case_id != row["validation_case_id"]:
-                    raise ValueError(f"{read_sha256}: validation case changes across rows")
+                    raise ValueError(
+                        f"{read_sha256}: validation case changes across rows"
+                    )
                 if context.orientation != selected_orientation:
-                    raise ValueError(f"{read_sha256}: selected orientation changes across rows")
+                    raise ValueError(
+                        f"{read_sha256}: selected orientation changes across rows"
+                    )
                 context.span_start_1based = min(context.span_start_1based, position)
                 context.span_end_1based = max(context.span_end_1based, position)
 
@@ -432,7 +440,9 @@ def observation_record(
         if values is not None and previous_base is not None
         else None
     )
-    reference_mass = mass_for_base(values, reference_base) if values is not None else None
+    reference_mass = (
+        mass_for_base(values, reference_base) if values is not None else None
+    )
     next_mass = (
         mass_for_base(values, next_base)
         if values is not None and next_base is not None
@@ -518,12 +528,8 @@ def summary_rows(
                     accumulator.previous_masses, 0.90
                 ),
                 "mean_next_reference_base_mass": mean(accumulator.next_masses),
-                "p50_next_reference_base_mass": quantile(
-                    accumulator.next_masses, 0.50
-                ),
-                "p90_next_reference_base_mass": quantile(
-                    accumulator.next_masses, 0.90
-                ),
+                "p50_next_reference_base_mass": quantile(accumulator.next_masses, 0.50),
+                "p90_next_reference_base_mass": quantile(accumulator.next_masses, 0.90),
             }
         )
     return rows
