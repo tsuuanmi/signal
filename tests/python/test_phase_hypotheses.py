@@ -16,6 +16,7 @@ from scripts.validation_corpus.model import (
 from scripts.validation_corpus.phase_hypotheses import (
     PhaseObservation,
     candidate_metrics,
+    parse_observation,
     phase_windows,
     publish_phase_hypotheses,
 )
@@ -187,6 +188,16 @@ class PhaseHypothesisResearchTests(unittest.TestCase):
         self.assertAlmostEqual(float(plus_one["mean_residual_mass"]), 0.05)
         self.assertAlmostEqual(float(minus_one["mean_shifted_reference_mass"]), 0.0)
         self.assertAlmostEqual(float(minus_one["mean_residual_mass"]), 0.40)
+
+    def test_aligned_base_preserves_non_nucleotide_alignment_symbol(self) -> None:
+        row = self.source_row(1)
+        row["state"] = "deletion"
+        row["aligned_base"] = "-"
+        parsed = parse_observation(row, 2)
+        self.assertIsNotNone(parsed)
+        assert parsed is not None
+        self.assertEqual(parsed.state, "deletion")
+        self.assertEqual(parsed.aligned_base, "-")
 
     def test_same_reference_base_is_not_informative(self) -> None:
         observation = PhaseObservation(
