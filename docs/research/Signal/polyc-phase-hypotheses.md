@@ -150,7 +150,7 @@ On the full corpus:
    with coherent shifted-reference support;
 6. identify reads where impurity is high but no candidate offset explains the profiles.
 
-The next implemented layer, [polyc-phase-characterization.md](polyc-phase-characterization.md), addresses items 1, 2, and 4 descriptively while retaining every candidate offset. Opposite-orientation controls, recurrent-locus joins, per-read unexplained-impurity review, and parameter sensitivity remain follow-up research.
+The implemented [polyc-phase-characterization.md](polyc-phase-characterization.md) layer addresses items 1, 2, and 4 descriptively while retaining every candidate offset. [polyc-orientation-controls.md](polyc-orientation-controls.md) addresses item 3 from the completed corpus, and [polyc-phase-sensitivity.md](polyc-phase-sensitivity.md) tests the candidate conclusions across an explicit window/stride/offset grid. Recurrent-locus joins and per-read unexplained-impurity review remain follow-up research.
 
 Only after those analyses should Signal consider a phase-state detector, recovery model,
 evidence attenuation, demixing, or a no-call policy.
