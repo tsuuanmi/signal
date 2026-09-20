@@ -186,7 +186,6 @@ class PhaseSensitivityResearchTests(unittest.TestCase):
             self.assertGreater(float(row["mean_shifted_reference_mass"]), 0.30)
             self.assertLess(float(row["mean_residual_mass"]), 0.10)
 
-
     def test_records_parameter_sets_with_no_complete_windows(self) -> None:
         self.write_source(count=20)
         output = self.root / "sparse-sensitivity"
