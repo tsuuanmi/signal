@@ -94,6 +94,9 @@ The baseline reports reviewer-proxy counts:
 - proxy precision;
 - proxy recall.
 
+A representation-equivalent indel counts as matched for FP/FN accounting, but a sample with
+any representation disagreement is not an exact profile match.
+
 A variant-only reviewer profile does not define a complete negative-locus denominator.
 Therefore v1 deliberately does **not** fabricate true-negative counts or specificity.
 
