@@ -254,9 +254,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
 
     def test_exact_snv_match_has_no_difference(self) -> None:
         reviewer = parse_reviewer_variants(["7A"], self.reference_sequence)
-        sample_path = self.write_sample(
-            [self.signal_variant(7, "T", "A", "SNV")]
-        )
+        sample_path = self.write_sample([self.signal_variant(7, "T", "A", "SNV")])
         signal, _ = load_signal_variants(
             sample_path,
             "AB0001",
@@ -278,9 +276,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self,
     ) -> None:
         reviewer = parse_reviewer_variants(["3.1A"], self.reference_sequence)
-        sample_path = self.write_sample(
-            [self.signal_variant(4, "A", "AA", "INS")]
-        )
+        sample_path = self.write_sample([self.signal_variant(4, "A", "AA", "INS")])
         signal, _ = load_signal_variants(
             sample_path,
             "AB0001",
