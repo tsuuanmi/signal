@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-20
-- **Implementation:** Descriptive research surface complete; ADR-0055 promotes only the read-local evidence boundary, with no production detector, state, weighting, or calling change.
+- **Implementation:** Descriptive research surface complete; ADR-0055/ADR-0056 promote only read-local continuous evidence. The end-to-end objective is accurate sample-level variant profiles; no production detector, weighting, or calling change is promoted here.
 
 ## Context
 
@@ -24,6 +24,12 @@ These two conditions have different scientific consequences:
 
 A single post-poly-C badness score would collapse these distinct states.
 
+The architectural objective is broader than phase detection itself. Signal ultimately
+receives multiple AB1 traces for one sample and must infer the sample's variant profile
+without adding phase-induced false variants or suppressing true variants. Phase evidence is
+therefore an explanatory layer for variant evidence, not an endpoint or success metric by
+itself.
+
 Tracy's indel decomposition provides a useful algorithmic principle. After detecting a
 persistent trace transition, Tracy evaluates multiple downstream insertion/deletion
 offsets and asks which offset makes the downstream primary/secondary evidence most
@@ -42,6 +48,63 @@ Signal will research post-poly-C phase behavior along two independent dimensions
 
 The first implementation MUST remain descriptive and MUST NOT combine these dimensions
 into a production confidence score.
+
+### End-to-end variant objective
+
+A future phase-aware policy is justified only when it improves the correctness of the
+**final sample variant profile** assembled from all usable AB1 traces.
+
+Validation MUST evaluate at least:
+
+- extra variants present in Signal output but absent from the truth/proxy profile;
+- missing truth/proxy variants absent from Signal output;
+- representation disagreements where equivalent sequence differences are encoded
+  differently;
+- preservation of true downstream variants inside phase-affected regions;
+- the same outcomes across independent reads, orientations, amplicons, source groups, and
+  acquisition strata where available.
+
+Phase-state or phase-window classification accuracy alone is not an acceptable promotion
+criterion. A policy that removes apparent phase artifacts by also removing true variants is
+not successful.
+
+The intended dependency is:
+
+```text
+read-local signal evidence
+        ↓
+structured phase explanation
+        ↓
+locus-local explained versus residual evidence
+        ↓
+sample-level evidence reconciliation
+        ↓
+final variant profile
+```
+
+Phase interpretation may explain why an alternate observation should receive different
+reliability treatment, but variant truth remains a sample-level validation question.
+
+### Reviewer-derived proxy truth
+
+Human-reviewed variant profiles may be used as local validation **proxy ground truth** when
+stronger independent truth is unavailable.
+
+For reviewer-produced Sequencher profiles, the local ground-truth artifact MUST:
+
+- retain sample identity needed for the local validation join;
+- preserve the original reviewer variant string verbatim;
+- retain source file identity and SHA-256 provenance;
+- label the evidence as reviewer-derived proxy truth rather than biological truth;
+- keep any tokenized convenience representation semantically subordinate to the preserved
+  reviewer string.
+
+Normalization or equivalence handling for evaluation MUST be a separate, explicit
+comparison step. The ground-truth artifact itself MUST NOT silently rewrite, normalize, or
+reinterpret the reviewer's variant profile.
+
+Reviewer truth/proxy data is validation input only. It MUST NOT feed back into phase
+measurement, alignment, basecalling, or production inference.
 
 ### Candidate reference offsets
 
@@ -147,6 +210,10 @@ validation for mtDNA poly-C behavior.
   dephased versus simply degraded.
 - A true isolated point variant should not receive strong phase support unless an offset
   also explains surrounding observations.
+- Phase research is evaluated by its contribution to correct sample-level variant profiles,
+  including both false-positive reduction and true-variant preservation.
+- Reviewer-derived Sequencher profiles may seed local proxy-ground-truth evaluation, but
+  their provenance and proxy status remain explicit and they are never production inputs.
 - Phase recovery can later be studied as the disappearance of coherent shifted evidence
   and residual degradation across successive windows, without a fixed genomic recovery
   distance.
@@ -169,4 +236,5 @@ does not promote any categorical state or reliability policy.
 
 This ADR does not define a breakpoint caller, phase-state classifier, genotype, length
 heteroplasmy estimate, indel call, demixed sequence, recovery threshold, confidence
-multiplier, no-call rule, or production output field.
+multiplier, no-call rule, sample-level variant reconciliation policy, or production output
+field. It also does not promote reviewer-derived proxy truth to a runtime dependency.

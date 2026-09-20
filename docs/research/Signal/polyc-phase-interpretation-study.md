@@ -69,9 +69,13 @@ Rust remains authoritative
 
 The first interpretation study asks:
 
-> Can continuous read-local phase evidence distinguish useful observational regimes after
-> an rCRS HV1/HV2 poly-C tract without suppressing clean evidence or true downstream
-> sequence differences?
+> Can continuous read-local phase evidence support a generic explanation of structured
+> downstream trace displacement that reduces false sample-level variant calls without
+> suppressing clean evidence or true downstream sequence differences?
+
+The final endpoint is the correctness of the sample variant profile assembled from the
+available AB1 traces. Phase-window interpretation is an intermediate explanatory model,
+not the primary success metric.
 
 It does not attempt to infer:
 
@@ -319,6 +323,12 @@ Any affected/clean performance label must retain independent truth or explicit p
 provenance. Proxy-labelled performance must be reported as proxy performance rather than
 biological sensitivity/specificity.
 
+Reviewer-produced Sequencher variant profiles may be used as local sample-level proxy
+ground truth when stronger truth is unavailable. Preserve the reviewer variant string and
+source-file SHA-256 verbatim in a local ignored artifact; any tokenization is convenience
+only. Variant normalization/equivalence for evaluation is a separate comparison step and
+must not rewrite the source truth artifact.
+
 ## Safety objectives
 
 Before feature or threshold search, declare a maximum tolerated false attenuation/no-call
@@ -328,10 +338,18 @@ The numeric objective belongs to the frozen local study plan, not this generic r
 document.
 
 True downstream SNVs are a co-primary safety challenge. A phase policy is unacceptable if
-it improves apparent handling of problematic poly-C reads by suppressing independently
-true downstream differences.
+it improves apparent handling of problematic poly-C reads by suppressing independently or
+reviewer-supported downstream differences.
 
-Report clean and true-SNV challenge behavior separately.
+The end-to-end comparison MUST evaluate the final sample-level variant set, including:
+
+- extra Signal variants not present in the truth/proxy profile;
+- missing truth/proxy variants;
+- documented representation/equivalence disagreements;
+- preservation of true variants inside phase-affected regions.
+
+Report clean and true-SNV challenge behavior separately. Phase-state accuracy without a
+sample-level variant benefit is insufficient for promotion.
 
 ## Development and holdout
 
@@ -602,7 +620,10 @@ Development and holdout reports include at minimum:
 - forward/reverse results;
 - same/cross-amplicon results where available;
 - insufficient/read-end/profile-gap behavior;
-- reviewed failure cases and limitations.
+- reviewed failure cases and limitations;
+- sample-level extra, missing, and representation-disagreement variant counts against the
+  frozen truth/proxy profile;
+- baseline-versus-phase-aware variant-profile comparison.
 
 Aggregate window accuracy alone is not an acceptable performance claim.
 
@@ -617,11 +638,14 @@ Production interpretation remains blocked until:
 5. rule/constants are frozen before holdout inspection;
 6. holdout results satisfy the predeclared objective;
 7. true downstream SNVs do not show unacceptable suppression;
-8. tract/orientation/amplicon and available replicate strata are reviewed;
-9. incomplete evidence/read-end behavior is explicit;
-10. the frozen rule is implemented in Rust;
-11. Rust behavior is validated against the frozen research evidence;
-12. ADR/SRS/method/source documentation explicitly promotes the behavior.
+8. the final sample-level variant profile improves against the frozen independent or
+   reviewer-derived truth/proxy without trading false positives for unacceptable false
+   negatives;
+9. tract/orientation/amplicon and available replicate strata are reviewed;
+10. incomplete evidence/read-end behavior is explicit;
+11. the frozen rule is implemented in Rust;
+12. Rust behavior is validated against the frozen research evidence;
+13. ADR/SRS/method/source documentation explicitly promotes the behavior.
 
 Weighting/no-call remains separately blocked even if interpretation passes.
 
