@@ -20,9 +20,11 @@ from scripts.validation_corpus.reviewer_variants import (
     read_reference,
 )
 from scripts.validation_corpus.variant_profile_evaluation import (
+    MutationGroup,
     SignalVariant,
     VariantMatch,
     compare_variants,
+    contiguous_groups,
     load_signal_variants,
     publish_evaluation,
 )
@@ -321,6 +323,17 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self.assertEqual(matches, [VariantMatch((0,), (0,), True)])
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
+
+    def test_grouping_does_not_cross_an_already_matched_source_event(self) -> None:
+        groups = contiguous_groups(
+            {0, 2},
+            lambda indices: MutationGroup(indices, "mutation"),
+        )
+
+        self.assertEqual(
+            [group.indices for group in groups],
+            [(0,), (2,)],
+        )
 
     def test_multi_event_haplotype_equivalence_is_one_representation_group(
         self,
