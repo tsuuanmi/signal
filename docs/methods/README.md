@@ -7,5 +7,6 @@ These documents describe current production behavior, not exploratory research.
 - [Basecall output](../basecall-output.md): reference-free projection of the shared read pipeline.
 - [Analysis output](../json-output.md): reference-guided result semantics.
 - [Sample evidence output](../sample-output.md): N-read reconciliation evidence and Tracy-derived overlap admission semantics.
+- [Read-local poly-C phase](polyc-phase.md): internal `signal.polyc_phase/v1` continuous candidate evidence after selected alignment.
 
 When a method is still exploratory, document it under `docs/research/<topic>/` instead. Promote it here only when the root production contract adopts it.
