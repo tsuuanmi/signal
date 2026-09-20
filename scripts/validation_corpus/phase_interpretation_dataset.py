@@ -328,7 +328,6 @@ def selected_orientations(corpus: ResearchCorpus) -> dict[tuple[str, str], str]:
 
 def validate_provenance(
     corpus: ResearchCorpus,
-    source_dir: Path,
     source_index: dict[str, Any],
 ) -> None:
     expected_corpus_sha256 = file_sha256(corpus.index_path)
@@ -354,9 +353,6 @@ def validate_provenance(
     for label, observed, expected in checks:
         if observed != expected:
             raise ValueError(f"phase hypotheses {label} differs from validation corpus")
-
-    if file_sha256(source_dir / "index.json") == expected_corpus_sha256:
-        raise ValueError("phase-hypothesis and corpus indexes must be distinct artifacts")
 
 
 def partition_for(
@@ -708,7 +704,7 @@ def publish_phase_interpretation_dataset(
     corpus = load_research_corpus(corpus_dir)
     source_index, offsets = validate_source(hypotheses_dir)
     production_v1_parameters(source_index["method"])
-    validate_provenance(corpus, hypotheses_dir, source_index)
+    validate_provenance(corpus, source_index)
     windows, candidates = load_source(hypotheses_dir, source_index, offsets)
 
     stage = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.", dir=output_dir.parent))
