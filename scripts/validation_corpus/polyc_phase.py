@@ -13,6 +13,20 @@ from typing import Any, TextIO
 
 from .filesystem import file_sha256, sync_directory, validate_new_directory, write_json
 from .model import POLYC_PHASE_SCHEMA_VERSION
+from .polyc_geometry import (
+    TRACTS,
+    PolyCTract,
+    TractCallSpan,
+    call_distance,
+    covers_complete_tract,
+    orientation,
+    path_region,
+    read_order_distance,
+    reference_neighbor_positions,
+    tract_call_span,
+    tract_positions,
+    validate_reference_tracts,
+)
 from .research_loader import iter_research_rows, load_research_corpus
 from .research_model import ResearchCorpus
 from .research_statistics import nearest_rank
@@ -80,21 +94,6 @@ SUMMARY_COLUMNS = (
 )
 
 
-@dataclass(frozen=True)
-class PolyCTract:
-    tract_id: str
-    start_1based: int
-    end_1based: int
-    interrupt_position_1based: int
-    reference_sequence: str
-
-
-TRACTS = (
-    PolyCTract("HV2_C", 303, 315, 310, "CCCCCCCTCCCCC"),
-    PolyCTract("HV1_C", 16184, 16193, 16189, "CCCCCTCCCC"),
-)
-
-
 @dataclass
 class ReadContext:
     validation_case_id: str
@@ -105,7 +104,8 @@ class ReadContext:
     declared_direction: str | None
     orientation: str
     tract_positions: set[int] = field(default_factory=set)
-    special_observations: dict[int, dict[str, Any]] = field(default_factory=dict)
+    tract_call_indices: dict[int, int | None] = field(default_factory=dict)
+    tract_observations: dict[int, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass
@@ -165,12 +165,6 @@ def write_row(
     target.writerow({key: csv_value(row[key]) for key in columns})
 
 
-def orientation(value: Any, label: str) -> str:
-    if value not in {"forward", "reverse"}:
-        raise ValueError(f"{label} must be forward or reverse")
-    return str(value)
-
-
 def profile(row: dict[str, Any]) -> tuple[float, float, float, float] | None:
     values = tuple(row[f"profile_{base}"] for base in ("a", "c", "g", "t"))
     if all(value is None for value in values):
@@ -193,139 +187,13 @@ def mass_for_base(values: tuple[float, float, float, float], base: str) -> float
     return values[index]
 
 
-def path_region(tract: PolyCTract, selected_orientation: str, position: int) -> str:
-    if tract.start_1based <= position <= tract.end_1based:
-        return "inside"
-    if selected_orientation == "forward":
-        return "before" if position < tract.start_1based else "after"
-    return "before" if position > tract.end_1based else "after"
-
-
-def read_order_distance(
-    tract: PolyCTract,
-    selected_orientation: str,
-    position: int,
-) -> int:
-    region = path_region(tract, selected_orientation, position)
-    if region == "inside":
-        return 0
-    if selected_orientation == "forward":
-        return (
-            position - tract.end_1based
-            if region == "after"
-            else position - tract.start_1based
-        )
-    return (
-        tract.start_1based - position
-        if region == "after"
-        else tract.end_1based - position
-    )
-
-
-def reference_neighbor_positions(
-    selected_orientation: str,
-    position: int,
-) -> tuple[int, int]:
-    if selected_orientation == "forward":
-        return position - 1, position + 1
-    return position + 1, position - 1
-
-
-def tract_call_boundary(
-    context: ReadContext,
-    tract: PolyCTract,
-    region: str,
-) -> int | None:
-    if region == "inside":
-        return None
-    if context.orientation == "forward":
-        boundary = tract.start_1based if region == "before" else tract.end_1based
-    else:
-        boundary = tract.end_1based if region == "before" else tract.start_1based
-    observation = context.special_observations.get(boundary)
-    if observation is None:
-        return None
-    call_index = observation["call_index_0based"]
-    return int(call_index) if call_index is not None else None
-
-
-def call_distance(
-    context: ReadContext,
-    tract: PolyCTract,
-    row: dict[str, Any],
-    region: str,
-) -> int | None:
-    if region == "inside":
-        return 0
-    call_index = row["call_index_0based"]
-    boundary = tract_call_boundary(context, tract, region)
-    if call_index is None or boundary is None:
-        return None
-    distance = int(call_index) - boundary
-    if region == "after" and distance <= 0:
-        raise ValueError(
-            f"{context.read_sha256}: after-tract call distance must be positive"
-        )
-    if region == "before" and distance >= 0:
-        raise ValueError(
-            f"{context.read_sha256}: before-tract call distance must be negative"
-        )
-    return distance
-
-
-def read_crosses_tract(context: ReadContext, tract: PolyCTract) -> bool:
-    return all(
-        position in context.tract_positions
-        for position in range(tract.start_1based, tract.end_1based + 1)
-    )
-
-
-def validate_reference_tracts(
-    reference_bases: dict[int, str],
-) -> tuple[PolyCTract, ...]:
-    active: list[PolyCTract] = []
-    for tract in TRACTS:
-        positions = range(tract.start_1based, tract.end_1based + 1)
-        present = [position in reference_bases for position in positions]
-        if not any(present):
-            continue
-        if not all(present):
-            raise ValueError(
-                f"{tract.tract_id}: validation corpus only partially represents "
-                "the rCRS poly-C tract"
-            )
-        sequence = "".join(reference_bases[position] for position in positions)
-        if sequence != tract.reference_sequence:
-            raise ValueError(
-                f"{tract.tract_id}: reference sequence {sequence!r} differs from "
-                f"expected rCRS tract {tract.reference_sequence!r}"
-            )
-        active.append(tract)
-    if not active:
-        raise ValueError(
-            "validation corpus contains no complete supported rCRS poly-C tract"
-        )
-    return tuple(active)
-
-
 def scan_context(
     corpus: ResearchCorpus,
 ) -> tuple[dict[str, ReadContext], dict[int, str], tuple[PolyCTract, ...]]:
     contexts: dict[str, ReadContext] = {}
     reference_bases: dict[int, str] = {}
-    tract_positions = {
-        position
-        for tract in TRACTS
-        for position in range(tract.start_1based, tract.end_1based + 1)
-    }
-    special_positions = {
-        position
-        for tract in TRACTS
-        for position in (
-            tract.start_1based,
-            tract.end_1based,
-            tract.interrupt_position_1based,
-        )
+    supported_tract_positions = {
+        position for tract in TRACTS for position in tract_positions(tract)
     }
 
     for locus_row, observation_rows in iter_research_rows(corpus):
@@ -376,15 +244,17 @@ def scan_context(
                     raise ValueError(
                         f"{read_sha256}: selected orientation changes across rows"
                     )
-            if position in tract_positions:
-                context.tract_positions.add(position)
-
-            if position in special_positions:
-                if position in context.special_observations:
+            if position in supported_tract_positions:
+                if position in context.tract_observations:
                     raise ValueError(
                         f"{read_sha256}: duplicate observation at position {position}"
                     )
-                context.special_observations[position] = row
+                context.tract_positions.add(position)
+                call_index = row["call_index_0based"]
+                context.tract_call_indices[position] = (
+                    int(call_index) if call_index is not None else None
+                )
+                context.tract_observations[position] = row
 
     return contexts, reference_bases, validate_reference_tracts(reference_bases)
 
@@ -393,7 +263,7 @@ def interrupt_fields(
     context: ReadContext,
     tract: PolyCTract,
 ) -> dict[str, Any]:
-    row = context.special_observations.get(tract.interrupt_position_1based)
+    row = context.tract_observations.get(tract.interrupt_position_1based)
     if row is None:
         return {
             "interrupt_state": None,
@@ -422,10 +292,13 @@ def observation_record(
     row: dict[str, Any],
     context: ReadContext,
     tract: PolyCTract,
+    span: TractCallSpan,
     reference_bases: dict[int, str],
 ) -> dict[str, Any]:
     position = int(row["position_1based"])
-    region = path_region(tract, context.orientation, position)
+    raw_call_index = row["call_index_0based"]
+    call_index = int(raw_call_index) if raw_call_index is not None else None
+    region = path_region(tract, position, call_index, span)
     previous_position, next_position = reference_neighbor_positions(
         context.orientation,
         position,
@@ -468,9 +341,10 @@ def observation_record(
             tract,
             context.orientation,
             position,
+            region,
         ),
-        "call_index_0based": row["call_index_0based"],
-        "call_distance_from_tract": call_distance(context, tract, row, region),
+        "call_index_0based": call_index,
+        "call_distance_from_tract": call_distance(span, call_index, region),
         "reference_base": reference_base,
         "state": row["state"],
         "aligned_base": row["aligned_base"],
@@ -566,8 +440,9 @@ def research_index(
                 "from tract start through tract end"
             ),
             "distance_rule": (
-                "signed reference distance in sequencing order: negative before tract, "
-                "zero inside tract, positive after tract"
+                "before/after derives from call order relative to the complete tract "
+                "call span; signed reference distance follows circular rCRS sequencing "
+                "order; non-call-backed outside-tract observations are unresolved"
             ),
             "summary_quantile_method": "empirical_nearest_rank",
         },
@@ -586,10 +461,14 @@ def research_index(
 def build_staged_polyc_phase(corpus: ResearchCorpus, stage: Path) -> None:
     contexts, reference_bases, active_tracts = scan_context(corpus)
     crossing = {
-        (read_sha256, tract.tract_id)
+        (read_sha256, tract.tract_id): tract_call_span(
+            context.tract_call_indices,
+            tract,
+            f"{read_sha256}:{tract.tract_id}",
+        )
         for read_sha256, context in contexts.items()
         for tract in active_tracts
-        if read_crosses_tract(context, tract)
+        if covers_complete_tract(context.tract_positions, tract)
     }
     if not crossing:
         raise ValueError("no validation read spans a supported rCRS poly-C tract")
@@ -611,7 +490,13 @@ def build_staged_polyc_phase(corpus: ResearchCorpus, stage: Path) -> None:
                 for tract in active_tracts:
                     if (read_sha256, tract.tract_id) not in crossing:
                         continue
-                    row = observation_record(source, context, tract, reference_bases)
+                    row = observation_record(
+                        source,
+                        context,
+                        tract,
+                        crossing[(read_sha256, tract.tract_id)],
+                        reference_bases,
+                    )
                     write_row(
                         observations_writer,
                         row,
