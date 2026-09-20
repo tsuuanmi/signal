@@ -18,6 +18,7 @@ from .model import (
     PHASE_ERROR_CHARACTERIZATION_SCHEMA_VERSION,
     PHASE_INTERPRETATION_DATASET_SCHEMA_VERSION,
     VARIANT_PHASE_CONTEXT_SCHEMA_VERSION,
+    VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION,
 )
 from .phase_artifact import (
     CandidateRecord,
@@ -31,6 +32,7 @@ from .phase_interpretation_dataset import DEVELOPMENT_WINDOW_COLUMNS
 from .research_loader import json_object, strict_keys
 from .variant_phase_context import DIFFERENCE_COLUMNS_OUT
 from .variant_phase_context import WINDOW_COLUMNS as CONTEXT_WINDOW_COLUMNS
+from .variant_profile_evaluation import SAMPLE_COLUMNS
 
 INTERPRETATION_INDEX_FIELDS = (
     "schema_version",
@@ -90,6 +92,24 @@ CONTEXT_INDEX_FIELDS = (
     "readiness_sha256",
     "readiness_rows",
     "readiness_columns",
+)
+
+EVALUATION_INDEX_FIELDS = (
+    "schema_version",
+    "truth_status",
+    "source_ground_truth_sha256",
+    "configuration_sha256",
+    "reference",
+    "method",
+    "summary",
+    "samples_file",
+    "samples_sha256",
+    "samples_rows",
+    "samples_columns",
+    "differences_file",
+    "differences_sha256",
+    "differences_rows",
+    "differences_columns",
 )
 
 CANDIDATE_COLUMNS = (
@@ -234,6 +254,7 @@ class CandidateFeatures:
 @dataclass(frozen=True)
 class WindowFeatures:
     window: PreparedWindow
+    evaluated: bool
     difference_ids: frozenset[str]
     extra_ids: frozenset[str]
     missing_ids: frozenset[str]
@@ -253,6 +274,8 @@ class WindowFeatures:
 
     @property
     def overlap_context(self) -> str:
+        if not self.evaluated:
+            return "not_evaluated"
         if self.extra_ids and self.missing_ids:
             return "extra+missing"
         if self.extra_ids:
@@ -427,6 +450,43 @@ def load_context(
         "variant phase windows",
     )
     return index, differences, windows
+
+
+def load_evaluated_cases(
+    evaluation_dir: Path,
+    context_index: dict[str, Any],
+) -> set[str]:
+    index_path = evaluation_dir / "index.json"
+    if not index_path.is_file():
+        raise ValueError(f"variant-profile evaluation index is missing: {index_path}")
+    if file_sha256(index_path) != context_index["source_variant_profile_evaluation_sha256"]:
+        raise ValueError("variant-profile evaluation differs from variant phase context")
+    index = json_object(index_path)
+    strict_keys(index, EVALUATION_INDEX_FIELDS, "variant-profile evaluation index")
+    if index["schema_version"] != VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION:
+        raise ValueError(
+            f"unsupported variant-profile evaluation schema: {index['schema_version']!r}"
+        )
+    if index["samples_file"] != "samples.csv":
+        raise ValueError("variant-profile samples_file must be samples.csv")
+    if index["samples_columns"] != list(SAMPLE_COLUMNS):
+        raise ValueError("variant-profile sample columns differ from current contract")
+    samples = load_csv(
+        evaluation_dir / "samples.csv",
+        SAMPLE_COLUMNS,
+        index_count(index["samples_rows"], "variant-profile samples_rows"),
+        str(index["samples_sha256"]),
+        "variant-profile samples",
+    )
+    cases: set[str] = set()
+    for row in samples:
+        case_id = row["validation_case_id"]
+        if not case_id:
+            raise ValueError("variant-profile sample is missing validation_case_id")
+        if case_id in cases:
+            raise ValueError(f"duplicate evaluated validation_case_id: {case_id}")
+        cases.add(case_id)
+    return cases
 
 
 def validate_provenance(
@@ -610,6 +670,7 @@ def overlap_annotations(
 
 def summarize_window(
     window: PreparedWindow,
+    evaluated: bool,
     difference_ids: frozenset[str],
     extra_ids: frozenset[str],
     missing_ids: frozenset[str],
@@ -640,8 +701,13 @@ def summarize_window(
         raise ValueError(
             f"{window.record.window_id}: informative candidate mass is missing"
         )
+    if not evaluated and difference_ids:
+        raise ValueError(
+            f"{window.record.window_id}: unevaluated case has biological error links"
+        )
     return WindowFeatures(
         window=window,
+        evaluated=evaluated,
         difference_ids=difference_ids,
         extra_ids=extra_ids,
         missing_ids=missing_ids,
@@ -671,6 +737,7 @@ def build_features(
     candidate_rows: list[dict[str, str]],
     differences: list[dict[str, str]],
     links: list[dict[str, str]],
+    evaluated_cases: set[str],
 ) -> list[WindowFeatures]:
     windows: dict[str, PreparedWindow] = {}
     for line, row in enumerate(window_rows, start=2):
@@ -719,6 +786,7 @@ def build_features(
         output.append(
             summarize_window(
                 windows[window_id],
+                windows[window_id].record.validation_case_id in evaluated_cases,
                 ids,
                 extra,
                 missing,
@@ -1010,6 +1078,7 @@ def strata_rows(
 def output_index(
     interpretation_dir: Path,
     interpretation_index: dict[str, Any],
+    evaluation_dir: Path,
     context_dir: Path,
     context_index: dict[str, Any],
     paths: dict[str, Path],
@@ -1021,9 +1090,9 @@ def output_index(
             interpretation_dir / "index.json"
         ),
         "source_variant_phase_context_sha256": file_sha256(context_dir / "index.json"),
-        "source_variant_profile_evaluation_sha256": context_index[
-            "source_variant_profile_evaluation_sha256"
-        ],
+        "source_variant_profile_evaluation_sha256": file_sha256(
+            evaluation_dir / "index.json"
+        ),
         "source_corpus_sha256": interpretation_index["source_corpus_sha256"],
         "source_polyc_phase_sha256": interpretation_index["source_polyc_phase_sha256"],
         "source_phase_hypotheses_sha256": interpretation_index[
@@ -1043,8 +1112,12 @@ def output_index(
                 "representation disagreements excluded upstream"
             ),
             "none_context_semantics": (
-                "window has no exact biological missing/extra disagreement overlap; "
-                "not a clean or true-negative label"
+                "evaluated window has no exact biological missing/extra disagreement "
+                "overlap; not a clean or true-negative label"
+            ),
+            "not_evaluated_semantics": (
+                "validation case is absent from variant-profile evaluation; no proxy "
+                "correctness label is inferred"
             ),
             "candidate_features": (
                 "nonzero_mass=shifted+residual and structured_fraction="
@@ -1082,19 +1155,25 @@ def output_index(
 
 def publish_phase_error_characterization(
     interpretation_dir: Path,
+    evaluation_dir: Path,
     context_dir: Path,
     output_dir: Path,
 ) -> None:
     interpretation_dir = interpretation_dir.resolve()
+    evaluation_dir = evaluation_dir.resolve()
     context_dir = context_dir.resolve()
     output_dir = output_dir.resolve()
     for label, path in (
         ("phase interpretation dataset", interpretation_dir),
+        ("variant-profile evaluation", evaluation_dir),
         ("variant phase context", context_dir),
     ):
         if not path.is_dir():
             raise ValueError(f"{label} directory does not exist: {path}")
-    validate_new_directory(output_dir, (interpretation_dir, context_dir))
+    validate_new_directory(
+        output_dir,
+        (interpretation_dir, evaluation_dir, context_dir),
+    )
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     if not output_dir.parent.is_dir() or output_dir.parent.is_symlink():
         raise ValueError(
@@ -1106,8 +1185,15 @@ def publish_phase_error_characterization(
     )
     context_index, differences, links = load_context(context_dir)
     validate_provenance(interpretation_index, context_index)
+    evaluated_cases = load_evaluated_cases(evaluation_dir, context_index)
 
-    features = build_features(window_source, candidate_source, differences, links)
+    features = build_features(
+        window_source,
+        candidate_source,
+        differences,
+        links,
+        evaluated_cases,
+    )
     candidate_output = candidate_rows(features)
     window_output = [window_row(item) for item in features]
     transition_output = transition_rows(window_output)
@@ -1137,6 +1223,7 @@ def publish_phase_error_characterization(
             output_index(
                 interpretation_dir,
                 interpretation_index,
+                evaluation_dir,
                 context_dir,
                 context_index,
                 paths,
