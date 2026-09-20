@@ -93,6 +93,7 @@ mod tests {
     };
     use crate::model::locus_evidence::{EvidenceProfile, LocusEvidence};
     use crate::model::nucleotide::Nucleotide;
+    use crate::model::phase::{PhaseApplicability, ReadPhaseEvidence};
     use crate::model::quality::{CallQuality, QualityControlResult};
     use crate::model::signal::{NoisyRegion, SignalAnalysis};
     use crate::model::variant::{
@@ -240,6 +241,10 @@ mod tests {
                     unresolved_query_bases: 0,
                 },
                 columns,
+            },
+            phase: ReadPhaseEvidence {
+                applicability: PhaseApplicability::NotApplicable,
+                tracts: Vec::new(),
             },
             variants: VariantCallingResult {
                 reported: variants,
