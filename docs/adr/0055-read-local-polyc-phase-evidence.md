@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-20
-- **Implementation:** Design boundary only; no production detector, phase state, weighting, no-call, or public-schema change.
+- **Implementation:** Boundary implemented by ADR-0056 as continuous internal measurement only; no phase state, weighting, no-call, or public-schema change.
 
 ## Context
 
