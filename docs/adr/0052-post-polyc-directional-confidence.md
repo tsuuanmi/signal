@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-20
-- **Implementation:** Deferred; this ADR defines the scientific/engineering invariant only.
+- **Implementation:** Descriptive validation measurement implemented; production attenuation/detection/recovery remain deferred.
 
 ## Context
 
@@ -90,6 +90,18 @@ tract should remain conservatively lower-confidence for review/calling purposes.
   length heteroplasmy, PCR/cycle-sequencing slippage, and the downstream reliability
   consequence; it need not solve their biological origin before discounting unreliable
   nucleotide evidence.
+
+## Research measurement
+
+The implemented local validation tool `scripts/analyze_polyc_phase.py` now measures
+read-path context without changing production behavior. It emits raw before/inside/after
+tract geometry, signed genomic/call-order distance, reference-oriented profile impurity,
+previous/current/next reference-base mass, and read-local T310/T16189 evidence for reads
+that span a complete validated rCRS tract.
+
+The tool deliberately defines no phase score, recovery threshold, artifact verdict, or
+confidence multiplier. See
+[poly-C phase-instability research](../research/Signal/polyc-phase-instability.md).
 
 ## Deferred implementation
 
