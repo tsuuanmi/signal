@@ -275,7 +275,7 @@ def parse_observation(row: dict[str, str], line: int) -> PhaseObservation | None
         ),
         reference_base=reference_base,
         state=row["state"],
-        aligned_base=optional_base(row["aligned_base"], f"{label}.aligned_base"),
+        aligned_base=row["aligned_base"] or None,
         in_noisy_region=optional_boolean(
             row["in_noisy_region"],
             f"{label}.in_noisy_region",
