@@ -72,12 +72,29 @@ class PhaseObservation:
     amplicon_id: str | None
     orientation: str
     interrupt_aligned_base: str | None
+    position_1based: int
     distance: int
     call_index: int | None
     reference_base: str
+    state: str
+    aligned_base: str | None
     in_noisy_region: bool | None
     profile: tuple[float, float, float, float] | None
     profile_impurity: float | None
+
+
+@dataclass(frozen=True)
+class PhaseWindow:
+    window_id: str
+    observations: tuple[PhaseObservation, ...]
+
+
+@dataclass(frozen=True)
+class CandidateContribution:
+    shifted_base: str
+    zero_mass: float
+    shifted_mass: float
+    residual_mass: float
 
 
 def json_object(path: Path) -> dict[str, Any]:
@@ -247,12 +264,18 @@ def parse_observation(row: dict[str, str], line: int) -> PhaseObservation | None
             row["interrupt_aligned_base"],
             f"{label}.interrupt_aligned_base",
         ),
+        position_1based=positive_int(
+            row["position_1based"],
+            f"{label}.position_1based",
+        ),
         distance=distance,
         call_index=optional_nonnegative_int(
             row["call_index_0based"],
             f"{label}.call_index_0based",
         ),
         reference_base=reference_base,
+        state=row["state"],
+        aligned_base=optional_base(row["aligned_base"], f"{label}.aligned_base"),
         in_noisy_region=optional_boolean(
             row["in_noisy_region"],
             f"{label}.in_noisy_region",
@@ -334,38 +357,79 @@ def write_row(
     target.writerow({key: csv_value(row[key]) for key in columns})
 
 
+def candidate_contribution(
+    observation: PhaseObservation,
+    reference_by_distance: dict[int, str],
+    offset: int,
+) -> CandidateContribution | None:
+    if observation.profile is None:
+        return None
+    shifted_base = reference_by_distance.get(observation.distance + offset)
+    if shifted_base is None or shifted_base == observation.reference_base:
+        return None
+    zero_mass = mass(observation.profile, observation.reference_base)
+    shifted_mass = mass(observation.profile, shifted_base)
+    residual = 1.0 - zero_mass - shifted_mass
+    if residual < -1e-9:
+        raise ValueError("candidate phase mass exceeds normalized profile mass")
+    return CandidateContribution(
+        shifted_base=shifted_base,
+        zero_mass=zero_mass,
+        shifted_mass=shifted_mass,
+        residual_mass=max(0.0, residual),
+    )
+
+
 def candidate_metrics(
-    window: list[PhaseObservation],
+    window: tuple[PhaseObservation, ...],
     reference_by_distance: dict[int, str],
     offset: int,
 ) -> tuple[int, float | None, float | None, float | None]:
-    zero_masses: list[float] = []
-    shifted_masses: list[float] = []
-    residual_masses: list[float] = []
-
-    for observation in window:
-        if observation.profile is None:
-            continue
-        shifted_base = reference_by_distance.get(observation.distance + offset)
-        if shifted_base is None or shifted_base == observation.reference_base:
-            continue
-        zero_mass = mass(observation.profile, observation.reference_base)
-        shifted_mass = mass(observation.profile, shifted_base)
-        residual = 1.0 - zero_mass - shifted_mass
-        if residual < -1e-9:
-            raise ValueError("candidate phase mass exceeds normalized profile mass")
-        zero_masses.append(zero_mass)
-        shifted_masses.append(shifted_mass)
-        residual_masses.append(max(0.0, residual))
-
-    if not zero_masses:
+    contributions = [
+        contribution
+        for observation in window
+        if (
+            contribution := candidate_contribution(
+                observation,
+                reference_by_distance,
+                offset,
+            )
+        )
+        is not None
+    ]
+    if not contributions:
         return 0, None, None, None
     return (
-        len(zero_masses),
-        mean(zero_masses),
-        mean(shifted_masses),
-        mean(residual_masses),
+        len(contributions),
+        mean([contribution.zero_mass for contribution in contributions]),
+        mean([contribution.shifted_mass for contribution in contributions]),
+        mean([contribution.residual_mass for contribution in contributions]),
     )
+
+
+def phase_windows(
+    groups: dict[tuple[str, str], list[PhaseObservation]],
+    window_size: int,
+    window_step: int,
+) -> list[PhaseWindow]:
+    windows: list[PhaseWindow] = []
+    seen: set[str] = set()
+    for key in sorted(groups):
+        profiled = [row for row in groups[key] if row.profile is not None]
+        if len(profiled) < window_size:
+            continue
+        for start in range(0, len(profiled) - window_size + 1, window_step):
+            observations = tuple(profiled[start : start + window_size])
+            first = observations[0]
+            last = observations[-1]
+            window_id = (
+                f"{first.tract_id}:{first.read_sha256}:{first.distance}-{last.distance}"
+            )
+            if window_id in seen:
+                raise ValueError(f"duplicate generated phase window {window_id}")
+            seen.add(window_id)
+            windows.append(PhaseWindow(window_id, observations))
+    return windows
 
 
 def window_rows(
@@ -377,72 +441,64 @@ def window_rows(
     windows: list[dict[str, Any]] = []
     hypotheses: list[dict[str, Any]] = []
     offsets = tuple(range(-max_offset, 0)) + tuple(range(1, max_offset + 1))
+    references = {
+        key: {row.distance: row.reference_base for row in rows}
+        for key, rows in groups.items()
+    }
 
-    for key in sorted(groups):
-        rows = groups[key]
-        reference_by_distance = {row.distance: row.reference_base for row in rows}
-        profiled = [row for row in rows if row.profile is not None]
-        if len(profiled) < window_size:
-            continue
+    for generated in phase_windows(groups, window_size, window_step):
+        window = generated.observations
+        first = window[0]
+        last = window[-1]
+        reference_by_distance = references[(first.read_sha256, first.tract_id)]
+        zero_masses = [
+            mass(row.profile, row.reference_base)
+            for row in window
+            if row.profile is not None
+        ]
+        impurities = [
+            row.profile_impurity for row in window if row.profile_impurity is not None
+        ]
+        windows.append(
+            {
+                "window_id": generated.window_id,
+                "validation_case_id": first.validation_case_id,
+                "read_sha256": first.read_sha256,
+                "tract_id": first.tract_id,
+                "amplicon_id": first.amplicon_id,
+                "orientation": first.orientation,
+                "interrupt_aligned_base": first.interrupt_aligned_base,
+                "start_distance_after_tract": first.distance,
+                "end_distance_after_tract": last.distance,
+                "start_call_index_0based": first.call_index,
+                "end_call_index_0based": last.call_index,
+                "profile_observations": len(window),
+                "noisy_observations": sum(
+                    row.in_noisy_region is True for row in window
+                ),
+                "mean_profile_impurity": mean(impurities),
+                "mean_zero_reference_mass": mean(zero_masses),
+            }
+        )
 
-        for start in range(0, len(profiled) - window_size + 1, window_step):
-            window = profiled[start : start + window_size]
-            first = window[0]
-            last = window[-1]
-            window_id = (
-                f"{first.tract_id}:{first.read_sha256}:{first.distance}-{last.distance}"
+        for offset in offsets:
+            informative, zero_mass, shifted_mass, residual_mass = candidate_metrics(
+                window,
+                reference_by_distance,
+                offset,
             )
-            zero_masses = [
-                mass(row.profile, row.reference_base)
-                for row in window
-                if row.profile is not None
-            ]
-            impurities = [
-                row.profile_impurity
-                for row in window
-                if row.profile_impurity is not None
-            ]
-            windows.append(
+            hypotheses.append(
                 {
-                    "window_id": window_id,
-                    "validation_case_id": first.validation_case_id,
-                    "read_sha256": first.read_sha256,
-                    "tract_id": first.tract_id,
-                    "amplicon_id": first.amplicon_id,
-                    "orientation": first.orientation,
-                    "interrupt_aligned_base": first.interrupt_aligned_base,
-                    "start_distance_after_tract": first.distance,
-                    "end_distance_after_tract": last.distance,
-                    "start_call_index_0based": first.call_index,
-                    "end_call_index_0based": last.call_index,
-                    "profile_observations": len(window),
-                    "noisy_observations": sum(
-                        row.in_noisy_region is True for row in window
-                    ),
-                    "mean_profile_impurity": mean(impurities),
-                    "mean_zero_reference_mass": mean(zero_masses),
+                    "window_id": generated.window_id,
+                    "reference_offset_in_read_order": offset,
+                    "informative_positions": informative,
+                    "mean_zero_reference_mass": zero_mass,
+                    "mean_shifted_reference_mass": shifted_mass,
+                    "mean_residual_mass": residual_mass,
                 }
             )
 
-            for offset in offsets:
-                informative, zero_mass, shifted_mass, residual_mass = candidate_metrics(
-                    window,
-                    reference_by_distance,
-                    offset,
-                )
-                hypotheses.append(
-                    {
-                        "window_id": window_id,
-                        "reference_offset_in_read_order": offset,
-                        "informative_positions": informative,
-                        "mean_zero_reference_mass": zero_mass,
-                        "mean_shifted_reference_mass": shifted_mass,
-                        "mean_residual_mass": residual_mass,
-                    }
-                )
-
     return windows, hypotheses
-
 
 def output_index(
     phase_dir: Path,
