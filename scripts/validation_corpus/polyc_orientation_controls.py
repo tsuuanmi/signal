@@ -17,6 +17,7 @@ from .model import POLYC_ORIENTATION_CONTROL_SCHEMA_VERSION
 from .polyc_context import (
     ReadContext,
     crossing_spans,
+    interrupt_fields,
     mass_for_base,
     profile,
     scan_context,
@@ -49,6 +50,7 @@ OBSERVATION_COLUMNS = (
     "amplicon_id",
     "declared_direction",
     "artifact_tags",
+    "interrupt_aligned_base",
     "path_region",
     "call_index_0based",
     "read_order_distance_from_tract",
@@ -74,6 +76,8 @@ LOCUS_COLUMNS = (
     "position_1based",
     "reference_base",
     "post_orientation",
+    "post_interrupt_bases",
+    "control_interrupt_bases",
     "post_reads",
     "control_reads",
     "post_profile_reads",
@@ -111,9 +115,16 @@ class RoleAccumulator:
     profiles: list[tuple[float, float, float, float]] = field(default_factory=list)
     impurities: list[float] = field(default_factory=list)
     reference_masses: list[float] = field(default_factory=list)
+    interrupt_bases: set[str] = field(default_factory=set)
 
     def add(self, row: dict[str, Any]) -> None:
         self.reads += 1
+        interrupt_base = row["interrupt_aligned_base"]
+        if interrupt_base is not None:
+            value = str(interrupt_base)
+            if value not in {"A", "C", "G", "T"}:
+                raise ValueError(f"unsupported interrupt base {value!r}")
+            self.interrupt_bases.add(value)
         if row["in_noisy_region"] is True:
             self.noisy_observations += 1
         values = tuple(row[f"profile_{base}"] for base in ("a", "c", "g", "t"))
@@ -309,6 +320,7 @@ def observation_row(
     reference_mass = (
         mass_for_base(values, reference_base) if values is not None else None
     )
+    interrupt = interrupt_fields(context, tract)
     return {
         "control_id": control_id,
         "validation_case_id": context.validation_case_id,
@@ -327,6 +339,7 @@ def observation_row(
         "amplicon_id": context.amplicon_id,
         "declared_direction": context.declared_direction,
         "artifact_tags": context.artifact_tags,
+        "interrupt_aligned_base": interrupt["interrupt_aligned_base"],
         "path_region": item.region,
         "call_index_0based": call_index,
         "read_order_distance_from_tract": read_order_distance(
@@ -405,6 +418,8 @@ def locus_row(
         "position_1based": position,
         "reference_base": reference_base,
         "post_orientation": post_orientation,
+        "post_interrupt_bases": ",".join(sorted(post.interrupt_bases)),
+        "control_interrupt_bases": ",".join(sorted(control.interrupt_bases)),
         "post_reads": post.reads,
         "control_reads": control.reads,
         "post_profile_reads": len(post.profiles),
@@ -458,6 +473,10 @@ def output_index(
             ),
             "orientation_source": "selected alignment orientation; never declared_direction",
             "read_selection": "retain every eligible read; no pair or winner selection",
+            "interrupt_evidence": (
+                "read-local aligned interrupt base retained per observation; locus "
+                "signatures are sorted unique observed bases, never genotype calls"
+            ),
             "mean_profile_distance": "total_variation = 0.5 * sum(abs(post_i-control_i))",
             "thresholds": "none",
         },
