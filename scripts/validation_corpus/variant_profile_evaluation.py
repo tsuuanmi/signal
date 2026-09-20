@@ -29,6 +29,7 @@ from .reviewer_variants import (
 SAMPLE_SCHEMA_VERSION = "signal.sample_evidence/v8"
 
 SAMPLE_COLUMNS = (
+    "sample_id",
     "validation_case_id",
     "signal_result_sha256",
     "reviewer_variants",
@@ -41,6 +42,7 @@ SAMPLE_COLUMNS = (
 )
 
 DIFFERENCE_COLUMNS = (
+    "sample_id",
     "validation_case_id",
     "difference",
     "reviewer_tokens",
@@ -87,7 +89,7 @@ def validate_reference_allele(position: int, allele: str, reference: str) -> Non
 
 def load_signal_variants(
     path: Path,
-    case_id: str,
+    sample_id: str,
     reference_name: str,
     reference: str,
 ) -> tuple[list[SignalVariant], str]:
@@ -95,8 +97,8 @@ def load_signal_variants(
     value = json_object(path)
     if value.get("schema_version") != SAMPLE_SCHEMA_VERSION:
         raise ValueError(f"{path}: expected {SAMPLE_SCHEMA_VERSION}")
-    if value.get("sample_id") != case_id:
-        raise ValueError(f"{path}: sample_id differs from {case_id!r}")
+    if value.get("sample_id") != sample_id:
+        raise ValueError(f"{path}: sample_id differs from {sample_id!r}")
 
     provenance = value.get("provenance")
     if not isinstance(provenance, dict):
@@ -339,15 +341,16 @@ def publish_evaluation(
     configurations: set[str] = set()
 
     for record in truth["records"]:
+        sample_id = record["sample_id"]
         case_id = record["validation_case_id"]
-        result_path = results_dir / case_id / f"{case_id}.json"
+        result_path = results_dir / sample_id / f"{sample_id}.json"
         if not result_path.is_file():
             raise ValueError(f"missing sample result: {result_path}")
 
         reviewer = parse_reviewer_variants(record["variants"], reference)
         signal, configuration_sha256 = load_signal_variants(
             result_path,
-            case_id,
+            sample_id,
             reference_name,
             reference,
         )
@@ -362,6 +365,7 @@ def publish_evaluation(
 
         sample_rows.append(
             {
+                "sample_id": sample_id,
                 "validation_case_id": case_id,
                 "signal_result_sha256": file_sha256(result_path),
                 "reviewer_variants": len(reviewer),
@@ -378,6 +382,7 @@ def publish_evaluation(
             reviewer_variant = reviewer[reviewer_index]
             difference_rows.append(
                 {
+                    "sample_id": sample_id,
                     "validation_case_id": case_id,
                     "difference": "missing",
                     "reviewer_tokens": ";".join(reviewer_variant.tokens),
@@ -391,6 +396,7 @@ def publish_evaluation(
             signal_variant = signal[signal_index]
             difference_rows.append(
                 {
+                    "sample_id": sample_id,
                     "validation_case_id": case_id,
                     "difference": "extra",
                     "reviewer_tokens": "",
@@ -407,6 +413,7 @@ def publish_evaluation(
             signal_variant = signal[signal_index]
             difference_rows.append(
                 {
+                    "sample_id": sample_id,
                     "validation_case_id": case_id,
                     "difference": "representation",
                     "reviewer_tokens": ";".join(reviewer_variant.tokens),
@@ -432,9 +439,12 @@ def publish_evaluation(
         )
     configuration_sha256 = next(iter(configurations))
 
-    sample_rows.sort(key=lambda row: str(row["validation_case_id"]))
+    sample_rows.sort(
+        key=lambda row: (str(row["sample_id"]), str(row["validation_case_id"]))
+    )
     difference_rows.sort(
         key=lambda row: (
+            str(row["sample_id"]),
             str(row["validation_case_id"]),
             str(row["difference"]),
             str(row["reviewer_tokens"]),
