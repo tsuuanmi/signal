@@ -586,28 +586,33 @@ mod tests {
         }
         Reference {
             name: "rCRS".into(),
-            sequence: String::from_utf8(sequence).expect("synthetic rCRS is ASCII"),
+            sequence: sequence.into_iter().map(char::from).collect(),
             topology: ReferenceTopology::Circular,
             sequence_sha256: RCRS_SEQUENCE_SHA256.into(),
         }
     }
 
-    fn one_hot(base: char) -> EvidenceProfile {
-        let mut weights = [0.0; 4];
-        weights[canonical_index(base).expect("canonical test base")] = 1.0;
-        EvidenceProfile { weights }
+    fn test_index(base: char) -> Result<usize> {
+        canonical_index(base)
+            .ok_or_else(|| Error::Phase(format!("test fixture base {base:?} is non-canonical")))
     }
 
-    fn mixture(zero: char, shifted: char) -> EvidenceProfile {
+    fn one_hot(base: char) -> Result<EvidenceProfile> {
         let mut weights = [0.0; 4];
-        weights[canonical_index(zero).expect("canonical zero base")] = 0.60;
-        weights[canonical_index(shifted).expect("canonical shifted base")] = 0.35;
+        weights[test_index(base)?] = 1.0;
+        Ok(EvidenceProfile { weights })
+    }
+
+    fn mixture(zero: char, shifted: char) -> Result<EvidenceProfile> {
+        let mut weights = [0.0; 4];
+        weights[test_index(zero)?] = 0.60;
+        weights[test_index(shifted)?] = 0.35;
         let residual = ['A', 'C', 'G', 'T']
             .into_iter()
             .find(|base| *base != zero && *base != shifted)
-            .expect("residual base");
-        weights[canonical_index(residual).expect("canonical residual base")] = 0.05;
-        EvidenceProfile { weights }
+            .ok_or_else(|| Error::Phase("test fixture lacks a residual base".into()))?;
+        weights[test_index(residual)?] = 0.05;
+        Ok(EvidenceProfile { weights })
     }
 
     fn locus(index: usize, profile: Option<EvidenceProfile>) -> LocusEvidence {
@@ -677,7 +682,7 @@ mod tests {
         reference: &Reference,
         after_count: usize,
         missing_profile_distance: Option<usize>,
-    ) -> (Alignment, SignalAnalysis) {
+    ) -> Result<(Alignment, SignalAnalysis)> {
         let tract = TRACTS[0];
         let mut columns = Vec::new();
         let mut profiles = Vec::new();
@@ -691,7 +696,7 @@ mod tests {
                 original_call_index_0based: Some(call),
                 reference_index_0based: Some(position),
             });
-            profiles.push(Some(one_hot(base)));
+            profiles.push(Some(one_hot(base)?));
             call += 1;
         }
 
@@ -706,13 +711,16 @@ mod tests {
                 original_call_index_0based: Some(call),
                 reference_index_0based: Some(position),
             });
-            let profile =
-                (missing_profile_distance != Some(distance)).then(|| mixture(base, shifted));
+            let profile = if missing_profile_distance == Some(distance) {
+                None
+            } else {
+                Some(mixture(base, shifted)?)
+            };
             profiles.push(profile);
             call += 1;
         }
 
-        (alignment(Orientation::Forward, columns), signal(profiles))
+        Ok((alignment(Orientation::Forward, columns), signal(profiles)))
     }
 
     #[test]
@@ -733,7 +741,7 @@ mod tests {
     #[test]
     fn complete_hv2_read_preserves_candidate_curve() -> Result<()> {
         let reference = canonical_reference();
-        let (alignment, signal) = forward_hv2_read(&reference, 30, None);
+        let (alignment, signal) = forward_hv2_read(&reference, 30, None)?;
         let evidence = measure(&alignment, &signal, &reference)?;
 
         assert_eq!(evidence.applicability, PhaseApplicability::Applicable);
@@ -741,7 +749,7 @@ mod tests {
             .tracts
             .iter()
             .find(|tract| tract.tract == PhaseTractId::Hv2)
-            .expect("HV2 evidence");
+            .ok_or_else(|| Error::Phase("synthetic read lacks HV2 evidence".into()))?;
         assert_eq!(hv2.availability, PhaseEvidenceAvailability::Measured);
         assert_eq!(hv2.windows.len(), 2);
         assert_eq!(hv2.windows[0].start_distance_after_tract, 1);
@@ -753,23 +761,29 @@ mod tests {
             .candidates
             .iter()
             .find(|candidate| candidate.reference_offset_in_read_order == 1)
-            .expect("+1 candidate");
+            .ok_or_else(|| Error::Phase("synthetic window lacks +1 candidate".into()))?;
         assert_eq!(plus_one.informative_positions, 25);
-        assert!((plus_one.mean_shifted_reference_mass.expect("shifted mass") - 0.35).abs() < 1e-12);
-        assert!((plus_one.mean_residual_mass.expect("residual mass") - 0.05).abs() < 1e-12);
+        let shifted_mass = plus_one
+            .mean_shifted_reference_mass
+            .ok_or_else(|| Error::Phase("+1 candidate lacks shifted mass".into()))?;
+        let residual_mass = plus_one
+            .mean_residual_mass
+            .ok_or_else(|| Error::Phase("+1 candidate lacks residual mass".into()))?;
+        assert!((shifted_mass - 0.35).abs() < 1e-12);
+        assert!((residual_mass - 0.05).abs() < 1e-12);
         Ok(())
     }
 
     #[test]
     fn profile_gap_is_skipped_without_interval_membership_fallback() -> Result<()> {
         let reference = canonical_reference();
-        let (alignment, signal) = forward_hv2_read(&reference, 26, Some(3));
+        let (alignment, signal) = forward_hv2_read(&reference, 26, Some(3))?;
         let evidence = measure(&alignment, &signal, &reference)?;
         let hv2 = evidence
             .tracts
             .iter()
             .find(|tract| tract.tract == PhaseTractId::Hv2)
-            .expect("HV2 evidence");
+            .ok_or_else(|| Error::Phase("synthetic read lacks HV2 evidence".into()))?;
 
         assert_eq!(hv2.availability, PhaseEvidenceAvailability::Measured);
         assert_eq!(hv2.windows.len(), 1);
@@ -782,7 +796,7 @@ mod tests {
     #[test]
     fn partial_tract_coverage_is_explicitly_insufficient() -> Result<()> {
         let reference = canonical_reference();
-        let (mut alignment, signal) = forward_hv2_read(&reference, 30, None);
+        let (mut alignment, signal) = forward_hv2_read(&reference, 30, None)?;
         alignment
             .columns
             .retain(|column| column.reference_index_0based != Some(305));
@@ -791,7 +805,7 @@ mod tests {
             .tracts
             .iter()
             .find(|tract| tract.tract == PhaseTractId::Hv2)
-            .expect("HV2 evidence");
+            .ok_or_else(|| Error::Phase("synthetic read lacks HV2 evidence".into()))?;
 
         assert_eq!(
             hv2.availability,
@@ -824,13 +838,13 @@ mod tests {
     #[test]
     fn incomplete_window_is_explicitly_insufficient() -> Result<()> {
         let reference = canonical_reference();
-        let (alignment, signal) = forward_hv2_read(&reference, 24, None);
+        let (alignment, signal) = forward_hv2_read(&reference, 24, None)?;
         let evidence = measure(&alignment, &signal, &reference)?;
         let hv2 = evidence
             .tracts
             .iter()
             .find(|tract| tract.tract == PhaseTractId::Hv2)
-            .expect("HV2 evidence");
+            .ok_or_else(|| Error::Phase("synthetic read lacks HV2 evidence".into()))?;
 
         assert_eq!(
             hv2.availability,
