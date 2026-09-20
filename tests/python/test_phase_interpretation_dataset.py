@@ -7,6 +7,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Any
 from unittest.mock import patch
 
 from scripts.validation_corpus.filesystem import file_sha256
@@ -54,7 +55,7 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
         self,
         read_sha256: str,
         orientation: str,
-    ) -> dict[str, object]:
+    ) -> dict[str, Any]:
         return {
             "read_sha256": read_sha256,
             "orientation": orientation,
@@ -92,7 +93,7 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
         case_id: str,
         read_sha256: str,
         orientation: str,
-    ) -> dict[str, object]:
+    ) -> dict[str, Any]:
         return {
             "schema_version": MEASUREMENT_SCHEMA_VERSION,
             "signal_version": "0.1.0",
@@ -156,7 +157,7 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
         fit: bool,
         orientation: str = "forward",
         amplicon: str = "HV2",
-    ) -> dict[str, object]:
+    ) -> dict[str, Any]:
         measurement = self.corpus / "cases" / f"{case_id}.jsonl"
         measurement.write_text(
             json.dumps(
@@ -201,7 +202,7 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
         *,
         include_nonfit_development: bool = False,
         holdout_group: str = "holdout",
-    ) -> list[dict[str, object]]:
+    ) -> list[dict[str, Any]]:
         cases = [
             self.case_record(
                 "dev-fit",
@@ -306,7 +307,7 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
 
     def write_hypotheses(
         self,
-        cases: list[dict[str, object]],
+        cases: list[dict[str, Any]],
         *,
         orientation_overrides: dict[str, str] | None = None,
         source_corpus_sha256: str | None = None,
@@ -463,8 +464,6 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
                 self.root / "unknown-group",
                 self.plan(),
             )
-
-        self.hypotheses.unlink(missing_ok=True)
 
     def test_rejects_source_corpus_and_orientation_mismatch(self) -> None:
         cases = self.write_corpus()
