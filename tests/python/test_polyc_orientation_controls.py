@@ -83,14 +83,17 @@ class PolyCOrientationControlTests(unittest.TestCase):
             else HV2_POSITIONS[-1] - position
         )
         values = self.profile_for(base, selected_orientation, position)
+        interrupt_aligned_base = (
+            "C" if position == 310 and read_sha256 == "2" * 64 else base
+        )
         post_tract = (selected_orientation == "forward" and position == 316) or (
             selected_orientation == "reverse" and position == 302
         )
         return {
             "read_sha256": read_sha256,
             "orientation": selected_orientation,
-            "state": "reference",
-            "aligned_base": base,
+            "state": "alternate" if interrupt_aligned_base != base else "reference",
+            "aligned_base": interrupt_aligned_base,
             "quality": 60,
             "call_index_0based": call_index,
             "source_primary": base,
@@ -287,6 +290,7 @@ class PolyCOrientationControlTests(unittest.TestCase):
         self.assertEqual(mismatched_declared["orientation"], "forward")
         self.assertEqual(mismatched_declared["declared_direction"], "reverse")
         self.assertEqual(mismatched_declared["role"], "post_tract")
+        self.assertEqual(mismatched_declared["interrupt_aligned_base"], "C")
         self.assertEqual(mismatched_declared["pcr_replicate_id"], "PCR-2")
         self.assertEqual(mismatched_declared["amplicon_id"], "HV2-F2")
 
@@ -298,6 +302,8 @@ class PolyCOrientationControlTests(unittest.TestCase):
             for row in loci
             if row["position_1based"] == "316" and row["post_orientation"] == "forward"
         )
+        self.assertEqual(forward_locus["post_interrupt_bases"], "C,T")
+        self.assertEqual(forward_locus["control_interrupt_bases"], "T")
         self.assertEqual(forward_locus["post_reads"], "2")
         self.assertEqual(forward_locus["control_reads"], "2")
         self.assertEqual(forward_locus["post_profile_reads"], "2")

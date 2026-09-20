@@ -441,10 +441,6 @@ def window_rows(
                     }
                 )
 
-    if not windows:
-        raise ValueError(
-            "poly-C phase artifact contains no complete post-tract windows"
-        )
     return windows, hypotheses
 
 
@@ -527,6 +523,10 @@ def publish_phase_hypotheses(
         window_step,
         max_offset,
     )
+    if not windows:
+        raise ValueError(
+            "poly-C phase artifact contains no complete post-tract windows"
+        )
 
     stage = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.", dir=output_dir.parent))
     try:

@@ -6,6 +6,8 @@ All notable changes to this project are documented here.
 
 ### Breaking Changes
 
+- Replace research-only `signal.validation_polyc_orientation_controls/v1` with v2, preserving each read's aligned interrupt base and deterministic post/control interrupt-base signatures directly in the control artifact without a v1 compatibility path.
+
 - Replace `signal.sample_evidence/v7` with `signal.sample_evidence/v8`, adding required differential-locus support topology and per-call optional reference-oriented A/C/G/T evidence profiles plus noisy-region context without v7 compatibility output.
 
 - Replace `signal.sample_evidence/v6` with `signal.sample_evidence/v7`, adding required normalized-variant support topology across read eligibility and selected orientation without v6 compatibility output.
@@ -26,7 +28,9 @@ All notable changes to this project are documented here.
 
 ### Added
 
-- Poly-C opposite-orientation research now publishes `signal.validation_polyc_orientation_controls/v1` directly from the completed validation corpus, retaining every eligible same-case/same-locus post-tract read and opposite selected-orientation pre-tract control without pair selection or Cartesian expansion. The artifact preserves PCR/run/amplicon provenance and descriptive role profile geometry, including mean-profile Total Variation, without thresholds or production interpretation.
+- Post-poly-C parameter-sensitivity research now publishes `signal.validation_phase_sensitivity/v1`, evaluating a full-factorial window-size/stride/max-offset grid through the authoritative phase-hypothesis engine and characterization aggregation while retaining every candidate independently and selecting no preferred parameter set or threshold.
+
+- Poly-C opposite-orientation research now publishes `signal.validation_polyc_orientation_controls/v2` directly from the completed validation corpus, retaining every eligible same-case/same-locus post-tract read and opposite selected-orientation pre-tract control without pair selection or Cartesian expansion. The artifact preserves PCR/run/amplicon provenance and descriptive role profile geometry, including mean-profile Total Variation, without thresholds or production interpretation.
 
 - Post-poly-C phase characterization now publishes hash-bound `signal.validation_phase_characterization/v1` adjacent-window persistence, exact-distance trajectory, and observed-interrupt strata over the complete candidate curves from `signal.validation_phase_hypotheses/v1`. The research preserves every offset independently and defines no best shift, classifier, recovery threshold, genotype, length-heteroplasmy call, or production behavior.
 

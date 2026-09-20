@@ -319,6 +319,48 @@ def parse_candidate(row: dict[str, str], line: int) -> CandidateRecord:
     )
 
 
+def generated_records(
+    window_rows: list[dict[str, Any]],
+    hypothesis_rows: list[dict[str, Any]],
+) -> tuple[dict[str, WindowRecord], dict[tuple[str, int], CandidateRecord]]:
+    windows: dict[str, WindowRecord] = {}
+    for index, row in enumerate(window_rows, 2):
+        if set(row) != set(WINDOW_COLUMNS):
+            raise ValueError(f"generated window row {index - 2} has unexpected columns")
+        parsed = parse_window(
+            {
+                column: "" if row[column] is None else str(row[column])
+                for column in WINDOW_COLUMNS
+            },
+            index,
+        )
+        if parsed.window_id in windows:
+            raise ValueError(f"duplicate generated window_id {parsed.window_id}")
+        windows[parsed.window_id] = parsed
+
+    candidates: dict[tuple[str, int], CandidateRecord] = {}
+    for index, row in enumerate(hypothesis_rows, 2):
+        if set(row) != set(HYPOTHESIS_COLUMNS):
+            raise ValueError(
+                f"generated hypothesis row {index - 2} has unexpected columns"
+            )
+        parsed = parse_candidate(
+            {
+                column: "" if row[column] is None else str(row[column])
+                for column in HYPOTHESIS_COLUMNS
+            },
+            index,
+        )
+        if parsed.window_id not in windows:
+            raise ValueError("generated candidate references unknown window_id")
+        key = (parsed.window_id, parsed.offset)
+        if key in candidates:
+            raise ValueError(f"duplicate generated window/offset candidate {key}")
+        candidates[key] = parsed
+
+    return windows, candidates
+
+
 def load_source(
     source_dir: Path,
     index: dict[str, Any],

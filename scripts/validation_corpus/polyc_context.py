@@ -64,6 +64,35 @@ def mass_for_base(values: tuple[float, float, float, float], base: str) -> float
     return values[index]
 
 
+def interrupt_fields(
+    context: ReadContext,
+    tract: PolyCTract,
+) -> dict[str, Any]:
+    row = context.tract_observations.get(tract.interrupt_position_1based)
+    if row is None:
+        return {
+            "interrupt_state": None,
+            "interrupt_aligned_base": None,
+            "interrupt_call_index_0based": None,
+            "interrupt_profile_a": None,
+            "interrupt_profile_c": None,
+            "interrupt_profile_g": None,
+            "interrupt_profile_t": None,
+            "interrupt_in_noisy_region": None,
+        }
+    values = profile(row)
+    return {
+        "interrupt_state": row["state"],
+        "interrupt_aligned_base": row["aligned_base"],
+        "interrupt_call_index_0based": row["call_index_0based"],
+        "interrupt_profile_a": values[0] if values is not None else None,
+        "interrupt_profile_c": values[1] if values is not None else None,
+        "interrupt_profile_g": values[2] if values is not None else None,
+        "interrupt_profile_t": values[3] if values is not None else None,
+        "interrupt_in_noisy_region": row["in_noisy_region"],
+    }
+
+
 def scan_context(
     corpus: ResearchCorpus,
 ) -> tuple[dict[str, ReadContext], dict[int, str], tuple[PolyCTract, ...]]:
@@ -148,6 +177,7 @@ def crossing_spans(
 __all__ = [
     "ReadContext",
     "crossing_spans",
+    "interrupt_fields",
     "mass_for_base",
     "profile",
     "scan_context",
