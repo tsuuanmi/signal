@@ -120,11 +120,12 @@ decisions template may contain reviewer identities, truth-source references, and
 human-authored interpretation once edited, so both files inherit the same
 sensitive-derived-data policy and must not be committed with real local corpus content.
 
-Poly-C phase and candidate-hypothesis research generated under
+Poly-C phase, candidate-hypothesis, and characterization research generated under
 `validation-results/research/polyc-phase*/` retains sample IDs, trace hashes,
-reference-oriented nucleotide profiles, tract context, and downstream candidate-offset
-evidence. These are sensitive derived biological artifacts and MUST remain ignored local
-validation data under the same approval, retention, and redistribution policy.
+reference-oriented nucleotide profiles, tract context, downstream candidate-offset
+evidence, and derived persistence/trajectory summaries. These are sensitive derived
+biological artifacts and MUST remain ignored local validation data under the same
+approval, retention, and redistribution policy.
 
 Repository examples MUST use synthetic sample/read names and synthetic input hashes.
 Do not commit a local sample result merely because v8 is compact. Real local outputs
