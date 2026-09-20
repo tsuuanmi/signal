@@ -395,7 +395,10 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             configuration_sha256="c" * 64,
         )
 
-        with self.assertRaisesRegex(ValueError, "do not share one configuration_sha256"):
+        with self.assertRaisesRegex(
+            ValueError,
+            "do not share one configuration_sha256",
+        ):
             publish_evaluation(
                 truth,
                 self.root / "results",
