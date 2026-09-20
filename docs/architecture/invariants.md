@@ -68,10 +68,10 @@ These invariants span modules and are intentionally centralized. SRS and module 
 
 ## Read-local phase evidence
 
-- **INV-PHASE-001:** Future production phase evidence is downstream of selected reference placement. It may consume selected orientation/path and immutable reference-oriented evidence, but it cannot feed back into alignment scoring, orientation selection, traceback, canonicalization, calls, or upstream signal evidence.
+- **INV-PHASE-001:** Production phase evidence is downstream of selected reference placement. It may consume selected orientation/path and immutable reference-oriented evidence, but it cannot feed back into alignment scoring, orientation selection, traceback, canonicalization, calls, or upstream signal evidence.
 - **INV-PHASE-002:** Phase applicability and evidence availability are distinct from interpretation. An unsupported reference/context or insufficient downstream evidence cannot be represented as stable phase, reference support, or absence of instability.
 - **INV-PHASE-003:** Read-local phase measurement cannot require a canonical F/R partner or opposite-orientation control. Cross-read orientation evidence remains validation/corroboration unless a separately specified sample policy adopts it.
-- **INV-PHASE-004:** Phase evidence cannot alter structural nucleotide-contribution eligibility, the current unit-mass nucleotide-support accumulator, read/variant eligibility, or public calling behavior without a separately accepted and validated reliability policy. No parallel hidden phase-weighted contribution path is permitted.
+- **INV-PHASE-004:** `signal.polyc_phase/v1` phase evidence cannot alter structural nucleotide-contribution eligibility, the current unit-mass nucleotide-support accumulator, read/variant eligibility, or public calling behavior without a separately accepted and validated reliability policy. No parallel hidden phase-weighted contribution path is permitted.
 
 ## Pipeline
 
