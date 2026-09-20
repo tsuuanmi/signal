@@ -98,6 +98,44 @@ fn exports_all_covered_loci_without_production_result() -> Result<(), Box<dyn st
             .is_file()
     );
 
+    let phase_runtime = directory
+        .path()
+        .join("validation-results")
+        .join(format!("{SAMPLE_ID}.phase-runtime"));
+    let phase_index: Value =
+        serde_json::from_str(&fs::read_to_string(phase_runtime.join("index.json"))?)?;
+    assert_eq!(
+        phase_index["schema_version"],
+        "signal.validation_phase_runtime/v1"
+    );
+    assert_eq!(phase_index["source_method"], "signal.polyc_phase/v1");
+    assert_eq!(phase_index["sample_id"], SAMPLE_ID);
+    assert_eq!(phase_index["read_count"], 2);
+    assert_eq!(phase_index["window_count"], 0);
+    assert_eq!(phase_index["candidate_count"], 0);
+    assert!(phase_index["reads"].as_array().is_some_and(|reads| {
+        reads.len() == 2
+            && reads
+                .iter()
+                .all(|read| read["applicability"] == "not_applicable")
+    }));
+    assert_eq!(
+        fs::read_to_string(phase_runtime.join("windows.csv"))?,
+        concat!(
+            "read_sha256,tract_id,start_distance_after_tract,end_distance_after_tract,",
+            "start_call_index_0based,end_call_index_0based,profile_observations,",
+            "mean_profile_impurity,mean_zero_reference_mass\n"
+        )
+    );
+    assert_eq!(
+        fs::read_to_string(phase_runtime.join("candidates.csv"))?,
+        concat!(
+            "read_sha256,tract_id,start_distance_after_tract,end_distance_after_tract,",
+            "reference_offset_in_read_order,informative_positions,mean_zero_reference_mass,",
+            "mean_shifted_reference_mass,mean_residual_mass\n"
+        )
+    );
+
     Ok(())
 }
 

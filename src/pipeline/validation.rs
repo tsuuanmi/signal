@@ -19,7 +19,7 @@ use crate::model::sample_evidence::{
 };
 use crate::report;
 use crate::sample as sample_science;
-use crate::validation::ValidationExportRequest;
+use crate::validation::{ValidationExportRequest, phase_runtime};
 
 use super::{input, sample_reads};
 
@@ -213,6 +213,14 @@ fn run_logged(
         &covered.loci,
     )?;
     let output = output_path(&request.sample_id);
+    let phase_output = phase_runtime::output_path(&request.sample_id);
+    if phase_output.exists() {
+        return Err(Error::Path {
+            kind: "output",
+            path: phase_output,
+            reason: "target already exists".into(),
+        });
+    }
 
     logger.info(
         module_path!(),
@@ -233,7 +241,14 @@ fn run_logged(
     logger.sync()?;
 
     *stage = "validation_publication";
-    report::publish(&output, &bytes)
+    report::publish(&output, &bytes)?;
+    phase_runtime::publish(
+        &request.sample_id,
+        &evidence.reference_sha256,
+        &evidence.configuration_sha256,
+        &reads,
+    )?;
+    Ok(())
 }
 
 fn output_path(sample_id: &str) -> PathBuf {

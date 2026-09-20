@@ -49,6 +49,22 @@ SIGNAL_CONFIG=config/signal.toml \
   --reference references/rCRS.fasta
 ```
 
+The same validation run also serializes the production `ReadObservation.phase` evidence
+without recomputing phase geometry or candidate math:
+
+```text
+validation-results/<sample-id>.phase-runtime/
+├── index.json
+├── windows.csv
+└── candidates.csv
+```
+
+This `signal.validation_phase_runtime/v1` bridge exists only for direct Rust-versus-research
+parity checks. Window identity and call indexes are exact fields; candidate offsets and
+informative-position counts are exact fields; floating phase masses and window impurity are
+compared numerically by downstream validation tooling. The artifact defines no phase state,
+threshold, weight, variant rule, or sample-policy change.
+
 Real validation exports are identifying scientific derivatives and remain ignored local artifacts. A completed corpus can be converted into deterministic joined research tables with:
 
 ```bash
