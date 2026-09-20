@@ -24,7 +24,7 @@ src/
 ├── sample/{mod,aggregate,call_evidence,contribution,coverage,loci,nucleotide_support,overlap,profile_geometry,variants}.rs
 ├── report/{mod,json,basecall,sample,signal,variant,atomic}.rs
 ├── pipeline/{mod,input,read,observation,analyze,basecall,sample,sample_metrics,sample_reads,validation}.rs
-├── validation/mod.rs
+├── validation/{mod,phase_runtime}.rs
 └── bin/signal-validation.rs
 ```
 
@@ -54,6 +54,6 @@ report -> completed models; no scientific computation
 - `phase/geometry` owns exact circular-rCRS/HV1/HV2 applicability and sequencing-order distance; `phase/measure` owns continuous 25-profile-window ±1..±5 candidate evidence after selected alignment and before any sample policy.
 - `logger` appends timestamped per-operation operational records without entering scientific stages or JSON.
 - `json` assembles analysis v7 and owns shared serialization; `basecall` assembles basecalls v2; `sample` projects sample-evidence v8; `signal` is the shared integrity/noisy-region projection; `variant` projects mapped analysis calls; `atomic` is the one no-overwrite publisher.
-- `input` loads command-specific resources and keeps reusable sample science inputs separate from publication targets; `read` sequences reference-independent stages; `observation` owns one authoritative reference-guided read path; `sample_reads` reuses that path across sample and validation operations; `sample/aggregate` validates and orders reads; `sample/coverage` builds run-length total/forward/reverse reference coverage topology; `sample/overlap` builds the Tracy-derived pairwise overlap/admission graph; `sample/loci` is the one reference-coordinate locus builder with sparse production and all-covered validation selection; `sample/call_evidence`, `sample/contribution`, `sample/nucleotide_support`, and `sample/profile_geometry` own call projection and threshold-free nucleotide evidence geometry; `sample/variants` aggregates normalized variant support; `sample_metrics` owns operational sample summaries; `pipeline/validation` exports local all-covered measurements; command modules own orchestration/publication.
+- `input` loads command-specific resources and keeps reusable sample science inputs separate from publication targets; `read` sequences reference-independent stages; `observation` owns one authoritative reference-guided read path; `sample_reads` reuses that path across sample and validation operations; `sample/aggregate` validates and orders reads; `sample/coverage` builds run-length total/forward/reverse reference coverage topology; `sample/overlap` builds the Tracy-derived pairwise overlap/admission graph; `sample/loci` is the one reference-coordinate locus builder with sparse production and all-covered validation selection; `sample/call_evidence`, `sample/contribution`, `sample/nucleotide_support`, and `sample/profile_geometry` own call projection and threshold-free nucleotide evidence geometry; `sample/variants` aggregates normalized variant support; `sample_metrics` owns operational sample summaries; `pipeline/validation` exports local all-covered measurements and delegates validation-only phase serialization to `validation/phase_runtime`; command modules own orchestration/publication.
 
 VCF has no source file or compatibility path in the MVP.
