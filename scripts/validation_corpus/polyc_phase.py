@@ -566,8 +566,6 @@ def research_index(
                 "zero inside tract, positive after tract"
             ),
             "summary_quantile_method": "empirical_nearest_rank",
-            "phase_score": None,
-            "recovery_threshold": None,
         },
         "crossing_reads": crossing_reads,
         "observations_file": "observations.csv",

@@ -242,8 +242,6 @@ class PolyCPhaseResearchTests(unittest.TestCase):
         self.assertEqual(index["crossing_reads"], 2)
         self.assertEqual(len(index["method"]["tracts"]), 1)
         self.assertEqual(index["method"]["tracts"][0]["tract_id"], "HV2_C")
-        self.assertIsNone(index["method"]["phase_score"])
-        self.assertIsNone(index["method"]["recovery_threshold"])
         self.assertEqual(
             index["source_corpus_sha256"],
             file_sha256(self.corpus / "index.json"),
