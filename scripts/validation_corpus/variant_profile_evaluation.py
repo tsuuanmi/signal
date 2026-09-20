@@ -419,9 +419,7 @@ def compare_variants(
             continue
         unmatched_reviewer.remove(reviewer_index)
         unmatched_signal.remove(exact)
-        matches.append(
-            VariantMatch((reviewer_index,), (exact,), False)
-        )
+        matches.append(VariantMatch((reviewer_index,), (exact,), False))
 
     for reviewer_index in sorted(unmatched_reviewer.copy()):
         expected = reviewer_mutations(reviewer[reviewer_index], reference)
@@ -437,9 +435,7 @@ def compare_variants(
             continue
         unmatched_reviewer.remove(reviewer_index)
         unmatched_signal.remove(equivalent)
-        matches.append(
-            VariantMatch((reviewer_index,), (equivalent,), True)
-        )
+        matches.append(VariantMatch((reviewer_index,), (equivalent,), True))
 
     matches.extend(
         representation_group_matches(
