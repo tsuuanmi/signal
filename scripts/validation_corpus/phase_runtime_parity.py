@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import csv
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 from .filesystem import file_sha256
 from .phase_artifact import (
