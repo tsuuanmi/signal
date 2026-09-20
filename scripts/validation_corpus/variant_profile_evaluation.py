@@ -30,6 +30,7 @@ SAMPLE_SCHEMA_VERSION = "signal.sample_evidence/v8"
 
 SAMPLE_COLUMNS = (
     "validation_case_id",
+    "signal_result_sha256",
     "reviewer_variants",
     "signal_variants",
     "matched_variants",
@@ -89,8 +90,8 @@ def load_signal_variants(
     case_id: str,
     reference_name: str,
     reference: str,
-) -> list[SignalVariant]:
-    """Load the current eligible sample-level variant evidence from one v8 result."""
+) -> tuple[list[SignalVariant], str]:
+    """Load eligible sample variants plus their configuration identity."""
     value = json_object(path)
     if value.get("schema_version") != SAMPLE_SCHEMA_VERSION:
         raise ValueError(f"{path}: expected {SAMPLE_SCHEMA_VERSION}")
@@ -100,6 +101,14 @@ def load_signal_variants(
     provenance = value.get("provenance")
     if not isinstance(provenance, dict):
         raise ValueError(f"{path}: missing provenance")
+    configuration_sha256 = provenance.get("configuration_sha256")
+    if (
+        not isinstance(configuration_sha256, str)
+        or len(configuration_sha256) != 64
+        or any(character not in "0123456789abcdef" for character in configuration_sha256)
+    ):
+        raise ValueError(f"{path}: invalid configuration_sha256")
+
     source_reference = provenance.get("reference")
     if not isinstance(source_reference, dict):
         raise ValueError(f"{path}: missing reference provenance")
@@ -144,14 +153,17 @@ def load_signal_variants(
         seen.add(identity)
         variants.append(SignalVariant(*identity))
 
-    return sorted(
-        variants,
-        key=lambda variant: (
-            variant.position,
-            variant.reference,
-            variant.alternate,
-            variant.kind,
+    return (
+        sorted(
+            variants,
+            key=lambda variant: (
+                variant.position,
+                variant.reference,
+                variant.alternate,
+                variant.kind,
+            ),
         ),
+        configuration_sha256,
     )
 
 
@@ -320,6 +332,7 @@ def publish_evaluation(
     total_missing = 0
     total_extra = 0
     exact_profiles = 0
+    configurations: set[str] = set()
 
     for record in truth["records"]:
         case_id = record["validation_case_id"]
@@ -328,12 +341,13 @@ def publish_evaluation(
             raise ValueError(f"missing sample result: {result_path}")
 
         reviewer = parse_reviewer_variants(record["variants"], reference)
-        signal = load_signal_variants(
+        signal, configuration_sha256 = load_signal_variants(
             result_path,
             case_id,
             reference_name,
             reference,
         )
+        configurations.add(configuration_sha256)
         matches, missing, extra = compare_variants(reviewer, signal, reference)
         representation = sum(
             1 for _, _, is_representation_disagreement in matches
@@ -344,6 +358,7 @@ def publish_evaluation(
         sample_rows.append(
             {
                 "validation_case_id": case_id,
+                "signal_result_sha256": file_sha256(result_path),
                 "reviewer_variants": len(reviewer),
                 "signal_variants": len(signal),
                 "matched_variants": len(matches),
@@ -405,6 +420,13 @@ def publish_evaluation(
         total_extra += len(extra)
         exact_profiles += int(exact_profile)
 
+    if len(configurations) != 1:
+        raise ValueError(
+            "sample results do not share one configuration_sha256: "
+            + ", ".join(sorted(configurations))
+        )
+    configuration_sha256 = next(iter(configurations))
+
     sample_rows.sort(key=lambda row: str(row["validation_case_id"]))
     difference_rows.sort(
         key=lambda row: (
@@ -446,6 +468,7 @@ def publish_evaluation(
                 "schema_version": VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION,
                 "truth_status": "reviewer_derived_proxy",
                 "source_ground_truth_sha256": file_sha256(ground_truth_path),
+                "configuration_sha256": configuration_sha256,
                 "reference": {
                     "name": reference_name,
                     "sha256": sequence_sha256(reference),
