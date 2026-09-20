@@ -7,9 +7,11 @@ import hashlib
 import os
 import shutil
 import tempfile
+from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import pairwise
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from .filesystem import (
     file_sha256,
@@ -265,7 +267,7 @@ def apply_event_group(
         normalized.append((start, end, alternate))
 
     normalized.sort()
-    for left, right in zip(normalized, normalized[1:], strict=False):
+    for left, right in pairwise(normalized):
         if right[0] < left[1]:
             return None
 
