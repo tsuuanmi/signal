@@ -433,7 +433,10 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
         self.assertEqual(tuple(candidates[0]), HYPOTHESIS_COLUMNS)
         self.assertEqual(len(candidates), 10)
         self.assertTrue(
-            all(candidate["window_id"] == windows[0]["window_id"] for candidate in candidates)
+            all(
+                candidate["window_id"] == windows[0]["window_id"]
+                for candidate in candidates
+            )
         )
 
         with (output / "readiness.csv").open(
