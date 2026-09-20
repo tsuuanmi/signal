@@ -433,3 +433,299 @@ const fn canonical_index(base: char) -> Option<usize> {
 fn mean(values: &[f64]) -> f64 {
     values.iter().sum::<f64>() / values.len() as f64
 }
+
+
+#[cfg(test)]
+mod tests {
+    use crate::model::alignment::{
+        AlignmentColumn, AlignmentMetrics, Orientation, ReferenceSegment,
+    };
+    use crate::model::locus_evidence::LocusEvidence;
+    use crate::model::phase::{PhaseEvidenceAvailability, PhaseInsufficiency, PhaseTractId};
+    use crate::model::reference::ReferenceTopology;
+    use crate::model::signal::{SignalAnalysis, TraceIntegrity};
+
+    use super::*;
+    use crate::phase::geometry::{RCRS_LENGTH, RCRS_SEQUENCE_SHA256, TRACTS};
+
+    fn canonical_reference() -> Reference {
+        let mut sequence = vec![b'A'; RCRS_LENGTH];
+        for tract in TRACTS {
+            sequence[tract.start_0based..=tract.end_0based_inclusive]
+                .copy_from_slice(tract.reference_sequence.as_bytes());
+        }
+        for (index, position) in (315..350).enumerate() {
+            sequence[position] = b"ACGT"[index % 4];
+        }
+        Reference {
+            name: "rCRS".into(),
+            sequence: String::from_utf8(sequence).expect("synthetic rCRS is ASCII"),
+            topology: ReferenceTopology::Circular,
+            sequence_sha256: RCRS_SEQUENCE_SHA256.into(),
+        }
+    }
+
+    fn one_hot(base: char) -> EvidenceProfile {
+        let mut weights = [0.0; 4];
+        weights[canonical_index(base).expect("canonical test base")] = 1.0;
+        EvidenceProfile { weights }
+    }
+
+    fn mixture(zero: char, shifted: char) -> EvidenceProfile {
+        let mut weights = [0.0; 4];
+        weights[canonical_index(zero).expect("canonical zero base")] = 0.60;
+        weights[canonical_index(shifted).expect("canonical shifted base")] = 0.35;
+        let residual = ['A', 'C', 'G', 'T']
+            .into_iter()
+            .find(|base| *base != zero && *base != shifted)
+            .expect("residual base");
+        weights[canonical_index(residual).expect("canonical residual base")] = 0.05;
+        EvidenceProfile { weights }
+    }
+
+    fn locus(index: usize, profile: Option<EvidenceProfile>) -> LocusEvidence {
+        LocusEvidence {
+            call_index_0based: index,
+            ploc_0based: index,
+            window_start_0based: index,
+            window_end_0based_exclusive: index + 1,
+            context_call_start_0based: index,
+            context_call_end_0based_exclusive: index + 1,
+            context_sample_start_0based: index,
+            context_sample_end_0based_exclusive: index + 1,
+            event_position_0based: index,
+            channel_heights: [0; 4],
+            channel_baselines: [0.0; 4],
+            channel_noise_sigmas: [1.0; 4],
+            corrected_amplitudes: profile.map_or([0.0; 4], |value| value.weights),
+            snrs: [0.0; 4],
+            profile,
+        }
+    }
+
+    fn signal(profiles: Vec<Option<EvidenceProfile>>) -> SignalAnalysis {
+        SignalAnalysis {
+            integrity: TraceIntegrity {
+                ploc_count: profiles.len(),
+                vendor_primary_count: None,
+                vendor_quality_count: None,
+                minimum_ploc_spacing: None,
+                median_ploc_spacing: None,
+                maximum_ploc_spacing: None,
+                clipped_channel_samples: 0,
+                maximum_to_median_event_signal_ratio: None,
+            },
+            loci: profiles
+                .into_iter()
+                .enumerate()
+                .map(|(index, profile)| locus(index, profile))
+                .collect(),
+            windows: Vec::new(),
+            noisy_regions: Vec::new(),
+        }
+    }
+
+    fn alignment(
+        orientation: Orientation,
+        columns: Vec<AlignmentColumn>,
+    ) -> Alignment {
+        Alignment {
+            orientation,
+            score: 0,
+            reference_segments: vec![ReferenceSegment {
+                start_0based: 0,
+                end_0based_exclusive: RCRS_LENGTH,
+            }],
+            wraps_origin: false,
+            metrics: AlignmentMetrics {
+                exact_matches: columns.len(),
+                mismatches: 0,
+                gap_opens: 0,
+                callable_columns: columns.len(),
+                callable_identity: 1.0,
+                unresolved_query_bases: 0,
+            },
+            columns,
+        }
+    }
+
+    fn forward_hv2_read(
+        reference: &Reference,
+        after_count: usize,
+        missing_profile_distance: Option<usize>,
+    ) -> (Alignment, SignalAnalysis) {
+        let tract = TRACTS[0];
+        let mut columns = Vec::new();
+        let mut profiles = Vec::new();
+        let mut call = 0usize;
+
+        for position in tract.start_0based..=tract.end_0based_inclusive {
+            let base = char::from(reference.sequence.as_bytes()[position]);
+            columns.push(AlignmentColumn {
+                query_base: base,
+                reference_base: base,
+                original_call_index_0based: Some(call),
+                reference_index_0based: Some(position),
+            });
+            profiles.push(Some(one_hot(base)));
+            call += 1;
+        }
+
+        for distance in 1..=after_count {
+            let position = (tract.end_0based_inclusive + distance) % RCRS_LENGTH;
+            let base = char::from(reference.sequence.as_bytes()[position]);
+            let shifted_position = (position + 1) % RCRS_LENGTH;
+            let shifted = char::from(reference.sequence.as_bytes()[shifted_position]);
+            columns.push(AlignmentColumn {
+                query_base: base,
+                reference_base: base,
+                original_call_index_0based: Some(call),
+                reference_index_0based: Some(position),
+            });
+            let profile = (missing_profile_distance != Some(distance))
+                .then(|| mixture(base, shifted));
+            profiles.push(profile);
+            call += 1;
+        }
+
+        (alignment(Orientation::Forward, columns), signal(profiles))
+    }
+
+    #[test]
+    fn unsupported_reference_is_not_applicable() -> Result<()> {
+        let mut reference = canonical_reference();
+        reference.sequence_sha256 = "0".repeat(64);
+        let evidence = measure(
+            &alignment(Orientation::Forward, Vec::new()),
+            &signal(Vec::new()),
+            &reference,
+        )?;
+
+        assert_eq!(evidence.applicability, PhaseApplicability::NotApplicable);
+        assert!(evidence.tracts.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn complete_hv2_read_preserves_candidate_curve() -> Result<()> {
+        let reference = canonical_reference();
+        let (alignment, signal) = forward_hv2_read(&reference, 30, None);
+        let evidence = measure(&alignment, &signal, &reference)?;
+
+        assert_eq!(evidence.applicability, PhaseApplicability::Applicable);
+        let hv2 = evidence
+            .tracts
+            .iter()
+            .find(|tract| tract.tract == PhaseTractId::Hv2)
+            .expect("HV2 evidence");
+        assert_eq!(hv2.availability, PhaseEvidenceAvailability::Measured);
+        assert_eq!(hv2.windows.len(), 2);
+        assert_eq!(hv2.windows[0].start_distance_after_tract, 1);
+        assert_eq!(hv2.windows[0].end_distance_after_tract, 25);
+        assert_eq!(hv2.windows[0].profile_observations, 25);
+        assert!((hv2.windows[0].mean_zero_reference_mass - 0.60).abs() < 1e-12);
+
+        let plus_one = hv2.windows[0]
+            .candidates
+            .iter()
+            .find(|candidate| candidate.reference_offset_in_read_order == 1)
+            .expect("+1 candidate");
+        assert_eq!(plus_one.informative_positions, 25);
+        assert!(
+            (plus_one
+                .mean_shifted_reference_mass
+                .expect("shifted mass")
+                - 0.35)
+                .abs()
+                < 1e-12
+        );
+        assert!(
+            (plus_one.mean_residual_mass.expect("residual mass") - 0.05).abs()
+                < 1e-12
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn profile_gap_is_skipped_without_interval_membership_fallback() -> Result<()> {
+        let reference = canonical_reference();
+        let (alignment, signal) = forward_hv2_read(&reference, 26, Some(3));
+        let evidence = measure(&alignment, &signal, &reference)?;
+        let hv2 = evidence
+            .tracts
+            .iter()
+            .find(|tract| tract.tract == PhaseTractId::Hv2)
+            .expect("HV2 evidence");
+
+        assert_eq!(hv2.availability, PhaseEvidenceAvailability::Measured);
+        assert_eq!(hv2.windows.len(), 1);
+        assert_eq!(hv2.windows[0].start_distance_after_tract, 1);
+        assert_eq!(hv2.windows[0].end_distance_after_tract, 26);
+        assert_eq!(hv2.windows[0].profile_observations, 25);
+        Ok(())
+    }
+
+    #[test]
+    fn incomplete_window_is_explicitly_insufficient() -> Result<()> {
+        let reference = canonical_reference();
+        let (alignment, signal) = forward_hv2_read(&reference, 24, None);
+        let evidence = measure(&alignment, &signal, &reference)?;
+        let hv2 = evidence
+            .tracts
+            .iter()
+            .find(|tract| tract.tract == PhaseTractId::Hv2)
+            .expect("HV2 evidence");
+
+        assert_eq!(
+            hv2.availability,
+            PhaseEvidenceAvailability::Insufficient(
+                PhaseInsufficiency::NoCompleteProfileWindow
+            )
+        );
+        assert!(hv2.windows.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn reverse_alignment_profiles_are_projected_to_reference_channels() -> Result<()> {
+        let reference = Reference {
+            name: "test".into(),
+            sequence: "A".into(),
+            topology: ReferenceTopology::Linear,
+            sequence_sha256: String::new(),
+        };
+        let alignment = Alignment {
+            orientation: Orientation::Reverse,
+            score: 0,
+            reference_segments: vec![ReferenceSegment {
+                start_0based: 0,
+                end_0based_exclusive: 1,
+            }],
+            wraps_origin: false,
+            metrics: AlignmentMetrics {
+                exact_matches: 1,
+                mismatches: 0,
+                gap_opens: 0,
+                callable_columns: 1,
+                callable_identity: 1.0,
+                unresolved_query_bases: 0,
+            },
+            columns: vec![AlignmentColumn {
+                query_base: 'A',
+                reference_base: 'A',
+                original_call_index_0based: Some(0),
+                reference_index_0based: Some(0),
+            }],
+        };
+        let signal = signal(vec![Some(EvidenceProfile {
+            weights: [0.0, 0.0, 0.0, 1.0],
+        })]);
+
+        let mapped = mapped_observations(&alignment, &signal, &reference)?;
+        assert_eq!(
+            mapped[0].profile.map(|profile| profile.weights),
+            Some([1.0, 0.0, 0.0, 0.0])
+        );
+        Ok(())
+    }
+}
