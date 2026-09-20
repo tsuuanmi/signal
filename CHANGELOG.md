@@ -26,6 +26,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Poly-C opposite-orientation research now publishes `signal.validation_polyc_orientation_controls/v1` directly from the completed validation corpus, retaining every eligible same-case/same-locus post-tract read and opposite selected-orientation pre-tract control without pair selection or Cartesian expansion. The artifact preserves PCR/run/amplicon provenance and descriptive role profile geometry, including mean-profile Total Variation, without thresholds or production interpretation.
+
 - Post-poly-C phase characterization now publishes hash-bound `signal.validation_phase_characterization/v1` adjacent-window persistence, exact-distance trajectory, and observed-interrupt strata over the complete candidate curves from `signal.validation_phase_hypotheses/v1`. The research preserves every offset independently and defines no best shift, classifier, recovery threshold, genotype, length-heteroplasmy call, or production behavior.
 
 - Tracy-inspired post-poly-C phase research now publishes hash-bound `signal.validation_phase_hypotheses/v1` sliding-window candidate curves over integer reference offsets in sequencing order. Each candidate preserves informative-position count plus mean zero-phase, shifted-reference, and unexplained residual profile mass, allowing structured dephasing to be studied separately from unstructured signal degradation without selecting a winning shift or changing production calling.
