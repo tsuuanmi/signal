@@ -36,7 +36,6 @@ struct PhaseRuntimeArtifact {
     windows: Vec<u8>,
     candidates: Vec<u8>,
     window_count: usize,
-    candidate_count: usize,
 }
 
 #[derive(Debug, Serialize)]
@@ -83,13 +82,6 @@ struct PhaseRuntimeTract {
     window_count: usize,
 }
 
-#[derive(Debug)]
-pub(crate) struct PhaseRuntimePublication {
-    pub(crate) output: PathBuf,
-    pub(crate) windows: usize,
-    pub(crate) candidates: usize,
-}
-
 /// Serializes exactly the already-computed `ReadObservation.phase` evidence and publishes
 /// it as a validation-only artifact. No phase geometry or candidate math is recomputed here.
 pub(crate) fn publish(
@@ -97,7 +89,7 @@ pub(crate) fn publish(
     reference_sha256: &str,
     configuration_sha256: &str,
     reads: &[ReadObservation],
-) -> Result<PhaseRuntimePublication> {
+) -> Result<()> {
     let artifact = serialize(
         sample_id,
         reference_sha256,
@@ -105,13 +97,7 @@ pub(crate) fn publish(
         reads,
     )?;
     let output = output_path(sample_id);
-    publish_artifact(&output, &artifact)?;
-
-    Ok(PhaseRuntimePublication {
-        output,
-        windows: artifact.window_count,
-        candidates: artifact.candidate_count,
-    })
+    publish_artifact(&output, &artifact)
 }
 
 fn serialize(
@@ -196,8 +182,6 @@ fn serialize(
         index,
         windows,
         candidates,
-        window_count,
-        candidate_count,
     })
 }
 
