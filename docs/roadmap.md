@@ -134,7 +134,7 @@ A current capability may remain in the product contract while its real-trace evi
 The following are intentionally deferred:
 
 1. new or more complex indel models beyond the current supported behavior;
-2. homopolymer and mtDNA poly-C special handling beyond current generic behavior;
+2. production mtDNA poly-C detector/state/recovery/weighting beyond the ADR-0055 read-local evidence boundary;
 3. sample-level multi-read consensus;
 5. quantitative heteroplasmy;
 6. mixed-template or length-mixture decomposition;
