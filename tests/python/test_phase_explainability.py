@@ -173,12 +173,13 @@ class PhaseExplainabilityResearchTests(unittest.TestCase):
         self.assertEqual(index["windows_rows"], 3)
         self.assertEqual(index["reads_rows"], 2)
         self.assertEqual(index["strata_rows"], 2)
-        self.assertEqual(index["method"]["candidate_selection"], "none; no winning offset or identity is emitted")
+        self.assertEqual(
+            index["method"]["candidate_selection"],
+            "none; no winning offset or identity is emitted",
+        )
         self.assertEqual(index["method"]["thresholds"], "none")
 
-        with (output / "windows.csv").open(
-            "r", encoding="utf-8", newline=""
-        ) as source:
+        with (output / "windows.csv").open("r", encoding="utf-8", newline="") as source:
             windows = list(csv.DictReader(source))
         self.assertEqual(tuple(windows[0]), WINDOW_COLUMNS)
         c1 = next(row for row in windows if row["window_id"] == "c-1")
@@ -241,14 +242,10 @@ class PhaseExplainabilityResearchTests(unittest.TestCase):
         self.assertEqual(t_read["windows_without_explainability_candidates"], "1")
         self.assertEqual(t_read["mean_candidate_residual_mass_min"], "")
 
-        with (output / "strata.csv").open(
-            "r", encoding="utf-8", newline=""
-        ) as source:
+        with (output / "strata.csv").open("r", encoding="utf-8", newline="") as source:
             strata = list(csv.DictReader(source))
         self.assertEqual(tuple(strata[0]), STRATA_COLUMNS)
-        c_stratum = next(
-            row for row in strata if row["interrupt_aligned_base"] == "C"
-        )
+        c_stratum = next(row for row in strata if row["interrupt_aligned_base"] == "C")
         self.assertEqual(c_stratum["reads"], "1")
         self.assertEqual(c_stratum["windows"], "2")
         self.assertAlmostEqual(
