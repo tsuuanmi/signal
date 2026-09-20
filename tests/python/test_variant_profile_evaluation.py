@@ -20,6 +20,8 @@ from scripts.validation_corpus.reviewer_variants import (
     read_reference,
 )
 from scripts.validation_corpus.variant_profile_evaluation import (
+    SignalVariant,
+    VariantMatch,
     compare_variants,
     load_signal_variants,
     publish_evaluation,
@@ -294,7 +296,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             self.reference_sequence,
         )
 
-        self.assertEqual(matches, [(0, 0, False)])
+        self.assertEqual(matches, [VariantMatch((0,), (0,), False)])
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
 
@@ -316,7 +318,23 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             self.reference_sequence,
         )
 
-        self.assertEqual(matches, [(0, 0, True)])
+        self.assertEqual(matches, [VariantMatch((0,), (0,), True)])
+        self.assertEqual(missing, [])
+        self.assertEqual(extra, [])
+
+    def test_multi_event_haplotype_equivalence_is_one_representation_group(
+        self,
+    ) -> None:
+        reference = "AGCACACACACAC"
+        reviewer = parse_reviewer_variants(
+            ["2A", "12DEL", "13DEL"],
+            reference,
+        )
+        signal = [SignalVariant(1, "AGC", "A", "DEL")]
+
+        matches, missing, extra = compare_variants(reviewer, signal, reference)
+
+        self.assertEqual(matches, [VariantMatch((0, 1), (0,), True)])
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
 
@@ -334,10 +352,10 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
 
         index = json.loads((output / "index.json").read_text(encoding="utf-8"))
         summary = index["summary"]
-        self.assertEqual(summary["proxy_true_positive_variants"], 1)
-        self.assertEqual(summary["proxy_false_positive_variants"], 0)
-        self.assertEqual(summary["proxy_false_negative_variants"], 0)
-        self.assertEqual(summary["representation_disagreements"], 1)
+        self.assertEqual(summary["matched_groups"], 1)
+        self.assertEqual(summary["proxy_false_positive_groups"], 0)
+        self.assertEqual(summary["proxy_false_negative_groups"], 0)
+        self.assertEqual(summary["representation_groups"], 1)
         self.assertEqual(summary["exact_profiles"], 0)
 
     def test_reports_false_positive_and_false_negative_proxy_counts(self) -> None:
@@ -376,9 +394,9 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         )
 
         summary = index["summary"]
-        self.assertEqual(summary["proxy_true_positive_variants"], 1)
-        self.assertEqual(summary["proxy_false_positive_variants"], 1)
-        self.assertEqual(summary["proxy_false_negative_variants"], 1)
+        self.assertEqual(summary["matched_groups"], 1)
+        self.assertEqual(summary["proxy_false_positive_groups"], 1)
+        self.assertEqual(summary["proxy_false_negative_groups"], 1)
         self.assertEqual(summary["exact_profiles"], 0)
         self.assertEqual(summary["proxy_precision"], 0.5)
         self.assertEqual(summary["proxy_recall"], 0.5)
