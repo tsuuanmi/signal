@@ -146,7 +146,10 @@ class PhaseSensitivityResearchTests(unittest.TestCase):
         self.assertEqual(index["schema_version"], PHASE_SENSITIVITY_SCHEMA_VERSION)
         self.assertEqual(index["parameter_sets_rows"], 4)
         self.assertEqual(index["method"]["grid"], "full factorial")
-        self.assertEqual(index["method"]["candidate_selection"], "none; every candidate retained independently")
+        self.assertEqual(
+            index["method"]["candidate_selection"],
+            "none; every candidate retained independently",
+        )
         self.assertEqual(index["method"]["thresholds"], "none")
         self.assertEqual(
             index["source_polyc_phase_sha256"],
@@ -175,9 +178,7 @@ class PhaseSensitivityResearchTests(unittest.TestCase):
             strata = list(csv.DictReader(source))
         self.assertEqual(tuple(strata[0]), STRATA_COLUMNS)
         plus_one = [
-            row
-            for row in strata
-            if row["reference_offset_in_read_order"] == "1"
+            row for row in strata if row["reference_offset_in_read_order"] == "1"
         ]
         self.assertEqual(len(plus_one), 4)
         for row in plus_one:
