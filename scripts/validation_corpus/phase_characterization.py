@@ -7,6 +7,7 @@ import math
 import os
 import shutil
 import tempfile
+from itertools import pairwise
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TextIO
@@ -475,7 +476,7 @@ def persistence_rows(
                     f"{key}: window metadata changes across one read/tract"
                 )
 
-        for left, right in zip(ordered, ordered[1:], strict=False):
+        for left, right in pairwise(ordered):
             for offset in offsets:
                 left_candidate = candidates[(left.window_id, offset)]
                 right_candidate = candidates[(right.window_id, offset)]
