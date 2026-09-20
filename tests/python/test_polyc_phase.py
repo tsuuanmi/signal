@@ -16,12 +16,12 @@ from scripts.validation_corpus.model import (
     MEASUREMENT_SCHEMA_VERSION,
     POLYC_PHASE_SCHEMA_VERSION,
 )
+from scripts.validation_corpus.polyc_context import ReadContext
 from scripts.validation_corpus.polyc_geometry import (
     TRACTS,
     TractCallSpan,
     covers_complete_tract,
 )
-from scripts.validation_corpus.polyc_context import ReadContext
 from scripts.validation_corpus.polyc_phase import (
     observation_record,
     publish_polyc_phase,
