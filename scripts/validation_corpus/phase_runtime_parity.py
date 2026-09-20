@@ -9,7 +9,13 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .filesystem import file_sha256
-from .phase_artifact import CandidateRecord, WindowRecord, load_source, validate_source
+from .phase_artifact import (
+    CandidateRecord,
+    WindowRecord,
+    load_source,
+    source_parameters,
+    validate_source,
+)
 from .research_loader import json_object, strict_keys
 
 RUNTIME_SCHEMA_VERSION = "signal.validation_phase_runtime/v1"
@@ -213,6 +219,10 @@ def validate_runtime_index(runtime_dir: Path) -> dict[str, Any]:
 
 def load_runtime(
     runtime_dirs: Iterable[Path],
+    *,
+    signal_version: str,
+    reference_sha256: str,
+    configuration_sha256: str,
 ) -> tuple[dict[WindowKey, RuntimeWindow], dict[CandidateKey, RuntimeCandidate]]:
     windows: dict[WindowKey, RuntimeWindow] = {}
     candidates: dict[CandidateKey, RuntimeCandidate] = {}
@@ -220,6 +230,14 @@ def load_runtime(
 
     for runtime_dir in sorted((path.resolve() for path in runtime_dirs), key=str):
         index = validate_runtime_index(runtime_dir)
+        if index["signal_version"] != signal_version:
+            raise ValueError(f"{runtime_dir}: Signal version differs from research artifact")
+        if index["reference_sha256"] != reference_sha256:
+            raise ValueError(f"{runtime_dir}: reference SHA-256 differs from research artifact")
+        if index["configuration_sha256"] != configuration_sha256:
+            raise ValueError(
+                f"{runtime_dir}: configuration SHA-256 differs from research artifact"
+            )
         sample_id = index["sample_id"]
         if sample_id in sample_ids:
             raise ValueError(f"duplicate runtime phase sample_id {sample_id}")
@@ -374,12 +392,26 @@ def compare_phase_runtime(
         raise ValueError("numeric tolerance must be finite and non-negative")
 
     research_index, offsets = validate_source(research_dir)
+    parameters = source_parameters(research_index["method"])
+    if (
+        parameters.window_size != 25
+        or parameters.window_step != 5
+        or parameters.max_offset != 5
+    ):
+        raise ValueError(
+            "research phase method does not match signal.polyc_phase/v1 constants"
+        )
     research_windows_by_id, research_candidates_by_id = load_source(
         research_dir,
         research_index,
         offsets,
     )
-    runtime_windows, runtime_candidates = load_runtime(runtime_dirs)
+    runtime_windows, runtime_candidates = load_runtime(
+        runtime_dirs,
+        signal_version=research_index["signal_version"],
+        reference_sha256=research_index["reference_sha256"],
+        configuration_sha256=research_index["configuration_sha256"],
+    )
 
     research_windows: dict[WindowKey, WindowRecord] = {}
     for window in research_windows_by_id.values():
