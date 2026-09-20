@@ -25,7 +25,7 @@ rewriting, or Tracy's breakpoint/MAD thresholds.
 
 Source audited:
 
-- <https://github.com/gear-genomics/tracy/blob/master/src/decompose.h>
+- <https://github.com/gear-genomics/tracy/blob/main/src/decompose.h>
 
 ## Candidate evidence
 
@@ -149,6 +149,8 @@ On the full corpus:
 5. inspect whether recurrent loci 253, 297, 302, 16194, and 16197 fall inside windows
    with coherent shifted-reference support;
 6. identify reads where impurity is high but no candidate offset explains the profiles.
+
+The next implemented layer, [polyc-phase-characterization.md](polyc-phase-characterization.md), addresses items 1, 2, and 4 descriptively while retaining every candidate offset. Opposite-orientation controls, recurrent-locus joins, per-read unexplained-impurity review, and parameter sensitivity remain follow-up research.
 
 Only after those analyses should Signal consider a phase-state detector, recovery model,
 evidence attenuation, demixing, or a no-call policy.
