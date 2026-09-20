@@ -11,13 +11,9 @@ from typing import Any, TextIO
 
 from .filesystem import file_sha256, sync_directory, validate_new_directory, write_json
 from .model import PHASE_RECURRENT_LOCUS_SCHEMA_VERSION
-from .phase_artifact import (
-    CandidateRecord,
-    WindowRecord,
-    load_source as load_hypothesis_source,
-    source_parameters,
-    validate_source as validate_hypothesis_source,
-)
+from .phase_artifact import CandidateRecord, WindowRecord, source_parameters
+from .phase_artifact import load_source as load_hypothesis_source
+from .phase_artifact import validate_source as validate_hypothesis_source
 from .phase_hypotheses import (
     PhaseObservation,
     PhaseWindow,
@@ -27,8 +23,8 @@ from .phase_hypotheses import (
     mean,
     nonnegative_int,
     phase_windows,
-    validate_source as validate_phase_source,
 )
+from .phase_hypotheses import validate_source as validate_phase_source
 
 RECURRENT_POSITIONS = (253, 297, 302, 16194, 16197)
 
