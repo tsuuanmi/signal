@@ -28,6 +28,12 @@ def parser() -> argparse.ArgumentParser:
         help="completed signal.validation_phase_interpretation_dataset/v1 directory",
     )
     built.add_argument(
+        "--evaluation-dir",
+        type=Path,
+        default=Path("validation-results/variant-profile/baseline"),
+        help="completed signal.validation_variant_profile_evaluation/v2 directory",
+    )
+    built.add_argument(
         "--context-dir",
         type=Path,
         default=Path("validation-results/research/variant-phase-context/baseline"),
@@ -49,6 +55,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         publish_phase_error_characterization(
             resolved(args.interpretation_dir),
+            resolved(args.evaluation_dir),
             resolved(args.context_dir),
             resolved(args.output_dir),
         )
