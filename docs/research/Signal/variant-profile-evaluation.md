@@ -131,7 +131,7 @@ unaffected / pre-tract:
 
 phase-affected / post-tract:
     fewer false positives
-    fewer false negatives
+    no increase in false negatives; ideally fewer
 ```
 
 An improvement in false positives does not justify an unacceptable increase in false
