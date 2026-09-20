@@ -356,7 +356,7 @@ def publish_evaluation(
             1 for _, _, is_representation_disagreement in matches
             if is_representation_disagreement
         )
-        exact_profile = not missing and not extra
+        exact_profile = not missing and not extra and representation == 0
 
         sample_rows.append(
             {
