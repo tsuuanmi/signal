@@ -29,6 +29,7 @@ VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION = (
     "signal.validation_variant_profile_evaluation/v2"
 )
 VARIANT_PHASE_CONTEXT_SCHEMA_VERSION = "signal.validation_variant_phase_context/v1"
+PHASE_ERROR_CHARACTERIZATION_SCHEMA_VERSION = "signal.validation_phase_error_characterization/v1"
 
 MANIFEST_COLUMNS = (
     "validation_case_id",
