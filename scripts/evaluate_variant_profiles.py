@@ -27,7 +27,7 @@ def parser() -> argparse.ArgumentParser:
         "--results-dir",
         type=Path,
         default=Path("results"),
-        help="Signal batch result root containing <case>/<case>.json",
+        help="Signal batch result root containing <sample-id>/<sample-id>.json",
     )
     built.add_argument(
         "--reference",

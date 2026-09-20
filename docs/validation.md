@@ -150,6 +150,11 @@ uv run python scripts/extract_reviewer_variant_ground_truth.py \
 This preserves `Variants (Sequencher)` verbatim and records the source SHA-256. Tokenization
 is convenience only; interpretation occurs later in the evaluator.
 
+Reviewer `sample_id` is the authoritative batch-result identity and resolves only
+`results/<sample-id>/<sample-id>.json`. The shorter `validation_case_id` is preserved
+separately for joins to validation corpus/phase evidence; it is never used to guess a result
+path.
+
 Evaluate current sample outputs with:
 
 ```bash
