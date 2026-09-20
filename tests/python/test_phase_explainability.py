@@ -240,7 +240,6 @@ class PhaseExplainabilityResearchTests(unittest.TestCase):
         self.assertEqual(t_read["windows_without_explainability_candidates"], "1")
         self.assertEqual(t_read["mean_candidate_residual_mass_min"], "")
 
-
     def test_no_overwrite_and_source_hash_mismatch_are_rejected(self) -> None:
         self.write_source()
         output = self.root / "explainability"
