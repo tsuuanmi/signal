@@ -28,7 +28,7 @@ All notable changes to this project are documented here.
 
 ### Added
 
-- Post-poly-C phase explainability research now publishes `signal.validation_phase_explainability/v1` with threshold-free candidate-envelope summaries at window, read, and stratum levels. The artifact exposes shifted-reference/residual extrema, ranges, and maximum non-zero-mass explainability without emitting a winning offset, review label, threshold, or production behavior.
+- Post-poly-C phase explainability research now publishes `signal.validation_phase_explainability/v1` with threshold-free candidate-envelope summaries at window and read levels. The artifact exposes shifted-reference/residual extrema, ranges, and maximum non-zero-mass explainability without emitting a winning offset, review label, threshold, or production behavior.
 
 - Post-poly-C parameter-sensitivity research now publishes `signal.validation_phase_sensitivity/v1`, evaluating a full-factorial window-size/stride/max-offset grid through the authoritative phase-hypothesis engine and characterization aggregation while retaining every candidate independently and selecting no preferred parameter set or threshold.
 
