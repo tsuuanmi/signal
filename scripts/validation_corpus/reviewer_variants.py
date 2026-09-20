@@ -24,9 +24,7 @@ REQUIRED_COLUMNS = (
 
 CASE_ID = re.compile(r"(AB\d+)$")
 SNV = re.compile(r"(?P<position>[1-9]\d*)(?P<alternate>[ACGTRYSWKMBDHVN])$")
-INSERTION = re.compile(
-    r"(?P<position>[1-9]\d*)\.(?P<index>[1-9]\d*)(?P<base>[ACGT])$"
-)
+INSERTION = re.compile(r"(?P<position>[1-9]\d*)\.(?P<index>[1-9]\d*)(?P<base>[ACGT])$")
 DELETION = re.compile(r"(?P<position>[1-9]\d*)DEL$")
 
 IUPAC = {
