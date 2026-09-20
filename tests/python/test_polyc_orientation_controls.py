@@ -287,6 +287,7 @@ class PolyCOrientationControlTests(unittest.TestCase):
         self.assertEqual(mismatched_declared["orientation"], "forward")
         self.assertEqual(mismatched_declared["declared_direction"], "reverse")
         self.assertEqual(mismatched_declared["role"], "post_tract")
+        self.assertEqual(mismatched_declared["interrupt_aligned_base"], "T")
         self.assertEqual(mismatched_declared["pcr_replicate_id"], "PCR-2")
         self.assertEqual(mismatched_declared["amplicon_id"], "HV2-F2")
 
@@ -298,6 +299,8 @@ class PolyCOrientationControlTests(unittest.TestCase):
             for row in loci
             if row["position_1based"] == "316" and row["post_orientation"] == "forward"
         )
+        self.assertEqual(forward_locus["post_interrupt_bases"], "T")
+        self.assertEqual(forward_locus["control_interrupt_bases"], "T")
         self.assertEqual(forward_locus["post_reads"], "2")
         self.assertEqual(forward_locus["control_reads"], "2")
         self.assertEqual(forward_locus["post_profile_reads"], "2")
