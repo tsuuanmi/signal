@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-20
-- **Implementation:** Descriptive validation measurement implemented; production attenuation/detection/recovery remain deferred.
+- **Implementation:** Descriptive validation measurement complete; ADR-0055 promotes the read-local evidence boundary while production detection, interpretation, attenuation, and recovery remain deferred.
 
 ## Context
 
@@ -65,7 +65,7 @@ Future implementation may use evidence such as:
 The detector and its thresholds require validation and are not production requirements
 yet.
 
-ADR-0054 defines the next research boundary: measure coherent shifted-reference explainability separately from unstructured residual degradation before any attenuation policy is chosen.
+ADR-0054 defines coherent shifted-reference explainability separately from unstructured residual degradation. The completed descriptive research surface is promoted by ADR-0055 into a read-local production evidence boundary, while detector thresholds and attenuation policy remain separate deferred decisions.
 
 ## Recovery
 
@@ -108,16 +108,11 @@ confidence multiplier. See
 
 ## Deferred implementation
 
-A later research/implementation change may introduce explicit evidence such as:
-
-- whether the read has crossed a known homopolymer tract;
-- tract identity and inferred instability;
-- distance from the tract in read order;
-- phase-shadow measurements;
-- phase-recovery state;
-- a validated confidence attenuation model.
-
-Those fields, thresholds, and output contracts are deliberately not defined here.
+ADR-0055 now defines the architecture and scientific boundary for future read-local
+poly-C phase evidence. It deliberately does not define a production detector, categorical
+phase state, threshold, recovery rule, confidence multiplier, contribution weight, or
+public output contract. Those interpretation/policy decisions require a separate
+validation-backed promotion.
 
 ## Evidence basis
 
