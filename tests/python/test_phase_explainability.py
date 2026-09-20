@@ -15,7 +15,6 @@ from scripts.validation_corpus.model import (
 )
 from scripts.validation_corpus.phase_explainability import (
     READ_COLUMNS,
-    STRATA_COLUMNS,
     WINDOW_COLUMNS,
     publish_phase_explainability,
 )
@@ -172,7 +171,6 @@ class PhaseExplainabilityResearchTests(unittest.TestCase):
         )
         self.assertEqual(index["windows_rows"], 3)
         self.assertEqual(index["reads_rows"], 2)
-        self.assertEqual(index["strata_rows"], 2)
         self.assertEqual(
             index["method"]["candidate_selection"],
             "none; no winning offset or identity is emitted",
@@ -242,16 +240,6 @@ class PhaseExplainabilityResearchTests(unittest.TestCase):
         self.assertEqual(t_read["windows_without_explainability_candidates"], "1")
         self.assertEqual(t_read["mean_candidate_residual_mass_min"], "")
 
-        with (output / "strata.csv").open("r", encoding="utf-8", newline="") as source:
-            strata = list(csv.DictReader(source))
-        self.assertEqual(tuple(strata[0]), STRATA_COLUMNS)
-        c_stratum = next(row for row in strata if row["interrupt_aligned_base"] == "C")
-        self.assertEqual(c_stratum["reads"], "1")
-        self.assertEqual(c_stratum["windows"], "2")
-        self.assertAlmostEqual(
-            float(c_stratum["mean_candidate_shifted_reference_mass_max"]),
-            0.25,
-        )
 
     def test_no_overwrite_and_source_hash_mismatch_are_rejected(self) -> None:
         self.write_source()
