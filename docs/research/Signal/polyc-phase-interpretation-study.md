@@ -537,6 +537,13 @@ The preparation layer described above is implemented by
 development window/candidate evidence plus aggregate partition/readiness counts; continuous
 holdout phase features remain outside the prepared development tables.
 
+Biological error attribution is implemented separately by
+[variant-phase-context.md](variant-phase-context.md) as
+`signal.validation_variant_phase_context/v1`. It consumes variant-profile evaluation v2,
+excludes ADR-0057 representation disagreements, and exposes exact read/window/candidate
+context only for fit-eligible development cases. This keeps biological outcome labels and
+continuous phase evidence joined for development without opening the locked holdout.
+
 ## Rust promotion boundary
 
 If the evidence justifies interpretation, the frozen rule should become a focused Rust
