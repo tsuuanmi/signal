@@ -102,20 +102,22 @@ class PhaseCharacterizationResearchTests(unittest.TestCase):
         ]
 
         windows_path = self.source / "windows.csv"
+        window_columns: list[str] = list(WINDOW_COLUMNS)
         with windows_path.open("w", encoding="utf-8", newline="") as target:
             writer = csv.DictWriter(
                 target,
-                fieldnames=list(WINDOW_COLUMNS),
+                fieldnames=window_columns,
                 lineterminator="\n",
             )
             writer.writeheader()
             writer.writerows(windows)
 
         hypotheses_path = self.source / "hypotheses.csv"
+        hypothesis_columns: list[str] = list(HYPOTHESIS_COLUMNS)
         with hypotheses_path.open("w", encoding="utf-8", newline="") as target:
             writer = csv.DictWriter(
                 target,
-                fieldnames=list(HYPOTHESIS_COLUMNS),
+                fieldnames=hypothesis_columns,
                 lineterminator="\n",
             )
             writer.writeheader()
@@ -233,10 +235,11 @@ class PhaseCharacterizationResearchTests(unittest.TestCase):
         hypotheses_path = self.source / "hypotheses.csv"
         with hypotheses_path.open("r", encoding="utf-8", newline="") as source:
             rows = list(csv.DictReader(source))
+        hypothesis_columns: list[str] = list(HYPOTHESIS_COLUMNS)
         with hypotheses_path.open("w", encoding="utf-8", newline="") as target:
             writer = csv.DictWriter(
                 target,
-                fieldnames=list(HYPOTHESIS_COLUMNS),
+                fieldnames=hypothesis_columns,
                 lineterminator="\n",
             )
             writer.writeheader()
