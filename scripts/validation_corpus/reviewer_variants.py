@@ -254,17 +254,29 @@ def load_ground_truth(path: Path) -> dict[str, Any]:
     if not records:
         raise ValueError(f"{path}: no reviewer records")
 
+    sample_ids: set[str] = set()
     case_ids: set[str] = set()
     for index, record in enumerate(records):
         if not isinstance(record, dict):
             raise TypeError(f"{path}: record {index} must be an object")
+        sample_id = record.get("sample_id")
         case_id = record.get("validation_case_id")
         raw = record.get("variants_raw")
         variants = record.get("variants")
+        if not isinstance(sample_id, str) or not sample_id:
+            raise ValueError(f"{path}: record {index} lacks sample_id")
+        if sample_id in sample_ids:
+            raise ValueError(f"{path}: duplicate sample_id {sample_id!r}")
         if not isinstance(case_id, str) or not case_id:
             raise ValueError(f"{path}: record {index} lacks validation_case_id")
         if case_id in case_ids:
             raise ValueError(f"{path}: duplicate validation_case_id {case_id!r}")
+        match = CASE_ID.search(sample_id)
+        if match is None or match.group(1) != case_id:
+            raise ValueError(
+                f"{path}: record {index} sample_id does not map to "
+                f"validation_case_id {case_id!r}"
+            )
         if not isinstance(raw, str) or not isinstance(variants, list):
             raise TypeError(f"{path}: record {index} has invalid reviewer variants")
         if not all(isinstance(token, str) for token in variants):
@@ -274,6 +286,7 @@ def load_ground_truth(path: Path) -> dict[str, Any]:
                 f"{path}: record {index} tokenization differs from variants_raw"
             )
         validate_tokens(variants)
+        sample_ids.add(sample_id)
         case_ids.add(case_id)
     return value
 
