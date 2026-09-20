@@ -65,6 +65,23 @@ informative-position counts are exact fields; floating phase masses and window i
 compared numerically by downstream validation tooling. The artifact defines no phase state,
 threshold, weight, variant rule, or sample-policy change.
 
+Direct parity checking is performed over completed artifacts only:
+
+```bash
+uv run python scripts/check_phase_runtime_parity.py \
+  --research-dir validation-results/phase-hypotheses/full-20260920 \
+  --runtime-root validation-results/runtime-phase/full-20260920 \
+  --tolerance 1e-12
+```
+
+The runtime root contains one `<validation-case>.phase-runtime/` directory per checked case.
+The checker verifies Signal/reference/configuration identity and the production v1 25/5/±5
+method constants before comparison. It joins windows by read SHA-256, tract, and exact
+start/end sequencing-order distance, then checks call indexes and profile-observation counts
+exactly. Candidate offsets and informative-position counts are exact; impurity and
+zero/shifted/residual masses use only the explicitly supplied absolute tolerance. It exits
+nonzero on any structural or numerical mismatch and performs no phase recomputation.
+
 Real validation exports are identifying scientific derivatives and remain ignored local artifacts. A completed corpus can be converted into deterministic joined research tables with:
 
 ```bash
