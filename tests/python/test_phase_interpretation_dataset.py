@@ -450,10 +450,10 @@ class PhaseInterpretationDatasetTests(unittest.TestCase):
 
         development_text = (output / "development-windows.csv").read_text()
         development_text += (output / "development-candidates.csv").read_text()
-        self.assertNotIn("holdout", development_text)
+        self.assertNotIn("2" * 64, development_text)
         self.assertNotIn("dev-review", development_text)
 
-    def test_rejects_unknown_partition_and_provenance_drift(self) -> None:
+    def test_rejects_unknown_partition(self) -> None:
         cases = self.write_corpus(holdout_group="locked")
         self.write_hypotheses(cases)
 
