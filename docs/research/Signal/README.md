@@ -14,6 +14,7 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 - [polyc-orientation-controls.md](polyc-orientation-controls.md): same-case, same-locus N-read controls comparing post-tract evidence with opposite selected-orientation pre-tract evidence without pair selection or thresholds.
 - [polyc-phase-hypotheses.md](polyc-phase-hypotheses.md): Tracy-inspired downstream candidate-offset curves that separate shifted-reference explainability from unexplained profile residual without selecting a winning phase.
 - [polyc-phase-characterization.md](polyc-phase-characterization.md): descriptive adjacent-window persistence, exact-distance trajectories, and observed-interrupt strata over complete phase-hypothesis curves without candidate selection or thresholds.
+- [polyc-phase-sensitivity.md](polyc-phase-sensitivity.md): full-factorial window/stride/offset sensitivity over the authoritative phase candidate engine without selecting a preferred parameter set.
 - [event-position-diagnostics.md](event-position-diagnostics.md): validation study for explaining primary-basecall versus continuous-profile event placement before threshold fitting.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.
