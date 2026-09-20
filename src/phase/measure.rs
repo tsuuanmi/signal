@@ -666,6 +666,50 @@ mod tests {
     }
 
     #[test]
+    fn partial_tract_coverage_is_explicitly_insufficient() -> Result<()> {
+        let reference = canonical_reference();
+        let (mut alignment, signal) = forward_hv2_read(&reference, 30, None);
+        alignment
+            .columns
+            .retain(|column| column.reference_index_0based != Some(305));
+        let evidence = measure(&alignment, &signal, &reference)?;
+        let hv2 = evidence
+            .tracts
+            .iter()
+            .find(|tract| tract.tract == PhaseTractId::Hv2)
+            .expect("HV2 evidence");
+
+        assert_eq!(
+            hv2.availability,
+            PhaseEvidenceAvailability::Insufficient(
+                PhaseInsufficiency::IncompleteTractCoverage
+            )
+        );
+        assert!(hv2.windows.is_empty());
+        Ok(())
+    }
+
+    #[test]
+    fn same_reference_base_is_noninformative_for_candidate() -> Result<()> {
+        let observation = AfterObservation {
+            distance: 1,
+            reference_base: 'A',
+            call_index_0based: 1,
+            profile: Some(EvidenceProfile {
+                weights: [0.7, 0.1, 0.1, 0.1],
+            }),
+        };
+        let reference_by_distance = BTreeMap::from([(1, 'A'), (2, 'A')]);
+        let candidate = candidate_evidence(&[observation], &reference_by_distance, 1)?;
+
+        assert_eq!(candidate.informative_positions, 0);
+        assert!(candidate.mean_zero_reference_mass.is_none());
+        assert!(candidate.mean_shifted_reference_mass.is_none());
+        assert!(candidate.mean_residual_mass.is_none());
+        Ok(())
+    }
+
+    #[test]
     fn incomplete_window_is_explicitly_insufficient() -> Result<()> {
         let reference = canonical_reference();
         let (alignment, signal) = forward_hv2_read(&reference, 24, None);
