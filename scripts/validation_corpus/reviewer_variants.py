@@ -147,7 +147,7 @@ def extract_ground_truth(source_tsv: Path, output_path: Path) -> None:
         reader = csv.DictReader(source, delimiter="\t")
         if reader.fieldnames is None:
             raise ValueError(f"{source_tsv}: missing TSV header")
-        missing = [column for column in REQUIRED_COLUMNS if column not in reader.fieldnames]
+        missing = [\n            column for column in REQUIRED_COLUMNS if column not in reader.fieldnames\n        ]
         if missing:
             raise ValueError(f"{source_tsv}: missing columns: {', '.join(missing)}")
         source_rows = list(reader)
@@ -162,7 +162,7 @@ def extract_ground_truth(source_tsv: Path, output_path: Path) -> None:
         if not sample_id or sample_id == SAMPLE_ID_COLUMN:
             continue
         if sample_id in sample_ids:
-            raise ValueError(f"{source_tsv}:{source_row}: duplicate sample ID {sample_id!r}")
+            raise ValueError(\n                f"{source_tsv}:{source_row}: duplicate sample ID {sample_id!r}"\n            )
 
         match = CASE_ID.search(sample_id)
         if match is None:
@@ -248,7 +248,7 @@ def load_ground_truth(path: Path) -> dict[str, Any]:
         if not all(isinstance(token, str) for token in variants):
             raise ValueError(f"{path}: record {index} has non-string reviewer token")
         if variants != raw.split():
-            raise ValueError(f"{path}: record {index} tokenization differs from variants_raw")
+            raise ValueError(\n                f"{path}: record {index} tokenization differs from variants_raw"\n            )
         validate_tokens(variants)
         case_ids.add(case_id)
     return value
