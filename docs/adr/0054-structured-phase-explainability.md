@@ -121,8 +121,9 @@ comparison layer:
 
 Consecutive `P.nBASE` tokens at one position form one ordered insertion, consecutive
 `PDEL` positions may form one deletion event, and IUPAC SNV symbols preserve the allowed
-alternate set. Equivalent indel representations in a repeat may match semantically while
-remaining explicitly reported as representation disagreements.
+alternate set. Equivalent variant representations that reconstruct the same resolved haplotype may match
+semantically while remaining explicitly reported as representation disagreements under
+ADR-0057.
 
 Reviewer truth/proxy data is validation input only. It MUST NOT feed back into phase
 measurement, alignment, basecalling, or production inference.
