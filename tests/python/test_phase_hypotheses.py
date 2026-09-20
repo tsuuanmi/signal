@@ -207,7 +207,7 @@ class PhaseHypothesisResearchTests(unittest.TestCase):
             profile_impurity=0.3,
         )
         informative, zero, shifted, residual = candidate_metrics(
-            [observation],
+            (observation,),
             {1: "A", 2: "A"},
             1,
         )
