@@ -22,7 +22,10 @@ from scripts.validation_corpus.polyc_geometry import (
     covers_complete_tract,
 )
 from scripts.validation_corpus.polyc_context import ReadContext
-from scripts.validation_corpus.polyc_phase import observation_record, publish_polyc_phase
+from scripts.validation_corpus.polyc_phase import (
+    observation_record,
+    publish_polyc_phase,
+)
 
 HV2_REFERENCE = "ACCCCCCCTCCCCCG"
 HV2_POSITIONS = tuple(range(302, 317))
