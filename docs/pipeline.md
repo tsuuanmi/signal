@@ -285,7 +285,7 @@ deduplicated.
 
 ## One-read observation boundary
 
-After variant calling, Signal materializes a `ReadObservation` that owns the input identity, base calls, basecall-independent locus/signal observations, quality-control result, selected alignment, and read-level variant result for exactly one trace.
+After selected alignment, internal phase measurement, and variant calling, Signal materializes a `ReadObservation` that owns the input identity, base calls, basecall-independent locus/signal observations, quality-control result, selected alignment, internal read-local phase evidence, and read-level variant result for exactly one trace.
 
 The read has already located itself at this boundary. Its orientation and covered reference segments come from evidence-driven semi-global alignment and circular projection; filenames or nominal HV/F/R labels are not placement inputs. This same one-read product feeds both the current analysis report and implemented sample-level reconciliation.
 
