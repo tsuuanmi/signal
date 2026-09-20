@@ -10,7 +10,10 @@ from pathlib import Path
 
 from scripts.validation_corpus.filesystem import file_sha256
 from scripts.validation_corpus.model import PHASE_HYPOTHESIS_SCHEMA_VERSION
-from scripts.validation_corpus.phase_hypotheses import HYPOTHESIS_COLUMNS, WINDOW_COLUMNS
+from scripts.validation_corpus.phase_hypotheses import (
+    HYPOTHESIS_COLUMNS,
+    WINDOW_COLUMNS,
+)
 from scripts.validation_corpus.phase_runtime_parity import (
     RUNTIME_CANDIDATE_COLUMNS,
     RUNTIME_SCHEMA_VERSION,
@@ -112,7 +115,9 @@ class PhaseRuntimeParityTests(unittest.TestCase):
         rows: list[dict[str, str]],
     ) -> None:
         with path.open("w", encoding="utf-8", newline="") as target:
-            writer = csv.DictWriter(target, fieldnames=list(columns), lineterminator="\n")
+            writer = csv.DictWriter(
+                target, fieldnames=list(columns), lineterminator="\n"
+            )
             writer.writeheader()
             writer.writerows(rows)
 
@@ -227,7 +232,9 @@ class PhaseRuntimeParityTests(unittest.TestCase):
         self.assertEqual(summary.informative_count_diff, 0)
         self.assertEqual(summary.max_numeric_delta, 0.0)
 
-    def test_call_index_mismatch_is_not_hidden_as_window_identity_mismatch(self) -> None:
+    def test_call_index_mismatch_is_not_hidden_as_window_identity_mismatch(
+        self,
+    ) -> None:
         self.write_research()
         self.write_runtime(start_call="101")
 
