@@ -298,6 +298,26 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
 
+    def test_representation_equivalence_is_matched_but_not_exact_profile(self) -> None:
+        truth = self.write_ground_truth("3.1A")
+        self.write_sample([self.signal_variant(4, "A", "AA", "INS")])
+        output = self.root / "evaluation"
+
+        publish_evaluation(
+            truth,
+            self.root / "results",
+            self.reference,
+            output,
+        )
+
+        index = json.loads((output / "index.json").read_text(encoding="utf-8"))
+        summary = index["summary"]
+        self.assertEqual(summary["proxy_true_positive_variants"], 1)
+        self.assertEqual(summary["proxy_false_positive_variants"], 0)
+        self.assertEqual(summary["proxy_false_negative_variants"], 0)
+        self.assertEqual(summary["representation_disagreements"], 1)
+        self.assertEqual(summary["exact_profiles"], 0)
+
     def test_reports_false_positive_and_false_negative_proxy_counts(self) -> None:
         truth = self.write_ground_truth("7A 9T")
         self.write_sample(
