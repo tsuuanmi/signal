@@ -70,11 +70,11 @@ invent a new consensus vote or phase-aware policy.
 
 ## Matching
 
-Matching occurs in two steps.
+Matching is representation-aware but deliberately conservative.
 
 ### Exact identity
 
-Exact variants match by:
+Exact one-to-one events match by:
 
 ```text
 (position, reference, alternate, kind)
@@ -82,35 +82,61 @@ Exact variants match by:
 
 For IUPAC reviewer SNVs, any canonical alternate allowed by the reviewer symbol may match.
 
-### Representation equivalence
+### Single-event representation equivalence
 
-An unmatched single indel may match an unmatched reviewer indel when applying each event to
-the same reference produces the same resulting sequence. Such a match counts as the same
-sequence difference but is recorded separately as a `representation` disagreement.
+An unmatched reviewer event may match one unmatched Signal event when applying each event
+to the same reference produces exactly the same resulting sequence. The pair is retained
+as a `representation` disagreement rather than an FP/FN.
 
-This is important in repeats/homopolymers where equivalent indels can have different
-anchors.
+### Multi-event haplotype equivalence
+
+After exact and single-event matching, v2 may compare contiguous unmatched event groups.
+A reviewer group is eligible only when every event has one unambiguous alternate and the
+events can be applied without overlapping reference spans. A reviewer group and a Signal
+group are representation-equivalent only when applying each complete group to the same
+reference produces exactly the same resulting sequence.
+
+This allows, for example, a reviewer SNV plus repeat-end deletion to match one canonical
+right-aligned Signal deletion when both descriptions encode the same haplotype.
+
+The evaluator does **not** use locus lists, repeat annotations, poly-C coordinates, or a
+maximum distance threshold to create such groups. A candidate group must be minimal: if a
+proper subgroup is already sequence-equivalent, the larger grouping is rejected. If an
+event participates in more than one competing minimal equivalence group, none of those
+ambiguous groups is collapsed.
+
+### Why grouping is required
+
+In repeat sequence, one biological sequence difference can admit different event
+decompositions. Correctness therefore cannot be defined by raw position equality alone.
+The evaluator first preserves source events, then evaluates canonical comparison groups.
 
 The evaluator does not ignore unmatched variants merely because they are close to a repeat
 or poly-C tract.
 
 ## Metrics
 
-The baseline reports reviewer-proxy counts:
+The v2 baseline reports both source-event counts and canonical comparison-group counts:
 
-- matched variants;
-- extra Signal variants: proxy false positives;
-- missing reviewer variants: proxy false negatives;
-- representation disagreements;
+- reviewer source events;
+- Signal source events;
+- canonical reviewer groups;
+- canonical Signal groups;
+- matched groups;
+- representation groups;
+- collapsed reviewer/Signal source events;
+- extra Signal groups: proxy false positives;
+- missing reviewer groups: proxy false negatives;
 - exact sample profiles;
 - proxy precision;
 - proxy recall.
 
-A representation-equivalent indel counts as matched for FP/FN accounting, but a sample with
-any representation disagreement is not an exact profile match.
+A representation group counts once on each side for FP/FN accounting regardless of whether
+its source representation was 1↔1, N↔1, 1↔M, or N↔M. A sample with any representation
+group is not an exact representation match.
 
 A variant-only reviewer profile does not define a complete negative-locus denominator.
-Therefore v1 deliberately does **not** fabricate true-negative counts or specificity.
+Therefore v2 deliberately does **not** fabricate true-negative counts or specificity.
 
 True negatives/specificity require a separately frozen reviewed callable/reference domain.
 
@@ -170,7 +196,7 @@ Evaluate the current Signal batch outputs:
 uv run python scripts/evaluate_variant_profiles.py
 ```
 
-The default no-overwrite output is:
+The default no-overwrite v2 output is:
 
 ```text
 validation-results/variant-profile/baseline/
