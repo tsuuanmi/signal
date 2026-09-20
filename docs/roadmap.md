@@ -116,6 +116,7 @@ The repository already contains or explores functionality beyond this baseline, 
 - pre-consensus run-length sample coverage topology with total/forward/reverse read depth;
 - factorized normalized-variant support topology across observed/eligible and selected forward/reverse reads;
 - richer per-call evidence.
+- internal read-local `signal.polyc_phase/v1` continuous candidate evidence for exact circular-rCRS HV1/HV2 contexts, without a phase state or weighting policy.
 
 These capabilities are not treated as disposable experiments merely because they are beyond the simplest validation path. Where their current behavior is coherent and tested, future work builds on them.
 
