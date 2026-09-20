@@ -16,10 +16,8 @@ AB1 -> decode -> basecalling -> signal_processing -> quality_control
                                                    |
                                                    +-> basecall report v2
                                                    |
-FASTA -----------------------------------------> alignment -> variant_calling
-                                                              |
-                                                              v
-                                                       ReadObservation
+FASTA -----------------------------------------> alignment -+-> variant_calling -+
+                                                           +-> phase -----------+-> ReadObservation
                                                          /          \
                                                         v            v
                                                analysis report v7   SampleEvidence
