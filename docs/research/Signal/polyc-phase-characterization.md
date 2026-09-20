@@ -106,19 +106,14 @@ Those patterns can later motivate a detector, but they are not detector states h
 
 ## Remaining ADR-0054 analyses
 
-This characterization does not yet answer:
+This characterization does not itself answer:
 
-1. whether overlapping opposite-orientation evidence stays clean before it crosses the
-   same tract;
-2. whether recurrent loci 253, 297, 302, 16194, and 16197 occur inside windows with
+1. whether recurrent loci 253, 297, 302, 16194, and 16197 occur inside windows with
    coherent shifted-reference support;
-3. which individual high-impurity reads remain unexplained by every candidate offset;
-4. sensitivity of conclusions to window size, stride, and maximum candidate offset.
+2. which individual high-impurity reads remain unexplained by every candidate offset;
+3. sensitivity of conclusions to window size, stride, and maximum candidate offset.
 
-The first two require joining additional locus/orientation context rather than inferring it
-from the phase-hypothesis summary artifact. The third requires a deliberately defined
-per-read descriptive view without introducing a winning-candidate rule. Parameter
-sensitivity should be tested before any promotion decision.
+Opposite-orientation evidence is handled separately by [polyc-orientation-controls.md](polyc-orientation-controls.md), which joins same-case locus context from the completed corpus rather than trying to reconstruct lost provenance from phase-hypothesis summaries. Recurrent-locus joins still require additional context. Per-read unexplained-impurity review needs a deliberately defined descriptive view without introducing a winning-candidate rule, and parameter sensitivity should be tested before any promotion decision.
 
 ## Scientific boundary
 
