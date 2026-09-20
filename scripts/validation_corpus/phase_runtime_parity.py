@@ -14,7 +14,7 @@ from .phase_artifact import (
     CandidateRecord,
     WindowRecord,
     load_source,
-    source_parameters,
+    production_v1_parameters,
     validate_source,
 )
 from .research_loader import json_object, strict_keys
@@ -410,15 +410,7 @@ def compare_phase_runtime(
         raise ValueError("numeric tolerance must be finite and non-negative")
 
     research_index, offsets = validate_source(research_dir)
-    parameters = source_parameters(research_index["method"])
-    if (
-        parameters.window_size != 25
-        or parameters.window_step != 5
-        or parameters.max_offset != 5
-    ):
-        raise ValueError(
-            "research phase method does not match signal.polyc_phase/v1 constants"
-        )
+    production_v1_parameters(research_index["method"])
     research_windows_by_id, research_candidates_by_id = load_source(
         research_dir,
         research_index,
