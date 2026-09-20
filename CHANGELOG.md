@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- ADR-0057 establishes haplotype-first variant correctness: exact reconstructed sequence/haplotype equivalence is the biological comparison criterion when variant descriptions differ, while Signal retains one deterministic internal canonical representation and future nomenclature conversions remain an explicit versioned reporting layer.
+
 - Local reviewer variant-profile validation now extracts provenance-bound `signal.reviewer_variant_ground_truth/v1` from Sequencher review tables and publishes deterministic `signal.validation_variant_profile_evaluation/v2` baseline comparisons against eligible sample-v8 variants. v2 preserves raw reviewer/Signal source-event counts, then compares canonical groups through exact identity, single-event sequence equivalence, and conservative unambiguous minimal multi-event haplotype equivalence. Representation-only N↔M decompositions remain explicit instead of inflating FP/FN; no true-negative denominator, phase-locus heuristic, or production behavior is introduced.
 
 - Phase-interpretation research preparation now publishes hash-bound `signal.validation_phase_interpretation_dataset/v1`, joining the validated corpus to production-v1 phase hypotheses with explicit development/holdout/excluded/unassigned group declarations. Only `include_in_threshold_fit=true` development window/candidate evidence is exported; other partitions contribute aggregate readiness counts without continuous phase features, and no state, threshold, recovery rule, weight, or production behavior is introduced.
