@@ -71,19 +71,34 @@ def json_object(path: Path) -> dict[str, Any]:
 
 
 def read_reference(path: Path) -> tuple[str, str]:
-    """Read one canonical A/C/G/T FASTA record."""
+    """Read one FASTA record using the production reference alphabet."""
     lines = path.read_text(encoding="utf-8").splitlines()
-    headers = [line for line in lines if line.startswith(">")]
-    if len(headers) != 1:
-        raise ValueError(f"{path}: expected exactly one FASTA record")
-    name = headers[0][1:].strip()
-    if not name:
+    if not lines:
+        raise ValueError(f"{path}: reference is empty")
+
+    header = lines[0]
+    if not header.startswith(">"):
+        raise ValueError(f"{path}: first line must contain a FASTA identifier")
+    fields = header[1:].split()
+    if not fields:
         raise ValueError(f"{path}: reference name is empty")
-    sequence = "".join(
-        line.strip().upper() for line in lines if line and not line.startswith(">")
-    )
-    if not sequence or any(base not in "ACGT" for base in sequence):
-        raise ValueError(f"{path}: reference must contain only A/C/G/T")
+    name = fields[0]
+
+    sequence_parts: list[str] = []
+    for line in lines[1:]:
+        if line.startswith(">"):
+            raise ValueError(f"{path}: expected exactly one FASTA record")
+        for character in line:
+            if character.isspace():
+                continue
+            base = character.upper()
+            if base not in "ACGTN":
+                raise ValueError(f"{path}: unsupported reference base {character!r}")
+            sequence_parts.append(base)
+
+    sequence = "".join(sequence_parts)
+    if not sequence:
+        raise ValueError(f"{path}: reference sequence is empty")
     return name, sequence
 
 
