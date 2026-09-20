@@ -26,6 +26,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Tracy-inspired post-poly-C phase research now publishes hash-bound `signal.validation_phase_hypotheses/v1` sliding-window candidate curves over integer reference offsets in sequencing order. Each candidate preserves informative-position count plus mean zero-phase, shifted-reference, and unexplained residual profile mass, allowing structured dephasing to be studied separately from unstructured signal degradation without selecting a winning shift or changing production calling.
+
 - Local poly-C phase-instability research now publishes hash-bound `signal.validation_polyc_phase/v1` observations and descriptive summaries for reads that actually span validated rCRS HV2/HV1 C tracts, preserving sequencing-direction path region, genomic/call-order distance, profile impurity, previous/current/next reference-base mass, and read-local T310/T16189 evidence without defining a phase score, recovery cutoff, genotype, artifact verdict, or production confidence change.
 
 - Reviewer-facing sample differential loci now preserve the concise Tracy-derived signal shape needed for evidence-aware review: factorized read/state/profile topology plus each call-backed observation's normalized reference-oriented A/C/G/T `EvidenceProfile` and existing candidate-noisy context, while corrected amplitudes/SNR and consensus interpretation remain internal.

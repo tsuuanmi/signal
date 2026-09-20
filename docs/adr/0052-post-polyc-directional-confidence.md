@@ -65,6 +65,8 @@ Future implementation may use evidence such as:
 The detector and its thresholds require validation and are not production requirements
 yet.
 
+ADR-0054 defines the next research boundary: measure coherent shifted-reference explainability separately from unstructured residual degradation before any attenuation policy is chosen.
+
 ## Recovery
 
 Confidence MUST NOT be restored using a hard-coded genomic distance alone.

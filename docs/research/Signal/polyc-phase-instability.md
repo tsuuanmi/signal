@@ -155,6 +155,8 @@ The first analysis should answer, separately for HV1 and HV2:
 Only after these descriptive questions are answered should a phase-instability detector
 or recovery model be proposed.
 
+The next implemented research layer is [polyc-phase-hypotheses.md](polyc-phase-hypotheses.md), which preserves complete downstream candidate-offset curves so structured dephasing can be distinguished from unstructured degradation without introducing a production phase score.
+
 ## Scientific boundary
 
 This artifact does **not**:
