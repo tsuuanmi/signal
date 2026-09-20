@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Development-only `signal.validation_variant_phase_context/v1` now joins biological missing/extra groups from variant-profile evaluation v2 to exact available post-poly-C observations, reconstructed phase-window membership, and complete candidate curves. Representation disagreements are excluded from error attribution; detailed context is restricted to fit-eligible development cases while other partitions expose aggregate readiness counts only. No phase state, winning offset, threshold, causal artifact label, weighting, or production behavior is introduced.
+
 - ADR-0057 establishes haplotype-first variant correctness: exact reconstructed sequence/haplotype equivalence is the biological comparison criterion when variant descriptions differ, while Signal retains one deterministic internal canonical representation and future nomenclature conversions remain an explicit versioned reporting layer.
 
 - Local reviewer variant-profile validation now extracts provenance-bound `signal.reviewer_variant_ground_truth/v1` from Sequencher review tables and publishes deterministic `signal.validation_variant_profile_evaluation/v2` baseline comparisons against eligible sample-v8 variants. v2 preserves raw reviewer/Signal source-event counts, then compares canonical groups through exact identity, single-event sequence equivalence, and conservative unambiguous minimal multi-event haplotype equivalence. Representation-only N↔M decompositions remain explicit instead of inflating FP/FN; no true-negative denominator, phase-locus heuristic, or production behavior is introduced.
