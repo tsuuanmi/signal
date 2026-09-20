@@ -6,6 +6,7 @@ pub(crate) mod basecalls;
 pub(crate) mod coordinate;
 pub(crate) mod locus_evidence;
 pub(crate) mod nucleotide;
+pub(crate) mod phase;
 pub(crate) mod quality;
 pub(crate) mod read_observation;
 pub(crate) mod reference;
