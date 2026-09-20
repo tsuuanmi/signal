@@ -23,7 +23,7 @@ The validation case is the sample execution boundary. `source_group_id` and
 `specimen_group_id` are preserved for provenance but are not used as substitutes for
 sample identity.
 
-For v1, both roles require explicit complete-tract coverage so before/after state can be
+For v2, both roles require explicit complete-tract coverage so before/after state can be
 proven from call order:
 
 - `post_tract`: selected orientation equals `post_orientation` and the locus occurs
@@ -87,6 +87,7 @@ One row per eligible read retained inside a matched control group. The row prese
 - role and selected read orientation;
 - read SHA-256 and PCR/run/instrument/amplicon metadata;
 - declared direction and artifact tags as metadata only;
+- read-local aligned interrupt base as evidence, never genotype;
 - call-order and circular-rCRS distance from the tract;
 - state/base/quality/noisy-region evidence;
 - normalized reference-oriented A/C/G/T profile when present;
@@ -99,6 +100,7 @@ fallback is introduced.
 
 One row per matched control group summarizes the two roles without pair expansion:
 
+- sorted unique post/control interrupt-base signatures without consensus calling;
 - read count and profile-bearing read count;
 - noisy-observation count;
 - mean profile impurity;
