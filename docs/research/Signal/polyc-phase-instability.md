@@ -160,7 +160,7 @@ The first analysis should answer, separately for HV1 and HV2:
 Only after these descriptive questions are answered should a phase-instability detector
 or recovery model be proposed.
 
-The next implemented research layer is [polyc-phase-hypotheses.md](polyc-phase-hypotheses.md), which preserves complete downstream candidate-offset curves so structured dephasing can be distinguished from unstructured degradation without introducing a production phase score.
+Two downstream research layers now consume this directional foundation. [polyc-phase-hypotheses.md](polyc-phase-hypotheses.md) preserves complete downstream candidate-offset curves so structured dephasing can be distinguished from unstructured degradation. [polyc-orientation-controls.md](polyc-orientation-controls.md) returns to the completed corpus to compare post-tract reads with same-case, same-locus evidence from the opposite selected orientation before that tract, retaining all eligible reads rather than selecting a pair.
 
 ## Scientific boundary
 

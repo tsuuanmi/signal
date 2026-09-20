@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import csv
-import math
 import os
 import shutil
 import tempfile
@@ -13,19 +12,20 @@ from typing import Any, TextIO
 
 from .filesystem import file_sha256, sync_directory, validate_new_directory, write_json
 from .model import POLYC_PHASE_SCHEMA_VERSION
+from .polyc_context import (
+    ReadContext,
+    crossing_spans,
+    mass_for_base,
+    profile,
+    scan_context,
+)
 from .polyc_geometry import (
-    TRACTS,
     PolyCTract,
     TractCallSpan,
     call_distance,
-    covers_complete_tract,
-    orientation,
     path_region,
     read_order_distance,
     reference_neighbor_positions,
-    tract_call_span,
-    tract_positions,
-    validate_reference_tracts,
 )
 from .research_loader import iter_research_rows, load_research_corpus
 from .research_model import ResearchCorpus
@@ -95,20 +95,6 @@ SUMMARY_COLUMNS = (
 
 
 @dataclass
-class ReadContext:
-    validation_case_id: str
-    source_group_id: str
-    specimen_group_id: str | None
-    read_sha256: str
-    amplicon_id: str | None
-    declared_direction: str | None
-    orientation: str
-    tract_positions: set[int] = field(default_factory=set)
-    tract_call_indices: dict[int, int | None] = field(default_factory=dict)
-    tract_observations: dict[int, dict[str, Any]] = field(default_factory=dict)
-
-
-@dataclass
 class SummaryAccumulator:
     observations: int = 0
     noisy_observations: int = 0
@@ -163,100 +149,6 @@ def write_row(
             f"{label} does not match table columns: missing={missing} extra={extra}"
         )
     target.writerow({key: csv_value(row[key]) for key in columns})
-
-
-def profile(row: dict[str, Any]) -> tuple[float, float, float, float] | None:
-    values = tuple(row[f"profile_{base}"] for base in ("a", "c", "g", "t"))
-    if all(value is None for value in values):
-        return None
-    if any(value is None for value in values):
-        raise ValueError("profile channels must be all present or all absent")
-    converted = tuple(float(value) for value in values)
-    if any(not math.isfinite(value) or value < 0.0 for value in converted):
-        raise ValueError("profile channels must be finite and non-negative")
-    if abs(sum(converted) - 1.0) > 1e-9:
-        raise ValueError("profile channels must sum to one")
-    return converted[0], converted[1], converted[2], converted[3]
-
-
-def mass_for_base(values: tuple[float, float, float, float], base: str) -> float:
-    try:
-        index = {"A": 0, "C": 1, "G": 2, "T": 3}[base]
-    except KeyError as error:
-        raise ValueError(f"unsupported reference base {base!r}") from error
-    return values[index]
-
-
-def scan_context(
-    corpus: ResearchCorpus,
-) -> tuple[dict[str, ReadContext], dict[int, str], tuple[PolyCTract, ...]]:
-    contexts: dict[str, ReadContext] = {}
-    reference_bases: dict[int, str] = {}
-    supported_tract_positions = {
-        position for tract in TRACTS for position in tract_positions(tract)
-    }
-
-    for locus_row, observation_rows in iter_research_rows(corpus):
-        position = int(locus_row["position_1based"])
-        reference_base = str(locus_row["reference_base"])
-        previous = reference_bases.setdefault(position, reference_base)
-        if previous != reference_base:
-            raise ValueError(
-                f"reference base at position {position} changes across validation cases"
-            )
-
-        for row in observation_rows:
-            read_sha256 = str(row["read_sha256"])
-            selected_orientation = orientation(
-                row["orientation"],
-                f"{read_sha256}.orientation",
-            )
-            context = contexts.get(read_sha256)
-            if context is None:
-                context = ReadContext(
-                    validation_case_id=str(row["validation_case_id"]),
-                    source_group_id=str(row["source_group_id"]),
-                    specimen_group_id=(
-                        str(row["specimen_group_id"])
-                        if row["specimen_group_id"] is not None
-                        else None
-                    ),
-                    read_sha256=read_sha256,
-                    amplicon_id=(
-                        str(row["amplicon_id"])
-                        if row["amplicon_id"] is not None
-                        else None
-                    ),
-                    declared_direction=(
-                        str(row["declared_direction"])
-                        if row["declared_direction"] is not None
-                        else None
-                    ),
-                    orientation=selected_orientation,
-                )
-                contexts[read_sha256] = context
-            else:
-                if context.validation_case_id != row["validation_case_id"]:
-                    raise ValueError(
-                        f"{read_sha256}: validation case changes across rows"
-                    )
-                if context.orientation != selected_orientation:
-                    raise ValueError(
-                        f"{read_sha256}: selected orientation changes across rows"
-                    )
-            if position in supported_tract_positions:
-                if position in context.tract_observations:
-                    raise ValueError(
-                        f"{read_sha256}: duplicate observation at position {position}"
-                    )
-                context.tract_positions.add(position)
-                call_index = row["call_index_0based"]
-                context.tract_call_indices[position] = (
-                    int(call_index) if call_index is not None else None
-                )
-                context.tract_observations[position] = row
-
-    return contexts, reference_bases, validate_reference_tracts(reference_bases)
 
 
 def interrupt_fields(
@@ -460,16 +352,7 @@ def research_index(
 
 def build_staged_polyc_phase(corpus: ResearchCorpus, stage: Path) -> None:
     contexts, reference_bases, active_tracts = scan_context(corpus)
-    crossing = {
-        (read_sha256, tract.tract_id): tract_call_span(
-            context.tract_call_indices,
-            tract,
-            f"{read_sha256}:{tract.tract_id}",
-        )
-        for read_sha256, context in contexts.items()
-        for tract in active_tracts
-        if covers_complete_tract(context.tract_positions, tract)
-    }
+    crossing = crossing_spans(contexts, active_tracts)
     if not crossing:
         raise ValueError("no validation read spans a supported rCRS poly-C tract")
 

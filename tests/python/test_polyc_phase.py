@@ -16,13 +16,13 @@ from scripts.validation_corpus.model import (
     MEASUREMENT_SCHEMA_VERSION,
     POLYC_PHASE_SCHEMA_VERSION,
 )
+from scripts.validation_corpus.polyc_context import ReadContext
 from scripts.validation_corpus.polyc_geometry import (
     TRACTS,
     TractCallSpan,
     covers_complete_tract,
 )
 from scripts.validation_corpus.polyc_phase import (
-    ReadContext,
     observation_record,
     publish_polyc_phase,
 )
@@ -229,8 +229,12 @@ class PolyCPhaseResearchTests(unittest.TestCase):
             source_group_id="source-1",
             specimen_group_id="specimen-1",
             read_sha256=self.forward_sha,
+            pcr_replicate_id=None,
+            sequencing_run_id="run-1",
+            instrument_id=None,
             amplicon_id="HV2",
             declared_direction="forward",
+            artifact_tags="",
             orientation="forward",
         )
         context.tract_positions.update(range(hv2.start_1based, hv2.end_1based + 1))
@@ -247,8 +251,12 @@ class PolyCPhaseResearchTests(unittest.TestCase):
             source_group_id="source-1",
             specimen_group_id="specimen-1",
             read_sha256=self.forward_sha,
+            pcr_replicate_id=None,
+            sequencing_run_id="run-1",
+            instrument_id=None,
             amplicon_id="HV1",
             declared_direction="forward",
+            artifact_tags="",
             orientation="forward",
         )
         row = {
