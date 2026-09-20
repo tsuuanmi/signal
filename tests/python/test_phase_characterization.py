@@ -192,9 +192,7 @@ class PhaseCharacterizationResearchTests(unittest.TestCase):
             float(first_plus_one["absolute_residual_mass_delta"]), 0.01
         )
 
-        with (output / "strata.csv").open(
-            "r", encoding="utf-8", newline=""
-        ) as source:
+        with (output / "strata.csv").open("r", encoding="utf-8", newline="") as source:
             strata = list(csv.DictReader(source))
         c_plus_one = next(
             row
