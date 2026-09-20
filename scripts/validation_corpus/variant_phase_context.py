@@ -225,9 +225,7 @@ def validate_csv(
             raise ValueError(f"{path}: unexpected columns")
         rows = list(reader)
     if len(rows) != expected_rows:
-        raise ValueError(
-            f"{path}: expected {expected_rows} rows, found {len(rows)}"
-        )
+        raise ValueError(f"{path}: expected {expected_rows} rows, found {len(rows)}")
     return rows
 
 
@@ -305,7 +303,9 @@ def selected_event(row: dict[str, str]) -> tuple[VariantEvent, str]:
     return events[0], source
 
 
-def event_footprint(event: VariantEvent, reference_length: int) -> tuple[int, int, int | None]:
+def event_footprint(
+    event: VariantEvent, reference_length: int
+) -> tuple[int, int, int | None]:
     end = event.position + len(event.reference) - 1
     if end > reference_length:
         raise ValueError("variant event reference footprint exceeds reference length")
@@ -373,9 +373,7 @@ def observation_row(
         "reference_footprint_start_1based": difference[
             "reference_footprint_start_1based"
         ],
-        "reference_footprint_end_1based": difference[
-            "reference_footprint_end_1based"
-        ],
+        "reference_footprint_end_1based": difference["reference_footprint_end_1based"],
         "read_sha256": observation.read_sha256,
         "source_group_id": case.metadata["source_group_id"],
         "specimen_group_id": case.metadata["specimen_group_id"],
@@ -500,9 +498,9 @@ def build_rows(
     observations_by_case: dict[str, list[Any]] = {}
     for rows in groups.values():
         for observation in rows:
-            observations_by_case.setdefault(
-                observation.validation_case_id, []
-            ).append(observation)
+            observations_by_case.setdefault(observation.validation_case_id, []).append(
+                observation
+            )
 
     detailed_differences: list[dict[str, Any]] = []
     observation_rows: list[dict[str, Any]] = []
@@ -687,9 +685,7 @@ def output_index(
         ),
         "source_corpus_sha256": file_sha256(corpus.index_path),
         "source_polyc_phase_sha256": file_sha256(phase_dir / "index.json"),
-        "source_phase_hypotheses_sha256": file_sha256(
-            hypotheses_dir / "index.json"
-        ),
+        "source_phase_hypotheses_sha256": file_sha256(hypotheses_dir / "index.json"),
         "signal_version": corpus.signal_version,
         "manifest_sha256": corpus.manifest_sha256,
         "reference_sha256": corpus.reference_sha256,
@@ -791,7 +787,9 @@ def publish_variant_phase_context(
         phase_index,
     )
     reference = evaluation_index["reference"]
-    reference_length = nonnegative_index_count(reference.get("length"), "reference.length")
+    reference_length = nonnegative_index_count(
+        reference.get("length"), "reference.length"
+    )
     if reference_length < 1:
         raise ValueError("reference.length must be positive")
 
