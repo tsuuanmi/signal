@@ -14,7 +14,13 @@ from typing import Any, TextIO
 
 from .filesystem import file_sha256, sync_directory, validate_new_directory, write_json
 from .model import POLYC_ORIENTATION_CONTROL_SCHEMA_VERSION
-from .polyc_context import ReadContext, crossing_spans, mass_for_base, profile, scan_context
+from .polyc_context import (
+    ReadContext,
+    crossing_spans,
+    mass_for_base,
+    profile,
+    scan_context,
+)
 from .polyc_geometry import (
     PolyCTract,
     TractCallSpan,
@@ -120,7 +126,9 @@ class RoleAccumulator:
         impurity = row["profile_impurity"]
         reference_mass = row["reference_base_mass"]
         if impurity is None or reference_mass is None:
-            raise ValueError("profile-bearing control observation lacks derived metrics")
+            raise ValueError(
+                "profile-bearing control observation lacks derived metrics"
+            )
         self.impurities.append(float(impurity))
         self.reference_masses.append(float(reference_mass))
 
@@ -368,11 +376,10 @@ def locus_row(
         if source_group_id is None:
             source_group_id = row_source_group
             specimen_group_id = row_specimen
-        elif (
-            source_group_id != row_source_group
-            or specimen_group_id != row_specimen
-        ):
-            raise ValueError(f"{control_id}: case grouping metadata changes across reads")
+        elif source_group_id != row_source_group or specimen_group_id != row_specimen:
+            raise ValueError(
+                f"{control_id}: case grouping metadata changes across reads"
+            )
 
         role = row["role"]
         if role == "post_tract":
@@ -494,9 +501,7 @@ def build_staged_orientation_controls(corpus: ResearchCorpus, stage: Path) -> No
             reference_base = reference_bases.get(position)
             if reference_base is None:
                 raise ValueError(f"missing reference base at matched locus {position}")
-            control_id = (
-                f"{case_id}:{tract.tract_id}:{position}:{post_orientation}"
-            )
+            control_id = f"{case_id}:{tract.tract_id}:{position}:{post_orientation}"
             rows: list[dict[str, Any]] = []
             for role, items in (
                 ("post_tract", posts),
