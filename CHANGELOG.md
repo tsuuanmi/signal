@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- The completed 89-case Rust/Python phase-runtime parity study is now recorded as research validation evidence: 11,231 windows and 112,310 candidates matched exactly on structure/counts, with maximum numeric delta `5.5511151231257827e-16` at `1e-12` tolerance. The record explicitly does not promote phase states, thresholds, weighting, or no-call behavior.
+
 - Direct Rust/Python phase parity checking now compares completed `signal.validation_phase_runtime/v1` artifacts against completed `signal.validation_phase_hypotheses/v1` evidence with exact structural/count checks and an explicit numeric tolerance, without regenerating phase geometry or changing production behavior.
 
 - Validation-only `signal.validation_phase_runtime/v1` now serializes the already-computed Rust `ReadObservation.phase` evidence to `index.json`, `windows.csv`, and `candidates.csv` for exact structural and numerical parity checks without recomputing phase geometry or changing production/public results.
