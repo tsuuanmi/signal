@@ -7,7 +7,7 @@ import hashlib
 import os
 import shutil
 import tempfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -160,18 +160,12 @@ class VariantEvent:
 
 @dataclass
 class ReadinessCounts:
-    cases: set[str]
+    cases: set[str] = field(default_factory=set)
     differences: int = 0
     fit_eligible_differences: int = 0
     phase_observations: int = 0
-    phase_reads: set[str] | None = None
-    phase_windows: set[str] | None = None
-
-    def __post_init__(self) -> None:
-        if self.phase_reads is None:
-            self.phase_reads = set()
-        if self.phase_windows is None:
-            self.phase_windows = set()
+    phase_reads: set[str] = field(default_factory=set)
+    phase_windows: set[str] = field(default_factory=set)
 
 
 def csv_value(value: Any) -> Any:
@@ -333,9 +327,7 @@ def difference_id(row: dict[str, str], source_events: str) -> str:
 
 def validate_provenance(
     corpus: ResearchCorpus,
-    evaluation_dir: Path,
     evaluation_index: dict[str, Any],
-    phase_dir: Path,
     phase_index: dict[str, Any],
 ) -> None:
     reference = evaluation_index["reference"]
@@ -355,8 +347,6 @@ def validate_provenance(
     ):
         if phase_index[key] != expected:
             raise ValueError(f"poly-C phase {key} differs from supplied corpus")
-    if file_sha256(evaluation_dir / "index.json") == file_sha256(phase_dir / "index.json"):
-        raise AssertionError("unrelated source indexes unexpectedly share one SHA-256")
 
 
 def profile_values(observation: Any) -> tuple[Any, Any, Any, Any]:
@@ -532,7 +522,7 @@ def build_rows(
             )
         partition = partition_for(str(case.metadata["holdout_group"]), mapping)
         key = (partition, row["difference"])
-        counts = readiness.setdefault(key, ReadinessCounts(set()))
+        counts = readiness.setdefault(key, ReadinessCounts())
         counts.cases.add(case_id)
         counts.differences += 1
 
@@ -658,7 +648,7 @@ def build_rows(
     readiness_rows: list[dict[str, Any]] = []
     for partition in PARTITIONS:
         for difference in ("extra", "missing"):
-            counts = readiness.get((partition, difference), ReadinessCounts(set()))
+            counts = readiness.get((partition, difference), ReadinessCounts())
             readiness_rows.append(
                 {
                     "partition": partition,
@@ -667,8 +657,8 @@ def build_rows(
                     "biological_differences": counts.differences,
                     "fit_eligible_differences": counts.fit_eligible_differences,
                     "phase_observations": counts.phase_observations,
-                    "phase_reads": len(counts.phase_reads or ()),
-                    "exact_phase_windows": len(counts.phase_windows or ()),
+                    "phase_reads": len(counts.phase_reads),
+                    "exact_phase_windows": len(counts.phase_windows),
                 }
             )
     return (
@@ -797,9 +787,7 @@ def publish_variant_phase_context(
     ) = validate_source_pair(phase_dir, hypotheses_dir)
     validate_provenance(
         corpus,
-        evaluation_dir,
         evaluation_index,
-        phase_dir,
         phase_index,
     )
     reference = evaluation_index["reference"]
