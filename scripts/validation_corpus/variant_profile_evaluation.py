@@ -130,7 +130,9 @@ def load_signal_variants(
             raise TypeError(f"{path}: variant {index} must be an object")
         topology = row.get("support_topology")
         if not isinstance(topology, dict):
-            raise TypeError(f"{path}: variant {index} support_topology must be an object")
+            raise TypeError(
+                f"{path}: variant {index} support_topology must be an object"
+            )
         eligible_reads = topology.get("eligible_reads")
         if not isinstance(eligible_reads, int) or eligible_reads < 0:
             raise ValueError(f"{path}: variant {index} has invalid eligible_reads")
