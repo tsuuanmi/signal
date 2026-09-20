@@ -20,6 +20,7 @@ PHASE_HYPOTHESIS_SCHEMA_VERSION = "signal.validation_phase_hypotheses/v1"
 PHASE_CHARACTERIZATION_SCHEMA_VERSION = "signal.validation_phase_characterization/v1"
 PHASE_SENSITIVITY_SCHEMA_VERSION = "signal.validation_phase_sensitivity/v1"
 PHASE_EXPLAINABILITY_SCHEMA_VERSION = "signal.validation_phase_explainability/v1"
+PHASE_RECURRENT_LOCUS_SCHEMA_VERSION = "signal.validation_phase_recurrent_loci/v1"
 
 MANIFEST_COLUMNS = (
     "validation_case_id",
