@@ -366,9 +366,7 @@ def strata_rows(windows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "mean_window_noisy_fraction": mean(
                     [float(row["noisy_fraction"]) for row in rows]
                 ),
-                "mean_candidate_shifted_reference_mass_max": mean_or_none(
-                    shifted_max
-                ),
+                "mean_candidate_shifted_reference_mass_max": mean_or_none(shifted_max),
                 "mean_candidate_residual_mass_min": mean_or_none(residual_min),
                 "mean_candidate_explainable_nonzero_fraction_max": mean_or_none(
                     explainability
