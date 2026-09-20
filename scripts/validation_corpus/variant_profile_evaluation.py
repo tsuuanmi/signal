@@ -105,7 +105,10 @@ def load_signal_variants(
     if (
         not isinstance(configuration_sha256, str)
         or len(configuration_sha256) != 64
-        or any(character not in "0123456789abcdef" for character in configuration_sha256)
+        or any(
+            character not in "0123456789abcdef"
+            for character in configuration_sha256
+        )
     ):
         raise ValueError(f"{path}: invalid configuration_sha256")
 
