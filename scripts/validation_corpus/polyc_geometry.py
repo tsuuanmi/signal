@@ -149,7 +149,9 @@ def read_order_distance(
         exit_ = tract.start_1based
 
     if region == "after":
-        distance = oriented_reference_steps(exit_, position_1based, selected_orientation)
+        distance = oriented_reference_steps(
+            exit_, position_1based, selected_orientation
+        )
         if distance <= 0:
             raise ValueError("after-tract reference distance must be positive")
         return distance
