@@ -18,6 +18,7 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 - [polyc-phase-explainability.md](polyc-phase-explainability.md): threshold-free candidate-envelope summaries for finding windows/reads whose impurity remains poorly described across all tested offsets without assigning a state.
 - [polyc-phase-recurrent-loci.md](polyc-phase-recurrent-loci.md): exact recurrent-locus membership and complete candidate context for positions 253/297/302/16194/16197 without interval approximation, scoring, or truth labels.
 - [phase-runtime-parity.md](phase-runtime-parity.md): completed 89-case Rust/Python `signal.polyc_phase/v1` measurement-parity evidence, including exact structural parity and numerical agreement before any interpretation policy.
+- [polyc-phase-interpretation-study.md](polyc-phase-interpretation-study.md): development/holdout study design for window/tract phase-evidence interpretation, including strict Python-research/Rust-production ownership and separate later weighting promotion.
 - [event-position-diagnostics.md](event-position-diagnostics.md): validation study for explaining primary-basecall versus continuous-profile event placement before threshold fitting.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.
