@@ -28,9 +28,7 @@ def parser() -> argparse.ArgumentParser:
     built.add_argument(
         "--output-dir",
         type=Path,
-        default=Path(
-            "validation-results/research/polyc-orientation-controls/baseline"
-        ),
+        default=Path("validation-results/research/polyc-orientation-controls/baseline"),
         help="new no-overwrite opposite-orientation control research directory",
     )
     return built
