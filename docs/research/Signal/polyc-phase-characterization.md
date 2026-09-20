@@ -111,9 +111,9 @@ This characterization does not itself answer:
 1. whether recurrent loci 253, 297, 302, 16194, and 16197 occur inside windows with
    coherent shifted-reference support;
 2. which individual high-impurity reads remain unexplained by every candidate offset;
-3. sensitivity of conclusions to window size, stride, and maximum candidate offset.
+3. which parameter choices preserve those descriptive patterns.
 
-Opposite-orientation evidence is handled separately by [polyc-orientation-controls.md](polyc-orientation-controls.md), which joins same-case locus context from the completed corpus rather than trying to reconstruct lost provenance from phase-hypothesis summaries. Recurrent-locus joins still require additional context. Per-read unexplained-impurity review needs a deliberately defined descriptive view without introducing a winning-candidate rule, and parameter sensitivity should be tested before any promotion decision.
+Opposite-orientation evidence is handled separately by [polyc-orientation-controls.md](polyc-orientation-controls.md), which joins same-case locus context from the completed corpus rather than trying to reconstruct lost provenance from phase-hypothesis summaries. Parameter sensitivity is handled by [polyc-phase-sensitivity.md](polyc-phase-sensitivity.md) using the same candidate engine and candidate-wise aggregation. Recurrent-locus joins still require additional context, and per-read unexplained-impurity review needs a deliberately defined descriptive view without introducing a winning-candidate rule.
 
 ## Scientific boundary
 
