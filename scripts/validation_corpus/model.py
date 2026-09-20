@@ -13,7 +13,9 @@ RESEARCH_SCHEMA_VERSION = "signal.validation_research/v1"
 AUDIT_SCHEMA_VERSION = "signal.validation_audit/v1"
 CURATION_QUEUE_SCHEMA_VERSION = "signal.validation_curation_queue/v1"
 POLYC_PHASE_SCHEMA_VERSION = "signal.validation_polyc_phase/v1"
-POLYC_ORIENTATION_CONTROL_SCHEMA_VERSION = "signal.validation_polyc_orientation_controls/v1"
+POLYC_ORIENTATION_CONTROL_SCHEMA_VERSION = (
+    "signal.validation_polyc_orientation_controls/v1"
+)
 PHASE_HYPOTHESIS_SCHEMA_VERSION = "signal.validation_phase_hypotheses/v1"
 PHASE_CHARACTERIZATION_SCHEMA_VERSION = "signal.validation_phase_characterization/v1"
 
