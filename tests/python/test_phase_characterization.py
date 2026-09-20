@@ -160,9 +160,7 @@ class PhaseCharacterizationResearchTests(unittest.TestCase):
         publish_phase_characterization(self.source, output)
 
         index = json.loads((output / "index.json").read_text(encoding="utf-8"))
-        self.assertEqual(
-            index["schema_version"], PHASE_CHARACTERIZATION_SCHEMA_VERSION
-        )
+        self.assertEqual(index["schema_version"], PHASE_CHARACTERIZATION_SCHEMA_VERSION)
         self.assertEqual(
             index["source_phase_hypotheses_sha256"],
             file_sha256(self.source / "index.json"),
