@@ -21,6 +21,9 @@ PHASE_CHARACTERIZATION_SCHEMA_VERSION = "signal.validation_phase_characterizatio
 PHASE_SENSITIVITY_SCHEMA_VERSION = "signal.validation_phase_sensitivity/v1"
 PHASE_EXPLAINABILITY_SCHEMA_VERSION = "signal.validation_phase_explainability/v1"
 PHASE_RECURRENT_LOCUS_SCHEMA_VERSION = "signal.validation_phase_recurrent_loci/v1"
+PHASE_INTERPRETATION_DATASET_SCHEMA_VERSION = (
+    "signal.validation_phase_interpretation_dataset/v1"
+)
 
 MANIFEST_COLUMNS = (
     "validation_case_id",
