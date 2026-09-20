@@ -79,7 +79,7 @@ def validate_reference_allele(position: int, allele: str, reference: str) -> Non
             "the current evaluator requires a non-seam representation"
         )
     if reference[start:end] != allele:
-        raise ValueError("variant reference allele disagrees with the supplied reference")
+        raise ValueError(\n            "variant reference allele disagrees with the supplied reference"\n        )
 
 
 def load_signal_variants(
