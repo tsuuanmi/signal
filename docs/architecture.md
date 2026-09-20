@@ -25,7 +25,7 @@ FASTA -----------------------------------------> alignment -> variant_calling
                                                analysis report v7   SampleEvidence
                                                                         |
                                                                         v
-                                                         sample_evidence/v7
+                                                         sample_evidence/v8
 ```
 
 `pipeline::observation` is the one authoritative reference-guided read path.
@@ -58,13 +58,35 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 
 Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. Shared `locus` geometry is reference-free and classification-free. `signal_processing` derives locus profiles from `Chromatogram` channel evidence directly; alignment consumes those immutable profiles for placement without mutating them or the upstream base calls. Existing rolling noisy-window analysis still consumes basecall window records. No algorithm module depends back on signal processing.
 
+## Promoted read-local phase boundary
+
+ADR-0055 defines a future production boundary for read-local rCRS HV1/HV2 poly-C phase
+evidence. The boundary is **accepted but not implemented**.
+
+If implemented, phase measurement belongs after selected reference placement because it
+depends on selected sequencing orientation/path and local reference context. It remains a
+sibling read interpretation rather than an input to alignment or variant calling:
+
+```text
+                       ┌─ primary-sequence variant observation
+selected alignment ───┤
+                       └─ read-local phase evidence
+                                  ↓
+                           ReadObservation
+```
+
+The current executable pipeline does not yet contain a `phase` module or phase field.
+Future measurement cannot feed back into alignment, require an F/R partner, infer stability
+from insufficient evidence, or alter structural contribution eligibility/unit-mass sample
+support without a separate validated policy decision.
+
 ## Coordinates and strand
 
 Trace samples, rolling signal-window call indexes, and original call indexes are 0-based. Internal reference intervals are 0-based half-open. Variant positions are 1-based. Reverse alignments retain an explicit oriented-query to original-call mapping. Circular alignments may contain two reference segments when they cross the origin.
 
 ## Output projection and transaction
 
-Compact `signal.analysis/v7` projects one completed read observation including concise trace-integrity evidence. `signal.basecalls/v2` projects the shared reference-independent stages. `signal.sample_evidence/v7` projects independently placed reads into one deterministic read registry, run-length coverage/orientation topology, pairwise overlap/admission evidence, sparse differential-locus observations, and normalized variants with factorized read/eligibility/orientation support topology. Read identity/orientation/coverage are factored once at top level; public locus and variant records use unique reviewer-facing read names while internal aggregation remains deterministically SHA-ordered. It omits dense all-reference loci and contains no consensus or sample-level variant verdict. Configuration remains schema version 5, and no compatibility result is assembled.
+Compact `signal.analysis/v7` projects one completed read observation including concise trace-integrity evidence. `signal.basecalls/v2` projects the shared reference-independent stages. `signal.sample_evidence/v8` projects independently placed reads into one deterministic read registry, run-length coverage/orientation topology, pairwise overlap/admission evidence, sparse differential-locus observations, and normalized variants with factorized read/eligibility/orientation support topology. Read identity/orientation/coverage are factored once at top level; public locus and variant records use unique reviewer-facing read names while internal aggregation remains deterministically SHA-ordered. It omits dense all-reference loci and contains no consensus or sample-level variant verdict. Configuration remains schema version 5, and no compatibility result is assembled.
 
 The completed typed result is serialized before filesystem publication. The core CLI writes a sibling temporary file, flushes and synchronizes it, creates the final path without overwrite, removes the temporary link, and synchronizes the directory. A failed core invocation leaves no command result and never replaces an existing file. Operational logs are deliberately separate, timestamped, run-correlated, escaped to one physical line, and append-only. Pipeline orchestration records aggregate metrics and elapsed time at every stage boundary, each removed variant's kind/position/reasons without alleles, the final warning categories, and stage-aware terminal failures. Mandatory pre-publication records are synchronized before the result transaction begins; no required record is written after a successful publication.
 

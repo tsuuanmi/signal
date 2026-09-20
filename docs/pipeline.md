@@ -289,6 +289,22 @@ After variant calling, Signal materializes a `ReadObservation` that owns the inp
 
 The read has already located itself at this boundary. Its orientation and covered reference segments come from evidence-driven semi-global alignment and circular projection; filenames or nominal HV/F/R labels are not placement inputs. This same one-read product feeds both the current analysis report and implemented sample-level reconciliation.
 
+## Promoted read-local poly-C phase boundary
+
+ADR-0055 reserves a future reference-aware read-local measurement stage after selected
+alignment. It is not implemented in the current executable pipeline.
+
+The future stage may consume immutable reference-oriented profile evidence, the selected
+orientation/path, and verified rCRS HV1/HV2 tract context. It cannot change placement,
+calls, quality, or primary-sequence variant observations. Unsupported reference contexts
+must be not applicable, and incomplete tract/window evidence must remain insufficient
+rather than being interpreted as phase-stable.
+
+No `PhaseState`, detector threshold, recovery rule, contribution weight, confidence
+attenuation, no-call behavior, configuration key, or public JSON field is currently
+defined. Opposite-orientation evidence remains validation/corroboration and is not a
+prerequisite for one-read processing.
+
 ## Sample evidence aggregation
 
 `signal sample` processes every trace through the one-read observation path before aggregation. `sample::aggregate` requires identical reference/configuration identities, rejects duplicate input SHA-256 values, and sorts reads by SHA-256 independently of CLI trace order. The top-level read registry retains reviewer-facing filename stem, stable SHA-256, and the concise selected-alignment summary (orientation, callable bases/identity, gap opens, unresolved bases, mapped segments, and origin-wrap state).

@@ -66,6 +66,13 @@ These invariants span modules and are intentionally centralized. SRS and module 
 - **INV-SAMPLE-020:** Profile heterogeneity is decomposed mathematically from eligible normalized profiles into within-profile impurity and between-profile dispersion; their sum reproduces total mean-profile heterogeneity within numerical tolerance. Geometry cannot become a mixed-signal or heteroplasmy verdict without separate validated policy.
 - **INV-SAMPLE-021:** Directional profile distance exists only when both forward and reverse mean profiles exist and is the Total Variation distance between those normalized distributions. Orientation comparison cannot imply independent biological replication or become a discordance/confidence threshold by itself.
 
+## Read-local phase evidence
+
+- **INV-PHASE-001:** Future production phase evidence is downstream of selected reference placement. It may consume selected orientation/path and immutable reference-oriented evidence, but it cannot feed back into alignment scoring, orientation selection, traceback, canonicalization, calls, or upstream signal evidence.
+- **INV-PHASE-002:** Phase applicability and evidence availability are distinct from interpretation. An unsupported reference/context or insufficient downstream evidence cannot be represented as stable phase, reference support, or absence of instability.
+- **INV-PHASE-003:** Read-local phase measurement cannot require a canonical F/R partner or opposite-orientation control. Cross-read orientation evidence remains validation/corroboration unless a separately specified sample policy adopts it.
+- **INV-PHASE-004:** Phase evidence cannot alter structural nucleotide-contribution eligibility, the current unit-mass nucleotide-support accumulator, read/variant eligibility, or public calling behavior without a separately accepted and validated reliability policy. No parallel hidden phase-weighted contribution path is permitted.
+
 ## Pipeline
 
 - **INV-PIPE-001:** Scientific stages consume validated output from earlier stages and do not silently re-parse or reinterpret external inputs.

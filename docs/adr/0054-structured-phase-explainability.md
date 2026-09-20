@@ -2,7 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-20
-- **Implementation:** Research-only candidate phase-hypothesis measurement; no production calling change.
+- **Implementation:** Descriptive research surface complete; ADR-0055 promotes only the read-local evidence boundary, with no production detector, state, weighting, or calling change.
 
 ## Context
 
@@ -152,8 +152,18 @@ validation for mtDNA poly-C behavior.
   distance.
 - Candidate offset magnitude may become evidence about length mixture, but it is not a
   biological indel call by itself.
+- ADR-0055 promotes the read-local evidence boundary while preserving complete candidate
+  evidence and explicit insufficient/not-applicable conditions.
 - Any future production contribution weight must depend on validated evidence and remain
-  a separate promotion decision.
+  a separate promotion decision that explicitly revisits the unit-mass contribution
+  contract.
+
+## Promotion boundary
+
+ADR-0055 defines how these findings may enter production architecture: measurement is
+read-local, downstream of selected alignment, scoped initially to validated rCRS HV1/HV2
+contexts, and separated into applicability/availability versus later interpretation. It
+does not promote any categorical state or reliability policy.
 
 ## Non-goals
 
