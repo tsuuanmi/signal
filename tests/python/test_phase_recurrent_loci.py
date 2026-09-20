@@ -122,9 +122,10 @@ class PhaseRecurrentLocusResearchTests(unittest.TestCase):
     def write_phase(self) -> None:
         observations = self.phase / "observations.csv"
         with observations.open("w", encoding="utf-8", newline="") as target:
+            observation_columns: list[str] = list(OBSERVATION_COLUMNS)
             writer = csv.DictWriter(
                 target,
-                fieldnames=list(OBSERVATION_COLUMNS),
+                fieldnames=observation_columns,
                 lineterminator="\n",
             )
             writer.writeheader()
