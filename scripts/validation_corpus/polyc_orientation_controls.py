@@ -151,10 +151,11 @@ def mean_profile(
     if not profiles:
         return None
     count = len(profiles)
-    return tuple(
+    means = [
         math.fsum(values[channel] for values in profiles) / count
         for channel in range(4)
-    )
+    ]
+    return means[0], means[1], means[2], means[3]
 
 
 def total_variation(
