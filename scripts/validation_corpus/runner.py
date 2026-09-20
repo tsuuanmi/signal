@@ -47,11 +47,24 @@ def run_case(
         detail = completed.stderr.strip() or f"exit status {completed.returncode}"
         raise RuntimeError(f"{case_id}: signal-validation failed: {detail}")
 
-    generated = work / "validation-results" / f"{case_id}.jsonl"
+    generated_root = work / "validation-results"
+    generated = generated_root / f"{case_id}.jsonl"
     if not generated.is_file():
         raise RuntimeError(
             f"{case_id}: validation succeeded but did not create {generated}"
         )
+    phase_runtime = generated_root / f"{case_id}.phase-runtime"
+    if not phase_runtime.is_dir() or phase_runtime.is_symlink():
+        raise RuntimeError(
+            f"{case_id}: validation succeeded but did not create {phase_runtime}"
+        )
+    for filename in ("index.json", "windows.csv", "candidates.csv"):
+        path = phase_runtime / filename
+        if not path.is_file() or path.is_symlink():
+            raise RuntimeError(
+                f"{case_id}: validation phase runtime is missing {path}"
+            )
+
     expected_reads = {trace.trace_sha256 for trace in case.traces}
     summary = load_measurements(
         generated, case.metadata.validation_case_id, expected_reads
@@ -59,6 +72,13 @@ def run_case(
     cases_dir = publish_root / "cases"
     cases_dir.mkdir(exist_ok=True)
     write_bytes(cases_dir / f"{case_id}.jsonl", generated.read_bytes())
+
+    phase_runtime_dir = publish_root / "phase-runtime"
+    phase_runtime_dir.mkdir(exist_ok=True)
+    os.rename(
+        phase_runtime,
+        phase_runtime_dir / f"{case_id}.phase-runtime",
+    )
     return summary
 
 
@@ -98,7 +118,14 @@ def run_corpus(
         write_json(
             publish_root / "index.json", corpus_index(manifest, cases, summaries)
         )
-        for directory in (publish_root / "cases", publish_root / "logs", publish_root):
+        for runtime in (publish_root / "phase-runtime").glob("*.phase-runtime"):
+            sync_directory(runtime)
+        for directory in (
+            publish_root / "cases",
+            publish_root / "logs",
+            publish_root / "phase-runtime",
+            publish_root,
+        ):
             if directory.exists():
                 sync_directory(directory)
 
@@ -109,7 +136,7 @@ def run_corpus(
                 f"output directory appeared while running: {output_dir}"
             ) from error
         try:
-            for name in ("cases", "logs"):
+            for name in ("cases", "logs", "phase-runtime"):
                 source = publish_root / name
                 if source.exists():
                     os.rename(source, output_dir / name)
