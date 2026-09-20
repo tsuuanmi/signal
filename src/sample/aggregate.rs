@@ -71,6 +71,12 @@ pub(crate) fn validated_ordered_reads(reads: &[ReadObservation]) -> Result<Vec<&
                 "all reads must use the same scientific configuration identity".into(),
             ));
         }
+        if read.phase.applicability != first.phase.applicability {
+            return Err(Error::Sample(
+                "reads with the same reference identity have inconsistent phase applicability"
+                    .into(),
+            ));
+        }
         if !identities.insert(read.input_sha256.as_str()) {
             return Err(Error::Sample(
                 "duplicate input trace content cannot contribute twice".into(),
