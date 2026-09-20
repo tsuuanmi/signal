@@ -87,9 +87,10 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         variants: list[dict[str, object]],
         *,
         case_id: str = "AB0001",
+        configuration_sha256: str = "b" * 64,
     ) -> Path:
         result = self.root / "results" / case_id / f"{case_id}.json"
-        result.parent.mkdir(parents=True)
+        result.parent.mkdir(parents=True, exist_ok=True)
         result.write_text(
             json.dumps(
                 {
@@ -103,7 +104,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
                                 self.reference_sequence.encode()
                             ).hexdigest(),
                         },
-                        "configuration_sha256": "b" * 64,
+                        "configuration_sha256": configuration_sha256,
                     },
                     "reads": [],
                     "coverage": [],
@@ -239,13 +240,14 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             ]
         )
 
-        variants = load_signal_variants(
+        variants, configuration_sha256 = load_signal_variants(
             path,
             "AB0001",
             "rCRS",
             self.reference_sequence,
         )
 
+        self.assertEqual(configuration_sha256, "b" * 64)
         self.assertEqual(len(variants), 1)
         self.assertEqual(variants[0].position, 7)
         self.assertEqual(variants[0].alternate, "A")
@@ -255,7 +257,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         sample_path = self.write_sample(
             [self.signal_variant(7, "T", "A", "SNV")]
         )
-        signal = load_signal_variants(
+        signal, _ = load_signal_variants(
             sample_path,
             "AB0001",
             "rCRS",
@@ -279,7 +281,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         sample_path = self.write_sample(
             [self.signal_variant(4, "A", "AA", "INS")]
         )
-        signal = load_signal_variants(
+        signal, _ = load_signal_variants(
             sample_path,
             "AB0001",
             "rCRS",
@@ -318,6 +320,17 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             index["schema_version"],
             VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION,
         )
+        self.assertEqual(index["configuration_sha256"], "b" * 64)
+        with (output / "samples.csv").open(newline="", encoding="utf-8") as source:
+            sample_rows = list(csv.DictReader(source))
+        self.assertEqual(len(sample_rows), 1)
+        self.assertEqual(
+            sample_rows[0]["signal_result_sha256"],
+            hashlib.sha256(
+                (self.root / "results/AB0001/AB0001.json").read_bytes()
+            ).hexdigest(),
+        )
+
         summary = index["summary"]
         self.assertEqual(summary["proxy_true_positive_variants"], 1)
         self.assertEqual(summary["proxy_false_positive_variants"], 1)
@@ -327,6 +340,68 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self.assertEqual(summary["proxy_recall"], 0.5)
         self.assertIsNone(summary["true_negatives"])
         self.assertIsNone(summary["specificity"])
+
+    def test_mixed_sample_configurations_are_rejected(self) -> None:
+        truth = self.root / "ground-truth.json"
+        truth.write_text(
+            json.dumps(
+                {
+                    "schema_version": REVIEWER_VARIANT_GROUND_TRUTH_SCHEMA_VERSION,
+                    "truth_status": "reviewer_derived_proxy",
+                    "description": "test",
+                    "source": {
+                        "file_name": "review.tsv",
+                        "sha256": "a" * 64,
+                        "sample_id_column": "Sample ID",
+                        "variant_column": "Variants (Sequencher)",
+                        "analyzed_range_column": "Analyzed Range (Sequencher)",
+                        "batches": ["batch"],
+                    },
+                    "record_count": 2,
+                    "records": [
+                        {
+                            "source_row": 2,
+                            "sample_id": "LN_26_AB0001",
+                            "validation_case_id": "AB0001",
+                            "batch": "batch",
+                            "analyzed_range": "FULL REGION",
+                            "variants_raw": "7A",
+                            "variants": ["7A"],
+                        },
+                        {
+                            "source_row": 3,
+                            "sample_id": "LN_26_AB0002",
+                            "validation_case_id": "AB0002",
+                            "batch": "batch",
+                            "analyzed_range": "FULL REGION",
+                            "variants_raw": "7A",
+                            "variants": ["7A"],
+                        },
+                    ],
+                },
+                indent=2,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+        self.write_sample(
+            [self.signal_variant(7, "T", "A", "SNV")],
+            case_id="AB0001",
+            configuration_sha256="b" * 64,
+        )
+        self.write_sample(
+            [self.signal_variant(7, "T", "A", "SNV")],
+            case_id="AB0002",
+            configuration_sha256="c" * 64,
+        )
+
+        with self.assertRaisesRegex(ValueError, "do not share one configuration_sha256"):
+            publish_evaluation(
+                truth,
+                self.root / "results",
+                self.reference,
+                self.root / "evaluation",
+            )
 
     def test_output_is_no_overwrite(self) -> None:
         truth = self.write_ground_truth("7A")
