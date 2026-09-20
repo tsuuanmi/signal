@@ -263,6 +263,11 @@ class PolyCPhaseResearchTests(unittest.TestCase):
         self.assertEqual(len(index["method"]["tracts"]), 1)
         self.assertEqual(index["method"]["tracts"][0]["tract_id"], "HV2_C")
         self.assertEqual(
+            index["method"]["read_crossing_rule"],
+            "the read has a validation observation at every reference position "
+            "from tract start through tract end",
+        )
+        self.assertEqual(
             index["source_corpus_sha256"],
             file_sha256(self.corpus / "index.json"),
         )

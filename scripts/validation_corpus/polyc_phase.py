@@ -562,8 +562,8 @@ def research_index(
                 for tract in active_tracts
             ],
             "read_crossing_rule": (
-                "selected read span covers every reference position from tract start "
-                "through tract end"
+                "the read has a validation observation at every reference position "
+                "from tract start through tract end"
             ),
             "distance_rule": (
                 "signed reference distance in sequencing order: negative before tract, "
