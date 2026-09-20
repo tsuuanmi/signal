@@ -164,7 +164,7 @@ def output_index(
     source_index: dict[str, Any],
     parameter_sets_path: Path,
     strata_path: Path,
-    parameters: tuple[ParameterSet, ...],
+    parameter_sets: tuple[ParameterSet, ...],
     parameter_rows: int,
     strata_rows: int,
 ) -> dict[str, Any]:
@@ -179,13 +179,13 @@ def output_index(
         "method": {
             "grid": "full factorial",
             "window_sizes_profile_observations": sorted(
-                {parameters.window_size for parameters in parameters}
+                {parameter_set.window_size for parameter_set in parameter_sets}
             ),
             "window_steps_profile_observations": sorted(
-                {parameters.window_step for parameters in parameters}
+                {parameter_set.window_step for parameter_set in parameter_sets}
             ),
             "max_reference_offsets_in_read_order": sorted(
-                {parameters.max_offset for parameters in parameters}
+                {parameter_set.max_offset for parameter_set in parameter_sets}
             ),
             "candidate_engine": (
                 "same authoritative window/candidate implementation as "
