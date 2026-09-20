@@ -127,7 +127,7 @@ class PartitionPlan:
 
 
 @dataclass
-class CountAccumulator:
+class EvidenceCounts:
     cases: set[str] = field(default_factory=set)
     fit_cases: set[str] = field(default_factory=set)
     source_groups: set[str] = field(default_factory=set)
@@ -144,11 +144,11 @@ class CountAccumulator:
     def add_case(self, case: ResearchCase) -> None:
         metadata = case.metadata
         case_id = str(metadata["validation_case_id"])
+        source_group = str(metadata["source_group_id"])
         self.cases.add(case_id)
+        self.source_groups.add(source_group)
         if metadata["include_in_threshold_fit"] is True:
             self.fit_cases.add(case_id)
-        source_group = str(metadata["source_group_id"])
-        self.source_groups.add(source_group)
         specimen = metadata["specimen_group_id"]
         if specimen is not None:
             self.specimen_groups.add(str(specimen))
@@ -165,7 +165,13 @@ class CountAccumulator:
             if instrument is not None:
                 self.instruments.add(str(instrument))
 
-    def add_window(self, window: WindowRecord, candidate_count: int) -> None:
+    def add_window(
+        self,
+        case: ResearchCase,
+        window: WindowRecord,
+        candidate_count: int,
+    ) -> None:
+        self.add_case(case)
         self.phase_reads.add(window.read_sha256)
         self.read_tracts.add((window.read_sha256, window.tract_id))
         self.windows += 1
@@ -186,64 +192,6 @@ class CountAccumulator:
             "windows": self.windows,
             "candidates": self.candidates,
         }
-
-
-@dataclass
-class ReadinessAccumulator:
-    cases: set[str] = field(default_factory=set)
-    source_groups: set[str] = field(default_factory=set)
-    specimen_groups: set[str] = field(default_factory=set)
-    pcr_replicates: set[tuple[str, str]] = field(default_factory=set)
-    sequencing_runs: set[str] = field(default_factory=set)
-    instruments: set[str] = field(default_factory=set)
-    reads: set[str] = field(default_factory=set)
-    read_tracts: set[tuple[str, str]] = field(default_factory=set)
-    windows: int = 0
-    candidates: int = 0
-
-    def add(
-        self,
-        case: ResearchCase,
-        read_sha256: str,
-        window: WindowRecord,
-        candidate_count: int,
-    ) -> None:
-        metadata = case.metadata
-        read = case.reads[read_sha256]
-        self.cases.add(str(metadata["validation_case_id"]))
-        source_group = str(metadata["source_group_id"])
-        self.source_groups.add(source_group)
-        specimen = metadata["specimen_group_id"]
-        if specimen is not None:
-            self.specimen_groups.add(str(specimen))
-        pcr_replicate = read["pcr_replicate_id"]
-        if pcr_replicate is not None:
-            self.pcr_replicates.add((source_group, str(pcr_replicate)))
-        sequencing_run = read["sequencing_run_id"]
-        if sequencing_run is not None:
-            self.sequencing_runs.add(str(sequencing_run))
-        instrument = read["instrument_id"]
-        if instrument is not None:
-            self.instruments.add(str(instrument))
-        self.reads.add(read_sha256)
-        self.read_tracts.add((read_sha256, window.tract_id))
-        self.windows += 1
-        self.candidates += candidate_count
-
-    def counts(self) -> tuple[int, ...]:
-        return (
-            len(self.cases),
-            len(self.source_groups),
-            len(self.specimen_groups),
-            len(self.pcr_replicates),
-            len(self.sequencing_runs),
-            len(self.instruments),
-            len(self.reads),
-            len(self.read_tracts),
-            self.windows,
-            self.candidates,
-        )
-
 
 ReadinessKey = tuple[str, str, bool, str, str, str, str, str]
 
@@ -452,7 +400,7 @@ def readiness_key(
 
 
 def readiness_rows(
-    accumulators: dict[ReadinessKey, ReadinessAccumulator],
+    accumulators: dict[ReadinessKey, EvidenceCounts],
 ) -> list[dict[str, Any]]:
     rows: list[dict[str, Any]] = []
     for key in sorted(accumulators):
@@ -466,7 +414,7 @@ def readiness_rows(
             amplicon_id,
             interrupt_aligned_base,
         ) = key
-        counts = accumulators[key].counts()
+        counts = accumulators[key].result()
         rows.append(
             {
                 "partition": partition,
@@ -477,16 +425,16 @@ def readiness_rows(
                 "orientation": orientation,
                 "amplicon_id": amplicon_id,
                 "interrupt_aligned_base": interrupt_aligned_base,
-                "cases": counts[0],
-                "source_groups": counts[1],
-                "specimen_groups": counts[2],
-                "pcr_replicates": counts[3],
-                "sequencing_runs": counts[4],
-                "instruments": counts[5],
-                "reads": counts[6],
-                "read_tracts": counts[7],
-                "windows": counts[8],
-                "candidates": counts[9],
+                "cases": counts["cases"],
+                "source_groups": counts["source_groups"],
+                "specimen_groups": counts["specimen_groups"],
+                "pcr_replicates": counts["pcr_replicates"],
+                "sequencing_runs": counts["sequencing_runs"],
+                "instruments": counts["instruments"],
+                "reads": counts["reads"],
+                "read_tracts": counts["read_tracts"],
+                "windows": counts["windows"],
+                "candidates": counts["candidates"],
             }
         )
     return rows
@@ -509,14 +457,14 @@ def build_rows(
     cases = case_map(corpus)
     orientations = selected_orientations(corpus)
 
-    partition_counts = {partition: CountAccumulator() for partition in PARTITIONS}
+    partition_counts = {partition: EvidenceCounts() for partition in PARTITIONS}
     for case in corpus.cases:
         partition = partition_for(str(case.metadata["holdout_group"]), mapping)
         partition_counts[partition].add_case(case)
 
     development_windows: list[dict[str, Any]] = []
     development_candidates: list[dict[str, Any]] = []
-    readiness: dict[ReadinessKey, ReadinessAccumulator] = {}
+    readiness: dict[ReadinessKey, EvidenceCounts] = {}
 
     ordered_windows = sorted(
         windows.values(),
@@ -552,12 +500,11 @@ def build_rows(
 
         partition = partition_for(str(case.metadata["holdout_group"]), mapping)
         curve = [candidates[(window.window_id, offset)] for offset in offsets]
-        partition_counts[partition].add_window(window, len(curve))
+        partition_counts[partition].add_window(case, window, len(curve))
 
         key = readiness_key(partition, case, window)
-        readiness.setdefault(key, ReadinessAccumulator()).add(
+        readiness.setdefault(key, EvidenceCounts()).add_window(
             case,
-            window.read_sha256,
             window,
             len(curve),
         )
