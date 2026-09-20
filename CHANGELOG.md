@@ -126,6 +126,8 @@ All notable changes to this project are documented here.
 
 ### Fixed
 
+- Reviewer variant-profile evaluation now resolves canonical batch outputs by reviewer `sample_id` (`results/<sample-id>/<sample-id>.json`) while retaining `validation_case_id` only as the corpus/research join identity; it no longer incorrectly substitutes the shorter case ID for the production sample identity.
+
 - Reviewer variant-profile validation now reads FASTA references with the same normalized `A/C/G/T/N`, header-identifier, and whitespace semantics as the production reference loader, so the repository rCRS reference (including its position-3107 `N`) is accepted without weakening reference identity checks.
 
 - Poly-C validation research now derives before/after state from actual call order across the complete tract and computes reference distances/neighbors on circular rCRS, so origin-wrapping reads remain on the correct post-tract path; outside-tract observations without call indexes remain explicitly unresolved instead of falling back to linear coordinates.
