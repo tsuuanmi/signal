@@ -109,7 +109,7 @@ Those patterns can later motivate a detector, but they are not detector states h
 This characterization does not itself answer whether recurrent loci 253, 297, 302,
 16194, and 16197 occur inside windows with coherent shifted-reference support.
 
-Opposite-orientation evidence is handled separately by [polyc-orientation-controls.md](polyc-orientation-controls.md), which joins same-case locus context from the completed corpus rather than trying to reconstruct lost provenance from phase-hypothesis summaries. Parameter sensitivity is handled by [polyc-phase-sensitivity.md](polyc-phase-sensitivity.md) using the same candidate engine and candidate-wise aggregation. Per-window/read residual explainability is handled by [polyc-phase-explainability.md](polyc-phase-explainability.md) without a winning-candidate rule or review threshold. Recurrent-locus joins remain the outstanding descriptive context analysis.
+Opposite-orientation evidence is handled separately by [polyc-orientation-controls.md](polyc-orientation-controls.md), which joins same-case locus context from the completed corpus rather than trying to reconstruct lost provenance from phase-hypothesis summaries. Parameter sensitivity is handled by [polyc-phase-sensitivity.md](polyc-phase-sensitivity.md) using the same candidate engine and candidate-wise aggregation. Per-window/read residual explainability is handled by [polyc-phase-explainability.md](polyc-phase-explainability.md) without a winning-candidate rule or review threshold. Exact recurrent-locus membership and candidate context are handled by [polyc-phase-recurrent-loci.md](polyc-phase-recurrent-loci.md), completing the planned descriptive ADR-0054 research surface.
 
 ## Scientific boundary
 
