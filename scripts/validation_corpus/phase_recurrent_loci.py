@@ -166,7 +166,9 @@ def validate_generated_window(
         or source.end_distance != last.distance
         or source.profile_observations != len(observations)
     ):
-        raise ValueError(f"{generated.window_id}: reconstructed window metadata differs")
+        raise ValueError(
+            f"{generated.window_id}: reconstructed window metadata differs"
+        )
 
     noisy = sum(observation.in_noisy_region is True for observation in observations)
     if source.noisy_observations != noisy:
@@ -183,7 +185,9 @@ def validate_generated_window(
         if observation.profile is not None
     ]
     if len(impurities) != len(observations) or len(zero_masses) != len(observations):
-        raise ValueError(f"{generated.window_id}: reconstructed window lacks profile data")
+        raise ValueError(
+            f"{generated.window_id}: reconstructed window lacks profile data"
+        )
     if abs(source.mean_profile_impurity - mean(impurities)) > 1e-9:
         raise ValueError(f"{generated.window_id}: reconstructed impurity differs")
     if abs(source.mean_zero_reference_mass - mean(zero_masses)) > 1e-9:
@@ -408,9 +412,7 @@ def output_index(
     return {
         "schema_version": PHASE_RECURRENT_LOCUS_SCHEMA_VERSION,
         "source_polyc_phase_sha256": file_sha256(phase_dir / "index.json"),
-        "source_phase_hypotheses_sha256": file_sha256(
-            hypotheses_dir / "index.json"
-        ),
+        "source_phase_hypotheses_sha256": file_sha256(hypotheses_dir / "index.json"),
         "source_corpus_sha256": phase_index["source_corpus_sha256"],
         "signal_version": phase_index["signal_version"],
         "manifest_sha256": phase_index["manifest_sha256"],
@@ -517,9 +519,7 @@ def publish_phase_recurrent_loci(
     if not phase_dir.is_dir():
         raise ValueError(f"poly-C phase directory does not exist: {phase_dir}")
     if not hypotheses_dir.is_dir():
-        raise ValueError(
-            f"phase-hypothesis directory does not exist: {hypotheses_dir}"
-        )
+        raise ValueError(f"phase-hypothesis directory does not exist: {hypotheses_dir}")
     validate_new_directory(output_dir, (phase_dir, hypotheses_dir))
     output_dir.parent.mkdir(parents=True, exist_ok=True)
     if not output_dir.parent.is_dir() or output_dir.parent.is_symlink():
