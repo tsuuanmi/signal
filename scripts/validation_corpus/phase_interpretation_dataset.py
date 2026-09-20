@@ -132,7 +132,7 @@ class CountAccumulator:
     fit_cases: set[str] = field(default_factory=set)
     source_groups: set[str] = field(default_factory=set)
     specimen_groups: set[str] = field(default_factory=set)
-    pcr_replicates: set[str] = field(default_factory=set)
+    pcr_replicates: set[tuple[str, str]] = field(default_factory=set)
     sequencing_runs: set[str] = field(default_factory=set)
     instruments: set[str] = field(default_factory=set)
     reads: set[str] = field(default_factory=set)
@@ -147,20 +147,23 @@ class CountAccumulator:
         self.cases.add(case_id)
         if metadata["include_in_threshold_fit"] is True:
             self.fit_cases.add(case_id)
-        self.source_groups.add(str(metadata["source_group_id"]))
+        source_group = str(metadata["source_group_id"])
+        self.source_groups.add(source_group)
         specimen = metadata["specimen_group_id"]
         if specimen is not None:
             self.specimen_groups.add(str(specimen))
 
         for read_sha256, read in case.reads.items():
             self.reads.add(read_sha256)
-            for target, value in (
-                (self.pcr_replicates, read["pcr_replicate_id"]),
-                (self.sequencing_runs, read["sequencing_run_id"]),
-                (self.instruments, read["instrument_id"]),
-            ):
-                if value is not None:
-                    target.add(str(value))
+            pcr_replicate = read["pcr_replicate_id"]
+            if pcr_replicate is not None:
+                self.pcr_replicates.add((source_group, str(pcr_replicate)))
+            sequencing_run = read["sequencing_run_id"]
+            if sequencing_run is not None:
+                self.sequencing_runs.add(str(sequencing_run))
+            instrument = read["instrument_id"]
+            if instrument is not None:
+                self.instruments.add(str(instrument))
 
     def add_window(self, window: WindowRecord, candidate_count: int) -> None:
         self.phase_reads.add(window.read_sha256)
@@ -190,7 +193,7 @@ class ReadinessAccumulator:
     cases: set[str] = field(default_factory=set)
     source_groups: set[str] = field(default_factory=set)
     specimen_groups: set[str] = field(default_factory=set)
-    pcr_replicates: set[str] = field(default_factory=set)
+    pcr_replicates: set[tuple[str, str]] = field(default_factory=set)
     sequencing_runs: set[str] = field(default_factory=set)
     instruments: set[str] = field(default_factory=set)
     reads: set[str] = field(default_factory=set)
@@ -208,17 +211,20 @@ class ReadinessAccumulator:
         metadata = case.metadata
         read = case.reads[read_sha256]
         self.cases.add(str(metadata["validation_case_id"]))
-        self.source_groups.add(str(metadata["source_group_id"]))
+        source_group = str(metadata["source_group_id"])
+        self.source_groups.add(source_group)
         specimen = metadata["specimen_group_id"]
         if specimen is not None:
             self.specimen_groups.add(str(specimen))
-        for target, value in (
-            (self.pcr_replicates, read["pcr_replicate_id"]),
-            (self.sequencing_runs, read["sequencing_run_id"]),
-            (self.instruments, read["instrument_id"]),
-        ):
-            if value is not None:
-                target.add(str(value))
+        pcr_replicate = read["pcr_replicate_id"]
+        if pcr_replicate is not None:
+            self.pcr_replicates.add((source_group, str(pcr_replicate)))
+        sequencing_run = read["sequencing_run_id"]
+        if sequencing_run is not None:
+            self.sequencing_runs.add(str(sequencing_run))
+        instrument = read["instrument_id"]
+        if instrument is not None:
+            self.instruments.add(str(instrument))
         self.reads.add(read_sha256)
         self.read_tracts.add((read_sha256, window.tract_id))
         self.windows += 1
