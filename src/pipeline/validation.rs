@@ -11,6 +11,7 @@ use crate::logger::Logger;
 use crate::model::alignment::Orientation;
 use crate::model::basecalls::PeakSource;
 use crate::model::locus_evidence::EvidenceProfile;
+use crate::model::phase::{PhaseApplicability, PhaseEvidenceAvailability};
 use crate::model::read_observation::ReadObservation;
 use crate::model::sample_evidence::{
     LocusState, NucleotideContribution, ProfileHeterogeneity, SampleLocusEvidence,
@@ -159,6 +160,40 @@ fn run_logged(
         stage,
     )?;
     let reads = completed_reads.reads;
+    let applicable_phase_reads = reads
+        .iter()
+        .filter(|read| read.phase.applicability == PhaseApplicability::Applicable)
+        .count();
+    let measured_phase_tracts = reads
+        .iter()
+        .flat_map(|read| &read.phase.tracts)
+        .filter(|tract| tract.availability == PhaseEvidenceAvailability::Measured)
+        .count();
+    let insufficient_phase_tracts = reads
+        .iter()
+        .flat_map(|read| &read.phase.tracts)
+        .filter(|tract| matches!(tract.availability, PhaseEvidenceAvailability::Insufficient(_)))
+        .count();
+    let phase_windows = reads
+        .iter()
+        .flat_map(|read| &read.phase.tracts)
+        .map(|tract| tract.windows.len())
+        .sum::<usize>();
+    logger.info(
+        module_path!(),
+        line!(),
+        format_args!(
+            concat!(
+                "event=validation_phase_evidence_summary reads={} applicable_reads={} ",
+                "measured_tracts={} insufficient_tracts={} windows={}"
+            ),
+            reads.len(),
+            applicable_phase_reads,
+            measured_phase_tracts,
+            insufficient_phase_tracts,
+            phase_windows
+        ),
+    )?;
 
     *stage = "sample_aggregation";
     let evidence = sample_science::aggregate(&reads, &inputs.config.sample_reconciliation)?;
