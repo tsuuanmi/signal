@@ -30,9 +30,7 @@ def parser() -> argparse.ArgumentParser:
     built.add_argument(
         "--context-dir",
         type=Path,
-        default=Path(
-            "validation-results/research/variant-phase-context/baseline"
-        ),
+        default=Path("validation-results/research/variant-phase-context/baseline"),
         help="completed signal.validation_variant_phase_context/v1 directory",
     )
     built.add_argument(
