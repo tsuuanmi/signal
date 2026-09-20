@@ -29,10 +29,8 @@ from .phase_artifact import (
 from .phase_hypotheses import HYPOTHESIS_COLUMNS
 from .phase_interpretation_dataset import DEVELOPMENT_WINDOW_COLUMNS
 from .research_loader import json_object, strict_keys
-from .variant_phase_context import (
-    DIFFERENCE_COLUMNS_OUT,
-    WINDOW_COLUMNS as CONTEXT_WINDOW_COLUMNS,
-)
+from .variant_phase_context import DIFFERENCE_COLUMNS_OUT
+from .variant_phase_context import WINDOW_COLUMNS as CONTEXT_WINDOW_COLUMNS
 
 INTERPRETATION_INDEX_FIELDS = (
     "schema_version",
