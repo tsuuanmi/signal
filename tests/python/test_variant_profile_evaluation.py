@@ -90,13 +90,14 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         case_id: str = "AB0001",
         configuration_sha256: str = "b" * 64,
     ) -> Path:
-        result = self.root / "results" / case_id / f"{case_id}.json"
+        sample_id = f"LN_26_{case_id}"
+        result = self.root / "results" / sample_id / f"{sample_id}.json"
         result.parent.mkdir(parents=True, exist_ok=True)
         result.write_text(
             json.dumps(
                 {
                     "schema_version": "signal.sample_evidence/v8",
-                    "sample_id": case_id,
+                    "sample_id": sample_id,
                     "provenance": {
                         "reference": {
                             "name": "rCRS",
@@ -189,6 +190,18 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self.assertEqual(record["variants_raw"], "3.1C 5DEL 7A")
         self.assertEqual(record["variants"], ["3.1C", "5DEL", "7A"])
 
+    def test_ground_truth_requires_sample_case_identity_mapping(self) -> None:
+        truth = self.write_ground_truth("7A")
+        value = json.loads(truth.read_text(encoding="utf-8"))
+        value["records"][0]["sample_id"] = "LN_26_AB9999"
+        truth.write_text(json.dumps(value) + "\n", encoding="utf-8")
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "sample_id does not map to validation_case_id",
+        ):
+            load_ground_truth(truth)
+
     def test_reviewer_notation_maps_to_insertion_deletion_and_snv(self) -> None:
         variants = parse_reviewer_variants(
             ["3.1C", "5DEL", "7A"],
@@ -255,7 +268,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
 
         variants, configuration_sha256 = load_signal_variants(
             path,
-            "AB0001",
+            "LN_26_AB0001",
             "rCRS",
             self.reference_sequence,
         )
@@ -270,7 +283,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         sample_path = self.write_sample([self.signal_variant(7, "T", "A", "SNV")])
         signal, _ = load_signal_variants(
             sample_path,
-            "AB0001",
+            "LN_26_AB0001",
             "rCRS",
             self.reference_sequence,
         )
@@ -292,7 +305,7 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         sample_path = self.write_sample([self.signal_variant(4, "A", "AA", "INS")])
         signal, _ = load_signal_variants(
             sample_path,
-            "AB0001",
+            "LN_26_AB0001",
             "rCRS",
             self.reference_sequence,
         )
@@ -353,10 +366,12 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         with (output / "samples.csv").open(newline="", encoding="utf-8") as source:
             sample_rows = list(csv.DictReader(source))
         self.assertEqual(len(sample_rows), 1)
+        self.assertEqual(sample_rows[0]["sample_id"], "LN_26_AB0001")
+        self.assertEqual(sample_rows[0]["validation_case_id"], "AB0001")
         self.assertEqual(
             sample_rows[0]["signal_result_sha256"],
             hashlib.sha256(
-                (self.root / "results/AB0001/AB0001.json").read_bytes()
+                (self.root / "results/LN_26_AB0001/LN_26_AB0001.json").read_bytes()
             ).hexdigest(),
         )
 
