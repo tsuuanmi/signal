@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Recurrent-locus phase research now publishes `signal.validation_phase_recurrent_loci/v1`, hash-binding the source poly-C phase and phase-hypothesis artifacts and reconstructing exact profile-bearing window membership for rCRS 253/297/302/16194/16197 before emitting complete candidate curves plus per-locus candidate contributions. Missing-profile loci remain explicit with zero containing windows; no interval approximation, winning offset, score, threshold, truth label, or production behavior is introduced.
+
 - Post-poly-C phase explainability research now publishes `signal.validation_phase_explainability/v1` with threshold-free candidate-envelope summaries at window and read levels. The artifact exposes shifted-reference/residual extrema, ranges, and maximum non-zero-mass explainability without emitting a winning offset, review label, threshold, or production behavior.
 
 - Post-poly-C parameter-sensitivity research now publishes `signal.validation_phase_sensitivity/v1`, evaluating a full-factorial window-size/stride/max-offset grid through the authoritative phase-hypothesis engine and characterization aggregation while retaining every candidate independently and selecting no preferred parameter set or threshold.
