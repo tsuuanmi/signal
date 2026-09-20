@@ -500,6 +500,7 @@ def window_rows(
 
     return windows, hypotheses
 
+
 def output_index(
     phase_dir: Path,
     source_index: dict[str, Any],
