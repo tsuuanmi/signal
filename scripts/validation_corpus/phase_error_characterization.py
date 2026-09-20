@@ -19,7 +19,13 @@ from .model import (
     PHASE_INTERPRETATION_DATASET_SCHEMA_VERSION,
     VARIANT_PHASE_CONTEXT_SCHEMA_VERSION,
 )
-from .phase_artifact import CandidateRecord, WindowRecord, csv_int, optional_unit_float, unit_float
+from .phase_artifact import (
+    CandidateRecord,
+    WindowRecord,
+    csv_int,
+    optional_unit_float,
+    unit_float,
+)
 from .phase_hypotheses import HYPOTHESIS_COLUMNS
 from .phase_interpretation_dataset import DEVELOPMENT_WINDOW_COLUMNS
 from .research_loader import json_object, strict_keys
@@ -336,9 +342,7 @@ def load_csv(
             raise ValueError(f"{label} columns differ from current contract")
         rows = list(reader)
     if len(rows) != expected_rows:
-        raise ValueError(
-            f"{label} expected {expected_rows} rows, found {len(rows)}"
-        )
+        raise ValueError(f"{label} expected {expected_rows} rows, found {len(rows)}")
     return rows
 
 
@@ -398,11 +402,15 @@ def load_context(
             f"unsupported variant phase context schema: {index['schema_version']!r}"
         )
     if index["differences_file"] != "differences.csv":
-        raise ValueError("variant phase context differences_file must be differences.csv")
+        raise ValueError(
+            "variant phase context differences_file must be differences.csv"
+        )
     if index["windows_file"] != "windows.csv":
         raise ValueError("variant phase context windows_file must be windows.csv")
     if index["differences_columns"] != list(DIFFERENCE_COLUMNS_OUT):
-        raise ValueError("variant phase context difference columns differ from contract")
+        raise ValueError(
+            "variant phase context difference columns differ from contract"
+        )
     if index["windows_columns"] != list(CONTEXT_WINDOW_COLUMNS):
         raise ValueError("variant phase context window columns differ from contract")
 
@@ -609,9 +617,7 @@ def summarize_window(
     missing_ids: frozenset[str],
     candidates: list[CandidateFeatures],
 ) -> WindowFeatures:
-    informative = [
-        item for item in candidates if item.source.informative_positions > 0
-    ]
+    informative = [item for item in candidates if item.source.informative_positions > 0]
     shifted = [
         float(item.source.shifted_mass)
         for item in informative
@@ -794,7 +800,9 @@ def window_row(item: WindowFeatures) -> dict[str, Any]:
         "candidate_shifted_mass_range": value_range(item.shifted_min, item.shifted_max),
         "candidate_residual_mass_min": item.residual_min,
         "candidate_residual_mass_max": item.residual_max,
-        "candidate_residual_mass_range": value_range(item.residual_min, item.residual_max),
+        "candidate_residual_mass_range": value_range(
+            item.residual_min, item.residual_max
+        ),
         "candidate_nonzero_mass_min": item.nonzero_min,
         "candidate_nonzero_mass_max": item.nonzero_max,
         "candidate_nonzero_mass_range": value_range(item.nonzero_min, item.nonzero_max),
@@ -854,18 +862,12 @@ def transition_rows(windows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     "right_start_distance_after_tract": right[
                         "start_distance_after_tract"
                     ],
-                    "start_distance_delta": int(
-                        right["start_distance_after_tract"]
-                    )
+                    "start_distance_delta": int(right["start_distance_after_tract"])
                     - int(left["start_distance_after_tract"]),
                     "left_overlap_context": left["overlap_context"],
                     "right_overlap_context": right["overlap_context"],
-                    "left_mean_zero_reference_mass": left[
-                        "mean_zero_reference_mass"
-                    ],
-                    "right_mean_zero_reference_mass": right[
-                        "mean_zero_reference_mass"
-                    ],
+                    "left_mean_zero_reference_mass": left["mean_zero_reference_mass"],
+                    "right_mean_zero_reference_mass": right["mean_zero_reference_mass"],
                     "zero_reference_mass_delta": delta(
                         left["mean_zero_reference_mass"],
                         right["mean_zero_reference_mass"],
@@ -934,7 +936,9 @@ def strata_rows(
     differences_by_window = {
         item.window.record.window_id: item.difference_ids for item in features
     }
-    grouped: dict[tuple[str, str, str, str, str], list[dict[str, Any]]] = defaultdict(list)
+    grouped: dict[tuple[str, str, str, str, str], list[dict[str, Any]]] = defaultdict(
+        list
+    )
     for row in windows:
         key = (
             str(row["overlap_context"]),
@@ -975,10 +979,7 @@ def strata_rows(
                 "source_groups": len({str(row["source_group_id"]) for row in rows}),
                 "reads": len({str(row["read_sha256"]) for row in rows}),
                 "read_tracts": len(
-                    {
-                        (str(row["read_sha256"]), str(row["tract_id"]))
-                        for row in rows
-                    }
+                    {(str(row["read_sha256"]), str(row["tract_id"])) for row in rows}
                 ),
                 "windows": len(rows),
                 "biological_differences": len(difference_ids),
@@ -1122,7 +1123,9 @@ def publish_phase_error_characterization(
             "transitions": stage / "transitions.csv",
             "strata": stage / "strata.csv",
         }
-        write_rows(paths["candidates"], candidate_output, CANDIDATE_COLUMNS, "candidate")
+        write_rows(
+            paths["candidates"], candidate_output, CANDIDATE_COLUMNS, "candidate"
+        )
         write_rows(paths["windows"], window_output, WINDOW_COLUMNS, "window")
         write_rows(
             paths["transitions"],
