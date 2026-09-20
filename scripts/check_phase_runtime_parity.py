@@ -36,11 +36,11 @@ def runtime_dirs(root: Path) -> list[Path]:
     resolved = root.resolve()
     if not resolved.is_dir():
         raise ValueError(f"runtime root is not a directory: {resolved}")
-    found = sorted(
-        path for path in resolved.glob("*.phase-runtime") if path.is_dir()
-    )
+    found = sorted(path for path in resolved.glob("*.phase-runtime") if path.is_dir())
     if not found:
-        raise ValueError(f"runtime root contains no *.phase-runtime directories: {resolved}")
+        raise ValueError(
+            f"runtime root contains no *.phase-runtime directories: {resolved}"
+        )
     return found
 
 
