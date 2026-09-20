@@ -52,9 +52,7 @@ class PhaseSensitivityResearchTests(unittest.TestCase):
             )
             masses[residual_base] += remaining
 
-        row: dict[str, object] = {
-            column: None for column in OBSERVATION_COLUMNS
-        }
+        row: dict[str, object] = {column: None for column in OBSERVATION_COLUMNS}
         row.update(
             {
                 "validation_case_id": "case-1",
