@@ -16,6 +16,7 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 - [polyc-phase-characterization.md](polyc-phase-characterization.md): descriptive adjacent-window persistence, exact-distance trajectories, and observed-interrupt strata over complete phase-hypothesis curves without candidate selection or thresholds.
 - [polyc-phase-sensitivity.md](polyc-phase-sensitivity.md): full-factorial window/stride/offset sensitivity over the authoritative phase candidate engine without selecting a preferred parameter set.
 - [polyc-phase-explainability.md](polyc-phase-explainability.md): threshold-free candidate-envelope summaries for finding windows/reads whose impurity remains poorly described across all tested offsets without assigning a state.
+- [polyc-phase-recurrent-loci.md](polyc-phase-recurrent-loci.md): exact recurrent-locus membership and complete candidate context for positions 253/297/302/16194/16197 without interval approximation, scoring, or truth labels.
 - [event-position-diagnostics.md](event-position-diagnostics.md): validation study for explaining primary-basecall versus continuous-profile event placement before threshold fitting.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.
