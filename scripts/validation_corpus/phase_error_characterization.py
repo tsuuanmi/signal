@@ -459,8 +459,13 @@ def load_evaluated_cases(
     index_path = evaluation_dir / "index.json"
     if not index_path.is_file():
         raise ValueError(f"variant-profile evaluation index is missing: {index_path}")
-    if file_sha256(index_path) != context_index["source_variant_profile_evaluation_sha256"]:
-        raise ValueError("variant-profile evaluation differs from variant phase context")
+    if (
+        file_sha256(index_path)
+        != context_index["source_variant_profile_evaluation_sha256"]
+    ):
+        raise ValueError(
+            "variant-profile evaluation differs from variant phase context"
+        )
     index = json_object(index_path)
     strict_keys(index, EVALUATION_INDEX_FIELDS, "variant-profile evaluation index")
     if index["schema_version"] != VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION:
