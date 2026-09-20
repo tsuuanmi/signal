@@ -23,6 +23,7 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 - [event-position-diagnostics.md](event-position-diagnostics.md): validation study for explaining primary-basecall versus continuous-profile event placement before threshold fitting.
 - [variant-profile-evaluation.md](variant-profile-evaluation.md): reviewer-derived sample variant-profile baseline, explicit Sequencher notation semantics, FP/FN accounting, representation-equivalence handling, and non-regression objective before phase-aware calling.
 - [variant-phase-context.md](variant-phase-context.md): development-only join of biological missing/extra variant disagreements to exact post-poly-C read/window/candidate evidence, with representation rows excluded and holdout limited to readiness counts.
+- [phase-error-characterization.md](phase-error-characterization.md): development-only candidate, window-envelope, ordered-transition, and error-overlap characterization for testing phase feature families without thresholds, states, or holdout leakage.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.
 
