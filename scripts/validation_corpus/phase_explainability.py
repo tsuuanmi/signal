@@ -72,24 +72,6 @@ READ_COLUMNS = (
     "mean_candidate_residual_mass_range",
 )
 
-STRATA_COLUMNS = (
-    "tract_id",
-    "amplicon_id",
-    "orientation",
-    "interrupt_aligned_base",
-    "reads",
-    "windows",
-    "windows_without_informative_candidates",
-    "windows_without_explainability_candidates",
-    "mean_window_profile_impurity",
-    "mean_window_noisy_fraction",
-    "mean_candidate_shifted_reference_mass_max",
-    "mean_candidate_residual_mass_min",
-    "mean_candidate_explainable_nonzero_fraction_max",
-    "mean_candidate_shifted_reference_mass_range",
-    "mean_candidate_residual_mass_range",
-)
-
 
 @dataclass(frozen=True)
 class WindowExplainability:
@@ -320,66 +302,6 @@ def read_rows(windows: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return output
 
 
-def strata_rows(windows: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    grouped: dict[tuple[str, str, str, str], list[dict[str, Any]]] = {}
-    for row in windows:
-        key = (
-            str(row["tract_id"]),
-            str(row["amplicon_id"]),
-            str(row["orientation"]),
-            str(row["interrupt_aligned_base"]),
-        )
-        grouped.setdefault(key, []).append(row)
-
-    output: list[dict[str, Any]] = []
-    for key in sorted(grouped):
-        rows = grouped[key]
-        tract_id, amplicon_id, orientation, interrupt = key
-        shifted_max = optional_values(rows, "candidate_shifted_reference_mass_max")
-        residual_min = optional_values(rows, "candidate_residual_mass_min")
-        explainability = optional_values(
-            rows,
-            "candidate_explainable_nonzero_fraction_max",
-        )
-        shifted_ranges = optional_values(
-            rows,
-            "candidate_shifted_reference_mass_range",
-        )
-        residual_ranges = optional_values(rows, "candidate_residual_mass_range")
-        output.append(
-            {
-                "tract_id": tract_id,
-                "amplicon_id": amplicon_id,
-                "orientation": orientation,
-                "interrupt_aligned_base": interrupt,
-                "reads": len({str(row["read_sha256"]) for row in rows}),
-                "windows": len(rows),
-                "windows_without_informative_candidates": sum(
-                    int(row["informative_candidates"]) == 0 for row in rows
-                ),
-                "windows_without_explainability_candidates": sum(
-                    int(row["explainability_candidates"]) == 0 for row in rows
-                ),
-                "mean_window_profile_impurity": mean(
-                    [float(row["mean_profile_impurity"]) for row in rows]
-                ),
-                "mean_window_noisy_fraction": mean(
-                    [float(row["noisy_fraction"]) for row in rows]
-                ),
-                "mean_candidate_shifted_reference_mass_max": mean_or_none(shifted_max),
-                "mean_candidate_residual_mass_min": mean_or_none(residual_min),
-                "mean_candidate_explainable_nonzero_fraction_max": mean_or_none(
-                    explainability
-                ),
-                "mean_candidate_shifted_reference_mass_range": mean_or_none(
-                    shifted_ranges
-                ),
-                "mean_candidate_residual_mass_range": mean_or_none(residual_ranges),
-            }
-        )
-    return output
-
-
 def csv_value(value: Any) -> Any:
     return "" if value is None else value
 
@@ -417,10 +339,8 @@ def output_index(
     offsets: tuple[int, ...],
     windows_path: Path,
     reads_path: Path,
-    strata_path: Path,
     windows_count: int,
     reads_count: int,
-    strata_count: int,
 ) -> dict[str, Any]:
     return {
         "schema_version": PHASE_EXPLAINABILITY_SCHEMA_VERSION,
@@ -442,10 +362,6 @@ def output_index(
                 "for candidates with positive non-zero mass"
             ),
             "read_aggregation": "window-weighted descriptive summaries per read/tract",
-            "strata_aggregation": (
-                "window-weighted descriptive summaries by "
-                "tract/amplicon/orientation/observed interrupt base"
-            ),
             "candidate_selection": "none; no winning offset or identity is emitted",
             "thresholds": "none",
         },
@@ -457,10 +373,6 @@ def output_index(
         "reads_sha256": file_sha256(reads_path),
         "reads_rows": reads_count,
         "reads_columns": list(READ_COLUMNS),
-        "strata_file": "strata.csv",
-        "strata_sha256": file_sha256(strata_path),
-        "strata_rows": strata_count,
-        "strata_columns": list(STRATA_COLUMNS),
     }
 
 
@@ -484,16 +396,13 @@ def publish_phase_explainability(source_dir: Path, output_dir: Path) -> None:
     envelope_rows = build_envelopes(windows, candidates, offsets)
     windows_output = [window_row(item) for item in envelope_rows]
     reads_output = read_rows(windows_output)
-    strata_output = strata_rows(windows_output)
 
     stage = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.", dir=output_dir.parent))
     try:
         windows_path = stage / "windows.csv"
         reads_path = stage / "reads.csv"
-        strata_path = stage / "strata.csv"
         write_rows(windows_path, windows_output, WINDOW_COLUMNS, "window")
         write_rows(reads_path, reads_output, READ_COLUMNS, "read")
-        write_rows(strata_path, strata_output, STRATA_COLUMNS, "stratum")
         write_json(
             stage / "index.json",
             output_index(
@@ -502,10 +411,8 @@ def publish_phase_explainability(source_dir: Path, output_dir: Path) -> None:
                 offsets,
                 windows_path,
                 reads_path,
-                strata_path,
                 len(windows_output),
                 len(reads_output),
-                len(strata_output),
             ),
         )
         sync_directory(stage)
@@ -518,7 +425,7 @@ def publish_phase_explainability(source_dir: Path, output_dir: Path) -> None:
                 f"{output_dir}"
             ) from error
         try:
-            for name in ("windows.csv", "reads.csv", "strata.csv", "index.json"):
+            for name in ("windows.csv", "reads.csv", "index.json"):
                 os.rename(stage / name, output_dir / name)
             sync_directory(output_dir)
             sync_directory(output_dir.parent)
