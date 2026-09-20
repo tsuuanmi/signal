@@ -138,6 +138,4 @@ This artifact does not:
 - tune against holdout truth;
 - modify production Rust behavior or public result schemas.
 
-The remaining ADR-0054 descriptive task is to join the recurrent loci
-253/297/302/16194/16197 back to candidate-window context. Any production phase-state
-model must be a separate promotion decision after that review.
+Exact recurrent-locus membership and complete candidate context are handled by [polyc-phase-recurrent-loci.md](polyc-phase-recurrent-loci.md). With that artifact, the planned descriptive ADR-0054 research surface is complete. Any production phase-state model must be a separate promotion decision.
