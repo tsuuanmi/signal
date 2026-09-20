@@ -20,9 +20,7 @@ def parser() -> argparse.ArgumentParser:
     built.add_argument(
         "--ground-truth",
         type=Path,
-        default=Path(
-            "data/validation/ground-truth/reviewer-variant-ground-truth.json"
-        ),
+        default=Path("data/validation/ground-truth/reviewer-variant-ground-truth.json"),
         help="reviewer-derived proxy-ground-truth JSON",
     )
     built.add_argument(
