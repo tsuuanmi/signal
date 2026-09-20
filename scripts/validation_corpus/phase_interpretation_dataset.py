@@ -141,7 +141,7 @@ class EvidenceCounts:
     windows: int = 0
     candidates: int = 0
 
-    def add_case(self, case: ResearchCase) -> None:
+    def add_case_metadata(self, case: ResearchCase) -> str:
         metadata = case.metadata
         case_id = str(metadata["validation_case_id"])
         source_group = str(metadata["source_group_id"])
@@ -152,18 +152,29 @@ class EvidenceCounts:
         specimen = metadata["specimen_group_id"]
         if specimen is not None:
             self.specimen_groups.add(str(specimen))
+        return source_group
 
+    def add_read(
+        self,
+        source_group: str,
+        read_sha256: str,
+        read: dict[str, Any],
+    ) -> None:
+        self.reads.add(read_sha256)
+        pcr_replicate = read["pcr_replicate_id"]
+        if pcr_replicate is not None:
+            self.pcr_replicates.add((source_group, str(pcr_replicate)))
+        sequencing_run = read["sequencing_run_id"]
+        if sequencing_run is not None:
+            self.sequencing_runs.add(str(sequencing_run))
+        instrument = read["instrument_id"]
+        if instrument is not None:
+            self.instruments.add(str(instrument))
+
+    def add_case(self, case: ResearchCase) -> None:
+        source_group = self.add_case_metadata(case)
         for read_sha256, read in case.reads.items():
-            self.reads.add(read_sha256)
-            pcr_replicate = read["pcr_replicate_id"]
-            if pcr_replicate is not None:
-                self.pcr_replicates.add((source_group, str(pcr_replicate)))
-            sequencing_run = read["sequencing_run_id"]
-            if sequencing_run is not None:
-                self.sequencing_runs.add(str(sequencing_run))
-            instrument = read["instrument_id"]
-            if instrument is not None:
-                self.instruments.add(str(instrument))
+            self.add_read(source_group, read_sha256, read)
 
     def add_window(
         self,
@@ -171,7 +182,8 @@ class EvidenceCounts:
         window: WindowRecord,
         candidate_count: int,
     ) -> None:
-        self.add_case(case)
+        source_group = self.add_case_metadata(case)
+        self.add_read(source_group, window.read_sha256, case.reads[window.read_sha256])
         self.phase_reads.add(window.read_sha256)
         self.read_tracts.add((window.read_sha256, window.tract_id))
         self.windows += 1
@@ -192,6 +204,7 @@ class EvidenceCounts:
             "windows": self.windows,
             "candidates": self.candidates,
         }
+
 
 ReadinessKey = tuple[str, str, bool, str, str, str, str, str]
 
