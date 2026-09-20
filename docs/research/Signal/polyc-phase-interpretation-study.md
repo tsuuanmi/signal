@@ -500,6 +500,12 @@ The Python research layer must:
 
 It is disposable research infrastructure, not production scientific authority.
 
+The preparation layer described above is implemented by
+[polyc-phase-interpretation-dataset.md](polyc-phase-interpretation-dataset.md) as
+`signal.validation_phase_interpretation_dataset/v1`. It exports only fit-eligible
+development window/candidate evidence plus aggregate partition/readiness counts; continuous
+holdout phase features remain outside the prepared development tables.
+
 ## Rust promotion boundary
 
 If the evidence justifies interpretation, the frozen rule should become a focused Rust
