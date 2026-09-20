@@ -168,9 +168,7 @@ The evaluator interprets the current reviewer notation explicitly:
 310A    SNV at 310 to A
 ```
 
-It compares only current sample variants with at least one eligible supporting read, matches
-exact normalized identities first, and then may recognize sequence-equivalent single-indel
-representations while recording representation disagreements separately.
+It compares only current sample variants with at least one eligible supporting read, requires one shared configuration SHA-256, hash-binds every evaluated sample-result JSON, matches exact normalized identities first, and then may recognize sequence-equivalent single-indel representations while recording representation disagreements separately.
 
 The baseline reports reviewer-proxy matched variants, extra variants (proxy false
 positives), missing variants (proxy false negatives), exact profiles, precision, and recall.
