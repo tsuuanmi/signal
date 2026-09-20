@@ -118,6 +118,14 @@ results.
 
 ## Reproducibility
 
+The current production-v1 measurement bridge has completed direct Rust/Python parity on the
+89-case validation corpus recorded in
+[`docs/research/Signal/phase-runtime-parity.md`](../research/Signal/phase-runtime-parity.md):
+11,231/11,231 windows and 112,310/112,310 candidates matched structurally, with maximum
+numeric delta `5.5511151231257827e-16` under an absolute tolerance of `1e-12`.
+This establishes measurement parity only and does not satisfy the interpretation/weighting
+promotion requirements in this protocol.
+
 Before promotion, rerun the frozen method on the same corpus and verify deterministic
 identical phase measurement identities/quantities within the repository's numerical
 contract.
