@@ -6,7 +6,7 @@ Owns the validated domain types shared across scientific stages.
 
 ## Responsibilities
 
-- Declare the model submodules: `alignment`, `basecall_result`, `basecalls`, `coordinate`, `locus_evidence`, `nucleotide`, `quality`, `read_observation`, `reference`, `result`, `sample_evidence`, `sample_result`, `signal`, `trace`, and `variant`.
+- Declare the model submodules: `alignment`, `basecall_result`, `basecalls`, `coordinate`, `locus_evidence`, `nucleotide`, `phase`, `quality`, `read_observation`, `reference`, `result`, `sample_evidence`, `sample_result`, `signal`, `trace`, and `variant`.
 - Provide validated domain vocabulary with no I/O, CLI, configuration loading, or
   algorithm dependencies.
 
@@ -23,6 +23,7 @@ No filesystem access, argument parsing, logging, or algorithm execution.
 - `locus_evidence`: basecall-independent per-locus A/C/G/T evidence and normalized profile.
 - `signal`: ordered locus evidence, rolling SNR windows, and merged candidate-noisy regions.
 - `quality`: quality vector, trim bounds, and QC result.
+- `phase`: internal read-local poly-C applicability, insufficiency, window, and complete candidate-curve evidence.
 - `read_observation`: complete one-read scientific products after
   evidence-derived placement.
 - `reference`: name, sequence, topology, and checksums.
@@ -32,9 +33,9 @@ No filesystem access, argument parsing, logging, or algorithm execution.
   exclusion diagnostics without report-only labels.
 - `result`: compact `AnalysisResult` plus result records shared by both
   contracts.
-- `basecall_result`: reference-free `BasecallResult` matching basecalls schema v1.
+- `basecall_result`: reference-free `BasecallResult` matching basecalls schema v2.
 - `sample_evidence`: compact internal read-registry, differential-locus, and normalized-variant evidence.
-- `sample_result`: public `signal.sample_evidence/v3` records.
+- `sample_result`: public `signal.sample_evidence/v8` records.
 
 ## Invariants and errors
 
@@ -55,7 +56,7 @@ arrays, and `Variant` structs with validated Rust types.
 
 ## Requirements and decisions
 
-ADR-0002, ADR-0028; `SRS-IN-003`, `SRS-CFG-005`, `SRS-BC-005`, `SRS-SIG-008`, `SRS-SIG-009`, `SRS-ALN-005`,
+ADR-0002, ADR-0028, ADR-0055, ADR-0056; `SRS-IN-003`, `SRS-CFG-005`, `SRS-BC-005`, `SRS-SIG-008`, `SRS-SIG-009`, `SRS-ALN-005`,
 `SRS-VAR-005`, and `SRS-OUT-002`.
 
 ## Tests
