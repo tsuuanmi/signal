@@ -72,9 +72,7 @@ class ParameterSet:
 
     @property
     def offsets(self) -> tuple[int, ...]:
-        return tuple(range(-self.max_offset, 0)) + tuple(
-            range(1, self.max_offset + 1)
-        )
+        return tuple(range(-self.max_offset, 0)) + tuple(range(1, self.max_offset + 1))
 
 
 def unique_positive(values: tuple[int, ...], label: str) -> tuple[int, ...]:
