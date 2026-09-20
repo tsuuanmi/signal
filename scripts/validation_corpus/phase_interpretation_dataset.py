@@ -528,7 +528,10 @@ def build_rows(
             len(curve),
         )
 
-        if partition != "development" or case.metadata["include_in_threshold_fit"] is not True:
+        if (
+            partition != "development"
+            or case.metadata["include_in_threshold_fit"] is not True
+        ):
             continue
 
         development_windows.append(development_window_row(case, window))
