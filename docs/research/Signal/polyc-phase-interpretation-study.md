@@ -2,15 +2,14 @@
 
 ## Purpose
 
-Define the research and validation plan required before Signal may interpret
-`signal.polyc_phase/v1` measurements as a categorical evidence pattern, recovery
-transition, reliability decision, contribution weight, no-call, or variant policy.
+Define the study required before Signal may interpret `signal.polyc_phase/v1`
+measurements as a categorical evidence pattern, recovery transition, reliability decision,
+contribution weight, no-call, or variant policy.
 
-This document is research-only. It does not define production behavior, thresholds,
-configuration, public output, or a `PhaseState` type.
+This is research guidance only. It defines no production state, threshold, configuration,
+public output, or sample behavior.
 
-The current production authority remains the Rust measurement implemented by
-ADR-0056:
+The production authority remains the Rust measurement implemented by ADR-0056:
 
 ```text
 selected alignment
@@ -20,13 +19,13 @@ Rust signal.polyc_phase/v1
 ReadPhaseEvidence
 ```
 
-The completed Rust/Python measurement-parity evidence is recorded in
-[phase-runtime-parity.md](phase-runtime-parity.md). The open scientific question is now
-interpretation, not window/candidate measurement.
+Rust/Python measurement parity for the current 89-case corpus is recorded in
+[phase-runtime-parity.md](phase-runtime-parity.md). The open question is now
+interpretation, not measurement.
 
-## Language and implementation boundary
+## Language boundary
 
-Signal uses different languages for different responsibilities:
+Signal uses the languages for different jobs:
 
 ```text
 Rust
@@ -45,15 +44,12 @@ Python
 
 Python MUST NOT become a runtime dependency of the scientific core.
 
-A future interpretation rule discovered with Python is not production behavior until the
-rule and all constants are frozen, independently implemented in Rust, covered by Rust
-tests, and validated against the frozen research evidence.
+A rule discovered in Python is not production behavior until its complete definition and
+constants are frozen, implemented in Rust, covered by Rust tests, and validated against the
+frozen research evidence.
 
-After promotion, Rust is the single authoritative interpretation implementation. Python
-may remain as an evaluator or parity checker, but MUST NOT remain a second authoritative
-classifier with independently evolving semantics.
-
-Conceptually:
+After promotion, Rust is the single authoritative implementation. Python may remain an
+evaluator or parity checker, but not a second independently evolving classifier.
 
 ```text
 Rust ReadPhaseEvidence
@@ -62,7 +58,7 @@ Python development research
         ↓
 frozen rule + constants
         ↓
-Rust phase interpretation
+Rust interpretation
         ↓ validation export
 Python parity / holdout evaluation
         ↓
@@ -73,11 +69,11 @@ Rust remains authoritative
 
 The first interpretation study asks:
 
-> Can the continuous read-local phase evidence reliably distinguish useful observational
-> regimes after an rCRS HV1/HV2 poly-C tract without erasing clean evidence or true
-> downstream sequence differences?
+> Can continuous read-local phase evidence distinguish useful observational regimes after
+> an rCRS HV1/HV2 poly-C tract without suppressing clean evidence or true downstream
+> sequence differences?
 
-The study does not ask whether the trace proves:
+It does not attempt to infer:
 
 - biological length heteroplasmy;
 - a specific indel length;
@@ -86,49 +82,35 @@ The study does not ask whether the trace proves:
 - an artifact mechanism;
 - a calibrated probability of correctness.
 
-Those are stronger claims than the current evidence supports.
+## Authoritative inputs
 
-## Current authoritative inputs
+Scientific phase measurements come from one completed
+`signal.validation_phase_hypotheses/v1` artifact, or equivalent Rust runtime evidence
+already proven to match it.
 
-The study consumes only completed, provenance-matched validation artifacts.
+The authoritative measured fields remain:
 
-Primary scientific input:
-
-```text
-signal.validation_phase_hypotheses/v1
-```
-
-or an equivalent Rust validation export proven to match
-`signal.validation_phase_runtime/v1`.
-
-The authoritative phase quantities are:
-
-- exact read/tract/window identity;
+- read/tract/window identity;
 - exact start/end sequencing-order distances;
-- exact original call-index bounds;
+- exact start/end original call indexes;
 - profile-observation count;
 - mean profile impurity;
 - mean zero-reference mass;
 - complete candidate-offset curve;
-- candidate informative-position count;
-- candidate zero-reference mass;
-- candidate shifted-reference mass;
-- candidate residual mass.
+- informative-position count;
+- candidate zero/shifted/residual masses.
 
-Validation grouping and truth/proxy metadata remain authoritative in:
+Truth, grouping, acquisition, and holdout metadata remain authoritative in
+`signal.validation_corpus/v1`.
 
-```text
-signal.validation_corpus/v1
-```
+The study MUST join these existing contracts. It must not add truth or holdout metadata to
+the phase-measurement contract merely to make fitting convenient.
 
-The interpretation study MUST join phase evidence back to the validated corpus rather
-than adding truth, holdout, or acquisition metadata to the phase-measurement contract.
+## Strict provenance join
 
-## Provenance join
+Research preparation rejects rather than repairs provenance drift.
 
-A research join MUST reject rather than repair provenance drift.
-
-Before any study row is admitted, the following identities must agree:
+Before any row is admitted, verify:
 
 ```text
 source corpus SHA-256
@@ -140,47 +122,43 @@ validation_case_id
 read_sha256
 ```
 
-Where phase evidence carries redundant read metadata such as amplicon or selected
-orientation, the joined corpus/read record must agree exactly.
+Any redundant read metadata carried by the phase artifact, such as amplicon or selected
+orientation, must agree with the corpus record.
 
-The join MUST NOT use:
+Do not join by:
 
-- filename matching;
-- declared acquisition direction as placement;
-- approximate case names;
-- fallback manifest parsing;
-- inferred amplicon membership.
+- filename;
+- declared direction;
+- approximate identifiers;
+- inferred amplicon;
+- a second manifest parser;
+- fallback metadata.
 
-The existing validation corpus/research loaders remain the authority for corpus metadata.
-A phase-interpretation research layer must reuse them rather than creating a second
-manifest parser or grouping model.
+Reuse the existing validation corpus/research loader and shared phase-artifact loader.
 
 ## Study prerequisites
 
-Threshold/model selection must not start until the local validation corpus has been
-reviewed and frozen for this study.
+Threshold/model selection must not start until the local study inputs are frozen.
 
 At minimum:
 
-1. curation decisions have been reconciled into the local validation manifest;
-2. the manifest SHA-256 is frozen for the study;
-3. each `source_group_id` belongs to exactly one study partition;
+1. curation decisions are reconciled into the local validation manifest;
+2. the manifest SHA-256 is frozen;
+3. every `source_group_id` belongs to one study partition;
 4. development and locked holdout group names are explicitly declared;
-5. `include_in_threshold_fit` has been reviewed;
-6. clean negative evidence is present;
+5. `include_in_threshold_fit` is reviewed;
+6. clean negative evidence is identified;
 7. true downstream SNV challenge evidence is identified;
-8. artifact/problematic-trace challenge evidence is identified where available;
+8. problematic/artifact challenge evidence is identified where available;
 9. HV1/HV2 and forward/reverse coverage is summarized;
 10. PCR/run/instrument replication limits are documented.
 
-If a required stratum is absent, the study records that as a limitation rather than
-silently treating correlated windows as independent evidence.
+Missing strata are limitations, not permission to treat correlated windows as independent
+experiments.
 
-## Unit of interpretation
+## Interpretation hierarchy
 
-A whole-read phase label is not the primary study target.
-
-The current evidence is naturally hierarchical:
+A whole-read phase label is not the primary target.
 
 ```text
 Read
@@ -191,23 +169,21 @@ Read
      └─ ...
 ```
 
-One read can show strong shifted-reference explainability immediately after a tract and
-later return to reference-coherent evidence. A single read-level category would collapse
-that transition.
+One read may be strongly shift-explainable near a tract and later become
+reference-coherent. A single read category would erase that transition.
 
 The study therefore treats:
 
-- the **window** as the local evidence-pattern unit;
-- the ordered **window sequence within one read/tract** as the persistence/recovery unit;
-- the **read/tract** as a derived summary level only;
-- the **source group** as the primary independence boundary for development/holdout and
-  statistical uncertainty.
+- **window** as the local evidence-pattern unit;
+- **ordered windows within one read/tract** as the persistence/recovery unit;
+- **read/tract** as a derived summary only;
+- **source group** as the independence boundary for development/holdout and uncertainty.
 
-Window counts MUST NOT be reported as independent sample counts.
+Window count is never an independent sample count.
 
-## Evidence availability remains separate
+## Availability is not interpretation
 
-The production availability vocabulary is already explicit:
+Production already distinguishes:
 
 ```text
 NotApplicable
@@ -215,10 +191,10 @@ Insufficient(reason)
 Measured
 ```
 
-Interpretation research applies only to measured evidence unless a study endpoint
-explicitly concerns insufficiency.
+Interpretation applies only to measured evidence unless the endpoint explicitly studies
+insufficiency.
 
-The following remain invalid equivalences:
+These equivalences are invalid:
 
 ```text
 NotApplicable != clean
@@ -227,12 +203,11 @@ no window     != reference coherent
 read end      != recovered
 ```
 
-No future interpretation enum may erase these distinctions.
+A future interpretation type must preserve these distinctions.
 
-## Candidate-wise quantities
+## Candidate-wise evidence
 
-For one informative candidate offset `c`, define descriptive quantities only after
-preserving the source candidate identity:
+For one informative candidate `c`, preserve:
 
 ```text
 zero(c)
@@ -241,63 +216,49 @@ residual(c)
 informative_positions(c)
 ```
 
-When `shifted(c) + residual(c) > 0`, development analysis may inspect:
+When `shifted(c) + residual(c) > 0`, development research may inspect:
 
 ```text
 structured_fraction(c)
     = shifted(c) / (shifted(c) + residual(c))
 ```
 
-This value is descriptive. It is not a probability, confidence value, allele fraction,
-or calibrated reliability score.
+This is descriptive only. It is not a probability, confidence, allele fraction, or
+calibrated reliability score.
 
-### Informative evidence gate
+### Informative support
 
-A candidate with very few informative positions can show an extreme mass fraction by
-chance or local sequence repetition. Therefore interpretation research MUST preserve
-`informative_positions` as a first-class dimension.
+Extreme candidate fractions supported by very few informative positions can be unstable.
+`informative_positions` must therefore remain a first-class feature.
 
-A future rule may require minimum informative support, but that minimum must be selected
-and frozen on development data before holdout evaluation.
+A future rule may require minimum informative support, but that value must be chosen on
+development data and frozen before holdout evaluation.
 
-Zero-informative candidates remain explicit missing numeric evidence and must never receive
-synthetic zero values.
+Zero-informative candidates retain absent masses. Do not synthesize zeros.
 
-## Candidate envelope without false precision
+## Candidate envelope and ambiguity
 
-The first interpretation study does not require a winning offset.
+The first study does not require a winning offset.
 
-Repeated sequence can make multiple offsets similarly explanatory. Selecting one offset
-when several provide nearly equivalent evidence would create false precision that is not
-required for a reliability policy.
+Repeated sequence can make several offsets similarly explanatory, and a reliability policy
+does not need false precision about the exact offset.
 
-Development analysis may inspect candidate-envelope quantities such as:
+Development analysis may inspect:
 
 - maximum candidate-wise structured fraction;
 - minimum candidate residual;
 - maximum shifted-reference mass;
-- spread/separation across candidate values;
+- candidate spread/separation;
 - number of candidates with sufficient informative support.
 
-However, quantities from different candidates MUST NOT be combined and described as one
-synthetic "best candidate".
+Do not combine extrema from different candidates into one synthetic "best candidate".
 
-For example, this is invalid:
+If a future rule uses companion quantities from one selected candidate, all companion
+values must come from that same candidate with deterministic tie semantics.
 
-```text
-shifted mass from candidate A
-+
-residual mass from candidate B
-=
-best candidate
-```
+## Research pattern vocabulary
 
-If a future rule requires companion quantities from one selected candidate, they must be
-taken from that same candidate with deterministic tie semantics.
-
-## Candidate observational regimes
-
-The following names are allowed as research hypotheses for **measured window evidence**:
+The following names may be used as hypotheses for **measured window evidence**:
 
 ```text
 reference-coherent
@@ -306,117 +267,103 @@ residual-dominant
 indeterminate
 ```
 
-They are not production enums and are intentionally observational rather than biological.
+They are not production enums and make no biological claim.
 
 ### Reference-coherent
 
-Hypothesis:
+Hypothesis: zero-phase evidence remains dominant and non-zero evidence does not require a
+structured shift explanation.
 
-- zero-phase evidence remains dominant;
-- non-zero evidence is limited;
-- no tested shift provides substantial structured evidence requiring interpretation.
-
-This state must not be defined merely as "not classified as unstable".
+This must be positively defined; it is not simply "not classified as unstable".
 
 ### Shift-explainable
 
-Hypothesis:
-
-- meaningful non-zero evidence is present;
-- at least one sufficiently informative candidate explains a substantial fraction as
-  shifted-reference mass;
-- residual mass remains low enough that a simple candidate shift remains informative.
+Hypothesis: meaningful non-zero evidence is present, at least one sufficiently informative
+candidate explains a substantial fraction as shifted-reference mass, and residual evidence
+remains limited enough for a structured interpretation.
 
 This does not prove an indel or length heteroplasmy.
 
 ### Residual-dominant
 
-Hypothesis:
-
-- meaningful non-zero evidence is present;
-- tested candidate shifts leave substantial residual evidence;
-- no sufficiently supported candidate explains the window cleanly enough for the proposed
-  structured interpretation.
+Hypothesis: meaningful non-zero evidence is present but tested shifts leave substantial
+residual evidence.
 
 This does not prove artifact or unusability.
 
 ### Indeterminate
 
-Hypothesis:
+Hypothesis: measured evidence is insufficiently discriminatory because of weak signal, too
+few informative positions, ambiguous candidates, or a development-defined uncertainty
+region.
 
-- evidence is measured but insufficiently discriminatory for the proposed interpretation;
-- examples include weak non-zero evidence, too few informative positions, ambiguous
-  candidate structure, or a development-defined uncertainty region.
+Indeterminate evidence remains explicit rather than being forced into another category.
 
-Indeterminate evidence must remain explicit rather than being coerced into a clean or
-problematic category.
+## Truth discipline
 
-## Labels and truth discipline
+Signal output is not independent truth for its own interpretation study.
 
-Signal output is not an independent truth source for its own interpretation study.
+Do not use these as biological ground truth:
 
-In particular, the following MUST NOT be used as biological ground truth:
-
-- observed `interrupt_aligned_base`;
-- high phase impurity;
+- `interrupt_aligned_base`;
+- phase impurity;
 - shifted-reference mass;
 - residual mass;
-- a candidate offset selected from the same evidence;
-- existing Signal variant calls;
-- research envelope labels derived from the tested metrics.
+- a candidate selected from the same evidence;
+- Signal variant calls;
+- labels derived from the tested phase features.
 
-Observed interrupt base may be used for stratification and challenge analysis only.
+Observed interrupt base is valid for stratification and challenge analysis only.
 
-Any affected/clean label used for performance claims must document independent truth or an
-explicitly weaker proxy provenance. Proxy-labelled results must be reported as proxy
-performance rather than biological sensitivity/specificity.
+Any affected/clean performance label must retain independent truth or explicit proxy
+provenance. Proxy-labelled performance must be reported as proxy performance rather than
+biological sensitivity/specificity.
 
-## Clean evidence and true-SNV safety objective
+## Safety objectives
 
-Before threshold/model search, the study must declare a maximum acceptable
-false-attenuation or false-no-call objective on clean evidence.
+Before feature or threshold search, declare a maximum tolerated false attenuation/no-call
+rate on clean evidence.
 
-A numeric objective is deliberately not chosen in this research design document; it must
-be predeclared with the frozen local study plan before development fitting.
+The numeric objective belongs to the frozen local study plan, not this generic research
+document.
 
-True downstream SNVs are a co-primary safety challenge. A phase rule is unacceptable if
-it gains apparent performance on problematic poly-C reads by suppressing independent true
-sequence differences.
+True downstream SNVs are a co-primary safety challenge. A phase policy is unacceptable if
+it improves apparent handling of problematic poly-C reads by suppressing independently
+true downstream differences.
 
-The study must therefore report clean and true-SNV challenge behavior separately.
+Report clean and true-SNV challenge behavior separately.
 
-## Development and holdout discipline
+## Development and holdout
 
-All related evidence from one independent source group remains on one side of the
-development/holdout boundary.
+All evidence from one independent source group remains on one side of the split.
 
 Development data may be used to choose:
 
-- candidate feature family;
+- feature family;
 - informative-position gate;
-- interpretation thresholds;
+- thresholds;
 - ambiguity/separation rule;
-- persistence requirement;
+- persistence rule;
 - recovery rule.
 
-Locked holdout data may not be inspected for phase metrics while these choices are being
-made.
+Holdout phase measurements remain untouched until the complete rule and constants are
+frozen.
 
-A research preparation step should expose development phase measurements and only aggregate
-holdout/readiness counts until the rule is frozen.
+A research preparation step should expose development measurements plus aggregate
+holdout/readiness counts, not holdout phase feature tables.
 
-`holdout_group` is a manifest string, not a hard-coded two-value enum. The study must
-explicitly declare which group names mean development, holdout, excluded, or unassigned.
-An unknown/unassigned group must never silently enter fitting data.
+`holdout_group` is a manifest string, not a hard-coded two-value enum. The study declares
+which group names are development, holdout, excluded, or unassigned. Unknown groups never
+silently enter fitting.
 
-`include_in_threshold_fit=false` must exclude that case from development fitting even
-when its holdout-group name otherwise belongs to development.
+`include_in_threshold_fit=false` excludes a case from development fitting even when its
+holdout group is otherwise development.
 
-## Avoiding pseudo-replication
+## Pseudo-replication
 
-Overlapping windows from one trace are strongly correlated.
+Overlapping windows from one trace are correlated.
 
-Every research report must provide counts at multiple levels:
+Every report must include counts for:
 
 ```text
 windows
@@ -427,36 +374,32 @@ source groups
 sequencing runs / instruments when available
 ```
 
-Confidence intervals or resampling used for validation must respect the highest relevant
-independent grouping level. Window-wise bootstrap/resampling is not valid evidence for
-independent performance.
+Resampling and confidence intervals must respect the highest relevant independent grouping
+level. Window-wise bootstrap is not evidence for independent performance.
 
 ## Persistence
 
 A local window pattern is not automatically a tract-level interpretation.
 
-The study must evaluate ordered adjacent windows from the same read/tract and quantify
-whether a proposed regime persists.
+Evaluate ordered adjacent windows from the same read/tract. A future rule may require
+multiple compatible consecutive windows, but the required count and any tolerated
+indeterminate transition must be chosen on development data.
 
-A future persistence rule may require multiple consecutive compatible windows, but the
-number of windows and any tolerated transition/ambiguity must be selected on development
-data and frozen before holdout evaluation.
-
-Persistence must use source window order and exact window identity. It must not reconstruct
-alternate windows or candidate evidence.
+Persistence uses source window identity/order. It must not regenerate windows or candidate
+evidence.
 
 ## Recovery
 
-Recovery is an evidence transition, not a fixed genomic-distance cutoff.
+Recovery is an evidence transition, not a fixed distance cutoff.
 
-Invalid rule:
+Invalid:
 
 ```text
 distance >= X
     => recovered
 ```
 
-Candidate study form:
+Candidate form:
 
 ```text
 previously non-reference-coherent evidence
@@ -468,22 +411,21 @@ multiple consecutive reference-coherent windows
 candidate recovery
 ```
 
-The study must evaluate:
+Evaluate:
 
-- number of supporting consecutive windows;
+- number of supporting windows;
 - intervening indeterminate windows;
-- read ends near the apparent recovery;
+- read ends near apparent recovery;
 - profile gaps;
 - HV1 versus HV2;
-- forward versus reverse orientation.
+- forward versus reverse.
 
-Distance from the tract may be reported descriptively but cannot by itself establish
-recovery.
+Distance may be descriptive but cannot establish recovery by itself.
 
-## Method constants
+## Production measurement constants
 
-The production measurement method is already frozen as
-`signal.polyc_phase/v1`:
+The primary interpretation study consumes the frozen production
+`signal.polyc_phase/v1` method:
 
 ```text
 25 profile-bearing observations per window
@@ -491,60 +433,52 @@ stride 5 profile-bearing observations
 candidate offsets -5..-1 and +1..+5
 ```
 
-Interpretation research uses the authoritative v1 measurement for the primary study.
+Existing sensitivity research may test whether conclusions are fragile to reasonable
+measurement choices, but fitting must not silently redefine these production constants.
 
-Existing parameter-sensitivity research may be used to assess whether the qualitative
-conclusions are fragile to reasonable measurement choices, but interpretation fitting
-must not silently redefine the production measurement constants.
+A different measurement method requires a separately versioned measurement change.
 
-If a different measurement method is eventually required, it is a separately versioned
-measurement change rather than an interpretation threshold tweak.
-
-## Noisy regions and other QC evidence
+## QC evidence
 
 Noisy-region membership, quality, SNR, signal intensity, and trace-integrity evidence may
-be used to stratify performance and investigate failures.
+stratify results and explain failures.
 
-They must not automatically become phase-state inputs.
+They do not automatically become phase-state inputs.
 
-Adding one of those dimensions to a future interpretation rule requires explicit
-development evidence and validation that it improves the intended operating objective
-without circularly reusing an existing QC verdict as phase truth.
+Adding one to a future rule requires development evidence that it improves the declared
+objective without circularly using a QC verdict as phase truth.
 
 ## Exact local membership before weighting
 
-The current `PhaseWindowEvidence` preserves exact window bounds and call-index bounds,
-but windows are constructed from profile-bearing observations only. Missing-profile
-observations are skipped.
+`PhaseWindowEvidence` retains exact window bounds and call-index bounds, but windows are
+built from profile-bearing observations only; missing-profile observations are skipped.
 
-Therefore an interval such as:
+Therefore interval containment:
 
 ```text
-window start distance .. window end distance
+window start distance <= locus <= window end distance
 ```
 
-does not prove that every locus in that interval was a member of the measured window.
+does not prove that the locus was a measured window member.
 
-The recurrent-locus research path already reconstructs exact membership from the
-authoritative window generator and explicitly rejects interval-only membership.
+The recurrent-locus research path already reconstructs exact membership and rejects
+interval-only membership.
 
-Any future **locus-local** attenuation, weighting, or no-call implementation must preserve
-or derive exact Rust-side membership/projection before applying a window interpretation to
-a locus. It MUST NOT map state to loci by start/end interval containment alone.
+Any future locus-local attenuation, weighting, or no-call implementation must preserve or
+derive exact **Rust-side** membership/projection before applying interpretation to a locus.
+It must not map state to loci by interval containment alone.
 
-This is a production-weighting prerequisite, not a reason to alter the current validated
-measurement in this research-only step.
+This is a future weighting prerequisite, not a reason to change the already validated
+measurement in this research step.
 
-## Research tooling design
+## Python research tooling
 
-A future development-data preparation tool should remain outside the Rust production core.
-
-Its responsibility is limited to:
+Future study-preparation code remains outside the production scientific core:
 
 ```text
 completed validation corpus
         +
-completed phase hypothesis/runtime evidence
+completed phase evidence
         ↓
 strict provenance join
         ↓
@@ -553,23 +487,23 @@ development-only research tables
 partition/readiness counts
 ```
 
-It must:
+The Python research layer must:
 
-- reuse the current validated corpus loader;
+- reuse the validated corpus loader;
 - reuse the shared phase-artifact loader;
-- avoid recomputing phase windows or candidate masses;
+- never recompute phase windows or candidate masses;
 - avoid a second manifest parser;
 - avoid exposing holdout phase measurements before rule freeze;
-- hash-bind its sources and outputs;
+- hash-bind source/output artifacts;
 - publish without overwrite;
-- remain local/ignored validation data.
+- remain local validation/research tooling.
 
-This Python tooling is a research convenience, not the scientific runtime implementation.
+It is disposable research infrastructure, not production scientific authority.
 
-## Rust promotion architecture
+## Rust promotion boundary
 
-If development and holdout evidence justify an interpretation, the frozen rule should be
-implemented as a focused Rust phase module, conceptually:
+If the evidence justifies interpretation, the frozen rule should become a focused Rust
+module, conceptually:
 
 ```text
 src/phase/
@@ -578,7 +512,7 @@ src/phase/
 └── interpret.rs
 ```
 
-with a pure boundary such as:
+with a pure boundary:
 
 ```text
 ReadPhaseEvidence
@@ -588,10 +522,10 @@ phase::interpret
 ReadPhaseInterpretation
 ```
 
-The interpretation module should:
+A promoted interpreter should:
 
-- consume only validated read-local phase evidence;
-- contain the frozen rule and method constants;
+- consume validated read-local phase evidence only;
+- contain the frozen rule and constants;
 - perform no filesystem access;
 - load no Python artifact;
 - read no validation manifest;
@@ -599,13 +533,12 @@ The interpretation module should:
 - not mutate alignment, calls, variants, or source evidence;
 - return typed Rust interpretation data.
 
-A production interpretation PR must add the corresponding Rust types, focused unit tests,
-method documentation, accepted ADR/SRS changes, and `docs/src` ownership mirror.
+Its PR must include Rust types/tests, method documentation, accepted ADR/SRS changes, and
+the required `docs/src` mirror.
 
 ## Interpretation is not weighting
 
-A successful Rust interpretation must not automatically return or apply a sample
-contribution weight.
+A successful interpretation does not automatically imply a contribution weight.
 
 Keep the dependency boundary:
 
@@ -614,20 +547,19 @@ ReadPhaseEvidence
         ↓
 ReadPhaseInterpretation
         ↓
-separate future reliability/contribution policy
+separate reliability/contribution policy
 ```
 
-A weighting/no-call policy must independently satisfy the promotion protocol and explicitly
-amend ADR-0040 / the current unit-read-mass sample contribution contract.
+Any weighting/no-call policy must independently satisfy
+`docs/validation/polyc-phase-promotion.md` and explicitly amend ADR-0040 / the current
+unit-read-mass contract.
 
-The interpretation type should not use an uncalibrated `0.0..1.0` value named
-`confidence` or `probability` unless a separate calibration study justifies those
-semantics.
+Do not expose an uncalibrated `0.0..1.0` value named `confidence` or `probability`.
 
 ## Rust validation after promotion
 
-Once a frozen interpretation is implemented in Rust, validation should mirror the proven
-measurement-parity pattern:
+After implementing the frozen rule in Rust, validation should mirror the successful
+measurement-parity workflow:
 
 ```text
 frozen development rule/spec
@@ -639,25 +571,23 @@ validation-only serialization
 Python parity / holdout evaluation
 ```
 
-Structural interpretation fields should compare exactly.
+Categorical/structural fields compare exactly. Retained derived floating-point quantities
+use an explicit documented tolerance.
 
-Any retained derived floating-point quantities must compare under an explicit documented
-numeric tolerance.
+Validation tooling must not reimplement phase measurement geometry as a fallback.
 
-The validation layer must not reimplement phase measurement geometry as a fallback.
+After parity, Rust remains authoritative; duplicated Python classification logic should not
+continue as a parallel production definition.
 
 ## Reporting
 
-Development and holdout reports must include, at minimum:
+Development and holdout reports include at minimum:
 
-- exact corpus/manifest/reference/configuration identities;
-- exact frozen rule version;
-- source-group count;
-- PCR replicate count;
-- run/instrument count when available;
-- read and read/tract counts;
-- window counts;
-- evidence-availability counts;
+- corpus/manifest/reference/configuration identities;
+- frozen rule version;
+- source-group/PCR/run/instrument counts;
+- read, read/tract, and window counts;
+- availability counts;
 - interpretation counts;
 - clean false attenuation/no-call;
 - affected/proxy challenge performance;
@@ -666,62 +596,57 @@ Development and holdout reports must include, at minimum:
 - forward/reverse results;
 - same/cross-amplicon results where available;
 - insufficient/read-end/profile-gap behavior;
-- identified failure cases and limitations.
+- reviewed failure cases and limitations.
 
 Aggregate window accuracy alone is not an acceptable performance claim.
 
 ## Promotion gates
 
-Production interpretation remains blocked until all of the following are true:
+Production interpretation remains blocked until:
 
-1. the local corpus and curation state are frozen;
-2. development/holdout source groups are frozen;
-3. the study objective and safety objective are predeclared;
-4. candidate feature/rule selection is performed on development data only;
-5. the complete rule and constants are frozen before holdout inspection;
+1. corpus and curation state are frozen;
+2. source-group development/holdout partitions are frozen;
+3. study and safety objectives are predeclared;
+4. rule selection uses development data only;
+5. rule/constants are frozen before holdout inspection;
 6. holdout results satisfy the predeclared objective;
-7. true downstream SNV challenges do not show unacceptable suppression;
+7. true downstream SNVs do not show unacceptable suppression;
 8. tract/orientation/amplicon and available replicate strata are reviewed;
-9. incomplete evidence and read-end behavior are explicit;
+9. incomplete evidence/read-end behavior is explicit;
 10. the frozen rule is implemented in Rust;
-11. Rust behavior is validated against the frozen research rule/evidence;
-12. the production ADR/SRS/method/source/docs changes explicitly authorize the behavior.
+11. Rust behavior is validated against the frozen research evidence;
+12. ADR/SRS/method/source documentation explicitly promotes the behavior.
 
 Weighting/no-call remains separately blocked even if interpretation passes.
 
-## Proposed implementation sequence
-
-The dependency-aware delivery order is:
+## Delivery order
 
 ```text
 1. freeze this study design
 2. verify/freeze local corpus and partitions
-3. build development-only research join/readiness tooling in Python
-4. explore and falsify candidate interpretation rules on development data
+3. build development-only Python research join/readiness tooling
+4. explore/falsify candidate rules on development data
 5. freeze one rule and all constants
-6. evaluate the untouched holdout
-7. if justified, implement the frozen interpretation in Rust
+6. evaluate untouched holdout
+7. if justified, implement the rule in Rust
 8. export and parity-check Rust interpretation
-9. only then study a separate sample reliability/weighting policy
+9. only then study sample reliability/weighting
 ```
 
-This order preserves one production authority and avoids turning exploratory Python code
-into a permanent parallel scientific implementation.
+This sequence keeps Python exploratory and Rust authoritative.
 
-## Explicit non-goals
+## Non-goals
 
-This study design does not:
+This study does not:
 
-- add production source code;
-- add a `PhaseState` enum;
-- choose a candidate offset;
+- add production source;
+- add a production `PhaseState`;
+- choose a winning offset;
 - choose numeric thresholds;
 - define a recovery distance;
 - change `signal.polyc_phase/v1`;
-- change configuration;
-- change public schemas;
-- alter variant eligibility;
-- alter nucleotide contribution eligibility;
+- change configuration or public schemas;
+- alter variant or nucleotide-contribution eligibility;
 - alter unit-mass sample support;
 - infer length heteroplasmy, genotype, artifact, or contamination;
 - make Python part of the runtime scientific core.
