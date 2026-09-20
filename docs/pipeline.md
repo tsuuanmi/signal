@@ -291,18 +291,19 @@ The read has already located itself at this boundary. Its orientation and covere
 
 ## Promoted read-local poly-C phase boundary
 
-ADR-0055 reserves a future reference-aware read-local measurement stage after selected
-alignment. It is not implemented in the current executable pipeline.
+ADR-0055 reserves the reference-aware read-local phase boundary after selected alignment;
+ADR-0056 implements it as internal `signal.polyc_phase/v1` continuous measurement.
 
-The future stage may consume immutable reference-oriented profile evidence, the selected
-orientation/path, and verified rCRS HV1/HV2 tract context. It cannot change placement,
-calls, quality, or primary-sequence variant observations. Unsupported reference contexts
-must be not applicable, and incomplete tract/window evidence must remain insufficient
-rather than being interpreted as phase-stable.
+The stage consumes immutable reference-oriented profile evidence, the selected
+orientation/path, and verified exact circular-rCRS HV1/HV2 tract context. It constructs
+25-profile windows at stride 5 and retains complete ±1..±5 candidate zero/shifted/residual
+mass curves. Unsupported reference contexts are not applicable, and incomplete
+tract/window evidence remains insufficient rather than being interpreted as phase-stable.
 
-No `PhaseState`, detector threshold, recovery rule, contribution weight, confidence
-attenuation, no-call behavior, configuration key, or public JSON field is currently
-defined. Opposite-orientation evidence remains validation/corroboration and is not a
+The result is retained only in internal `ReadObservation` plus concise operational
+availability logging. No `PhaseState`, candidate winner, recovery rule, contribution
+weight, confidence attenuation, no-call behavior, configuration key, or public JSON field
+is defined. Opposite-orientation evidence remains validation/corroboration and is not a
 prerequisite for one-read processing.
 
 ## Sample evidence aggregation
