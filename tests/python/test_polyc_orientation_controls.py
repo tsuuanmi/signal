@@ -296,8 +296,7 @@ class PolyCOrientationControlTests(unittest.TestCase):
         forward_locus = next(
             row
             for row in loci
-            if row["position_1based"] == "316"
-            and row["post_orientation"] == "forward"
+            if row["position_1based"] == "316" and row["post_orientation"] == "forward"
         )
         self.assertEqual(forward_locus["post_reads"], "2")
         self.assertEqual(forward_locus["control_reads"], "2")
