@@ -190,9 +190,13 @@ class PhaseRecurrentLocusResearchTests(unittest.TestCase):
             index["schema_version"],
             PHASE_RECURRENT_LOCUS_SCHEMA_VERSION,
         )
-        self.assertEqual(index["method"]["recurrent_positions_1based"], [253, 297, 302, 16194, 16197])
+        self.assertEqual(
+            index["method"]["recurrent_positions_1based"], [253, 297, 302, 16194, 16197]
+        )
         self.assertEqual(index["method"]["candidate_offsets"], [-1, 1])
-        self.assertEqual(index["method"]["candidate_selection"], "none; every source offset retained")
+        self.assertEqual(
+            index["method"]["candidate_selection"], "none; every source offset retained"
+        )
         self.assertEqual(index["loci_rows"], 3)
         self.assertEqual(index["windows_rows"], 2)
         self.assertEqual(index["candidates_rows"], 4)
