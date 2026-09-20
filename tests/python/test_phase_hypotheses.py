@@ -16,6 +16,7 @@ from scripts.validation_corpus.model import (
 from scripts.validation_corpus.phase_hypotheses import (
     PhaseObservation,
     candidate_metrics,
+    phase_windows,
     publish_phase_hypotheses,
 )
 from scripts.validation_corpus.polyc_phase import (
@@ -195,9 +196,12 @@ class PhaseHypothesisResearchTests(unittest.TestCase):
             amplicon_id="HV2",
             orientation="forward",
             interrupt_aligned_base="C",
+            position_1based=316,
             distance=1,
             call_index=101,
             reference_base="A",
+            state="reference",
+            aligned_base="A",
             in_noisy_region=False,
             profile=(0.7, 0.1, 0.1, 0.1),
             profile_impurity=0.3,
@@ -211,6 +215,42 @@ class PhaseHypothesisResearchTests(unittest.TestCase):
         self.assertIsNone(zero)
         self.assertIsNone(shifted)
         self.assertIsNone(residual)
+
+    def test_window_membership_uses_profiled_observations_only(self) -> None:
+        profiled = [
+            PhaseObservation(
+                validation_case_id="case-1",
+                read_sha256=self.read_sha256,
+                tract_id="HV2_C",
+                amplicon_id="HV2",
+                orientation="forward",
+                interrupt_aligned_base="C",
+                position_1based=315 + distance,
+                distance=distance,
+                call_index=100 + distance,
+                reference_base=self.reference_base(distance),
+                state="reference",
+                aligned_base=self.reference_base(distance),
+                in_noisy_region=False,
+                profile=self.profile(distance) if distance != 3 else None,
+                profile_impurity=0.4 if distance != 3 else None,
+            )
+            for distance in range(1, 7)
+        ]
+        windows = phase_windows(
+            {(self.read_sha256, "HV2_C"): profiled},
+            window_size=5,
+            window_step=5,
+        )
+        self.assertEqual(len(windows), 1)
+        self.assertEqual(
+            [row.distance for row in windows[0].observations],
+            [1, 2, 4, 5, 6],
+        )
+        self.assertEqual(
+            windows[0].window_id,
+            f"HV2_C:{self.read_sha256}:1-6",
+        )
 
     def test_source_hash_mismatch_is_rejected(self) -> None:
         self.write_source()
