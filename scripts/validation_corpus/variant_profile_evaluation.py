@@ -9,7 +9,7 @@ import shutil
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from .filesystem import (
     file_sha256,
@@ -328,7 +328,7 @@ def signal_group(
 
 def contiguous_groups(
     indices: set[int],
-    build: Any,
+    build: Callable[[tuple[int, ...]], MutationGroup | None],
 ) -> list[MutationGroup]:
     """Enumerate deterministic contiguous groups from one unmatched event ordering."""
     ordered = sorted(indices)
