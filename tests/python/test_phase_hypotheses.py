@@ -28,7 +28,9 @@ BASES = ("A", "C", "G", "T")
 
 class PhaseHypothesisResearchTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temporary = tempfile.TemporaryDirectory(prefix="signal-phase-hypothesis-test-")
+        self.temporary = tempfile.TemporaryDirectory(
+            prefix="signal-phase-hypothesis-test-"
+        )
         self.root = Path(self.temporary.name)
         self.phase = self.root / "phase"
         self.phase.mkdir()
@@ -162,9 +164,7 @@ class PhaseHypothesisResearchTests(unittest.TestCase):
             file_sha256(self.phase / "index.json"),
         )
 
-        with (output / "windows.csv").open(
-            "r", encoding="utf-8", newline=""
-        ) as source:
+        with (output / "windows.csv").open("r", encoding="utf-8", newline="") as source:
             windows = list(csv.DictReader(source))
         self.assertEqual(windows[0]["profile_observations"], "25")
         self.assertAlmostEqual(float(windows[0]["mean_zero_reference_mass"]), 0.60)
@@ -174,14 +174,10 @@ class PhaseHypothesisResearchTests(unittest.TestCase):
         ) as source:
             hypotheses = list(csv.DictReader(source))
         plus_one = next(
-            row
-            for row in hypotheses
-            if row["reference_offset_in_read_order"] == "1"
+            row for row in hypotheses if row["reference_offset_in_read_order"] == "1"
         )
         minus_one = next(
-            row
-            for row in hypotheses
-            if row["reference_offset_in_read_order"] == "-1"
+            row for row in hypotheses if row["reference_offset_in_read_order"] == "-1"
         )
         self.assertEqual(plus_one["informative_positions"], "25")
         self.assertAlmostEqual(float(plus_one["mean_zero_reference_mass"]), 0.60)

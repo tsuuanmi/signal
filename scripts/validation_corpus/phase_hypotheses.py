@@ -136,7 +136,9 @@ def optional_base(value: str, label: str) -> str | None:
     return value
 
 
-def profile(row: dict[str, str], label: str) -> tuple[float, float, float, float] | None:
+def profile(
+    row: dict[str, str], label: str
+) -> tuple[float, float, float, float] | None:
     raw = tuple(row[f"profile_{base}"] for base in ("a", "c", "g", "t"))
     if all(value == "" for value in raw):
         return None
@@ -164,7 +166,9 @@ def validate_source(phase_dir: Path) -> dict[str, Any]:
     index = json_object(index_path)
     strict_keys(index, SOURCE_INDEX_FIELDS, "poly-C phase index")
     if index["schema_version"] != POLYC_PHASE_SCHEMA_VERSION:
-        raise ValueError(f"unsupported poly-C phase schema: {index['schema_version']!r}")
+        raise ValueError(
+            f"unsupported poly-C phase schema: {index['schema_version']!r}"
+        )
 
     specs = (
         (
@@ -273,11 +277,11 @@ def load_after_observations(
             rows_seen += 1
             parsed = parse_observation(row, line)
             if parsed is not None:
-                groups.setdefault((parsed.read_sha256, parsed.tract_id), []).append(parsed)
+                groups.setdefault((parsed.read_sha256, parsed.tract_id), []).append(
+                    parsed
+                )
     if rows_seen != expected_rows:
-        raise ValueError(
-            f"{path}: expected {expected_rows} rows, found {rows_seen}"
-        )
+        raise ValueError(f"{path}: expected {expected_rows} rows, found {rows_seen}")
 
     for key, rows in groups.items():
         distances = [row.distance for row in rows]
@@ -291,7 +295,9 @@ def load_after_observations(
                 or row.orientation != first.orientation
                 or row.interrupt_aligned_base != first.interrupt_aligned_base
             ):
-                raise ValueError(f"{key}: read/tract metadata changes across observations")
+                raise ValueError(
+                    f"{key}: read/tract metadata changes across observations"
+                )
         rows.sort(key=lambda row: row.distance)
     return groups
 
@@ -384,8 +390,7 @@ def window_rows(
             first = window[0]
             last = window[-1]
             window_id = (
-                f"{first.tract_id}:{first.read_sha256}:"
-                f"{first.distance}-{last.distance}"
+                f"{first.tract_id}:{first.read_sha256}:{first.distance}-{last.distance}"
             )
             zero_masses = [
                 mass(row.profile, row.reference_base)
@@ -437,7 +442,9 @@ def window_rows(
                 )
 
     if not windows:
-        raise ValueError("poly-C phase artifact contains no complete post-tract windows")
+        raise ValueError(
+            "poly-C phase artifact contains no complete post-tract windows"
+        )
     return windows, hypotheses
 
 
