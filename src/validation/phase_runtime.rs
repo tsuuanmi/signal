@@ -35,6 +35,8 @@ struct PhaseRuntimeArtifact {
     index: Vec<u8>,
     windows: Vec<u8>,
     candidates: Vec<u8>,
+    window_count: usize,
+    candidate_count: usize,
 }
 
 #[derive(Debug, Serialize)]
@@ -105,11 +107,10 @@ pub(crate) fn publish(
     let output = output_path(sample_id);
     publish_artifact(&output, &artifact)?;
 
-    let index: PhaseRuntimeIndex = serde_json::from_slice(&artifact.index)?;
     Ok(PhaseRuntimePublication {
         output,
-        windows: index.window_count,
-        candidates: index.candidate_count,
+        windows: artifact.window_count,
+        candidates: artifact.candidate_count,
     })
 }
 
@@ -195,6 +196,8 @@ fn serialize(
         index,
         windows,
         candidates,
+        window_count,
+        candidate_count,
     })
 }
 
