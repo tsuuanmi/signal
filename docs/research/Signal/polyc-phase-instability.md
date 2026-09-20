@@ -32,23 +32,27 @@ Poly-C context is a **read-path property**, not a global locus mask.
 A read contributes to this research for a tract only when validation measurements contain
 an observation at every reference position in the complete tract. This explicit coverage
 rule is safe for circular mtDNA and does not infer continuity from genomic min/max span.
-For every observation on such a read:
-
-- `before` means the observation occurs before the tract in sequencing order;
-- `inside` means the observation lies inside the tract;
-- `after` means the read has already crossed the tract before reaching the observation.
+For call-backed observations, `before` and `after` are derived from the observation's
+call index relative to the minimum/maximum call indexes observed inside the complete
+tract. Reference coordinate alone never decides which side of the tract a call occupies.
+This remains correct when a selected alignment crosses the circular rCRS origin. An
+observation whose reference position lies inside the tract remains `inside`; an
+outside-tract observation without a call index is retained as `unresolved` rather than
+being assigned a side from linear coordinate order.
 
 Therefore the same genomic locus can have different path regions on opposite read
-orientations.
+orientations, and a post-HV1 forward read may remain `after` at positions 1, 253, or 302
+after crossing the rCRS origin.
 
-The signed `read_order_distance_from_tract` is:
+The signed `read_order_distance_from_tract` follows circular rCRS sequencing order:
 
 - negative before the tract;
 - zero inside the tract;
-- positive after the tract.
+- positive after the tract;
+- absent when the outside-tract path side is unresolved.
 
-When source call indexes exist at the relevant tract boundary,
-`call_distance_from_tract` records the equivalent signed distance in call order.
+`call_distance_from_tract` uses the same role and the complete tract call span. Immediate
+previous/next reference neighbors also wrap across 16569/1.
 
 No hard-coded post-tract exclusion or recovery distance is used.
 
@@ -81,8 +85,9 @@ The row preserves:
 - read SHA-256 and assay metadata;
 - selected orientation;
 - tract identity and coordinates;
-- before/inside/after path region;
-- signed genomic and, when available, call-order tract distance;
+- before/inside/after path region, or explicit unresolved status for an outside-tract
+  observation without a call index;
+- signed circular-rCRS and, when available, call-order tract distance;
 - locus reference/state/base/quality/noisy context;
 - normalized reference-oriented A/C/G/T profile and simple `1 - max(profile)` impurity;
 - the reference base immediately before and after the locus in **sequencing order**;
@@ -129,7 +134,7 @@ The first pass derives:
 
 - stable per-read selected orientation and explicit tract-position coverage;
 - reference-base identity by position;
-- tract-boundary and interrupt observations.
+- call indexes across complete tract observations plus interrupt evidence.
 
 The second pass emits only rows for reads that actually span a validated tract and updates
 small summary accumulators.

@@ -16,13 +16,15 @@ from scripts.validation_corpus.model import (
     MEASUREMENT_SCHEMA_VERSION,
     POLYC_PHASE_SCHEMA_VERSION,
 )
-from scripts.validation_corpus.polyc_phase import (
+from scripts.validation_corpus.polyc_geometry import (
     TRACTS,
+    TractCallSpan,
+    covers_complete_tract,
+)
+from scripts.validation_corpus.polyc_phase import (
     ReadContext,
-    path_region,
+    observation_record,
     publish_polyc_phase,
-    read_crosses_tract,
-    read_order_distance,
 )
 
 HV2_REFERENCE = "ACCCCCCCTCCCCCG"
@@ -232,23 +234,48 @@ class PolyCPhaseResearchTests(unittest.TestCase):
             orientation="forward",
         )
         context.tract_positions.update(range(hv2.start_1based, hv2.end_1based + 1))
-        self.assertTrue(read_crosses_tract(context, hv2))
+        self.assertTrue(covers_complete_tract(context.tract_positions, hv2))
 
         context.tract_positions.remove(310)
         context.tract_positions.update({1, 16569})
-        self.assertFalse(read_crosses_tract(context, hv2))
+        self.assertFalse(covers_complete_tract(context.tract_positions, hv2))
 
-    def test_directional_geometry_is_read_order_specific(self) -> None:
-        hv2 = TRACTS[0]
-        self.assertEqual(path_region(hv2, "forward", 302), "before")
-        self.assertEqual(path_region(hv2, "forward", 316), "after")
-        self.assertEqual(path_region(hv2, "reverse", 316), "before")
-        self.assertEqual(path_region(hv2, "reverse", 302), "after")
-        self.assertEqual(read_order_distance(hv2, "forward", 302), -1)
-        self.assertEqual(read_order_distance(hv2, "forward", 316), 1)
-        self.assertEqual(read_order_distance(hv2, "reverse", 316), -1)
-        self.assertEqual(read_order_distance(hv2, "reverse", 302), 1)
-        self.assertEqual(read_order_distance(hv2, "forward", 310), 0)
+    def test_observation_record_preserves_post_hv1_path_across_origin(self) -> None:
+        hv1 = TRACTS[1]
+        context = ReadContext(
+            validation_case_id="case-1",
+            source_group_id="source-1",
+            specimen_group_id="specimen-1",
+            read_sha256=self.forward_sha,
+            amplicon_id="HV1",
+            declared_direction="forward",
+            orientation="forward",
+        )
+        row = {
+            "position_1based": 253,
+            "call_index_0based": 738,
+            "reference_base": "A",
+            "state": "reference",
+            "aligned_base": "A",
+            "quality": 60,
+            "in_noisy_region": False,
+            "profile_a": 0.90,
+            "profile_c": 0.05,
+            "profile_g": 0.03,
+            "profile_t": 0.02,
+        }
+        record = observation_record(
+            row,
+            context,
+            hv1,
+            TractCallSpan(100, 109),
+            {252: "C", 253: "A", 254: "G"},
+        )
+        self.assertEqual(record["path_region"], "after")
+        self.assertEqual(record["read_order_distance_from_tract"], 629)
+        self.assertEqual(record["call_distance_from_tract"], 629)
+        self.assertEqual(record["read_order_previous_reference_base"], "C")
+        self.assertEqual(record["read_order_next_reference_base"], "G")
 
     def test_publishes_directional_raw_features_without_phase_score(self) -> None:
         self.write_corpus()
@@ -267,6 +294,7 @@ class PolyCPhaseResearchTests(unittest.TestCase):
             "the read has a validation observation at every reference position "
             "from tract start through tract end",
         )
+        self.assertIn("circular rCRS", index["method"]["distance_rule"])
         self.assertEqual(
             index["source_corpus_sha256"],
             file_sha256(self.corpus / "index.json"),

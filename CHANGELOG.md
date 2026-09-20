@@ -102,6 +102,8 @@ All notable changes to this project are documented here.
 
 ### Fixed
 
+- Poly-C validation research now derives before/after state from actual call order across the complete tract and computes reference distances/neighbors on circular rCRS, so origin-wrapping reads remain on the correct post-tract path; outside-tract observations without call indexes remain explicitly unresolved instead of falling back to linear coordinates.
+
 - Accept ABIF directory entries whose declared allocation is larger than the logical element payload, including real-world oversized `tdir.1` root-directory allocations, while still bounds-checking the full allocation and rejecting undersized/truncated payloads.
 
 - Anchor `LocusEvidence`/`EvidenceProfile` to the positive total-corrected-signal local event nearest PLOC, with deterministic equal-distance tie handling and PLOC fallback, preventing a stronger neighboring chromatogram event elsewhere in the midpoint window from stealing a locus profile while preserving nucleotide/basecall-independent profile composition.
