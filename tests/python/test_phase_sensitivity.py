@@ -185,6 +185,28 @@ class PhaseSensitivityResearchTests(unittest.TestCase):
             self.assertGreater(float(row["mean_shifted_reference_mass"]), 0.30)
             self.assertLess(float(row["mean_residual_mass"]), 0.10)
 
+
+    def test_records_parameter_sets_with_no_complete_windows(self) -> None:
+        self.write_source(count=20)
+        output = self.root / "sparse-sensitivity"
+        publish_phase_sensitivity(
+            self.phase,
+            output,
+            window_sizes=(25,),
+            window_steps=(5,),
+            max_offsets=(1,),
+        )
+
+        with (output / "parameter_sets.csv").open(
+            "r", encoding="utf-8", newline=""
+        ) as source:
+            parameters = list(csv.DictReader(source))
+        self.assertEqual(parameters[0]["windows"], "0")
+        self.assertEqual(parameters[0]["hypotheses"], "0")
+
+        with (output / "strata.csv").open("r", encoding="utf-8", newline="") as source:
+            self.assertEqual(list(csv.DictReader(source)), [])
+
     def test_parameter_grid_rejects_invalid_or_duplicate_values(self) -> None:
         with self.assertRaisesRegex(ValueError, "must be unique"):
             parameter_grid((15, 15), (5,), (3,))
