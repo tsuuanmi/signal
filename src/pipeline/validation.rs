@@ -19,7 +19,7 @@ use crate::model::sample_evidence::{
 };
 use crate::report;
 use crate::sample as sample_science;
-use crate::validation::{phase_runtime, ValidationExportRequest};
+use crate::validation::{ValidationExportRequest, phase_runtime};
 
 use super::{input, sample_reads};
 
