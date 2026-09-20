@@ -547,9 +547,10 @@ continuous phase evidence joined for development without opening the locked hold
 Development-only feature-family characterization is implemented by
 [phase-error-characterization.md](phase-error-characterization.md) as
 `signal.validation_phase_error_characterization/v1`. It combines the prepared development
-windows/candidates with exact biological-error window links, keeps absolute non-zero mass
-beside structured fractions, and exposes ordered adjacent-window deltas without selecting
-an offset, state, threshold, persistence rule, or recovery rule.
+windows/candidates with the exact evaluator-v2 coverage and biological-error window links,
+keeps unevaluated cases distinct from evaluated no-error-overlap windows, retains absolute
+non-zero mass beside structured fractions, and exposes ordered adjacent-window deltas
+without selecting an offset, state, threshold, persistence rule, or recovery rule.
 
 ## Rust promotion boundary
 
