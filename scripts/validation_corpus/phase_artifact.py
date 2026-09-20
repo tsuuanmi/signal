@@ -106,8 +106,6 @@ def source_offsets(method: Any) -> tuple[int, ...]:
     return tuple(offsets)
 
 
-
-
 @dataclass(frozen=True)
 class PhaseHypothesisParameters:
     window_size: int
@@ -144,6 +142,7 @@ def source_parameters(method: Any) -> PhaseHypothesisParameters:
         max_offset=max_offset,
         offsets=offsets,
     )
+
 
 def validate_source(source_dir: Path) -> tuple[dict[str, Any], tuple[int, ...]]:
     index_path = source_dir / "index.json"
@@ -187,7 +186,8 @@ def validate_source(source_dir: Path) -> tuple[dict[str, Any], tuple[int, ...]]:
         if index[sha_key] != file_sha256(path):
             raise ValueError(f"{filename} SHA-256 mismatch")
         index_count(index[rows_key], f"phase-hypothesis {rows_key}")
-    return index, source_offsets(index["method"])
+    parameters = source_parameters(index["method"])
+    return index, parameters.offsets
 
 
 def parse_window(row: dict[str, str], line: int) -> WindowRecord:
