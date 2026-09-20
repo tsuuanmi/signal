@@ -25,8 +25,6 @@ OBSERVATION_COLUMNS = (
     "amplicon_id",
     "declared_direction",
     "orientation",
-    "read_span_start_1based",
-    "read_span_end_1based",
     "tract_id",
     "tract_start_1based",
     "tract_end_1based",
@@ -106,8 +104,7 @@ class ReadContext:
     amplicon_id: str | None
     declared_direction: str | None
     orientation: str
-    span_start_1based: int
-    span_end_1based: int
+    tract_positions: set[int] = field(default_factory=set)
     special_observations: dict[int, dict[str, Any]] = field(default_factory=dict)
 
 
@@ -277,9 +274,9 @@ def call_distance(
 
 
 def read_crosses_tract(context: ReadContext, tract: PolyCTract) -> bool:
-    return (
-        context.span_start_1based <= tract.start_1based
-        and context.span_end_1based >= tract.end_1based
+    return all(
+        position in context.tract_positions
+        for position in range(tract.start_1based, tract.end_1based + 1)
     )
 
 
@@ -316,6 +313,11 @@ def scan_context(
 ) -> tuple[dict[str, ReadContext], dict[int, str], tuple[PolyCTract, ...]]:
     contexts: dict[str, ReadContext] = {}
     reference_bases: dict[int, str] = {}
+    tract_positions = {
+        position
+        for tract in TRACTS
+        for position in range(tract.start_1based, tract.end_1based + 1)
+    }
     special_positions = {
         position
         for tract in TRACTS
@@ -363,8 +365,6 @@ def scan_context(
                         else None
                     ),
                     orientation=selected_orientation,
-                    span_start_1based=position,
-                    span_end_1based=position,
                 )
                 contexts[read_sha256] = context
             else:
@@ -376,8 +376,8 @@ def scan_context(
                     raise ValueError(
                         f"{read_sha256}: selected orientation changes across rows"
                     )
-                context.span_start_1based = min(context.span_start_1based, position)
-                context.span_end_1based = max(context.span_end_1based, position)
+            if position in tract_positions:
+                context.tract_positions.add(position)
 
             if position in special_positions:
                 if position in context.special_observations:
@@ -458,8 +458,6 @@ def observation_record(
         "amplicon_id": context.amplicon_id,
         "declared_direction": context.declared_direction,
         "orientation": context.orientation,
-        "read_span_start_1based": context.span_start_1based,
-        "read_span_end_1based": context.span_end_1based,
         "tract_id": tract.tract_id,
         "tract_start_1based": tract.start_1based,
         "tract_end_1based": tract.end_1based,

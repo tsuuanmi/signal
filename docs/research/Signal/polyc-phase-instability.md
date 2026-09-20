@@ -29,8 +29,10 @@ is skipped.
 
 Poly-C context is a **read-path property**, not a global locus mask.
 
-A read contributes to this research for a tract only when its selected placed span covers
-the complete tract. For every observation on such a read:
+A read contributes to this research for a tract only when validation measurements contain
+an observation at every reference position in the complete tract. This explicit coverage
+rule is safe for circular mtDNA and does not infer continuity from genomic min/max span.
+For every observation on such a read:
 
 - `before` means the observation occurs before the tract in sequencing order;
 - `inside` means the observation lies inside the tract;
@@ -77,7 +79,7 @@ The row preserves:
 
 - validation case/source/specimen identifiers;
 - read SHA-256 and assay metadata;
-- selected orientation and placed read span;
+- selected orientation;
 - tract identity and coordinates;
 - before/inside/after path region;
 - signed genomic and, when available, call-order tract distance;
@@ -125,7 +127,7 @@ memory.
 
 The first pass derives:
 
-- stable per-read selected orientation and genomic span;
+- stable per-read selected orientation and explicit tract-position coverage;
 - reference-base identity by position;
 - tract-boundary and interrupt observations.
 

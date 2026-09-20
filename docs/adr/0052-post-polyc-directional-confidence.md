@@ -94,8 +94,9 @@ tract should remain conservatively lower-confidence for review/calling purposes.
 ## Research measurement
 
 The implemented local validation tool `scripts/analyze_polyc_phase.py` now measures
-read-path context without changing production behavior. It emits raw before/inside/after
-tract geometry, signed genomic/call-order distance, reference-oriented profile impurity,
+read-path context without changing production behavior. It requires explicit observation
+coverage of every tract reference position (rather than genomic min/max span) and emits raw
+before/inside/after tract geometry, signed genomic/call-order distance, reference-oriented profile impurity,
 previous/current/next reference-base mass, and read-local T310/T16189 evidence for reads
 that span a complete validated rCRS tract.
 

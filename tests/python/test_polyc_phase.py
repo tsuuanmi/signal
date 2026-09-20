@@ -18,8 +18,10 @@ from scripts.validation_corpus.model import (
 )
 from scripts.validation_corpus.polyc_phase import (
     TRACTS,
+    ReadContext,
     path_region,
     publish_polyc_phase,
+    read_crosses_tract,
     read_order_distance,
 )
 
@@ -217,6 +219,24 @@ class PolyCPhaseResearchTests(unittest.TestCase):
             json.dumps(index, indent=2, sort_keys=True) + "\n",
             encoding="utf-8",
         )
+
+    def test_crossing_requires_actual_tract_positions(self) -> None:
+        hv2 = TRACTS[0]
+        context = ReadContext(
+            validation_case_id="case-1",
+            source_group_id="source-1",
+            specimen_group_id="specimen-1",
+            read_sha256=self.forward_sha,
+            amplicon_id="HV2",
+            declared_direction="forward",
+            orientation="forward",
+        )
+        context.tract_positions.update(range(hv2.start_1based, hv2.end_1based + 1))
+        self.assertTrue(read_crosses_tract(context, hv2))
+
+        context.tract_positions.remove(310)
+        context.tract_positions.update({1, 16569})
+        self.assertFalse(read_crosses_tract(context, hv2))
 
     def test_directional_geometry_is_read_order_specific(self) -> None:
         hv2 = TRACTS[0]
