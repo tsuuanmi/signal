@@ -544,6 +544,13 @@ excludes ADR-0057 representation disagreements, and exposes exact read/window/ca
 context only for fit-eligible development cases. This keeps biological outcome labels and
 continuous phase evidence joined for development without opening the locked holdout.
 
+Development-only feature-family characterization is implemented by
+[phase-error-characterization.md](phase-error-characterization.md) as
+`signal.validation_phase_error_characterization/v1`. It combines the prepared development
+windows/candidates with exact biological-error window links, keeps absolute non-zero mass
+beside structured fractions, and exposes ordered adjacent-window deltas without selecting
+an offset, state, threshold, persistence rule, or recovery rule.
+
 ## Rust promotion boundary
 
 If the evidence justifies interpretation, the frozen rule should become a focused Rust
