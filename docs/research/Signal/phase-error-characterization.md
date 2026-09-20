@@ -11,6 +11,8 @@ The artifact consumes only already prepared development research surfaces:
 ```text
 signal.validation_phase_interpretation_dataset/v1
         +
+signal.validation_variant_profile_evaluation/v2
+        +
 signal.validation_variant_phase_context/v1
         ↓
 signal.validation_phase_error_characterization/v1
@@ -80,8 +82,13 @@ missing
 extra+missing
 ```
 
-`none` means only that no exact reviewer-proxy missing/extra disagreement overlaps that
-window. It is not a clean label, true negative, or proof of biological correctness.
+`none` means the case was present in variant-profile evaluation and no exact reviewer-proxy
+missing/extra disagreement overlaps that window. It is not a clean label, true negative,
+or proof of biological correctness.
+
+`not_evaluated` is used when the development case is absent from variant-profile
+evaluation, for example because reviewer proxy truth is unavailable. Such windows are kept
+separate rather than silently joining the no-error-overlap comparison group.
 
 Representation disagreements remain excluded upstream under ADR-0057.
 
@@ -177,6 +184,7 @@ Then publish characterization:
 ```bash
 uv run python scripts/analyze_phase_error_characterization.py \
   --interpretation-dir validation-results/research/phase-interpretation-dataset/phase-study-v1 \
+  --evaluation-dir validation-results/variant-profile/adr0057-v2 \
   --context-dir validation-results/research/variant-phase-context/phase-study-v1 \
   --output-dir validation-results/research/phase-error-characterization/phase-study-v1
 ```
@@ -192,9 +200,10 @@ validation-results/research/phase-error-characterization/<study>/
 └── strata.csv
 ```
 
-The index is SHA-256 bound to both prepared source artifacts and verifies that corpus,
-poly-C phase, phase hypotheses, Signal version, manifest, reference, configuration, and
-partition declarations agree exactly.
+The index is SHA-256 bound to all three prepared source artifacts. The evaluator index must
+match the exact evaluator SHA-256 referenced by variant-phase context; corpus, poly-C
+phase, phase hypotheses, Signal version, manifest, reference, configuration, and partition
+declarations must also agree exactly.
 
 ## Scientific boundary
 
@@ -205,7 +214,7 @@ This artifact does not:
 - define a phase score, confidence, probability, state, classifier, threshold, or cutoff;
 - infer persistence or recovery;
 - label an error as phase-caused;
-- treat `overlap_context=none` as clean truth;
+- treat `overlap_context=none` as clean truth or merge unevaluated cases into that group;
 - infer genotype, indel length, length heteroplasmy, contamination, or artifact mechanism;
 - change read/variant eligibility, sample reconciliation, unit-mass contribution, or
   no-call behavior;
