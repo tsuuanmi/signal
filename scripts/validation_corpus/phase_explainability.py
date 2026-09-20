@@ -157,7 +157,9 @@ def envelope(
     explainable_fractions: list[float] = []
     for candidate in informative:
         if candidate.shifted_mass is None or candidate.residual_mass is None:
-            raise ValueError(f"{window.window_id}: informative candidate mass is missing")
+            raise ValueError(
+                f"{window.window_id}: informative candidate mass is missing"
+            )
         nonzero = candidate.shifted_mass + candidate.residual_mass
         if nonzero > 0.0:
             explainable_fractions.append(candidate.shifted_mass / nonzero)
@@ -263,7 +265,9 @@ def read_rows(windows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 or row["orientation"] != first["orientation"]
                 or row["interrupt_aligned_base"] != first["interrupt_aligned_base"]
             ):
-                raise ValueError(f"{key}: window metadata changes across one read/tract")
+                raise ValueError(
+                    f"{key}: window metadata changes across one read/tract"
+                )
 
         impurities = [float(row["mean_profile_impurity"]) for row in rows]
         shifted_max = optional_values(rows, "candidate_shifted_reference_mass_max")
@@ -297,9 +301,7 @@ def read_rows(windows: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "mean_window_noisy_fraction": mean(
                     [float(row["noisy_fraction"]) for row in rows]
                 ),
-                "mean_candidate_shifted_reference_mass_max": mean_or_none(
-                    shifted_max
-                ),
+                "mean_candidate_shifted_reference_mass_max": mean_or_none(shifted_max),
                 "max_candidate_shifted_reference_mass_max": max_or_none(shifted_max),
                 "mean_candidate_residual_mass_min": mean_or_none(residual_min),
                 "max_candidate_residual_mass_min": max_or_none(residual_min),
