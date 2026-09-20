@@ -48,10 +48,12 @@ pub(crate) fn measure(
     reference: &Reference,
 ) -> Result<ReadPhaseEvidence> {
     if !geometry::supported_reference(reference)? {
-        return Ok(ReadPhaseEvidence {
+        let evidence = ReadPhaseEvidence {
             applicability: PhaseApplicability::NotApplicable,
             tracts: Vec::new(),
-        });
+        };
+        validate_evidence(&evidence)?;
+        return Ok(evidence);
     }
 
     let mapped = mapped_observations(alignment, signal, reference)?;
@@ -73,10 +75,135 @@ pub(crate) fn measure(
         .map(|tract| tract_evidence(tract, alignment, &by_reference))
         .collect::<Result<Vec<_>>>()?;
 
-    Ok(ReadPhaseEvidence {
+    let evidence = ReadPhaseEvidence {
         applicability: PhaseApplicability::Applicable,
         tracts,
-    })
+    };
+    validate_evidence(&evidence)?;
+    Ok(evidence)
+}
+
+fn validate_evidence(evidence: &ReadPhaseEvidence) -> Result<()> {
+    match evidence.applicability {
+        PhaseApplicability::NotApplicable => {
+            if !evidence.tracts.is_empty() {
+                return Err(Error::Phase(
+                    "non-applicable phase evidence must not contain tract records".into(),
+                ));
+            }
+            return Ok(());
+        }
+        PhaseApplicability::Applicable => {
+            if evidence.tracts.len() != TRACTS.len() {
+                return Err(Error::Phase(format!(
+                    "applicable phase evidence must contain {} tract records",
+                    TRACTS.len()
+                )));
+            }
+        }
+    }
+
+    for (index, tract) in evidence.tracts.iter().enumerate() {
+        if tract.tract != TRACTS[index].id {
+            return Err(Error::Phase(
+                "phase tract records are not in canonical method order".into(),
+            ));
+        }
+        if tract
+            .interrupt_aligned_base
+            .is_some_and(|base| canonical_index(base).is_none())
+        {
+            return Err(Error::Phase(
+                "phase interrupt evidence must be canonical A/C/G/T".into(),
+            ));
+        }
+
+        match tract.availability {
+            PhaseEvidenceAvailability::Insufficient(reason) => {
+                match reason {
+                    PhaseInsufficiency::NoTractCoverage
+                    | PhaseInsufficiency::IncompleteTractCoverage
+                    | PhaseInsufficiency::NoCallBackedTractSpan
+                    | PhaseInsufficiency::NoCompleteProfileWindow => {}
+                }
+                if !tract.windows.is_empty() {
+                    return Err(Error::Phase(
+                        "insufficient phase evidence must not contain windows".into(),
+                    ));
+                }
+            }
+            PhaseEvidenceAvailability::Measured => {
+                if tract.windows.is_empty() {
+                    return Err(Error::Phase(
+                        "measured phase evidence must contain at least one window".into(),
+                    ));
+                }
+            }
+        }
+
+        for window in &tract.windows {
+            if window.profile_observations != super::WINDOW_PROFILE_OBSERVATIONS
+                || window.start_distance_after_tract == 0
+                || window.start_distance_after_tract > window.end_distance_after_tract
+                || window.start_call_index_0based > window.end_call_index_0based
+                || !unit_interval(window.mean_profile_impurity)
+                || !unit_interval(window.mean_zero_reference_mass)
+                || window.candidates.len() != super::CANDIDATE_OFFSETS.len()
+            {
+                return Err(Error::Phase(
+                    "phase window evidence violates the v1 method contract".into(),
+                ));
+            }
+
+            for (candidate_index, candidate) in window.candidates.iter().enumerate() {
+                if candidate.reference_offset_in_read_order
+                    != super::CANDIDATE_OFFSETS[candidate_index]
+                {
+                    return Err(Error::Phase(
+                        "phase candidates are not in canonical offset order".into(),
+                    ));
+                }
+                if candidate.informative_positions > window.profile_observations {
+                    return Err(Error::Phase(
+                        "phase candidate informative count exceeds window size".into(),
+                    ));
+                }
+
+                let masses = [
+                    candidate.mean_zero_reference_mass,
+                    candidate.mean_shifted_reference_mass,
+                    candidate.mean_residual_mass,
+                ];
+                if candidate.informative_positions == 0 {
+                    if masses.iter().any(Option::is_some) {
+                        return Err(Error::Phase(
+                            "non-informative phase candidate must not contain mean masses".into(),
+                        ));
+                    }
+                    continue;
+                }
+                let [Some(zero), Some(shifted), Some(residual)] = masses else {
+                    return Err(Error::Phase(
+                        "informative phase candidate must contain all mean masses".into(),
+                    ));
+                };
+                if !unit_interval(zero)
+                    || !unit_interval(shifted)
+                    || !unit_interval(residual)
+                    || (zero + shifted + residual - 1.0).abs() > 1e-9
+                {
+                    return Err(Error::Phase(
+                        "phase candidate mean masses must be finite and sum to one".into(),
+                    ));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+fn unit_interval(value: f64) -> bool {
+    value.is_finite() && (0.0..=1.0).contains(&value)
 }
 
 fn mapped_observations(
