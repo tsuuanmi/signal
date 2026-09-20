@@ -399,10 +399,7 @@ fn insufficient(
     }
 }
 
-fn interrupt_base(
-    tract: Tract,
-    by_reference: &BTreeMap<usize, MappedObservation>,
-) -> Option<char> {
+fn interrupt_base(tract: Tract, by_reference: &BTreeMap<usize, MappedObservation>) -> Option<char> {
     by_reference
         .get(&tract.interrupt_0based)
         .filter(|observation| observation.call_index_0based.is_some())
@@ -565,7 +562,6 @@ fn mean(values: &[f64]) -> f64 {
     values.iter().sum::<f64>() / values.len() as f64
 }
 
-
 #[cfg(test)]
 mod tests {
     use crate::model::alignment::{
@@ -656,10 +652,7 @@ mod tests {
         }
     }
 
-    fn alignment(
-        orientation: Orientation,
-        columns: Vec<AlignmentColumn>,
-    ) -> Alignment {
+    fn alignment(orientation: Orientation, columns: Vec<AlignmentColumn>) -> Alignment {
         Alignment {
             orientation,
             score: 0,
@@ -713,8 +706,8 @@ mod tests {
                 original_call_index_0based: Some(call),
                 reference_index_0based: Some(position),
             });
-            let profile = (missing_profile_distance != Some(distance))
-                .then(|| mixture(base, shifted));
+            let profile =
+                (missing_profile_distance != Some(distance)).then(|| mixture(base, shifted));
             profiles.push(profile);
             call += 1;
         }
@@ -762,18 +755,8 @@ mod tests {
             .find(|candidate| candidate.reference_offset_in_read_order == 1)
             .expect("+1 candidate");
         assert_eq!(plus_one.informative_positions, 25);
-        assert!(
-            (plus_one
-                .mean_shifted_reference_mass
-                .expect("shifted mass")
-                - 0.35)
-                .abs()
-                < 1e-12
-        );
-        assert!(
-            (plus_one.mean_residual_mass.expect("residual mass") - 0.05).abs()
-                < 1e-12
-        );
+        assert!((plus_one.mean_shifted_reference_mass.expect("shifted mass") - 0.35).abs() < 1e-12);
+        assert!((plus_one.mean_residual_mass.expect("residual mass") - 0.05).abs() < 1e-12);
         Ok(())
     }
 
@@ -812,9 +795,7 @@ mod tests {
 
         assert_eq!(
             hv2.availability,
-            PhaseEvidenceAvailability::Insufficient(
-                PhaseInsufficiency::IncompleteTractCoverage
-            )
+            PhaseEvidenceAvailability::Insufficient(PhaseInsufficiency::IncompleteTractCoverage)
         );
         assert!(hv2.windows.is_empty());
         Ok(())
@@ -853,9 +834,7 @@ mod tests {
 
         assert_eq!(
             hv2.availability,
-            PhaseEvidenceAvailability::Insufficient(
-                PhaseInsufficiency::NoCompleteProfileWindow
-            )
+            PhaseEvidenceAvailability::Insufficient(PhaseInsufficiency::NoCompleteProfileWindow)
         );
         assert!(hv2.windows.is_empty());
         Ok(())
