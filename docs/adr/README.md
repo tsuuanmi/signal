@@ -55,3 +55,4 @@
 | [0051](0051-validation-curation-queue.md) | Separate immutable curation evidence from editable review decisions | Accepted |
 | [0052](0052-post-polyc-directional-confidence.md) | Treat post-poly-C evidence as directionally lower-confidence when read phase is unstable | Accepted |
 | [0053](0053-public-differential-locus-signal-evidence.md) | Expose concise differential-locus signal evidence in sample output | Accepted |
+| [0054](0054-structured-phase-explainability.md) | Separate structured phase explainability from unstructured signal degradation | Accepted |
