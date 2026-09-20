@@ -3,9 +3,9 @@ from __future__ import annotations
 import unittest
 from pathlib import Path
 
-from validation_corpus.phase_interpretation_dataset import PartitionPlan
-from validation_corpus.research_model import ResearchCase, ResearchCorpus
-from validation_corpus.variant_phase_context import (
+from scripts.validation_corpus.phase_interpretation_dataset import PartitionPlan
+from scripts.validation_corpus.research_model import ResearchCase, ResearchCorpus
+from scripts.validation_corpus.variant_phase_context import (
     build_rows,
     event_footprint,
     parse_event,
