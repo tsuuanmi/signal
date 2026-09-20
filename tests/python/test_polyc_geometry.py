@@ -42,9 +42,7 @@ class PolyCGeometryTests(unittest.TestCase):
         for position, call_index in ((16194, 110), (16569, 485), (1, 486), (253, 738)):
             region = path_region(hv1, position, call_index, span)
             self.assertEqual(region, "after")
-            reference_distance = read_order_distance(
-                hv1, "forward", position, region
-            )
+            reference_distance = read_order_distance(hv1, "forward", position, region)
             call_index_distance = call_distance(span, call_index, region)
             if reference_distance is None or call_index_distance is None:
                 self.fail("call-backed post-tract distances must be present")
@@ -67,9 +65,7 @@ class PolyCGeometryTests(unittest.TestCase):
         for position, call_index in ((302, 213), (1, 514), (16569, 515), (16197, 887)):
             region = path_region(hv2, position, call_index, span)
             self.assertEqual(region, "after")
-            reference_distance = read_order_distance(
-                hv2, "reverse", position, region
-            )
+            reference_distance = read_order_distance(hv2, "reverse", position, region)
             call_index_distance = call_distance(span, call_index, region)
             if reference_distance is None or call_index_distance is None:
                 self.fail("call-backed post-tract distances must be present")
