@@ -122,5 +122,4 @@ This artifact does not:
 - tune against holdout truth;
 - modify production Rust behavior or public result schemas.
 
-Only after parameter sensitivity and unexplained high-impurity read analysis should a
-separate promotion discussion consider any production phase-state model.
+Per-window/read residual explainability is handled by [polyc-phase-explainability.md](polyc-phase-explainability.md). Recurrent-locus context remains the final descriptive ADR-0054 research task before any separate promotion discussion considers a production phase-state model.

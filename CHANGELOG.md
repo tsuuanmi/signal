@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Post-poly-C phase explainability research now publishes `signal.validation_phase_explainability/v1` with threshold-free candidate-envelope summaries at window and read levels. The artifact exposes shifted-reference/residual extrema, ranges, and maximum non-zero-mass explainability without emitting a winning offset, review label, threshold, or production behavior.
+
 - Post-poly-C parameter-sensitivity research now publishes `signal.validation_phase_sensitivity/v1`, evaluating a full-factorial window-size/stride/max-offset grid through the authoritative phase-hypothesis engine and characterization aggregation while retaining every candidate independently and selecting no preferred parameter set or threshold.
 
 - Poly-C opposite-orientation research now publishes `signal.validation_polyc_orientation_controls/v2` directly from the completed validation corpus, retaining every eligible same-case/same-locus post-tract read and opposite selected-orientation pre-tract control without pair selection or Cartesian expansion. The artifact preserves PCR/run/amplicon provenance and descriptive role profile geometry, including mean-profile Total Variation, without thresholds or production interpretation.
