@@ -75,7 +75,7 @@ class PhaseSensitivityResearchTests(unittest.TestCase):
                 "state": "reference",
                 "aligned_base": reference,
                 "quality": 60,
-                "in_noisy_region": False,
+                "in_noisy_region": "false",
                 "profile_a": masses["A"],
                 "profile_c": masses["C"],
                 "profile_g": masses["G"],
@@ -84,7 +84,7 @@ class PhaseSensitivityResearchTests(unittest.TestCase):
                 "interrupt_state": "alternate",
                 "interrupt_aligned_base": "C",
                 "interrupt_call_index_0based": 100,
-                "interrupt_in_noisy_region": False,
+                "interrupt_in_noisy_region": "false",
             }
         )
         return row
