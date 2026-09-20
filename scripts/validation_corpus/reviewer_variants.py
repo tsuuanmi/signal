@@ -201,6 +201,9 @@ def extract_ground_truth(source_tsv: Path, output_path: Path) -> None:
             }
         )
 
+    if not records:
+        raise ValueError(f"{source_tsv}: no reviewer records")
+
     artifact = {
         "schema_version": REVIEWER_VARIANT_GROUND_TRUTH_SCHEMA_VERSION,
         "truth_status": "reviewer_derived_proxy",
@@ -235,6 +238,8 @@ def load_ground_truth(path: Path) -> dict[str, Any]:
     records = value.get("records")
     if not isinstance(records, list) or value.get("record_count") != len(records):
         raise ValueError(f"{path}: invalid record_count/records")
+    if not records:
+        raise ValueError(f"{path}: no reviewer records")
 
     case_ids: set[str] = set()
     for index, record in enumerate(records):
