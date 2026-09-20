@@ -9,6 +9,7 @@ Exports deterministic local per-locus measurements for empirical validation and 
 - Load validation traces/reference/config through the same input path used by `sample`.
 - Reuse `sample_reads` and production sample aggregation to validate the complete read set.
 - Request all-covered locus evidence from the authoritative sample-locus builder.
+- Log aggregate internal phase-evidence applicability, availability, and window coverage for validation runs without changing the validation JSONL schema.
 - Serialize one `signal.validation_locus/v2` JSON object per covered locus in deterministic position order, including one strict per-read diagnostic record that exposes existing call/PLOC/primary-peak/signal-event provenance and reference-oriented channel evidence.
 - Publish atomically without overwrite to `validation-results/<sample-id>.jsonl`.
 - Keep truth labels and candidate thresholds outside the exporter.

@@ -28,6 +28,7 @@ pub(crate) fn build_analysis(completed: CompletedAnalysis) -> Result<AnalysisRes
         signal,
         quality,
         alignment,
+        phase: _,
         variants,
     } = read;
     if reference_sha256 != reference.sequence_sha256 {

@@ -16,10 +16,8 @@ AB1 -> decode -> basecalling -> signal_processing -> quality_control
                                                    |
                                                    +-> basecall report v2
                                                    |
-FASTA -----------------------------------------> alignment -> variant_calling
-                                                              |
-                                                              v
-                                                       ReadObservation
+FASTA -----------------------------------------> alignment -+-> variant_calling -+
+                                                           +-> phase -----------+-> ReadObservation
                                                          /          \
                                                         v            v
                                                analysis report v7   SampleEvidence
@@ -51,19 +49,21 @@ The shared `checksum` module provides the stable SHA-256 identities used by
 | `signal_processing` | rolling sample-domain SNR, basecall-independent `LocusEvidence`/`EvidenceProfile`, trace-integrity observations, and merged candidate-noisy regions | channel mutation, calibrated quality, artifact reclassification, basecall classification, reference interpretation, and variant eligibility |
 | `quality_control` | penalties, relative scores, end trimming | Phred calibration and variant filtering |
 | `alignment` | fixed-point evidence-profile Gotoh scoring, traceback, orientation, circular projection | variant extraction and evidence mutation |
+| `phase` | exact-rCRS HV1/HV2 read-path geometry and continuous 25-profile-window candidate phase evidence after selected alignment | alignment feedback, generic homopolymer classification, phase state, weighting, and variant mutation |
 | `variant_calling` | SNV/indel extraction, call/reference mapping, normalization, configured region/supporting-evidence filters | genotype and clinical interpretation |
 | `sample` | deterministic read ordering, run-length reference coverage topology, pairwise reference-coordinate overlap admission, sparse differential-locus evidence, reference-oriented preservation of basecall-independent call profiles, and normalized-variant aggregation | input loading, filename/HV pairing, consensus and interpretation |
-| `report` | analysis-v7/basecalls-v2/sample-evidence-v7 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
+| `report` | analysis-v7/basecalls-v2/sample-evidence-v8 projection, shared serialization, atomic publish | scientific decisions and compatibility output |
 | `pipeline` | command sequencing plus shared reference-independent `read` and reference-guided `observation` paths | algorithm internals |
 
 Dependencies point toward `model`, `config`, and `error`; cycles are forbidden. Shared `locus` geometry is reference-free and classification-free. `signal_processing` derives locus profiles from `Chromatogram` channel evidence directly; alignment consumes those immutable profiles for placement without mutating them or the upstream base calls. Existing rolling noisy-window analysis still consumes basecall window records. No algorithm module depends back on signal processing.
 
 ## Promoted read-local phase boundary
 
-ADR-0055 defines a future production boundary for read-local rCRS HV1/HV2 poly-C phase
-evidence. The boundary is **accepted but not implemented**.
+ADR-0055 defines the production boundary for read-local rCRS HV1/HV2 poly-C phase
+evidence, and ADR-0056 implements that boundary as continuous internal
+`signal.polyc_phase/v1` measurement.
 
-If implemented, phase measurement belongs after selected reference placement because it
+Phase measurement belongs after selected reference placement because it
 depends on selected sequencing orientation/path and local reference context. It remains a
 sibling read interpretation rather than an input to alignment or variant calling:
 
@@ -75,10 +75,11 @@ selected alignment ───┤
                            ReadObservation
 ```
 
-The current executable pipeline does not yet contain a `phase` module or phase field.
-Future measurement cannot feed back into alignment, require an F/R partner, infer stability
-from insufficient evidence, or alter structural contribution eligibility/unit-mass sample
-support without a separate validated policy decision.
+The executable pipeline now contains `src/phase/` and retains internal
+`ReadObservation.phase`. Measurement cannot feed back into alignment, require an F/R
+partner, infer stability from insufficient evidence, or alter structural contribution
+eligibility/unit-mass sample support without a separate validated policy decision. Public
+analysis/sample schemas remain unchanged.
 
 ## Coordinates and strand
 

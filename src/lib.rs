@@ -17,6 +17,7 @@ pub mod error;
 mod locus;
 mod logger;
 pub mod model;
+mod phase;
 mod pipeline;
 mod quality_control;
 mod reference;

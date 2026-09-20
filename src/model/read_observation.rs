@@ -2,6 +2,7 @@
 
 use crate::model::alignment::Alignment;
 use crate::model::basecalls::BaseCalls;
+use crate::model::phase::ReadPhaseEvidence;
 use crate::model::quality::QualityControlResult;
 use crate::model::signal::SignalAnalysis;
 use crate::model::variant::VariantCallingResult;
@@ -22,5 +23,6 @@ pub(crate) struct ReadObservation {
     pub(crate) signal: SignalAnalysis,
     pub(crate) quality: QualityControlResult,
     pub(crate) alignment: Alignment,
+    pub(crate) phase: ReadPhaseEvidence,
     pub(crate) variants: VariantCallingResult,
 }

@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Internal `signal.polyc_phase/v1` now measures read-local post-HV1/HV2 candidate phase evidence after selected alignment for the exact circular rCRS identity. It retains explicit applicability/insufficiency, 25-profile windows at stride 5, and complete ±1..±5 zero/shifted/residual candidate curves on `ReadObservation` without changing calls, variants, sample contribution, configuration, or public JSON schemas.
+
 - ADR-0055 promotes the completed poly-C research into a read-local production architecture boundary: future phase evidence is downstream of selected alignment, initially limited to verified rCRS HV1/HV2 contexts, keeps not-applicable/insufficient/measured availability distinct from interpretation, and cannot change variants or unit-mass sample contribution without a separate validated policy. No detector, `PhaseState`, threshold, weight, config key, or public schema is introduced.
 
 - Recurrent-locus phase research now publishes `signal.validation_phase_recurrent_loci/v1`, hash-binding the source poly-C phase and phase-hypothesis artifacts and reconstructing exact profile-bearing window membership for rCRS 253/297/302/16194/16197 before emitting complete candidate curves plus per-locus candidate contributions. Missing-profile loci remain explicit with zero containing windows; no interval approximation, winning offset, score, threshold, truth label, or production behavior is introduced.

@@ -54,6 +54,9 @@ pub enum Error {
     /// Variant extraction or normalization failed.
     #[error("variant calling failed: {0}")]
     Variant(String),
+    /// Read-local post-poly-C phase measurement failed.
+    #[error("phase measurement failed: {0}")]
+    Phase(String),
     /// Sample-level read evidence is inconsistent or invalid.
     #[error("sample evidence failed: {0}")]
     Sample(String),
