@@ -251,7 +251,7 @@ def load_ground_truth(path: Path) -> dict[str, Any]:
         if case_id in case_ids:
             raise ValueError(f"{path}: duplicate validation_case_id {case_id!r}")
         if not isinstance(raw, str) or not isinstance(variants, list):
-            raise ValueError(f"{path}: record {index} has invalid reviewer variants")
+            raise TypeError(f"{path}: record {index} has invalid reviewer variants")
         if not all(isinstance(token, str) for token in variants):
             raise ValueError(f"{path}: record {index} has non-string reviewer token")
         if variants != raw.split():
