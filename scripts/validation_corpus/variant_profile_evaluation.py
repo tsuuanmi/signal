@@ -317,14 +317,24 @@ def contiguous_groups(
     indices: set[int],
     build: Callable[[tuple[int, ...]], MutationGroup | None],
 ) -> list[MutationGroup]:
-    """Enumerate deterministic contiguous groups from one unmatched event ordering."""
+    """Enumerate source-contiguous groups from the unmatched event indices."""
     ordered = sorted(indices)
     groups: list[MutationGroup] = []
-    for start in range(len(ordered)):
-        for stop in range(start + 1, len(ordered) + 1):
-            group = build(tuple(ordered[start:stop]))
+    for start, first in enumerate(ordered):
+        current = [first]
+        group = build(tuple(current))
+        if group is not None:
+            groups.append(group)
+
+        previous = first
+        for index in ordered[start + 1 :]:
+            if index != previous + 1:
+                break
+            current.append(index)
+            group = build(tuple(current))
             if group is not None:
                 groups.append(group)
+            previous = index
     return groups
 
 
