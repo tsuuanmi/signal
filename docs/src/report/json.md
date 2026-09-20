@@ -7,13 +7,13 @@ Assembles compact `signal.analysis/v7` and provides deterministic JSON serializa
 ## Responsibilities
 
 - Validate completed read/reference identity consistency.
-- Project read/trim, trace-integrity/signal-quality, selected post-trim alignment, normalized variants, and warnings.
+- Project read/trim, trace-integrity/signal-quality, selected post-trim alignment, normalized variants, and warnings while intentionally keeping internal phase evidence out of the public v7 schema.
 - Pass the selected alignment orientation into variant-call projection so public base/peak evidence is reference-oriented.
 - Serialize typed results deterministically with a trailing newline.
 
 ## Non-responsibilities
 
-No input loading, scientific stage execution, compatibility output, or filesystem publication.
+No input loading, scientific stage execution, phase interpretation/projection, compatibility output, or filesystem publication.
 
 ## Invariants
 
