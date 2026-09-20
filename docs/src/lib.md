@@ -26,7 +26,7 @@ Pipeline errors are preserved for the binary boundary.
 ## Dependencies
 
 - `cli`, `config`, `error`, `model`, and `validation` are public.
-- `alignment`, `basecalling`, `locus`, `logger`, `pipeline`, `quality_control`, `reference`, `report`, `sample`, `signal_processing`, `trace`, and `variant_calling` are private.
+- `alignment`, `basecalling`, `locus`, `logger`, `phase`, `pipeline`, `quality_control`, `reference`, `report`, `sample`, `signal_processing`, `trace`, and `variant_calling` are private.
 
 ## Apollo mapping
 
