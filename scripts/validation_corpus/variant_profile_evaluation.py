@@ -32,12 +32,16 @@ SAMPLE_COLUMNS = (
     "sample_id",
     "validation_case_id",
     "signal_result_sha256",
-    "reviewer_variants",
-    "signal_variants",
-    "matched_variants",
-    "representation_disagreements",
-    "missing_variants",
-    "extra_variants",
+    "reviewer_source_events",
+    "signal_source_events",
+    "canonical_reviewer_groups",
+    "canonical_signal_groups",
+    "matched_groups",
+    "representation_groups",
+    "collapsed_reviewer_events",
+    "collapsed_signal_events",
+    "missing_groups",
+    "extra_groups",
     "exact_profile",
 )
 
@@ -46,10 +50,12 @@ DIFFERENCE_COLUMNS = (
     "validation_case_id",
     "difference",
     "reviewer_tokens",
-    "signal_position",
-    "signal_reference",
-    "signal_alternate",
-    "signal_kind",
+    "reviewer_positions",
+    "reviewer_events",
+    "signal_positions",
+    "signal_events",
+    "reviewer_event_count",
+    "signal_event_count",
 )
 
 
@@ -61,6 +67,25 @@ class SignalVariant:
     reference: str
     alternate: str
     kind: str
+
+
+@dataclass(frozen=True)
+class VariantMatch:
+    """One exact or representation-equivalent comparison group."""
+
+    reviewer_indices: tuple[int, ...]
+    signal_indices: tuple[int, ...]
+    representation_disagreement: bool
+
+
+@dataclass(frozen=True)
+class MutationGroup:
+    """One unambiguous contiguous event group and its resulting sequence."""
+
+    indices: tuple[int, ...]
+    mutation: str
+    start: int
+    end: int
 
 
 def sequence_sha256(sequence: str) -> str:
@@ -224,15 +249,153 @@ def signal_mutation(variant: SignalVariant, reference: str) -> str:
     )
 
 
+def event_span(position: int, reference_allele: str) -> tuple[int, int]:
+    """Return the zero-based half-open reference span of one normalized event."""
+    start = position - 1
+    return start, start + len(reference_allele)
+
+
+def apply_event_group(
+    reference: str,
+    events: tuple[tuple[int, str, str], ...],
+) -> str | None:
+    """Apply non-overlapping reference-coordinate events or return None."""
+    normalized: list[tuple[int, int, str]] = []
+    for position, reference_allele, alternate in events:
+        validate_reference_allele(position, reference_allele, reference)
+        start, end = event_span(position, reference_allele)
+        normalized.append((start, end, alternate))
+
+    normalized.sort()
+    for left, right in zip(normalized, normalized[1:], strict=False):
+        if right[0] < left[1]:
+            return None
+
+    mutated = reference
+    for start, end, alternate in reversed(normalized):
+        mutated = mutated[:start] + alternate + mutated[end:]
+    return mutated
+
+
+def reviewer_group(
+    reviewer: list[ReviewerVariant],
+    indices: tuple[int, ...],
+    reference: str,
+) -> MutationGroup | None:
+    """Build one unambiguous reviewer group for exact haplotype comparison."""
+    events: list[tuple[int, str, str]] = []
+    starts: list[int] = []
+    ends: list[int] = []
+    for index in indices:
+        variant = reviewer[index]
+        if len(variant.alternates) != 1:
+            return None
+        alternate = next(iter(variant.alternates))
+        events.append((variant.position, variant.reference, alternate))
+        start, end = event_span(variant.position, variant.reference)
+        starts.append(start)
+        ends.append(end)
+
+    mutation = apply_event_group(reference, tuple(events))
+    if mutation is None:
+        return None
+    return MutationGroup(indices, mutation, min(starts), max(ends))
+
+
+def signal_group(
+    signal: list[SignalVariant],
+    indices: tuple[int, ...],
+    reference: str,
+) -> MutationGroup | None:
+    """Build one Signal group for exact haplotype comparison."""
+    events = tuple(
+        (signal[index].position, signal[index].reference, signal[index].alternate)
+        for index in indices
+    )
+    mutation = apply_event_group(reference, events)
+    if mutation is None:
+        return None
+    spans = [
+        event_span(signal[index].position, signal[index].reference) for index in indices
+    ]
+    return MutationGroup(
+        indices,
+        mutation,
+        min(start for start, _ in spans),
+        max(end for _, end in spans),
+    )
+
+
+def contiguous_groups(
+    indices: set[int],
+    build: Any,
+) -> list[MutationGroup]:
+    """Enumerate deterministic contiguous groups from one unmatched event ordering."""
+    ordered = sorted(indices)
+    groups: list[MutationGroup] = []
+    for start in range(len(ordered)):
+        for stop in range(start + 1, len(ordered) + 1):
+            group = build(tuple(ordered[start:stop]))
+            if group is not None:
+                groups.append(group)
+    return groups
+
+
+def representation_group_matches(
+    reviewer: list[ReviewerVariant],
+    signal: list[SignalVariant],
+    reference: str,
+    unmatched_reviewer: set[int],
+    unmatched_signal: set[int],
+) -> list[VariantMatch]:
+    """Match remaining local event groups by exact resulting haplotype."""
+    reviewer_groups = contiguous_groups(
+        unmatched_reviewer,
+        lambda indices: reviewer_group(reviewer, indices, reference),
+    )
+    signal_groups = contiguous_groups(
+        unmatched_signal,
+        lambda indices: signal_group(signal, indices, reference),
+    )
+
+    signal_by_mutation: dict[str, list[MutationGroup]] = {}
+    for group in signal_groups:
+        signal_by_mutation.setdefault(group.mutation, []).append(group)
+
+    candidates: list[tuple[int, int, tuple[int, ...], tuple[int, ...]]] = []
+    for expected in reviewer_groups:
+        for observed in signal_by_mutation.get(expected.mutation, ()):
+            if len(expected.indices) == 1 and len(observed.indices) == 1:
+                continue
+            span = max(expected.end, observed.end) - min(expected.start, observed.start)
+            explained = len(expected.indices) + len(observed.indices)
+            candidates.append(
+                (span, -explained, expected.indices, observed.indices)
+            )
+
+    matches: list[VariantMatch] = []
+    for _, _, reviewer_indices, signal_indices in sorted(candidates):
+        if not all(index in unmatched_reviewer for index in reviewer_indices):
+            continue
+        if not all(index in unmatched_signal for index in signal_indices):
+            continue
+        unmatched_reviewer.difference_update(reviewer_indices)
+        unmatched_signal.difference_update(signal_indices)
+        matches.append(
+            VariantMatch(reviewer_indices, signal_indices, True)
+        )
+    return matches
+
+
 def compare_variants(
     reviewer: list[ReviewerVariant],
     signal: list[SignalVariant],
     reference: str,
-) -> tuple[list[tuple[int, int, bool]], list[int], list[int]]:
-    """Match exact identities first, then representation-equivalent single events."""
+) -> tuple[list[VariantMatch], list[int], list[int]]:
+    """Match exact events, equivalent events, then equivalent local event groups."""
     unmatched_reviewer = set(range(len(reviewer)))
     unmatched_signal = set(range(len(signal)))
-    matches: list[tuple[int, int, bool]] = []
+    matches: list[VariantMatch] = []
 
     for reviewer_index in range(len(reviewer)):
         identities = reviewer_identities(reviewer[reviewer_index])
@@ -248,7 +411,9 @@ def compare_variants(
             continue
         unmatched_reviewer.remove(reviewer_index)
         unmatched_signal.remove(exact)
-        matches.append((reviewer_index, exact, False))
+        matches.append(
+            VariantMatch((reviewer_index,), (exact,), False)
+        )
 
     for reviewer_index in sorted(unmatched_reviewer.copy()):
         expected = reviewer_mutations(reviewer[reviewer_index], reference)
@@ -264,10 +429,67 @@ def compare_variants(
             continue
         unmatched_reviewer.remove(reviewer_index)
         unmatched_signal.remove(equivalent)
-        matches.append((reviewer_index, equivalent, True))
+        matches.append(
+            VariantMatch((reviewer_index,), (equivalent,), True)
+        )
 
+    matches.extend(
+        representation_group_matches(
+            reviewer,
+            signal,
+            reference,
+            unmatched_reviewer,
+            unmatched_signal,
+        )
+    )
+    matches.sort(
+        key=lambda match: (
+            match.reviewer_indices,
+            match.signal_indices,
+            match.representation_disagreement,
+        )
+    )
     return matches, sorted(unmatched_reviewer), sorted(unmatched_signal)
 
+
+def reviewer_tokens_text(
+    reviewer: list[ReviewerVariant],
+    indices: tuple[int, ...],
+) -> str:
+    """Serialize source reviewer token groups without changing their notation."""
+    return "|".join(";".join(reviewer[index].tokens) for index in indices)
+
+
+def reviewer_events_text(
+    reviewer: list[ReviewerVariant],
+    indices: tuple[int, ...],
+) -> str:
+    """Serialize parsed reviewer events for audit/debugging."""
+    events: list[str] = []
+    for index in indices:
+        variant = reviewer[index]
+        alternate = ",".join(sorted(variant.alternates))
+        events.append(
+            f"{variant.kind}:{variant.position}:{variant.reference}>{alternate}"
+        )
+    return "|".join(events)
+
+
+def signal_events_text(
+    signal: list[SignalVariant],
+    indices: tuple[int, ...],
+) -> str:
+    """Serialize normalized Signal events for audit/debugging."""
+    return "|".join(
+        f"{signal[index].kind}:{signal[index].position}:"
+        f"{signal[index].reference}>{signal[index].alternate}"
+        for index in indices
+    )
+
+
+def positions_text(positions: list[int]) -> str:
+    """Serialize deterministic unique one-based positions."""
+    return ";".join(str(position) for position in sorted(set(positions)))
 
 def write_csv(
     path: Path,
