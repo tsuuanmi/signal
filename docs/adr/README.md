@@ -57,3 +57,4 @@
 | [0053](0053-public-differential-locus-signal-evidence.md) | Expose concise differential-locus signal evidence in sample output | Accepted |
 | [0054](0054-structured-phase-explainability.md) | Separate structured phase explainability from unstructured signal degradation | Accepted |
 | [0055](0055-read-local-polyc-phase-evidence.md) | Define the read-local poly-C phase evidence promotion boundary | Accepted |
+| [0056](0056-read-local-polyc-phase-measurement-v1.md) | Implement continuous read-local poly-C phase measurement v1 | Accepted |
