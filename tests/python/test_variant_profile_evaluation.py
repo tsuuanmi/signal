@@ -338,6 +338,20 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
         self.assertEqual(missing, [])
         self.assertEqual(extra, [])
 
+    def test_ambiguous_reviewer_multi_event_group_is_not_collapsed(self) -> None:
+        reference = "AGCACACACACAC"
+        reviewer = parse_reviewer_variants(
+            ["2N", "12DEL", "13DEL"],
+            reference,
+        )
+        signal = [SignalVariant(1, "AGC", "A", "DEL")]
+
+        matches, missing, extra = compare_variants(reviewer, signal, reference)
+
+        self.assertEqual(matches, [])
+        self.assertEqual(missing, [0, 1])
+        self.assertEqual(extra, [0])
+
     def test_multi_event_representation_collapses_to_one_canonical_group(
         self,
     ) -> None:
