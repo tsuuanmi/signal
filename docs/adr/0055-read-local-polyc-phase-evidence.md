@@ -51,14 +51,13 @@ production thresholds and operating characteristics have been validated.
 
 ## Decision
 
-Signal adopts a production **read-local phase evidence boundary** for future
-implementation, with the rules below.
-
-This ADR promotes the architectural semantics only. It does not implement the detector.
+Signal adopts a production **read-local phase evidence boundary** with the rules below.
+ADR-0056 implements this boundary as continuous internal measurement only; categorical
+interpretation and reliability policy remain deferred.
 
 ### 1. Phase evidence is read-local and downstream of selected placement
 
-Future production phase measurement MUST run only after one read has independently
+Production phase measurement MUST run only after one read has independently
 selected its reference placement and orientation.
 
 Conceptually:
@@ -83,7 +82,7 @@ canonicalization, source calls, or upstream signal evidence.
 
 ### 2. Initial production applicability is rCRS HV1/HV2-specific
 
-The first production-capable method, if implemented, MUST be scoped to the validated
+The first production method, `signal.polyc_phase/v1`, is scoped to the validated
 human rCRS poly-C contexts studied by the current corpus:
 
 - HV2 positions 303–315 with the represented rCRS tract verified;
@@ -100,7 +99,7 @@ references.
 
 ### 3. Evidence availability is separate from phase interpretation
 
-Future phase evidence MUST distinguish at least these availability concepts:
+Production phase evidence MUST distinguish at least these availability concepts:
 
 ```text
 not applicable
@@ -127,7 +126,7 @@ evidence MUST remain explicit rather than being coerced into a clean/stable stat
 Measured phase evidence MUST preserve the scientific dimensions established by ADR-0054
 rather than collapsing immediately to one scalar score or categorical state.
 
-A future implementation may retain concepts such as:
+The current v1 measurement retains concepts such as:
 
 - tract identity and read-path relationship;
 - exact downstream window provenance;
@@ -224,7 +223,7 @@ promotion evidence.
 
 ## Ownership and dependency boundary
 
-If production phase measurement is later implemented, the intended ownership is:
+ADR-0056 implements the intended ownership as:
 
 ```text
 src/model/phase.rs
@@ -240,8 +239,8 @@ src/model/read_observation.rs
     owns the measured read-local phase evidence once a real producer exists
 ```
 
-The phase module may depend on validated model/reference evidence. Sample aggregation may
-consume future read-local phase evidence only after a separate policy decision.
+The phase module depends on validated model/reference evidence. Sample aggregation may
+consume read-local phase evidence only after a separate policy decision.
 
 The design specifically excludes putting the detector in:
 
@@ -250,14 +249,13 @@ The design specifically excludes putting the detector in:
 - `variant_calling`, because phase evidence is not a variant verdict;
 - `sample`, because the measurement is read-local and cannot require cross-read pairing.
 
-No placeholder Rust type or module is required until a production measurement algorithm is
-specified and implemented.
+ADR-0056 supplies the real producer and model types; no placeholder or compatibility path is retained.
 
 ## Consequences
 
 - The completed descriptive research is promoted into an explicit production architecture
   boundary without silently promoting a classifier.
-- Future implementation has one clear insertion point after selected alignment and before
+- The implemented measurement uses the insertion point after selected alignment and before
   cross-read reconciliation.
 - Unsupported references and incomplete evidence remain explicit instead of masquerading
   as stable reads.
