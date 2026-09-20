@@ -17,6 +17,7 @@ from scripts.validation_corpus.reviewer_variants import (
     extract_ground_truth,
     load_ground_truth,
     parse_reviewer_variants,
+    read_reference,
 )
 from scripts.validation_corpus.variant_profile_evaluation import (
     compare_variants,
@@ -143,6 +144,18 @@ class ReviewerVariantEvaluationTests(unittest.TestCase):
             },
             "support": [],
         }
+
+    def test_reference_reader_matches_production_acgtn_semantics(self) -> None:
+        reference = self.root / "reference-with-n.fasta"
+        reference.write_text(
+            ">rCRS description\nAC GT\nNta\n",
+            encoding="utf-8",
+        )
+
+        name, sequence = read_reference(reference)
+
+        self.assertEqual(name, "rCRS")
+        self.assertEqual(sequence, "ACGTNTA")
 
     def test_extract_preserves_reviewer_notation_verbatim(self) -> None:
         source = self.root / "review.tsv"
