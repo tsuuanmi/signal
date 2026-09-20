@@ -15,6 +15,65 @@ from .model import PHASE_CHARACTERIZATION_SCHEMA_VERSION
 from .phase_artifact import CandidateRecord, WindowRecord, load_source, validate_source
 
 
+PERSISTENCE_COLUMNS = (
+    "validation_case_id",
+    "read_sha256",
+    "tract_id",
+    "amplicon_id",
+    "orientation",
+    "interrupt_aligned_base",
+    "reference_offset_in_read_order",
+    "left_window_id",
+    "right_window_id",
+    "left_start_distance_after_tract",
+    "right_start_distance_after_tract",
+    "left_informative_positions",
+    "right_informative_positions",
+    "left_mean_zero_reference_mass",
+    "right_mean_zero_reference_mass",
+    "left_mean_shifted_reference_mass",
+    "right_mean_shifted_reference_mass",
+    "left_mean_residual_mass",
+    "right_mean_residual_mass",
+    "absolute_zero_reference_mass_delta",
+    "absolute_shifted_reference_mass_delta",
+    "absolute_residual_mass_delta",
+)
+
+TRAJECTORY_COLUMNS = (
+    "tract_id",
+    "amplicon_id",
+    "orientation",
+    "interrupt_aligned_base",
+    "start_distance_after_tract",
+    "reference_offset_in_read_order",
+    "windows",
+    "informative_windows",
+    "mean_informative_positions",
+    "mean_zero_reference_mass",
+    "mean_shifted_reference_mass",
+    "mean_residual_mass",
+    "mean_window_profile_impurity",
+    "mean_window_noisy_fraction",
+)
+
+STRATA_COLUMNS = (
+    "tract_id",
+    "amplicon_id",
+    "orientation",
+    "interrupt_aligned_base",
+    "reference_offset_in_read_order",
+    "windows",
+    "informative_windows",
+    "mean_informative_positions",
+    "mean_zero_reference_mass",
+    "mean_shifted_reference_mass",
+    "mean_residual_mass",
+    "mean_window_profile_impurity",
+    "mean_window_noisy_fraction",
+)
+
+
 def mean(values: list[float]) -> float:
     return sum(values) / len(values)
 
