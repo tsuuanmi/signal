@@ -497,11 +497,17 @@ def build_rows(
             )
         read = case.reads.get(window.read_sha256)
         if read is None:
-            raise ValueError(\n                f"{window.window_id}: phase window references unknown read"\n            )
+            raise ValueError(
+                f"{window.window_id}: phase window references unknown read"
+            )
 
-        expected_amplicon = (\n            "" if read["amplicon_id"] is None else str(read["amplicon_id"])\n        )
+        expected_amplicon = (
+            "" if read["amplicon_id"] is None else str(read["amplicon_id"])
+        )
         if window.amplicon_id != expected_amplicon:
-            raise ValueError(\n                f"{window.window_id}: amplicon differs from corpus read metadata"\n            )
+            raise ValueError(
+                f"{window.window_id}: amplicon differs from corpus read metadata"
+            )
 
         expected_orientation = orientations[
             (window.validation_case_id, window.read_sha256)
