@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Local reviewer variant-profile validation now extracts provenance-bound `signal.reviewer_variant_ground_truth/v1` from Sequencher review tables and publishes deterministic `signal.validation_variant_profile_evaluation/v1` baseline comparisons against eligible sample-v8 variants. The evaluator reports reviewer-proxy matched/extra/missing variants, exact profiles, precision/recall, and representation disagreements without fabricating true negatives, embedding phase-locus heuristics, or changing production behavior.
+
 - Phase-interpretation research preparation now publishes hash-bound `signal.validation_phase_interpretation_dataset/v1`, joining the validated corpus to production-v1 phase hypotheses with explicit development/holdout/excluded/unassigned group declarations. Only `include_in_threshold_fit=true` development window/candidate evidence is exported; other partitions contribute aggregate readiness counts without continuous phase features, and no state, threshold, recovery rule, weight, or production behavior is introduced.
 
 - The completed 89-case Rust/Python phase-runtime parity study is now recorded as research validation evidence: 11,231 windows and 112,310 candidates matched exactly on structure/counts, with maximum numeric delta `5.5511151231257827e-16` at `1e-12` tolerance. The record explicitly does not promote phase states, thresholds, weighting, or no-call behavior.

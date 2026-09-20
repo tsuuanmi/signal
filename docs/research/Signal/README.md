@@ -21,6 +21,7 @@ This subtree contains Signal-specific exploratory work that has not yet been pro
 - [polyc-phase-interpretation-study.md](polyc-phase-interpretation-study.md): development/holdout study design for window/tract phase-evidence interpretation, including strict Python-research/Rust-production ownership and separate later weighting promotion.
 - [polyc-phase-interpretation-dataset.md](polyc-phase-interpretation-dataset.md): implemented provenance-strict development-only join of corpus metadata and production-v1 phase candidates, with aggregate holdout readiness counts but no holdout phase features or thresholds.
 - [event-position-diagnostics.md](event-position-diagnostics.md): validation study for explaining primary-basecall versus continuous-profile event placement before threshold fitting.
+- [variant-profile-evaluation.md](variant-profile-evaluation.md): reviewer-derived sample variant-profile baseline, explicit Sequencher notation semantics, FP/FN accounting, representation-equivalence handling, and non-regression objective before phase-aware calling.
 
 These documents may contain useful ideas, hypotheses, candidate algorithms, and delivery sequences. They are not authority for current production behavior.
 

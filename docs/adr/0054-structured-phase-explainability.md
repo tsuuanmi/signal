@@ -68,6 +68,13 @@ Phase-state or phase-window classification accuracy alone is not an acceptable p
 criterion. A policy that removes apparent phase artifacts by also removing true variants is
 not successful.
 
+The current pre-poly-C/unaffected calling behavior is a baseline non-regression surface.
+Phase-aware logic is intended to address evidence affected after tract crossing; it MUST NOT
+reduce variant-profile correctness in regions/evidence that do not require phase handling.
+Future evaluation therefore compares the frozen baseline caller against the phase-aware
+caller, reporting false positives and false negatives separately for unaffected and
+phase-affected strata when those strata can be established without truth leakage.
+
 The intended dependency is:
 
 ```text
@@ -102,6 +109,20 @@ For reviewer-produced Sequencher profiles, the local ground-truth artifact MUST:
 Normalization or equivalence handling for evaluation MUST be a separate, explicit
 comparison step. The ground-truth artifact itself MUST NOT silently rewrite, normalize, or
 reinterpret the reviewer's variant profile.
+
+The reviewer notation used by the current local source is interpreted only in that separate
+comparison layer:
+
+```text
+310.1C  = insert C after reference position 310
+310DEL  = delete the reference base at position 310
+310A    = SNV at position 310 from the reference base to A
+```
+
+Consecutive `P.nBASE` tokens at one position form one ordered insertion, consecutive
+`PDEL` positions may form one deletion event, and IUPAC SNV symbols preserve the allowed
+alternate set. Equivalent indel representations in a repeat may match semantically while
+remaining explicitly reported as representation disagreements.
 
 Reviewer truth/proxy data is validation input only. It MUST NOT feed back into phase
 measurement, alignment, basecalling, or production inference.
@@ -211,7 +232,9 @@ validation for mtDNA poly-C behavior.
 - A true isolated point variant should not receive strong phase support unless an offset
   also explains surrounding observations.
 - Phase research is evaluated by its contribution to correct sample-level variant profiles,
-  including both false-positive reduction and true-variant preservation.
+  including both false-positive reduction and false-negative reduction relative to frozen
+  reviewer/independent truth. Improvements in one error class MUST NOT be purchased by an
+  unacceptable regression in the other.
 - Reviewer-derived Sequencher profiles may seed local proxy-ground-truth evaluation, but
   their provenance and proxy status remain explicit and they are never production inputs.
 - Phase recovery can later be studied as the disappearance of coherent shifted evidence

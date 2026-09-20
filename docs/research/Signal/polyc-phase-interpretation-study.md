@@ -329,6 +329,13 @@ source-file SHA-256 verbatim in a local ignored artifact; any tokenization is co
 only. Variant normalization/equivalence for evaluation is a separate comparison step and
 must not rewrite the source truth artifact.
 
+For the current reviewer notation, `P.nB` means insertion base `B` after reference position
+`P`, `PDEL` means deletion of the reference base at `P`, and `PB` means an SNV at `P` to
+`B`. The evaluator may group ordered same-position insertion tokens and consecutive
+deletion positions into sequence events and may recognize repeat-equivalent indel
+representations, but it must report representation differences separately rather than
+rewriting the reviewer source.
+
 ## Safety objectives
 
 Before feature or threshold search, declare a maximum tolerated false attenuation/no-call
@@ -343,10 +350,16 @@ reviewer-supported downstream differences.
 
 The end-to-end comparison MUST evaluate the final sample-level variant set, including:
 
-- extra Signal variants not present in the truth/proxy profile;
-- missing truth/proxy variants;
+- extra Signal variants not present in the truth/proxy profile (proxy false positives);
+- missing truth/proxy variants (proxy false negatives);
 - documented representation/equivalence disagreements;
 - preservation of true variants inside phase-affected regions.
+
+The goal is to reduce both false positives and false negatives. A phase-aware policy MUST
+be compared against the frozen current caller rather than against an abstract zero-error
+target only. Because current calling is already useful before poly-C crossing, unaffected
+/pre-tract evidence is a non-regression stratum; gains after a crossed tract do not justify
+worse calls where phase handling was unnecessary.
 
 Report clean and true-SNV challenge behavior separately. Phase-state accuracy without a
 sample-level variant benefit is insufficient for promotion.

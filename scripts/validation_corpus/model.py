@@ -24,6 +24,10 @@ PHASE_RECURRENT_LOCUS_SCHEMA_VERSION = "signal.validation_phase_recurrent_loci/v
 PHASE_INTERPRETATION_DATASET_SCHEMA_VERSION = (
     "signal.validation_phase_interpretation_dataset/v1"
 )
+REVIEWER_VARIANT_GROUND_TRUTH_SCHEMA_VERSION = "signal.reviewer_variant_ground_truth/v1"
+VARIANT_PROFILE_EVALUATION_SCHEMA_VERSION = (
+    "signal.validation_variant_profile_evaluation/v1"
+)
 
 MANIFEST_COLUMNS = (
     "validation_case_id",
