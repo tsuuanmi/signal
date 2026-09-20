@@ -28,6 +28,8 @@ All notable changes to this project are documented here.
 
 ### Added
 
+- Development-only `signal.validation_phase_error_characterization/v1` now combines the prepared phase-interpretation dataset with exact biological missing/extra window links to retain complete candidate-derived non-zero/structured quantities, threshold-free window envelopes, signed adjacent-window trajectories, and descriptive error-overlap strata. The artifact deduplicates multi-locus event/window links, never treats no-error-overlap windows as clean truth, and introduces no candidate selection, phase state, threshold, recovery rule, weighting, holdout feature exposure, or production behavior.
+
 - Development-only `signal.validation_variant_phase_context/v1` now joins biological missing/extra groups from variant-profile evaluation v2 to exact available post-poly-C observations, reconstructed phase-window membership, and complete candidate curves. Representation disagreements are excluded from error attribution; detailed context is restricted to fit-eligible development cases while other partitions expose aggregate readiness counts only. No phase state, winning offset, threshold, causal artifact label, weighting, or production behavior is introduced.
 
 - ADR-0057 establishes haplotype-first variant correctness: exact reconstructed sequence/haplotype equivalence is the biological comparison criterion when variant descriptions differ, while Signal retains one deterministic internal canonical representation and future nomenclature conversions remain an explicit versioned reporting layer.
