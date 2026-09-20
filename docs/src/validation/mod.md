@@ -8,10 +8,11 @@ Defines the explicit library boundary for local validation measurement export.
 
 - Define `ValidationExportRequest` with research sample ID, trace paths, and reference path.
 - Route validation export to the internal pipeline implementation.
+- Register the validation-only phase-runtime serializer module.
 
 ## Non-responsibilities
 
-No CLI parsing, scientific computation, threshold selection, or publication logic.
+No CLI parsing, scientific computation, threshold selection, or phase-measurement logic.
 
 ## Status
 
