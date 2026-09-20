@@ -106,8 +106,7 @@ def load_signal_variants(
         not isinstance(configuration_sha256, str)
         or len(configuration_sha256) != 64
         or any(
-            character not in "0123456789abcdef"
-            for character in configuration_sha256
+            character not in "0123456789abcdef" for character in configuration_sha256
         )
     ):
         raise ValueError(f"{path}: invalid configuration_sha256")
@@ -353,7 +352,8 @@ def publish_evaluation(
         configurations.add(configuration_sha256)
         matches, missing, extra = compare_variants(reviewer, signal, reference)
         representation = sum(
-            1 for _, _, is_representation_disagreement in matches
+            1
+            for _, _, is_representation_disagreement in matches
             if is_representation_disagreement
         )
         exact_profile = not missing and not extra and representation == 0
@@ -442,9 +442,7 @@ def publish_evaluation(
         )
     )
 
-    stage = Path(
-        tempfile.mkdtemp(prefix=f".{output_dir.name}.", dir=output_dir.parent)
-    )
+    stage = Path(tempfile.mkdtemp(prefix=f".{output_dir.name}.", dir=output_dir.parent))
     try:
         samples_path = stage / "samples.csv"
         differences_path = stage / "differences.csv"
