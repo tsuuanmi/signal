@@ -195,11 +195,13 @@ production Rust ReadPhaseEvidence
 The measurement implementation is no longer the open scientific question addressed by the
 next phase of work.
 
-The next question is interpretation: whether any continuous evidence can safely support a
-categorical phase/recovery state or reliability policy. That work remains governed by
-`docs/validation/polyc-phase-promotion.md` and must use source-group-safe
-development/holdout evaluation, clean-evidence false-attenuation objectives, true downstream
-SNV challenges, incomplete-evidence behavior, and explicit policy promotion.
+The next question is interpretation: whether the continuous evidence can support useful
+window/tract evidence patterns and recovery transitions without suppressing clean evidence or
+true downstream sequence differences. The research design is frozen in
+[polyc-phase-interpretation-study.md](polyc-phase-interpretation-study.md), while production
+promotion remains governed by `docs/validation/polyc-phase-promotion.md`. Python remains a
+research/validation harness; any promoted interpretation must be implemented authoritatively
+in the Rust core before it can affect production behavior.
 
 ## Reproducibility follow-up
 
