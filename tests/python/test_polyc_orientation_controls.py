@@ -127,9 +127,7 @@ class PolyCOrientationControlTests(unittest.TestCase):
             self.observation(position, read_sha256, selected_orientations[read_sha256])
             for read_sha256, _, _, _, _ in self.reads
         ]
-        forward_reads = sum(
-            row["orientation"] == "forward" for row in observations
-        )
+        forward_reads = sum(row["orientation"] == "forward" for row in observations)
         reverse_reads = len(observations) - forward_reads
         return {
             "schema_version": MEASUREMENT_SCHEMA_VERSION,
@@ -180,8 +178,7 @@ class PolyCOrientationControlTests(unittest.TestCase):
             for read_sha256, selected_orientation, _, _, _ in self.reads
         }
         rows = [
-            self.locus(position, selected_orientations)
-            for position in HV2_POSITIONS
+            self.locus(position, selected_orientations) for position in HV2_POSITIONS
         ]
         measurement = self.corpus / "cases" / "case-1.jsonl"
         measurement.write_text(
@@ -273,8 +270,7 @@ class PolyCOrientationControlTests(unittest.TestCase):
         forward_group = [
             row
             for row in observations
-            if row["position_1based"] == "316"
-            and row["post_orientation"] == "forward"
+            if row["position_1based"] == "316" and row["post_orientation"] == "forward"
         ]
         self.assertEqual(len(forward_group), 4)
         self.assertEqual(
@@ -282,10 +278,7 @@ class PolyCOrientationControlTests(unittest.TestCase):
             2,
         )
         self.assertEqual(
-            sum(
-                row["role"] == "pre_tract_opposite_control"
-                for row in forward_group
-            ),
+            sum(row["role"] == "pre_tract_opposite_control" for row in forward_group),
             2,
         )
         mismatched_declared = next(
